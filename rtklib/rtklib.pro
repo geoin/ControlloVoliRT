@@ -46,10 +46,8 @@ SOURCES += \
 HEADERS +=\
     rtklib.h
 
-#macx {
-    DESTDIR = ../lib
+DESTDIR = ../lib
 
-    incl.path = ../include/rtklib
-    incl.files = ../rtklib/rtklib.h
-    INSTALLS += incl
-#}
+incl.path = ../include/rtklib
+incl.files = ../rtklib/rtklib.h
+INSTALLS += incl
