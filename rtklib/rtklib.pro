@@ -49,6 +49,7 @@ HEADERS +=\
     rtklib.h
 
 DESTDIR = ../lib
+#target.path = ../lib
 
 incl.path = ../include/rtklib
 incl.files = ../rtklib/rtklib.h
