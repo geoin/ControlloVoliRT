@@ -9,6 +9,8 @@ QT       -= core gui
 TARGET = rtklib
 TEMPLATE = lib
 
+win32:LIBS += -L"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib" -lWs2_32 -lwinmm
+
 DEFINES += RTKLIB_LIBRARY
 
 SOURCES += \
