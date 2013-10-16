@@ -6,11 +6,11 @@
 CONFIG += sharedlib
 QT       -= core gui
 
-release {
-    TARGET = dem_interpolate
-} else {
+CONFIG(debug, debug|release)
     TARGET = dem_interpolated
-}
+CONFIG(release, debug|release)
+    TARGET = dem_interpolate
+
 TEMPLATE = lib
 
 # win32:LIBS += -L"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib" -lWs2_32 -lwinmm
