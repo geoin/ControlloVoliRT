@@ -11,6 +11,10 @@ TEMPLATE = lib
 
 win32:LIBS += -L"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib" -lWs2_32 -lwinmm
 
+CONFIG(debug, debug|release) {
+        TARGET = $$join(TARGET,,,d)
+}
+
 DEFINES += RTKLIB_LIBRARY
 
 SOURCES += \
@@ -49,7 +53,6 @@ HEADERS +=\
     rtklib.h
 
 DESTDIR = ../lib
-#target.path = ../lib
 
 incl.path = ../include/rtklib
 incl.files = ../rtklib/rtklib.h

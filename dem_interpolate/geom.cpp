@@ -1,3 +1,4 @@
+#include "exports.h"
 #include "dsm.h"
 
 RETTA::RETTA(const DPOINT& p1, const DPOINT& p2) 
@@ -50,7 +51,7 @@ double RETTA::val(const DPOINT& p)
 //	return rt1;
 //}
 
-_declspec (dllexport) int sign(double val)
+TOOLS_EXPORTS int sign(double val)
 {
 	return ( val == 0. ) ? 0 : ( val < 0. ) ? -1 : 1;
 }

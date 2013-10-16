@@ -16046,7 +16046,7 @@ char **argv;
 !@	rilascia le strutture usate dalla triangolazione
 !
 !----------------------------------------------------------------------------*/
-_declspec (dllexport) void ReleaseStruct(struct triangulateio *st)
+TOOLS_EXPORTS void ReleaseStruct(struct triangulateio *st)
 {
 	if (st->pointlist != (REAL *) NULL)
 		free(st->pointlist);
@@ -16089,7 +16089,7 @@ _declspec (dllexport) void ReleaseStruct(struct triangulateio *st)
 !@	Prepara le strutture per il modulo di triangolazione
 !
 !----------------------------------------------------------------------------*/
-_declspec (dllexport) int InitStruct(struct triangulateio *st, int npt, int natt, int nseg)
+TOOLS_EXPORTS int InitStruct(struct triangulateio *st, int npt, int natt, int nseg)
 {
 	st->numberofpoints = npt;
 	st->numberofpointattributes = natt;
@@ -16155,7 +16155,7 @@ void Terminate(short k)
   //   produce an edge list (e), a Voronoi diagram (v), and a triangle
   //   neighbor list (n).
 
-_declspec (dllexport) int Triangulate(char* triswitches, struct triangulateio *in,
+TOOLS_EXPORTS int Triangulate(char* triswitches, struct triangulateio *in,
 										struct triangulateio *out, void (*fLprintf)(char*),
 										char* fTrErrMes)
 {
@@ -16169,7 +16169,7 @@ _declspec (dllexport) int Triangulate(char* triswitches, struct triangulateio *i
 		return 0;
 	}
 }
-_declspec (dllexport) int Voronoi(char * triswitches, struct triangulateio *in, 
+TOOLS_EXPORTS int Voronoi(char * triswitches, struct triangulateio *in,
 										struct triangulateio *out, struct triangulateio *vor, 
 										void (*fLprintf)(char*), char* fTrErrMes)
 {

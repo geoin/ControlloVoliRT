@@ -533,7 +533,7 @@ bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 	FILE* fp = fopen(nome.c_str(), "r");
 	if ( fp == NULL )
 		return false;
-	_fseeki64(fp, _pos, SEEK_SET);
+    fseek(fp, _pos, SEEK_SET);
 
 	//Progress* prg = ( prb == NULL ) ? new Progress : prb;
 

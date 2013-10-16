@@ -9,10 +9,29 @@ QT       -= core gui
 TARGET = ziplib
 TEMPLATE = lib
 
-# win32:LIBS += -L"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib" -lWs2_32 -lwinmm
-LIBS += -L"C:\ControlloVoliRT_Tools\lib" -lPocoFoundationd -lPocoZipd
+win32 {
+        LIBS += -L"C:/ControlloVoliRT_Tools/lib"
+}
+macx {
+        LIBS += -L"/Users/andrea/SwTools/lib"
+}
 
-INCLUDEPATH = C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+
+CONFIG(debug, debug|release) {
+        LIBS += -lPocoFoundationd -lPocoZipd
+        TARGET = $$join(TARGET,,,d)
+}
+else {
+        LIBS += -lPocoFoundation -lPocoZip
+}
+
+
+win32 {
+        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+}
+macx {
+        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+}
 
 DEFINES +=ZIPLIB_LIBRARY
 

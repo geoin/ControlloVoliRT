@@ -15,6 +15,7 @@
 #ifdef TRILIBRARY
 #define HGLOBAL int
 #endif
+#include "exports.h"
 
 struct triangulateio {
 	REAL *pointlist;
@@ -51,11 +52,11 @@ struct triangulateio {
 extern "C" {
 #endif
 
-_declspec (dllexport) void ReleaseStruct(struct triangulateio *);
-_declspec (dllexport) int InitStruct(struct triangulateio * sto, int npt, int natt, int nseg);
-_declspec (dllexport) int Triangulate(char * triswitches, struct triangulateio *in, struct triangulateio *out,
+TOOLS_EXPORTS void ReleaseStruct(struct triangulateio *);
+TOOLS_EXPORTS int InitStruct(struct triangulateio * sto, int npt, int natt, int nseg);
+TOOLS_EXPORTS int Triangulate(char * triswitches, struct triangulateio *in, struct triangulateio *out,
 										void (*fLprintf)(char*), char* fTrErrMes);
-_declspec (dllexport) int Voronoi(char * triswitches, struct triangulateio *in, struct triangulateio *out,
+TOOLS_EXPORTS int Voronoi(char * triswitches, struct triangulateio *in, struct triangulateio *out,
 										struct triangulateio *vor, void (*fLprintf)(char*), char* fTrErrMes);
 #if defined(__cplusplus)
 }

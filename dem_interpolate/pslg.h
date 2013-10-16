@@ -10,10 +10,13 @@
 #ifndef PSLG_H
 #define PSLG_H
 
+#include "exports.h"
 #include <set>
 #include "triangle.h"
 #include "dsm.h"
-#include <share.h>
+#include <limits>
+
+//#include <share.h>
 
 #ifndef INF
 #define INF	1.e30
@@ -26,7 +29,7 @@ static void fn_lst(char* mes) {
 
 // TIN CLASS
 template <typename ND, typename NT>
-class _declspec(dllexport) tPSLG: public DSM {
+class TOOLS_EXPORTS tPSLG: public DSM {
 public:
 	unsigned int			Org_Nod;	// original num. of nodes
 	tPSLG(void): _open(false),
@@ -195,13 +198,14 @@ public:
 	}
 
 	bool ReadFileNod(const std::string& DemName, Progress* Prg = NULL) {
-		FILE* fptr = _fsopen(DemName.c_str(), "r", _SH_DENYWR );
+        FILE* fptr = fopen(DemName.c_str(), "r" );
+        //FILE* fptr = _fsopen(DemName.c_str(), "r", _SH_DENYWR );
 		if ( fptr == NULL )
 			return false;
 
 		//Progress* prg = ( Prg == NULL ) ? new Progress : Prg;
 
-		char	val[_MAX_PATH];
+        char	val[FILENAME_MAX];
 		fgets(val, 80, fptr);
 		sscanf(val, "%u", &Org_Nod);
 		
@@ -505,7 +509,7 @@ private:
 		InitStruct(&vorData, 0, 0, 0);
 		
 		bool ret = false;
-		HWND hw = GetParent(_cnl.GetListHandle().GetHwnd());
+        //HWND hw = GetParent(_cnl.GetListHandle().GetHwnd());
 		char mes[256];
 		if ( Voronoi("Vpcznv", &inData, &outData, &vorData, NULL, mes) ) {
 			// add the voronoi vertexes

@@ -159,7 +159,7 @@ private:
 	mutable TRIANGLE	_tr;
 	mutable NODE		_nd;
 	SEGMENT				_sg;
-	__int64				_pos;
+    long long				_pos;
 	std::vector<float> quote;
 };
 

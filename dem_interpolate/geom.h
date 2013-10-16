@@ -4,6 +4,7 @@
 #include <algorithm>
 #define  _USE_MATH_DEFINES
 #include <math.h>
+#include <stdexcept>
 #include "exports.h"
 
 #ifndef INF
@@ -81,7 +82,7 @@ public:
 	// ritorna il punto sulla perp. a p1 this distante d da this
 	//DPOINT Posd(const DPOINT& p1, double d) const;
 	double dist2D(const DPOINT& ptb) const {
-		return _hypot(x - ptb.x, y - ptb.y);
+        return hypot(x - ptb.x, y - ptb.y);
 	}
 	double dist_lat2D(const DPOINT& ptb) const {
 		double lon1 = DEG_RAD(x);
@@ -102,7 +103,7 @@ public:
 	//}
 	// distanza bidimensionale
 	double dist2D(double xp, double yp) const {
-		return _hypot(x - xp, y - yp);
+        return hypot(x - xp, y - yp);
 	}
 	// distanza tridimensionale
 	double dist3D(const DPOINT& ptb) const {
@@ -379,7 +380,7 @@ public:
 		mt.SetRows( v3, v2 * v0, v0 * v1);
 		double det = v0 % v3 ;
 		if ( fabs(det) < 1.e-12 )
-			throw std::exception("non invertibile");
+            throw std::runtime_error("non invertibile");
 		mt *= (1. / det); 
 		return mt;
 	}
