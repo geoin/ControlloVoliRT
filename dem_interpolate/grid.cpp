@@ -9,7 +9,7 @@
 !=================================================================================*/
 #include "dsm.h"
 #include "pslg.h"
-#include "txtfile.h"
+//#include "txtfile.h"
 #include <fstream>
 #include "Poco/StringTokenizer.h"
 #include "Poco/String.h"
@@ -395,26 +395,32 @@ bool DSM::RayIntersect(const DPOINT& p0, const DPOINT& p1, DPOINT& pt)
 }
 bool DSM_Grid::Save(const std::string& nome, Progress* prb)
 {
-	TxtFile txf;
-	if ( !txf.InitW(nome) )
+    std::fstream txf;
+    txf.open(nome.c_str(), std::fstream::out | std::fstream::trunc);
+    if ( !txf.is_open() )
 		return false;
-	txf.PrintNextRecord("ncols\t%d", _nx);
-	txf.PrintNextRecord("nrows\t%d", _ny);
-	txf.PrintNextRecord("xllcorner\t%.18lf", _x0);
-	txf.PrintNextRecord("yllcorner\t%.18lf", _y0);
-	txf.PrintNextRecord("cellsize\t%.18lf", _stx);
-	txf.PrintNextRecord("NODATA_value\t%lf", _z0);
+    txf.precision(18);
+    txf << "ncols\t" << _nx << std::endl;
+    txf << "nrows\t" << _ny << std::endl;
+    txf << "xllcorner\t" << _x0 << std::endl;
+    txf << "yllcorner\t" << _y0 << std::endl;
+    txf << "cellsize\t" << _stx << std::endl;
+    txf << "NODATA_value\t" << _z0 << std::endl;
 
-	//Progress* prg = ( prb == NULL ) ? new Progress : prb;
-	//prg->Start(_nx * _ny);
-	txf.LineFeed(false);
+    //txf.PrintNextRecord("ncols\t%d", _nx);
+    //txf.PrintNextRecord("nrows\t%d", _ny);
+    //txf.PrintNextRecord("xllcorner\t%.18lf", _x0);
+    //txf.PrintNextRecord("yllcorner\t%.18lf", _y0);
+    //txf.PrintNextRecord("cellsize\t%.18lf", _stx);
+    //txf.PrintNextRecord("NODATA_value\t%lf", _z0);
+
+    txf << std::endl;
+    txf.precision(3);
 	for (unsigned int i = 0; i < quote.size(); i++) {
-		//if ( !prg->Set((double) i) )
-		//	break; // abortito dall'operatore
-		txf.PrintNextRecord("%.3lf ", quote[i]);
+        txf << quote[i] << " ";
+        //txf.PrintNextRecord("%.3lf ", quote[i]);
 	}
-	txf.SetNextRecord("\n");
-	//prg->Quit();
+    txf << std::endl;
 	return true;
 }
 void DSM_Grid::Set(double xmin, double ymin, int nx, int ny, double stepx, double z0)
@@ -428,12 +434,13 @@ void DSM_Grid::Set(double xmin, double ymin, int nx, int ny, double stepx, doubl
 }
 bool DSM_Grid::GetProperties(const std::string& nome) 
 {
-	TxtFile txf;
-	if ( !txf.Init(nome) )
+    std::fstream txf;
+    txf.open(nome.c_str(), std::fstream::in);
+    if ( txf.is_open() )
 		return false;
-	const char* mes;
+    char mes[256];
 	int count = 0;
-	while ( (mes = txf.GetNextRecord()) ) {
+    while ( txf.getline(mes, 255) ) {
 		Poco::StringTokenizer tok(mes, " \t", Poco::StringTokenizer::TOK_TRIM );
 		if ( tok.count() != 2 )
 			break;
@@ -460,8 +467,8 @@ bool DSM_Grid::GetProperties(const std::string& nome)
 		if ( count == 6 )
 			break;
 	}
-	_pos = txf.GetPos();
-	txf.Close();
+    _pos = txf.tellp();
+    txf.close();
 	_xmin = _x0;
 	_ymin = _y0;
 	return true;
@@ -707,35 +714,18 @@ bool DSM_Factory::Open(const std::string nome, bool verbose, Progress* prb)
 		return _dsm->Open(nome, verbose, prb);
 	}
 	return false; // formato non riconosciuto
-
-	//TxtFile tf;
-	//if ( tf.Init(nome) ) {
-	//	const char* mes = tf.GetNextRecord();
-	//	if ( mes == NULL )
-	//		return false;
-	//	Close();
-	//	std::string trm = Poco::trim(std::string(mes));
-	//	Poco::StringTokenizer tok(Poco::trim(std::string(mes)), ", \t");
-	//	if ( tok.count() > 1 ) {
-	//		// file di tipo grid;
-	//		_dsm = new DSM_Grid;
-	//		return _dsm->Open(nome, verbose, prb);
-	//	} else
-	//		// file di tipo tin;
-	//		_dsm = new PSLG;
-	//		return _dsm->Open(nome, verbose, prb);
-	//}
-	//return false;
 }
 DSM::DSM_Type DSM_Factory::GetType(const std::string nome)
 {
-	TxtFile tf;
-	if ( tf.Init(nome) ) {
-		const char* mes = tf.GetNextRecord();
-		if ( mes == NULL )
+    std::fstream tf;
+    tf.open(nome.c_str());
+    if ( tf.is_open() ) {
+        char mes[256];
+        mes[0] = '\0';
+        tf.getline(mes, 255);
+        if ( !strlen(mes) )
 			return DSM::DSM_UNKN;
 		Poco::StringTokenizer tok(Poco::trim(std::string(mes)), ", \t", Poco::StringTokenizer::TOK_TRIM);
-		//Poco::StringTokenizer tok(mes, " \t", Poco::StringTokenizer::TOK_TRIM);
 		if ( tok.count() > 1 ) {
 			// file di tipo grid;
 			return DSM::DSM_GRID;

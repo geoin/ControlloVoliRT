@@ -29,8 +29,7 @@ HEADERS +=\
     pslg.h \
     dsm.h \
     geom.h \
-    triangle.h \
-    txtfile.h
+    triangle.h
 
 
 DESTDIR = ../lib
