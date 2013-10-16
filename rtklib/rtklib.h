@@ -33,6 +33,7 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
+#include "exports.h"
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -1402,7 +1403,7 @@ extern int  rtkopenstat(const char *file, int level);
 extern void rtkclosestat(void);
 
 /* post-processing positioning -----------------------------------------------*/
-extern int postpos(gtime_t ts, gtime_t te, double ti, double tu,
+TOOLS_EXPORTS int postpos(gtime_t ts, gtime_t te, double ti, double tu,
                    const prcopt_t *popt, const solopt_t *sopt,
                    const filopt_t *fopt, char **infile, int n, char *outfile,
                    const char *rov, const char *base);

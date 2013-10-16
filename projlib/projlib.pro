@@ -5,17 +5,30 @@
 #-------------------------------------------------
 CONFIG += sharedlib
 QT       -= core gui
-
-release {
-    TARGET = projlib
-} else {
-    TARGET = projlibd
-}
+TARGET = projlib
 TEMPLATE = lib
 
-LIBS += -L"C:/ControlloVoliRT_Tools/lib" -lPocoFoundationd
+win32 {
+        LIBS += -L"C:/ControlloVoliRT_Tools/lib"
+}
+macx {
+        LIBS += -L"/Users/andrea/SwTools/lib"
+}
 
-INCLUDEPATH = ../projlib C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+CONFIG(debug, debug|release) {
+        LIBS += -lPocoFoundationd
+        TARGET = $$join(TARGET,,,d)
+}
+else {
+        LIBS += -lPocoFoundation
+}
+
+win32 {
+        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include ../projlib
+}
+macx {
+        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+}
 
 DEFINES += PROJECTOR_EXPORTS
 

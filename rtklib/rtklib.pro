@@ -15,6 +15,13 @@ CONFIG(debug, debug|release) {
         TARGET = $$join(TARGET,,,d)
 }
 
+win32 {
+        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+}
+macx {
+        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+}
+
 DEFINES += RTKLIB_LIBRARY
 
 SOURCES += \

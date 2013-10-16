@@ -187,9 +187,3 @@ namespace Projection {
 		}
 	}
 }
-
-#ifdef _WIN32_WCE
-char *getenv(const char *varname) {return 0;}
-int errno;
-void rewind(FILE* fp) {}
-#endif

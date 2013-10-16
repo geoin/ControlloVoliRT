@@ -11,7 +11,7 @@
 #define VDP_H
 
 #include "exports.h"
-#include "tools/geom.h"
+#include "dem_interpolate/geom.h"
 #include <string>
 
 // classe definizione fotocamera

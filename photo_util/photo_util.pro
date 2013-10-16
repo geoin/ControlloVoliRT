@@ -5,17 +5,19 @@
 #-------------------------------------------------
 CONFIG += sharedlib
 QT       -= core gui
-
-release {
-    TARGET = photo_util
-} else {
-    TARGET = photo_util
-}
+TARGET = photo_util
 TEMPLATE = lib
 
-#LIBS += -L"C:/ControlloVoliRT_Tools/lib" -lPocoFoundationd
+win32 {
+        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+}
+macx {
+        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+}
 
-INCLUDEPATH = C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+CONFIG(debug, debug|release) {
+        TARGET = $$join(TARGET,,,d)
+}
 
 DEFINES +=PHOTOUTIL_LIBRARY
 
@@ -29,6 +31,6 @@ HEADERS +=\
 
 DESTDIR = ../lib
 
-incl.path = ../include/tools
+incl.path = ../include/photo_util
 incl.files = ../photo_util/sun.h ../photo_util/vdp.h
 INSTALLS += incl
