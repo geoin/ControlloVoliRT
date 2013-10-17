@@ -4,6 +4,7 @@
 #include <string>
 #include "projects.h"
 #include "projector.h"
+#include "common_defs.h"
 
 using namespace std;
 

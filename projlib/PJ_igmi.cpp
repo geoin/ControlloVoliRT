@@ -11,11 +11,15 @@
 #include <stdlib.h>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
+#include "common_defs.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 #define DEG_RAD(val) (M_PI / 180.) * (val)
 #define RAD_DEG(val) (180. / M_PI) * (val)
+
+
 static int nearest(double val)
 {
 	return ( val > 0.) ? (int) (0.5 + val) : (int) (val - 0.5);
@@ -251,14 +255,14 @@ bool hGrid::MergeGrid(const char* nome, DATUM_TYPE dt)
 					int idx = i2 * hg.nlon + j2;
 					if ( llat[index].used && hg.dlat[idx].used ) {
 						if ( llat[index].val != hg.dlat[idx].val )
-							throw(std::exception("Anomalia"));
+                            throw(std::runtime_error("Anomalia"));
 					} else {
 						llat[index].val = hg.dlat[idx].val;
 						llat[index].used = hg.dlat[idx].used;
 					}
 					if ( llon[index].used && hg.dlon[idx].used ) {
 						if ( llon[index].val != hg.dlon[idx].val )
-							throw(std::exception("Anomalia"));
+                            throw(std::runtime_error("Anomalia"));
 					} else {
 						llon[index].val = hg.dlon[idx].val;
 						llon[index].used = hg.dlon[idx].used;
@@ -436,7 +440,7 @@ bool vGrid::MergeGrid(const char* nome)
 					int idx = i2 * vg.nlon + j2;
 					if ( lq[index].used ) {
 						if ( lq[index].val != vg.dq[idx].val )
-							throw(std::exception("Anomalia"));
+                            throw(std::runtime_error("Anomalia"));
 
 					} else {
 						lq[index].val = vg.dq[idx].val;

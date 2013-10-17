@@ -111,7 +111,6 @@ SOURCES += \
 	PJ_lcc.c \
 	PJ_lcca.c \
 	pj_list.c \
-	pj_list.h \
 	PJ_loxim.c \
 	PJ_lsat.c \
 	pj_malloc.c \

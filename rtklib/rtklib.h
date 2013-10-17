@@ -34,6 +34,8 @@
 #include <time.h>
 #include <ctype.h>
 #include "exports.h"
+#include "common_defs.h"
+
 #ifdef WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -1034,14 +1036,6 @@ typedef struct {        /* RTK server type */
     int prcout;         /* missing observation data count */
     lock_t lock;        /* lock flag */
 } rtksvr_t;
-
-#if defined( __APPLE__ )
-    #define __int64 __int64_t
-    #define stricmp strcasecmp
-    #define strnset memset
-    #define _fseeki64 fseek
-    #define _ftelli64 ftell
-#endif
 
 void (*myCoordPlot)(double* rec, const char* date);
 

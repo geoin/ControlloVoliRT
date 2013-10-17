@@ -12,7 +12,8 @@
 
 #include <math.h>
 #include "projector.h"
-#include "boost/shared_ptr.hpp"
+#include "Poco/SharedPtr.h"
+
 using namespace Projection;
 
 #define _wgs84_ "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs" // 4326
@@ -76,13 +77,13 @@ protected:
 			throw(std::exception("input Transformation error"));
 		if ( !pout.init(out) ) 
 			throw(std::exception("output Transformation error"));
-		cdt.reset(new coord_transformer(&pin, &pout));
-		cdtr.reset(new coord_transformer(&pout, &pin));
+        cdt.assign(new coord_transformer(&pin, &pout));
+        cdtr.assign(new coord_transformer(&pout, &pin));
 		latout = ( strstr(out.c_str(), "longlat") ) ? true : false;
 		latin = ( strstr(in.c_str(), "longlat") ) ? true : false;
 	}
-	boost::shared_ptr<coord_transformer> cdt;
-	boost::shared_ptr<coord_transformer> cdtr;
+    Poco::SharedPtr<coord_transformer> cdt;
+    Poco::SharedPtr<coord_transformer> cdtr;
 };
 #endif // __cplusplus
 
