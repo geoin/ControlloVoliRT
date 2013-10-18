@@ -1049,7 +1049,7 @@ void (*myCoordPlot)(double* rec, const char* date);
 extern const double chisqr[];           /* chi-sqr(n) table (alpha=0.001) */
 extern const double lam[];              /* carrier wave length (m) {L1,L2,...} */
 extern const prcopt_t prcopt_default;   /* default positioning options */
-extern const solopt_t solopt_default;   /* default solution output options */
+TOOLS_EXPORTS const solopt_t solopt_default;   /* default solution output options */
 extern const sbsigpband_t igpband1[][8]; /* SBAS IGP band 0-8 */
 extern const sbsigpband_t igpband2[][5]; /* SBAS IGP band 9-10 */
 extern const char *formatstrs[];        /* stream format strings */
@@ -1058,7 +1058,7 @@ extern opt_t sysopts[];                 /* system options table */
 /* satellites, systems, codes functions --------------------------------------*/
 extern int  satno   (int sys, int prn);
 extern int  satsys  (int sat, int *prn);
-extern int  satid2no(const char *id);
+TOOLS_EXPORTS int  satid2no(const char *id);
 extern void satno2id(int sat, char *id);
 extern unsigned char obs2code(const char *obs);
 extern char *code2obs(unsigned char code);
@@ -1208,8 +1208,8 @@ extern int tokyo2jgd(double *pos);
 extern int jgd2tokyo(double *pos);
 
 /* rinex functions -----------------------------------------------------------*/
-extern int crx2rnx(const char* crx);
-extern int raw2rnx(const char* file, const char* ext, char** of);
+TOOLS_EXPORTS int crx2rnx(const char* crx);
+TOOLS_EXPORTS int raw2rnx(const char* file, const char* ext, char** of);
 extern int readrnx (const char *file, int rcv, obs_t *obs, nav_t *nav,
                     sta_t *sta);
 extern int readrnxt(const char *file, int rcv, gtime_t ts, gtime_t te,

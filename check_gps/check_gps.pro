@@ -3,10 +3,11 @@
 # Project created by QtCreator 2013-10-10T17:26:24
 #
 #-------------------------------------------------
-#CONFIG += sharedlib
+CONFIG -= qt
+CONFIG += console
 QT       -= core gui
 TARGET = check_gps
-TEMPLATE = app
+#TEMPLATE = app
 
 win32 {
         LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib"
@@ -30,7 +31,7 @@ macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
 }
 
-DEFINES +=DEMINTERPOLATE_LIBRARY
+DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
 
 SOURCES += \
     check_gps.cpp \
