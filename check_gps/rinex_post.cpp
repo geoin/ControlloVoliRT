@@ -19,7 +19,6 @@
 static gtime_t tstart_={0};         // time start for progress-bar
 static gtime_t tend_  ={0};         // time end for progress-bar
 vGPS* pr;
-//Abort* myabort;
 
 extern "C" {
 
