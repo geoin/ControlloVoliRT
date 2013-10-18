@@ -9,7 +9,7 @@ QT       -= core gui
 TARGET = rtklib
 TEMPLATE = lib
 
-win32:LIBS += -L"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Lib" -lWs2_32 -lwinmm
+win32:LIBS += -L"C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Lib" -lWs2_32 -lwinmm
 
 CONFIG(debug, debug|release) {
         TARGET = $$join(TARGET,,,d)
@@ -22,7 +22,7 @@ macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
 }
 
-DEFINES += RTKLIB_LIBRARY
+DEFINES += DLL_EXPORTS RTKLIB_LIBRARY
 
 SOURCES += \
     ublox.c \
