@@ -47,6 +47,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "exports.h"
 
 /*** define macros ***/
 /* #define CHOP_LF(q,p) p = strchr(q,'\n'); *p = '\0'; */
@@ -105,7 +106,7 @@ int  read_chk_line(char *line);
 int error_exit(int error_no, char *string);
 
 /*---------------------------------------------------------------------*/
-int crx2rnx(const char* crx)
+TOOLS_EXPORTS int crx2rnx(const char* crx)
 {
     static char line[MAXCLM] = "", sat_lst_old[MAXSAT*3];
     static int nsat1 = 0, n;

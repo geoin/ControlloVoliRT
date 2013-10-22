@@ -58,6 +58,41 @@ static char proc_base[64]="";   /* base station for current processing */
 static FILE *fp_rtcm=NULL;      /* rtcm data file pointer */
 static rtcm_t rtcm;             /* rtcm data structure */
 
+// Callback definition
+int (*showmsg)(char *format,...);
+void (*settspan)(gtime_t ts, gtime_t te);
+int (*settime)(gtime_t time);
+void (*resettime)(char* mes) = NULL;
+void (*setread)(double ps) = NULL;
+void (*myCoordPlot)(double* rec, const char* date) = NULL;
+
+TOOLS_EXPORTS void Set_myCoordPlot(void (*mcp)(double* rec, const char* date))
+{
+    myCoordPlot = mcp;
+}
+TOOLS_EXPORTS void Set_showmsg(int (*smsg)(char *format,...))
+{
+    showmsg = smsg;
+}
+TOOLS_EXPORTS void Set_settspan(void (*sspan)(gtime_t ts, gtime_t te))
+{
+    settspan = sspan;
+}
+TOOLS_EXPORTS void Set_settime(int (*stime)(gtime_t time))
+{
+    settime = stime;
+}
+
+TOOLS_EXPORTS void Set_resettime(void (*rstime)(char* mes))
+{
+    resettime = rstime;
+}
+
+TOOLS_EXPORTS void Set_setread(void (*stread)(double ps))
+{
+    setread = stread;
+}
+
 /* show message and check break ----------------------------------------------*/
 static int checkbrk(const char *format, ...)
 {

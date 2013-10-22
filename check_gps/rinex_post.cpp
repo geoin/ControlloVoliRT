@@ -369,17 +369,7 @@ int rinex_post::ExecProc()
     char infile_[5][1024] = {""}, *infile[5], outfile[1024];
     char *p, *q, *r;
     
-    // get processing options
-
-    //if (TimeStart->Checked) ts=GetTime1();
-    //if (TimeEnd  ->Checked) te=GetTime2();
-    //if (TimeIntF ->Checked) ti=str2dbl(TimeInt ->Text);
-    //if (TimeUnitF->Checked) tu=str2dbl(TimeUnit->Text)*3600.0;
-
-	/*if ( !read_options() ) 
-		return 0;*/
-    
-    // set input/output files
+     // set input/output files
     for (int i = 0; i < 5; i++) 
 		infile[i] = infile_[i];
     
@@ -391,7 +381,7 @@ int rinex_post::ExecProc()
 	if ( !_inputFile3.empty() ) {
         strcpy(infile[n++], _inputFile3.c_str());
     } else if ( (_prcopt.navsys & SYS_GPS) && !_obsToNav(_inputFile1.c_str(), infile[n++]) ) {
-        showmsg("error: no gps navigation data");
+        fshowmsg("error: no gps navigation data");
         return 0;
     }
 	if ( !_inputFile31.empty() ) {
@@ -456,13 +446,13 @@ int rinex_post::ExecProc()
             strcpy(r++, " ");
         }
     }
-	showmsg("reading...");
+	fshowmsg("reading...");
     
     // post processing positioning
 	if ( _prcopt.mode == 3 )
 		_prcopt.modear = 3; // per modalità statica
     if ( (stat = postpos(ts, te, ti, tu, &_prcopt, &_solopt, &_filopt, infile, n, outfile, rov, base)) == 1 ) {
-        showmsg("aborted");
+        fshowmsg("aborted");
     }
     delete [] rov;
     delete [] base;
@@ -520,6 +510,18 @@ bool RinexPost(const std::string& rover, const std::string& out, vGPS* data) //,
 
 bool RinexPost(const std::string& rover, const std::string& base, const std::string& out, MBR* mbr, vGPS* data, GPS_OPT* gps) //, Abort* ab)
 {
+	// inizializza le callback
+	//settspan = fsettspan;
+	//settime = fsettime;
+	//resettime = fresettime;
+	//setread = fsetread;
+	Set_myCoordPlot(fmyCoordPlot);
+	Set_showmsg(fshowmsg);
+	Set_settspan(fsettspan);
+	Set_settime(fsettime);
+	Set_resettime(fresettime);
+	Set_setread(fsetread);
+
 	rinex_post rp(PMODE_KINEMA); //(PMODE_SINGLE);
 	rp.set_rover(rover);
 	if ( !base.empty() )

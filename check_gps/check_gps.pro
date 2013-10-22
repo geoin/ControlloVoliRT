@@ -10,6 +10,7 @@ TARGET = check_gps
 #TEMPLATE = app
 
 win32 {
+        QMAKE_CXXFLAGS -= -Zc:wchar_t-
         LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib"
 }
 macx {
@@ -17,7 +18,7 @@ macx {
 }
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoUtild -lrtklibd -lziplibd
+        LIBS += -lPocoFoundationd   -lrtklibd -lziplibd
         TARGET = $$join(TARGET,,,d)
 }
 else {

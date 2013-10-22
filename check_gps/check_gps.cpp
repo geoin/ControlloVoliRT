@@ -151,7 +151,10 @@ int check_gps::main(const std::vector<std::string>& args)
 		//}
 		//logger().information("Application properties:");
 		//printProperties("");
-		_gps.set_out_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/Out");
+		_gps.set_out_folder("""C:/Google_drive/Regione Toscana Tools/Dati_test/Out""");
+		_gps.set_rover_folder("""C:/Google_drive/Regione Toscana Tools/Dati_test/GPS-t/Rinex_aereo""");
+		_gps.set_base_folder("""C:/Google_drive/Regione Toscana Tools/Dati_test/GPS-t/Rinex_stazioni_di_terra""");
+
 		_gps.run();
 	}
 	return Application::EXIT_OK;

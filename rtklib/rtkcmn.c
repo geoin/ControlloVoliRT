@@ -1016,7 +1016,7 @@ extern gtime_t timeadd(gtime_t t, double sec)
 * args   : gtime_t t1,t2    I   gtime_t structs
 * return : time difference (t1-t2) (s)
 *-----------------------------------------------------------------------------*/
-extern double timediff(gtime_t t1, gtime_t t2)
+TOOLS_EXPORTS double timediff(gtime_t t1, gtime_t t2)
 {
     return difftime(t1.time,t2.time)+t1.sec-t2.sec;
 }

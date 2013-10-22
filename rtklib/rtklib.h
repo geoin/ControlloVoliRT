@@ -1037,12 +1037,10 @@ typedef struct {        /* RTK server type */
     lock_t lock;        /* lock flag */
 } rtksvr_t;
 
-void (*myCoordPlot)(double* rec, const char* date);
-
 /* global variables ----------------------------------------------------------*/
 extern const double chisqr[];           /* chi-sqr(n) table (alpha=0.001) */
 extern const double lam[];              /* carrier wave length (m) {L1,L2,...} */
-extern const prcopt_t prcopt_default;   /* default positioning options */
+TOOLS_EXPORTS const prcopt_t prcopt_default;   /* default positioning options */
 TOOLS_EXPORTS const solopt_t solopt_default;   /* default solution output options */
 extern const sbsigpband_t igpband1[][8]; /* SBAS IGP band 0-8 */
 extern const sbsigpband_t igpband2[][5]; /* SBAS IGP band 9-10 */
@@ -1094,7 +1092,7 @@ extern double  time2gst(gtime_t t, int *week);
 extern char    *time_str(gtime_t t, int n);
 
 extern gtime_t timeadd  (gtime_t t, double sec);
-extern double  timediff (gtime_t t1, gtime_t t2);
+TOOLS_EXPORTS double  timediff (gtime_t t1, gtime_t t2);
 extern gtime_t gpst2utc (gtime_t t);
 extern gtime_t utc2gpst (gtime_t t);
 extern gtime_t timeget  (void);
@@ -1202,8 +1200,9 @@ extern int tokyo2jgd(double *pos);
 extern int jgd2tokyo(double *pos);
 
 /* rinex functions -----------------------------------------------------------*/
-TOOLS_EXPORTS int crx2rnx(const char* crx);
+//TOOLS_EXPORTS int crx2rnx(const char* crx);
 TOOLS_EXPORTS int raw2rnx(const char* file, const char* ext, char** of);
+TOOLS_EXPORTS int crx2rnx(const char* crx);
 extern int readrnx (const char *file, int rcv, obs_t *obs, nav_t *nav,
                     sta_t *sta);
 extern int readrnxt(const char *file, int rcv, gtime_t ts, gtime_t te,
@@ -1432,11 +1431,19 @@ extern void rtksvrsstat (rtksvr_t *svr, int *sstat, char *msg);
 //extern int settime(gtime_t time);
 //extern void resettime(char* mes);
 //extern void setread(double ps);
-int (*showmsg)(char *format,...);
-void (*settspan)(gtime_t ts, gtime_t te);
-int (*settime)(gtime_t time);
-void (*resettime)(char* mes);
-void (*setread)(double ps);
+extern int (*showmsg)(char *format,...);
+extern void (*settspan)(gtime_t ts, gtime_t te);
+extern int (*settime)(gtime_t time);
+extern void (*resettime)(char* mes);
+extern void (*setread)(double ps);
+extern void (*myCoordPlot)(double* rec, const char* date);
+
+TOOLS_EXPORTS void Set_myCoordPlot(void (*myCoordPlot)(double* rec, const char* date));
+TOOLS_EXPORTS void Set_showmsg(int (*smsg)(char *format,...));
+TOOLS_EXPORTS void Set_settspan(void (*settspan)(gtime_t ts, gtime_t te));
+TOOLS_EXPORTS void Set_settime(int (*settime)(gtime_t time));
+TOOLS_EXPORTS void Set_resettime(void (*resettime)(char* mes));
+TOOLS_EXPORTS void Set_setread(void (*setread)(double ps));
 
 /* qzss lex functions (optional) ---------------------------------------------*/
 extern int lexupdatecorr(const lexmsg_t *msg, nav_t *nav, gtime_t *tof);
