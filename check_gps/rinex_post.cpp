@@ -84,8 +84,10 @@ void fmyCoordPlot(double* rec, const char* date)
 /********************************************************/
 class rinex_post {
 public:
-	rinex_post(int sol_mode): _prcopt(prcopt_default), _solopt(solopt_default),
+	rinex_post(int sol_mode): /*_prcopt(prcopt_default), _solopt(solopt_default),*/
  		_timeStart_Checked(false), _timeEnd_Checked(false)	{
+		Set_prcopt_default(&_prcopt);
+		Set_solopt_default(&_solopt);
     	_filopt.satantp[0] = '\0';
     	_filopt.rcvantp[0] = '\0';
     	_filopt.stapos[0] = '\0'; 
@@ -223,7 +225,8 @@ int rinex_post::read_options()
 
     _prcopt.eratio[0]= 100.; //im.GetFloatKey("measeratio1", 100.0);
     _prcopt.eratio[1]= 100.; //im.GetFloatKey("measeratio2", 100.0);
-    _prcopt.err[1]   = 0.003; //im.GetFloatKey("measerr2", 0.003);
+    _prcopt.err[0]   = 100.; //???
+	_prcopt.err[1]   = 0.003; //im.GetFloatKey("measerr2", 0.003);
     _prcopt.err[2]   = 0.003; //im.GetFloatKey("measerr3", 0.003);
     _prcopt.err[3]   = 0.; //im.GetFloatKey("measerr4", 0.000);
     _prcopt.err[4]   = 10.; //im.GetFloatKey("measerr5", 10.000);

@@ -92,6 +92,15 @@ TOOLS_EXPORTS void Set_setread(void (*stread)(double ps))
 {
     setread = stread;
 }
+TOOLS_EXPORTS void Set_prcopt_default(prcopt_t* prcopt)
+{
+    *prcopt = prcopt_default;
+}
+
+TOOLS_EXPORTS void Set_solopt_default(solopt_t* solopt)
+{
+    * solopt = solopt_default;
+}
 
 /* show message and check break ----------------------------------------------*/
 static int checkbrk(const char *format, ...)

@@ -7,6 +7,8 @@
 #include "Poco/Path.h"
 #include "ziplib/ziplib.h"
 #include "Poco/String.h"
+#include <spatialite.h>
+#include <sstream>
 
 void gps_exec::set_out_folder(const std::string& nome)
 {
@@ -108,18 +110,48 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 }
 void gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
 {
-	Poco::Path fn(_out_folder, "basi.shp");
+	std::string table("Basi");
+	std::stringstream ss;
+	char *err_msg = NULL;
 
-/*	QgsFieldMap fields;
-	fields[0] = QgsField("NOME", QVariant::String);
-	QgsVectorFileWriter writer(fn.toString().c_str(), "CP1250", fields, QGis::WKBPoint, 0, "ESRI Shapefile");
-	
+	ss << "CREATE TABLE " << table << " (id INTEGER NOT NULL PRIMARY KEY,name TEXT NOT NULL)";
+	int ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return;
+	}
+	ss.seekg(0, std::ios_base::beg);
+	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', 4326, 'POINT', 'XY')";
+	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return;
+	}
+	ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return;
+	}
+
 	for ( size_t i = 0; i < basi.size(); i++) {
-		QgsFeature fet;
-		fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(basi[i].x, basi[i].y)));
-		fet.addAttribute(0, QVariant(vs_base[i].c_str()));
-		writer.addFeature(fet);
-    }*/
+		ss.seekg(0, std::ios_base::beg);
+		ss << "INSERT INTO " << table << " (id, name, geom) VALUES (" << i + 1 << ", '" << vs_base[i] << 
+			"', GeomFromText('POINT(" << basi[i].x << " " << basi[i].y << " " << basi[i].z << ")', 4326))";
+		ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+		if ( ret != SQLITE_OK ) {
+			fprintf (stderr, "Error: %s\n", err_msg);
+			sqlite3_free (err_msg);
+			continue;
+		}
+	}
+	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+	}
 }
 bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std::vector<vGPS*>& vvg, MBR* mbr)
 {
@@ -307,6 +339,9 @@ bool gps_exec::RecordData(const std::string& nome, const std::string& code, vGPS
 
 bool gps_exec::run()
 {
+	//inizializza spatial lite
+	spatialite_init(0);
+
 	// registra i plugin di Qgis
     //QgsProviderRegistry::instance("C:\\OSGeo4W\\apps\\qgis\\plugins");
 
@@ -351,6 +386,21 @@ bool gps_exec::run()
 	}
 	std::vector<vGPS*> vvg;
 
+	int ret = sqlite3_open_v2(_db_name.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
+		sqlite3_close(db_handle);
+		db_handle = NULL;
+		//return -1;
+	}
+
+	char *err_msg = NULL;
+	ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
+		sqlite3_free(err_msg);
+		//return 0;
+	}
 	std::string dis;
 	// attiva il calcolo per ogni vbase
 	for ( size_t i = 0; i < bfl.size(); i++ ) {
@@ -375,6 +425,7 @@ bool gps_exec::run()
 		}
 	}
 	std::string nome = _rover_name;
+
 
 	if ( _single ) {
 		SingleTrack(dis, "gps", vvg, NULL);

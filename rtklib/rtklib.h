@@ -1040,8 +1040,8 @@ typedef struct {        /* RTK server type */
 /* global variables ----------------------------------------------------------*/
 extern const double chisqr[];           /* chi-sqr(n) table (alpha=0.001) */
 extern const double lam[];              /* carrier wave length (m) {L1,L2,...} */
-TOOLS_EXPORTS const prcopt_t prcopt_default;   /* default positioning options */
-TOOLS_EXPORTS const solopt_t solopt_default;   /* default solution output options */
+extern const prcopt_t prcopt_default;   /* default positioning options */
+extern const solopt_t solopt_default;   /* default solution output options */
 extern const sbsigpband_t igpband1[][8]; /* SBAS IGP band 0-8 */
 extern const sbsigpband_t igpband2[][5]; /* SBAS IGP band 9-10 */
 extern const char *formatstrs[];        /* stream format strings */
@@ -1200,7 +1200,6 @@ extern int tokyo2jgd(double *pos);
 extern int jgd2tokyo(double *pos);
 
 /* rinex functions -----------------------------------------------------------*/
-//TOOLS_EXPORTS int crx2rnx(const char* crx);
 TOOLS_EXPORTS int raw2rnx(const char* file, const char* ext, char** of);
 TOOLS_EXPORTS int crx2rnx(const char* crx);
 extern int readrnx (const char *file, int rcv, obs_t *obs, nav_t *nav,
@@ -1426,11 +1425,6 @@ extern int  rtksvrostat (rtksvr_t *svr, int type, gtime_t *time, int *sat,
 extern void rtksvrsstat (rtksvr_t *svr, int *sstat, char *msg);
 
 /* application defined functions ---------------------------------------------*/
-//extern int showmsg(char *format,...);
-//extern void settspan(gtime_t ts, gtime_t te);
-//extern int settime(gtime_t time);
-//extern void resettime(char* mes);
-//extern void setread(double ps);
 extern int (*showmsg)(char *format,...);
 extern void (*settspan)(gtime_t ts, gtime_t te);
 extern int (*settime)(gtime_t time);
@@ -1444,6 +1438,8 @@ TOOLS_EXPORTS void Set_settspan(void (*settspan)(gtime_t ts, gtime_t te));
 TOOLS_EXPORTS void Set_settime(int (*settime)(gtime_t time));
 TOOLS_EXPORTS void Set_resettime(void (*resettime)(char* mes));
 TOOLS_EXPORTS void Set_setread(void (*setread)(double ps));
+TOOLS_EXPORTS void Set_prcopt_default(prcopt_t* prcopt);
+TOOLS_EXPORTS void Set_solopt_default(solopt_t* solopt);
 
 /* qzss lex functions (optional) ---------------------------------------------*/
 extern int lexupdatecorr(const lexmsg_t *msg, nav_t *nav, gtime_t *tof);

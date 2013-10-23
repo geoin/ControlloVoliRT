@@ -146,6 +146,7 @@ const solopt_t solopt_default={ /* defaults solution output options */
     {0.0,0.0},                  /* nmeaintv */
     " ",""                      /* separator/program name */
 };
+
 const char *formatstrs[]={      /* stream format strings */
     "RTCM 2",                   /*  0 */
     "RTCM 3",                   /*  1 */
