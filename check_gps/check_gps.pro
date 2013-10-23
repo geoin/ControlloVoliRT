@@ -18,7 +18,7 @@ macx {
 }
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd   -lrtklibd -lziplibd
+        LIBS += -lPocoFoundationd  -lPocoUtild -lrtklibd -lziplibd
         TARGET = $$join(TARGET,,,d)
 }
 else {

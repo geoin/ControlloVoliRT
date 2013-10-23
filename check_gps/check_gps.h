@@ -3,7 +3,7 @@
 
 #include "gps.h"
 #include "Poco/Util/Application.h"
-
+#include <spatialite/sqlite3.h>
 
 class gps_exec {
 public:
@@ -16,6 +16,7 @@ public:
 	void set_out_folder(const std::string& nome);
 	void set_rover_folder(const std::string& nome);
 	void set_base_folder(const std::string& nome);
+	void set_db_name(const std::string& nome){ _db_name.assign(nome); }
 
 private:
 	std::string _getnome(const std::string& nome, gps_type type);
@@ -33,6 +34,10 @@ private:
 	std::string _rover_folder;
 	std::string _base_folder;
 	std::string _out_folder;
+	std::string _db_name;
+
+	sqlite3 *db_handle;
+	sqlite3_stmt *stmt;
 };
 
 class check_gps: public Poco::Util::Application {
