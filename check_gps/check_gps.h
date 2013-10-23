@@ -14,9 +14,10 @@ public:
 	gps_exec() {}
 	bool run(void);
 	void set_out_folder(const std::string& nome);
-	void set_rover_folder(const std::string& nome);
-	void set_base_folder(const std::string& nome);
+	//void set_rover_folder(const std::string& nome);
+	//void set_base_folder(const std::string& nome);
 	void set_db_name(const std::string& nome){ _db_name.assign(nome); }
+	void set_proj_dir(const std::string& nome){ _proj_dir.assign(nome); }
 
 private:
 	std::string _getnome(const std::string& nome, gps_type type);
@@ -25,16 +26,18 @@ private:
 	bool RecordData(const std::string& nome, const std::string& code, vGPS& vg, MBR* mbr);
 	bool SingleTrack(const std::string& nome, const std::string& code, std::vector<vGPS*>& vvg, MBR* mbr);
 	void _record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base);
+	bool _mission_process(const std::string& folder);
 
 	std::string _rover_name;
 	std::string _sigla_base;
 	std::vector<std::string> _vs_base;
 	GPS_OPT _gps_opt;
 
-	std::string _rover_folder;
-	std::string _base_folder;
+	//std::string _rover_folder;
+	//std::string _base_folder;
 	std::string _out_folder;
 	std::string _db_name;
+	std::string _proj_dir;
 
 	sqlite3 *db_handle;
 	sqlite3_stmt *stmt;
@@ -57,7 +60,8 @@ protected:
 	//gps_exec _gps;
 private:
 	void _handlePrj(const std::string & name, const std::string & value);
-    void _handleConfig(const std::string & name, const std::string & value);
+    void _handleConfigFile(const std::string & name, const std::string & value);
+    void _handleConfigType(const std::string & name, const std::string & value);
 	void _handleHelp(const std::string& name, const std::string& value);
 	bool _helpRequested;
 };
