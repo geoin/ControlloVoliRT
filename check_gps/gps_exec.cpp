@@ -191,7 +191,7 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 				gr.nsat = atoi(tok[1].c_str());
 				gr.pdop = atof(tok[2].c_str());
 				if ( tok.count() >= 5 ) {
-					gr.rms = max(atof(tok[3].c_str()), atof(tok[4].c_str()));
+                    gr.rms = std::max(atof(tok[3].c_str()), atof(tok[4].c_str()));
 				}
 				gr.id_base = (int) l;
 				mmap.insert(std::pair<std::string, GRX>(time, gr));
@@ -249,9 +249,9 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 
             //fet.addAttribute(0, QVariant(gr.data.c_str()));
 			//fpt["DATE"] = gr.data;
-			nsat = max(nsat, gr.nsat);
-			pdop = min(pdop, gr.pdop);
-			rms = max(rms, gr.rms);
+            nsat = std::max(nsat, gr.nsat);
+            pdop = std::min(pdop, gr.pdop);
+            rms = std::max(rms, gr.rms);
 		}
 		if ( d == 0  && _gps_opt.Position_mode != GPS_OPT::Single ) {
 			//cnl.printf("Epoca scartata perché nessuna base");
