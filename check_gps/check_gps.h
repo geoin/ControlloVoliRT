@@ -57,13 +57,8 @@ protected:
 	//gps_exec _gps;
 private:
 	void _handlePrj(const std::string & name, const std::string & value);
-	void _handlerfolder(const std::string & name, const std::string & value);
-	void _handlebfolder(const std::string & name, const std::string & value);
-	void _handleStrip(const std::string & name, const std::string & value);
-	void _handleRif(const std::string & name, const std::string & value);
+    void _handleConfig(const std::string & name, const std::string & value);
 	void _handleHelp(const std::string& name, const std::string& value);
-	void _handleDefine(const std::string& name, const std::string& value);
-	void _handleConfig(const std::string& name, const std::string& value);
 	bool _helpRequested;
 };
 #endif

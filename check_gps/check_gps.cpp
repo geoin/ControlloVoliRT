@@ -23,12 +23,14 @@ using Poco::AutoPtr;
 check_gps::check_gps(): _helpRequested(false) 
 {
 }
+
 void check_gps::initialize(Application& self)
 {
-	loadConfiguration(); // load default configuration files, if present
-	Application::initialize(self);
+    //loadConfiguration(); // load default configuration files, if present
+    Application::initialize(self);
 	// add your own initialization code here
 }
+
 void check_gps::uninitialize()
 {
 	// add your own uninitialization code here
@@ -40,70 +42,47 @@ void check_gps::reinitialize(Application& self)
 	Application::reinitialize(self);
 	// add your own reinitialization code here
 }
+
 void check_gps::defineOptions(OptionSet& options)
 {
 	Application::defineOptions(options);
 
 	options.addOption(
-		Option("help", "h", "mostra le informazioni sui parametri da specificare")
+        Option("help", "h", "mostra le opzioni di linea di comando")
 			.required(false)
 			.repeatable(false)
 			.callback(OptionCallback<check_gps>(this, &check_gps::_handleHelp)));
 
 	options.addOption(
-		Option("prj", "j", "Specifica il file di progetto")
+        Option("prj", "p", "Specifica il file di progetto")
 			.required(false)
 			.repeatable(false)
 			.argument("file di testo")
 			.callback(OptionCallback<check_gps>(this, &check_gps::_handlePrj)));
-	
+		
 	options.addOption(
-		Option("rfolder", "r", "Specifica la crtella con i dati del rover")
-			.required(false)
-			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_gps>(this, &check_gps::_handlerfolder)));
-
-	options.addOption(
-		Option("bfolder", "b", "Specifica la crtella con i dati delle basi")
-			.required(false)
-			.repeatable(false)
-			.argument("cartella")
-			.callback(OptionCallback<check_gps>(this, &check_gps::_handlebfolder)));
-
-	options.addOption(
-		Option("strip", "s", "Specifica il file con gli assi di volo")
-			.required(false)
-			.repeatable(false)
-			.argument("shape file")
-			.callback(OptionCallback<check_gps>(this, &check_gps::_handleStrip)));
-	
-	options.addOption(
-		Option("rif", "i", "Specifica il file con i valori di riferimento")
+        Option("config_file", "c", "Specifica il file con i valori di riferimento")
 			.required(false)
 			.repeatable(false)
 			.argument("file di testo")
-			.callback(OptionCallback<check_gps>(this, &check_gps::_handleRif)));
+            .callback(OptionCallback<check_gps>(this, &check_gps::_handleConfigFile)));
+
+    options.addOption(
+        Option("config_type", "t", "Specifica la tipologa di configurazione")
+            .required(false)
+            .repeatable(false)
+            .argument("file di testo")
+            .callback(OptionCallback<check_gps>(this, &check_gps::_handleConfigType)));
 }
+
 void check_gps::_handlePrj(const std::string & name, const std::string & value)
 {
-	int a = 1;
-}
-void check_gps::_handlerfolder(const std::string & name, const std::string & value)
-{
-	_gps.set_rover_folder(value);
-}
-void check_gps::_handlebfolder(const std::string & name, const std::string & value)
-{
-	_gps.set_base_folder(value);
-}
-void check_gps::_handleStrip(const std::string & name, const std::string & value)
-{
-	int a = 1;
-}
-void check_gps::_handleRif(const std::string & name, const std::string & value)
-{
-	int a = 1;
+    // controllo esistenza direcory
+
+    // esistenza db con lo stesso nome della directory
+
+    // impostare il valore del path al progetto
+    //_proj_dir = ....value
 }
 void check_gps::_handleHelp(const std::string& name, const std::string& value)
 {
@@ -111,14 +90,17 @@ void check_gps::_handleHelp(const std::string& name, const std::string& value)
 	displayHelp();
 	stopOptionsProcessing();
 }
-void check_gps::_handleDefine(const std::string& name, const std::string& value)
-{
-	defineProperty(value);
-}
-void check_gps::_handleConfig(const std::string& name, const std::string& value) 
+
+void check_gps::_handleConfigFile(const std::string& name, const std::string& value)
 {
 	loadConfiguration(value);
 }
+
+void check_gps::_handleConfigType(const std::string& name, const std::string& value)
+{
+    loadConfiguration(value);
+}
+
 void check_gps::displayHelp() 
 {
 	HelpFormatter helpFormatter(options());

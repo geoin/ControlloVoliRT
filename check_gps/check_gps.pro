@@ -17,12 +17,13 @@ macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
 }
 
+LIBS += -lspatialite
 CONFIG(debug, debug|release) {
         LIBS += -lPocoFoundationd  -lPocoUtild -lrtklibd -lziplibd
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoFoundation -lPocoUtil
+        LIBS += -lPocoFoundation -lPocoUtil -lrtklib -lziplib
 }
 
 win32 {
