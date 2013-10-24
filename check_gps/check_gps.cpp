@@ -77,7 +77,7 @@ void check_gps::defineOptions(OptionSet& options)
 
 void check_gps::_handlePrj(const std::string & name, const std::string & value)
 {
-    // controllo esistenza direcory
+    // controllo esistenza directory
 
     // esistenza db con lo stesso nome della directory
 
@@ -93,12 +93,17 @@ void check_gps::_handleHelp(const std::string& name, const std::string& value)
 
 void check_gps::_handleConfigFile(const std::string& name, const std::string& value)
 {
-	loadConfiguration(value);
+    // Controlllo esistenza file
+
+    // Caricamento ed assegnazione del file di configurazione
 }
 
 void check_gps::_handleConfigType(const std::string& name, const std::string& value)
 {
-    loadConfiguration(value);
+    // verifica esistenza della sezione del file di configurazione
+
+    // impostazione del valore della sezione
+    //_config_type = ...
 }
 
 void check_gps::displayHelp() 
