@@ -14,14 +14,14 @@ void gps_exec::set_out_folder(const std::string& nome)
 {
 	_out_folder = nome;
 }
-void gps_exec::set_rover_folder(const std::string& nome)
-{
-	_rover_folder = nome;
-}
-void gps_exec::set_base_folder(const std::string& nome)
-{
-	_base_folder = nome;
-}
+//void gps_exec::set_rover_folder(const std::string& nome)
+//{
+//	_rover_folder = nome;
+//}
+//void gps_exec::set_base_folder(const std::string& nome)
+//{
+//	_base_folder = nome;
+//}
 std::string gps_exec::_getnome(const std::string& nome, gps_type type) 
 {
 	if ( type == rover_type )
@@ -81,16 +81,16 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 			files.push_back(st);
 			continue;
 		}
-		std::vector<std::string> vs;
-		// controlla se il file deve essere convertito da formato raw
-		vs = _rawConv(fn.toString());
-		if ( !vs.empty() ) {
-			for (size_t i = 0; i < vs.size(); i++) {
-				if ( std::find(files.begin(), files.end(), vs[i]) == files.end() )
-					files.push_back(vs[i]);
-			}
-			continue;
-		}
+		//std::vector<std::string> vs;
+		//// controlla se il file deve essere convertito da formato raw
+		//vs = _rawConv(fn.toString());
+		//if ( !vs.empty() ) {
+		//	for (size_t i = 0; i < vs.size(); i++) {
+		//		if ( std::find(files.begin(), files.end(), vs[i]) == files.end() )
+		//			files.push_back(vs[i]);
+		//	}
+		//	continue;
+		//}
 		if ( tolower(ext[2]) == 'o' ) {
 			sst.insert(ext);
 			if ( type == rover_type && _rover_name.empty() ) {
@@ -119,10 +119,11 @@ void gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 	if (ret != SQLITE_OK) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
-		return;
+		//return;
 	}
-	ss.seekg(0, std::ios_base::beg);
-	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', 4326, 'POINT', 'XY')";
+	ss.str("");	ss.clear(); 
+
+	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', 4326, 'POINT', 'XYZ')";
 	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
 	if ( ret != SQLITE_OK ) {
 		fprintf (stderr, "Error: %s\n", err_msg);
@@ -136,10 +137,11 @@ void gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 		return;
 	}
 
+	ss.precision(8);
 	for ( size_t i = 0; i < basi.size(); i++) {
-		ss.seekg(0, std::ios_base::beg);
+		ss.str("");	ss.clear(); 
 		ss << "INSERT INTO " << table << " (id, name, geom) VALUES (" << i + 1 << ", '" << vs_base[i] << 
-			"', GeomFromText('POINT(" << basi[i].x << " " << basi[i].y << " " << basi[i].z << ")', 4326))";
+			"', GeomFromText('POINTZ(" << basi[i].x << " " << basi[i].y << " " << basi[i].z << ")', 4326))";
 		ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
 		if ( ret != SQLITE_OK ) {
 			fprintf (stderr, "Error: %s\n", err_msg);
@@ -223,7 +225,7 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 				gr.nsat = atoi(tok[1].c_str());
 				gr.pdop = atof(tok[2].c_str());
 				if ( tok.count() >= 5 ) {
-                    gr.rms = std::max(atof(tok[3].c_str()), atof(tok[4].c_str()));
+                    gr.rms = max(atof(tok[3].c_str()), atof(tok[4].c_str()));
 				}
 				gr.id_base = (int) l;
 				mmap.insert(std::pair<std::string, GRX>(time, gr));
@@ -234,33 +236,42 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 
 	_record_base_file(basi, _vs_base);
 
-    /*QgsFieldMap fields;
-	fields[0] = QgsField("DATE", QVariant::Date);
-	fields[1] = QgsField("TIME", QVariant::Time);
-	fields[2] = QgsField("NSAT", QVariant::Int);
-	fields[3] = QgsField("PDOP", QVariant::Double);
-	fields[4] = QgsField("NBASI", QVariant::Int);
-    fields[5] = QgsField("RMS", QVariant::Double);*/
+	std::string table("Gps");
+	std::stringstream ss;
+	char *err_msg = NULL;
 
-	Poco::Path fn(_out_folder, "gps.shp");
-    //QgsVectorFileWriter writer(fn.toString().c_str(), "CP1250", fields, QGis::WKBPoint, 0, "ESRI Shapefile");
+	ss << "CREATE TABLE " << table << 
+		" (id INTEGER NOT NULL PRIMARY KEY,DATE TEXT NOT NULL,TIME TEXT NOT NULL,NSAT INTEGER NOT NULL,PDOP FLOAT NOT NULL,NBASI INTEGER NOT NULL,RMS DOUBLE NOT NULL )";
+	int ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		//return;
+	}
+	ss.str("");	ss.clear(); 
+
+	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', 4326, 'POINT', 'XYZ')";
+	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		//return;
+	}
 
 	long count = 0;
 
 	std::set<std::string>::iterator it;
+	long id = 1;
 	for ( it = smap.begin(); it != smap.end(); it++) {
-        //QgsFeature fet;
-
 		std::pair<std::multimap<std::string, GRX>::iterator, std::multimap<std::string, GRX>::iterator> ret;
 		std::multimap<std::string, GRX>::iterator itr;
 		ret = mmap.equal_range(*it);
-		//fpt["TIME"] = *it;
-        //fet.addAttribute(1, QVariant((*it).c_str()));
 
 		double d = 0;
 		int nsat = 0;
 		double pdop = 1000.;
 		double rms = -INF;
+		std::string data;
 		int nb = 0;
 		DPOINT p;
 		for (itr = ret.first; itr != ret.second; ++itr) {
@@ -279,11 +290,10 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 			p.y += gr.pos.y * pi;
 			p.z += gr.pos.z * pi;
 
-            //fet.addAttribute(0, QVariant(gr.data.c_str()));
-			//fpt["DATE"] = gr.data;
-            nsat = std::max(nsat, gr.nsat);
-            pdop = std::min(pdop, gr.pdop);
-            rms = std::max(rms, gr.rms);
+			data = gr.data;
+            nsat = max(nsat, gr.nsat);
+            pdop = min(pdop, gr.pdop);
+            rms = max(rms, gr.rms);
 		}
 		if ( d == 0  && _gps_opt.Position_mode != GPS_OPT::Single ) {
 			//cnl.printf("Epoca scartata perché nessuna base");
@@ -296,13 +306,24 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 		p.y /= d;
 		p.z /= d;
 
-        //fet.addAttribute(2, QVariant(nsat));
-        //fet.addAttribute(3, QVariant(pdop));
-        //fet.addAttribute(4, QVariant(nb));
-        //fet.addAttribute(5, QVariant(rms));
+		ss.str("");	ss.clear(); 
+		ss.precision(8);
+		ss << "INSERT INTO " << table << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, geom) VALUES (" << id++ <<
+			", '" << data << "', '" << (*it).c_str() << "', " << nsat << ", " << pdop << ", " << nb << ", " << rms <<
+			", GeomFromText('POINTZ(" << p.x << " " << p.y << " " << p.z << ")', 4326))";
+		int ret1 = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+		if ( ret1 != SQLITE_OK ) {
+			fprintf (stderr, "Error: %s\n", err_msg);
+			sqlite3_free (err_msg);
+			continue;
+		}
 
-        //fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(p.x, p.y)));
-        //writer.addFeature(fet);
+
+	}
+	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
 	}
 	return true;
 }
@@ -336,44 +357,54 @@ bool gps_exec::RecordData(const std::string& nome, const std::string& code, vGPS
 {
 	return true;
 }
-
 bool gps_exec::run()
 {
 	//inizializza spatial lite
 	spatialite_init(0);
 
-	// registra i plugin di Qgis
-    //QgsProviderRegistry::instance("C:\\OSGeo4W\\apps\\qgis\\plugins");
-
 	// imposta la massima distanza per le basi
 	_gps_opt.max_base_dst = 30000.;
 
-	bool _single = true;
+	Poco::Path fn(_proj_dir);
+	fn.append("rilievo");
 
+	Poco::File dircnt(fn);
+	std::vector<std::string> files;
+	dircnt.list(files);
+	for (size_t i = 0; i < files.size(); i++) {
+		Poco::Path fn(fn.toString(), files[i]);
+		_mission_process(fn.toString());
+	}
+	return true;
+}
+bool gps_exec::_mission_process(const std::string& folder)
+{
 	// cartella dati rover non impostata
-	if ( _rover_folder.empty() )
+	if ( folder.empty() )
 		return false;
 		
+	bool _single = true;
+
 	// nome del file rover da elaborare
-	std::string rover = _getnome(_rover_folder, rover_type);
+	std::string rover = _getnome(folder, rover_type);
 	if ( rover.empty() )
 		return false;
 
-	std::string bas_fld = _base_folder;
+	std::string bas_fld = folder;
 	std::vector<std::string> bfl;
 	if ( !bas_fld.empty() ) {
-		Poco::File dircnt(_base_folder);
+		Poco::File dircnt(folder);
 		std::vector<std::string> files;
 		dircnt.list(files);
 		std::vector<std::string> df;
 		for (size_t i = 0; i < files.size(); i++) {
-			Poco::Path fn(_base_folder, files[i]);
+			Poco::Path fn(folder, files[i]);
 			df.push_back(fn.toString());
 		}
 		// per ogni base prende l'elenco dei files da elaborare
 		bfl.push_back(bas_fld);
 		for (size_t i = 0; i < df.size(); i++) {
-			Poco::Path base = Poco::Path(_base_folder).pushDirectory(df[i]);
+			Poco::Path base = Poco::Path(folder).pushDirectory(df[i]);
 			if ( Poco::File(df[i]).exists() && Poco::File(df[i]).isDirectory() ) {
 				bfl.push_back(df[i]);
 			}
@@ -401,6 +432,14 @@ bool gps_exec::run()
 		sqlite3_free(err_msg);
 		//return 0;
 	}
+	//int rrows;
+ //   ret = load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\assi\\Castiglione_Scarlino",
+	//				   "assi_volo", "cp1252", 32632,
+	//				   "geom", 0,
+	//				   0, 1,
+	//				   1, &rrows,
+	//				   err_msg);
+
 	std::string dis;
 	// attiva il calcolo per ogni vbase
 	for ( size_t i = 0; i < bfl.size(); i++ ) {
@@ -409,7 +448,7 @@ bool gps_exec::run()
 			continue;
 
 		std::string nome = _rover_name + "_" + _sigla_base;
-		Poco::Path out(_rover_folder, nome);
+		Poco::Path out(folder, nome);
 		out.setExtension("txt");
 		//Poco::Path dis(Wrk.VecPath, nome, "gdf");
 		_vs_base.push_back(_sigla_base);
@@ -433,5 +472,6 @@ bool gps_exec::run()
 			delete vvg[i];
 	}
 
+	sqlite3_close (db_handle);
 	return true;
 }
