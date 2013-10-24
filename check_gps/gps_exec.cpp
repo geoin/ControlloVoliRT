@@ -101,6 +101,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 	}
 	if ( sst.size() != 1 )
 		return "";
+
 	Poco::Path fl(nome, "*");
 	fl.setExtension(*sst.begin());
 	return fl.toString();
