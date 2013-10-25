@@ -1,12 +1,29 @@
-/*==============================================================================
-!   Filename:  RINEX_POST.CPP
-!
-!   Contents:	rinex data manager
-!
-!   History:
-!			28/12/2011	created
-!			28/12/2011	updated
-!================================================================================*/
+/* 
+	File: rinex_post.cpp
+	Author:  F.Flamigni
+	Date: 2013 October 22
+	Comment:
+
+	Disclaimer:
+		This file is part of RT_Controllo_Voli.
+
+		Tabula is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Lesser General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
+
+		Tabula is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Lesser General Public License for more details.
+
+		You should have received a copy of the GNU Lesser General Public License
+		along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+		Copyright (C) 2013 Geoin s.r.l.
+
+*/
 #include <stdarg.h>
 #include "gps.h"
 #include "rtklib/rtklib.h"
@@ -32,7 +49,7 @@ int fshowmsg(char *format, ...)
 		va_start(arg, format);
 		vsprintf(buff, format, arg);
 		va_end(arg);
-		//printf("%s\n", buff);
+		fprintf(stderr, "%s\n", buff);
 	}
 	return 0;
 }
@@ -84,7 +101,7 @@ void fmyCoordPlot(double* rec, const char* date)
 /********************************************************/
 class rinex_post {
 public:
-	rinex_post(int sol_mode): /*_prcopt(prcopt_default), _solopt(solopt_default),*/
+	rinex_post(int sol_mode):
  		_timeStart_Checked(false), _timeEnd_Checked(false)	{
 		Set_prcopt_default(&_prcopt);
 		Set_solopt_default(&_solopt);
@@ -196,99 +213,96 @@ int rinex_post::read_options()
     char buff[1024], *p;
     int sat,ex;
 
-	//IniMgr im("C:\\windows\\rtkpostaaa.ini");
-    // processing options
-	//im.SetSection("opt");
-	int PosMode = _prcopt.mode; //im.GetIntKey("posmode", 4);
-    //_prcopt.mode     = PosMode;
-    _prcopt.soltype  = 2;// im.GetIntKey("solution", 2); // 0 forward 1 backward 2 combined
-    _prcopt.nf       = 2; //im.GetIntKey("freq", 1) + 1; // L1 + L2
-    _prcopt.navsys   = SYS_GPS; //im.GetIntKey("navsys", SYS_GPS);
-	_prcopt.elmin    = 15.0 * D2R; //im.GetFloatKey("elmask", 15.0) * D2R;
-    _prcopt.snrmin   = 0.; //im.GetFloatKey("snrmask", 0.0);
-    _prcopt.sateph   = 0; //im.GetIntKey("satephem",  0);
-    _prcopt.modear   = 1; //im.GetIntKey("ambres", 1);
-    _prcopt.glomodear= 1; //im.GetIntKey("gloambres", 1);
-    _prcopt.maxout   = 5; //im.GetIntKey("outcntresetbias", 5);
-    _prcopt.minfix   = 10; //im.GetIntKey("fixcntholdamb", 10);
-    _prcopt.minlock  = 0; //im.GetIntKey("lockcntfixamb",  0);
-    _prcopt.ionoopt  = IONOOPT_BRDC; //im.GetIntKey( "ionoopt", IONOOPT_BRDC);
-    _prcopt.tropopt  = TROPOPT_SAAS; //im.GetIntKey("tropopt", TROPOPT_SAAS);
-    _prcopt.dynamics = 0; //im.GetIntKey("dynamicmodel", 0);
-    _prcopt.tidecorr = 0; //im.GetIntKey("tidecorr", 0);
-    _prcopt.niter    = 1; //im.GetIntKey("numiter", 1);
-    _prcopt.intpref  = 0; //im.GetIntKey("intprefobs", 0);
-    _prcopt.sbassatsel= 0; //im.GetIntKey("sbassat", 0);
+
+	int PosMode = _prcopt.mode; 
+    _prcopt.soltype  = 2; // 0 forward 1 backward 2 combined
+    _prcopt.nf       = 2; // L1 + L2
+    _prcopt.navsys   = SYS_GPS; 
+	_prcopt.elmin    = 15.0 * D2R; 
+    _prcopt.snrmin   = 0.; 
+    _prcopt.sateph   = 0; 
+    _prcopt.modear   = 1; 
+    _prcopt.glomodear= 1; 
+    _prcopt.maxout   = 5; 
+    _prcopt.minfix   = 10;
+    _prcopt.minlock  = 0; 
+    _prcopt.ionoopt  = IONOOPT_BRDC; 
+    _prcopt.tropopt  = TROPOPT_SAAS; 
+    _prcopt.dynamics = 0; 
+    _prcopt.tidecorr = 0; 
+    _prcopt.niter    = 1; 
+    _prcopt.intpref  = 0; 
+    _prcopt.sbassatsel= 0; 
 	
 	_prcopt.xlim[0] = _prcopt.xlim[1] = 0.;
 	_prcopt.ylim[0] = _prcopt.ylim[1] = 0.;
 
-    _prcopt.eratio[0]= 100.; //im.GetFloatKey("measeratio1", 100.0);
-    _prcopt.eratio[1]= 100.; //im.GetFloatKey("measeratio2", 100.0);
-    _prcopt.err[0]   = 100.; //???
-	_prcopt.err[1]   = 0.003; //im.GetFloatKey("measerr2", 0.003);
-    _prcopt.err[2]   = 0.003; //im.GetFloatKey("measerr3", 0.003);
-    _prcopt.err[3]   = 0.; //im.GetFloatKey("measerr4", 0.000);
-    _prcopt.err[4]   = 10.; //im.GetFloatKey("measerr5", 10.000);
-    _prcopt.prn[0]   = 1E-4; //im.GetFloatKey("prnoise1", 1E-4);
-    _prcopt.prn[1]   = 1E-3; //im.GetFloatKey("prnoise2", 1E-3);
-    _prcopt.prn[2]   = 1E-4; //im.GetFloatKey("prnoise3", 1E-4);
-    _prcopt.prn[3]   = 1E+1; //im.GetFloatKey("prnoise4", 1E+1);
-    _prcopt.prn[4]   = 1E+1; //im.GetFloatKey("prnoise5", 1E+1);
-    _prcopt.sclkstab = 5E-12; //im.GetFloatKey("satclkstab", 5E-12);
-    _prcopt.thresar  = 3.; //im.GetFloatKey("validthresar", 3.0);
-    _prcopt.elmaskar = 0. * D2R; //im.GetFloatKey("elmaskar", 0.0) * D2R;
-    _prcopt.elmaskhold= 0. * D2R; //im.GetFloatKey("elmaskhold", 0.0) * D2R;
-    _prcopt.thresslip= 0.05; //im.GetFloatKey("slipthres", 0.05);
-    _prcopt.maxtdiff  = 30.; //im.GetFloatKey("maxagediff", 30.0);
-    _prcopt.maxgdop  = 30.; //im.GetFloatKey("rejectgdop", 30.0);
-    _prcopt.maxinno  = 30.; //im.GetFloatKey("rejectthres", 30.0);
-	int BaseLineConst = 0; //im.GetIntKey("baselineconst", 0);
+    _prcopt.eratio[0]= 100.; 
+    _prcopt.eratio[1]= 100.; 
+    _prcopt.err[0]   = 100.; 
+	_prcopt.err[1]   = 0.003; 
+    _prcopt.err[2]   = 0.003; 
+    _prcopt.err[3]   = 0.; 
+    _prcopt.err[4]   = 10.; 
+    _prcopt.prn[0]   = 1E-4; 
+    _prcopt.prn[1]   = 1E-3; 
+    _prcopt.prn[2]   = 1E-4; 
+    _prcopt.prn[3]   = 1E+1; 
+    _prcopt.prn[4]   = 1E+1; 
+    _prcopt.sclkstab = 5E-12;
+    _prcopt.thresar  = 3.; 
+    _prcopt.elmaskar = 0. * D2R; 
+    _prcopt.elmaskhold= 0. * D2R; 
+    _prcopt.thresslip= 0.05; 
+    _prcopt.maxtdiff  = 30.; 
+    _prcopt.maxgdop  = 30.; 
+    _prcopt.maxinno  = 30.; 
+	int BaseLineConst = 0; 
     if ( BaseLineConst ) {
-        _prcopt.baseline[0] = 0.; //im.GetFloatKey("baselinelen", 0.0);
-        _prcopt.baseline[1] = 0.; //im.GetFloatKey("baselinesig", 0.0);
+        _prcopt.baseline[0] = 0.; 
+        _prcopt.baseline[1] = 0.; 
     } else {
         _prcopt.baseline[0] = 0.0;
         _prcopt.baseline[1] = 0.0;
     }
 
-	int RovPosType = 0; //im.GetIntKey("rovpostype", 0);
+	int RovPosType = 0; 
     if ( PosMode != PMODE_FIXED && PosMode != PMODE_PPP_FIXED ) {
         for (int i = 0; i < 3; i++) 
 			_prcopt.ru[i] = 0.0;
 	} else if ( RovPosType <= 2 ) {
-		_prcopt.ru[0] = 0.; //im.GetFloatKey("rovpos1", 0.0);
-		_prcopt.ru[1] = 0.; //im.GetFloatKey("rovpos2", 0.0);
-		_prcopt.ru[2] = 0.; //im.GetFloatKey("rovpos3", 0.0);
+		_prcopt.ru[0] = 0.; 
+		_prcopt.ru[1] = 0.; 
+		_prcopt.ru[2] = 0.; 
     } else 
 		_prcopt.rovpos = RovPosType - 2; // 1:single,2:posfile,3:rinex
     
-    int RefPosType = 5; //im.GetIntKey("refpostype", 5);
+    int RefPosType = 5; 
 	if ( PosMode == PMODE_SINGLE || PosMode == PMODE_MOVEB ) {
         for (int i = 0; i < 3; i++) 
 			_prcopt.rb[i] = 0.0;
     } else if ( RefPosType <= 2 ) {
-		_prcopt.rb[0] = 0.; //im.GetFloatKey("refpos1", 0.0);
-		_prcopt.rb[1] = 0.; //im.GetFloatKey("refpos2", 0.0);
-		_prcopt.rb[2] = 0.; //im.GetFloatKey("refpos3", 0.0);
+		_prcopt.rb[0] = 0.; 
+		_prcopt.rb[1] = 0.; 
+		_prcopt.rb[2] = 0.; 
     } else 
 		_prcopt.refpos = RefPosType - 2;
     
-	int RovAntPcv = 0; //im.GetIntKey("rovantpcv", 0);
+	int RovAntPcv = 0; 
     if ( RovAntPcv ) {
-        strcpy(_prcopt.anttype[0], ""); //im.GetStrKey("rovant", "").c_str());
-        _prcopt.antdel[0][0] = 0.; //im.GetFloatKey("rovante", 0.0);
-        _prcopt.antdel[0][1] = 0.; //im.GetFloatKey("rovantn", 0.0);
-        _prcopt.antdel[0][2] = 0.; //im.GetFloatKey("rovantu", 0.0);
+        strcpy(_prcopt.anttype[0], ""); 
+        _prcopt.antdel[0][0] = 0.; 
+        _prcopt.antdel[0][1] = 0.; 
+        _prcopt.antdel[0][2] = 0.; 
     }
-	int RefAntPcv = 0; //im.GetIntKey("refantpcv", 0);
+	int RefAntPcv = 0; 
     if ( RefAntPcv ) {
-        strcpy(_prcopt.anttype[1], ""); //im.GetStrKey("refant", "").c_str());
-        _prcopt.antdel[1][0] = 0.; //im.GetFloatKey("refante", 0.0);
-        _prcopt.antdel[1][1] = 0.; //im.GetFloatKey("refantn", 0.0);
-        _prcopt.antdel[1][2] = 0.; //im.GetFloatKey("refantu", 0.0);
+        strcpy(_prcopt.anttype[1], ""); 
+        _prcopt.antdel[1][0] = 0.; 
+        _prcopt.antdel[1][1] = 0.; 
+        _prcopt.antdel[1][2] = 0.; 
     }
-	std::string ExSats = ""; //im.GetStrKey("exsats", "");
+	std::string ExSats = ""; 
 	if ( !ExSats.empty() ) { // excluded satellites
         strcpy(buff, ExSats.c_str());
         for ( p = strtok(buff," "); p; p = strtok(NULL, " ")) {
@@ -303,33 +317,33 @@ int rinex_post::read_options()
         }
     }
     // solution options
-    _solopt.posf     = 0; //im.GetIntKey("solformat", 0);
-	int TimeFormat = 1; //im.GetIntKey("timeformat", 1);
+    _solopt.posf     = 0; 
+	int TimeFormat = 1; 
     _solopt.times    = TimeFormat == 0 ? 0 : TimeFormat/* - 1*/;
     _solopt.timef    = TimeFormat == 0 ? 0 : 1;
-	int TimeDecimal = 3; //im.GetIntKey("timedecimal", 3);
+	int TimeDecimal = 3; 
     _solopt.timeu    = TimeDecimal <= 0 ? 0 : TimeDecimal;
-    _solopt.degf     = 0; //im.GetIntKey("latlonformat", 0);
-    _solopt.outhead  = 1; //im.GetIntKey("outputhead", 1);
-    _solopt.outopt   =1; //im.GetIntKey("outputopt", 1);
-    _solopt.datum    =0; //im.GetIntKey("outputdatum", 0);
-    _solopt.height   =0; //im.GetIntKey("outputheight", 0);
-    _solopt.geoid    =0; //im.GetIntKey("outputgeoid", 0);
-    _solopt.solstatic=0; //im.GetIntKey("solstatic", 0); // per soluzione statica stampa un solo valore
-    _solopt.sstat    =0; //im.GetIntKey("debugstatus", 0);
-    _solopt.trace    =0; //im.GetIntKey("debugtrace", 0);
+    _solopt.degf     = 0; 
+    _solopt.outhead  = 1;
+    _solopt.outopt   =1; 
+    _solopt.datum    =0; 
+    _solopt.height   =0; 
+    _solopt.geoid    =0; 
+    _solopt.solstatic=0;  // per soluzione statica stampa un solo valore
+    _solopt.sstat    =0; 
+    _solopt.trace    =0; 
 
-	std::string FieldSep = ""; //im.GetStrKey("fieldsep", "");
+	std::string FieldSep = ""; 
     strcpy(_solopt.sep, FieldSep != "" ? FieldSep.c_str() : " ");
     sprintf(_solopt.prog, "%s ver.%s", PRGNAME, VER_RTKLIB);
     
     // file options
-	strcpy(_filopt.satantp, ""); //im.GetStrKey("satpcvfile", "").c_str());
-    strcpy(_filopt.rcvantp, ""); //im.GetStrKey("antpcvfile", "").c_str());
-    strcpy(_filopt.stapos, ""); //im.GetStrKey("staposfile", "").c_str());
-    strcpy(_filopt.geoid, ""); //im.GetStrKey("geoiddatafile", "").c_str());
-    strcpy(_filopt.iono, ""); //im.GetStrKey("ionofile", "").c_str());
-    strcpy(_filopt.dcb, ""); //im.GetStrKey("dcbfile", "").c_str());
+	strcpy(_filopt.satantp, ""); 
+    strcpy(_filopt.rcvantp, ""); 
+    strcpy(_filopt.stapos, ""); 
+    strcpy(_filopt.geoid, ""); 
+    strcpy(_filopt.iono, ""); 
+    strcpy(_filopt.dcb, ""); 
     
     return 1;
 }
@@ -396,10 +410,7 @@ int rinex_post::ExecProc()
 	if ( !_inputFile5.empty() ) {
 		strcpy(infile[n++], _inputFile5.c_str());
     }
-	/*if ( _outputFile.empty() ) {
-        showmsg("error: no output file");
-        return 0;
-	}*/
+
     strcpy(outfile, _outputFile.c_str());
     
 	std::string RovList;
@@ -462,43 +473,7 @@ int rinex_post::ExecProc()
     
     return stat;
 }
-/*************************/
-//bool RecordData(const std::string& nome, const std::string& code, std::vector<DPOINT>& dp)
-//{
-//	vConn fd;
-//	fd._cad = new CAD;
-//	fd._cad->InitmVar();
-//	
-//	fd._cad->Cset->SetCod("code");
-//	fd._cad->Cset->SetProven(1);
-//	//fd._cad->Cset->Penna = _fd._cad->Vmap.GetLayerColor("code");
-//
-//	Fname fn1(nome);
-//	fn1.SetNome(code);
-//	fn1.SetExt("gdf");
-//	if ( !fd.CreateGDF(fn1) )
-//		return false;
-//	if ( !fd.OpenGDFw(fn1) )
-//		return false;
-//
-//	/*DDATA dd;
-//	dd.SetCod(code.c_str());
-//	dd.ActCod = 1;
-//	dd.proven = 1;*/
-//	fd._cad->Uid.SetFast();
-//	fd.Unmap();
-//	for (UINT i = 0; i < dp.size(); i++) {
-//		FVDATA fv1;
-//		fv1.Punctual(-1, dp[i].x,  dp[i].y,  dp[i].z);
-//		fd.FeatureCreate(fv1);
-//	}
-//
-//	fd.CloseGDF();
-//
-//	fd._cad->ResetmVar();
-//	delete fd._cad;
-//	return true;
-//}
+
 // elabora posizione senza ref station
 bool RinexPost(const std::string& rover, const std::string& out, vGPS* data) //, Abort* ab)
 {
@@ -514,10 +489,7 @@ bool RinexPost(const std::string& rover, const std::string& out, vGPS* data) //,
 bool RinexPost(const std::string& rover, const std::string& base, const std::string& out, MBR* mbr, vGPS* data, GPS_OPT* gps) //, Abort* ab)
 {
 	// inizializza le callback
-	//settspan = fsettspan;
-	//settime = fsettime;
-	//resettime = fresettime;
-	//setread = fsetread;
+
 	Set_myCoordPlot(fmyCoordPlot);
 	Set_showmsg(fshowmsg);
 	Set_settspan(fsettspan);
@@ -525,7 +497,7 @@ bool RinexPost(const std::string& rover, const std::string& base, const std::str
 	Set_resettime(fresettime);
 	Set_setread(fsetread);
 
-	rinex_post rp(PMODE_KINEMA); //(PMODE_SINGLE);
+	rinex_post rp(PMODE_KINEMA); 
 	rp.set_rover(rover);
 	if ( !base.empty() )
 		rp.set_base(base);
@@ -539,7 +511,6 @@ bool RinexPost(const std::string& rover, const std::string& base, const std::str
 
 	rp.set_lim(mbr);
 	pr = data;
-	//myabort = ab;
 
 	return rp.ExecProc() == 0;
 }

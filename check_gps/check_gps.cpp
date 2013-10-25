@@ -1,4 +1,29 @@
+/* 
+	File: check_gps.cpp
+	Author:  F.Flamigni
+	Date: 2013 October 22
+	Comment:
 
+	Disclaimer:
+		This file is part of RT_Controllo_Voli.
+
+		Tabula is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Lesser General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
+
+		Tabula is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Lesser General Public License for more details.
+
+		You should have received a copy of the GNU Lesser General Public License
+		along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+		Copyright (C) 2013 Geoin s.r.l.
+
+*/
 #include "check_gps.h"
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
@@ -134,12 +159,10 @@ int check_gps::main(const std::vector<std::string>& args)
 		//logger().information("Application properties:");
 		//printProperties("");
 		_gps.set_out_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/Out");
-		//_gps.set_rover_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/GPS-t/Rinex_aereo");
-		//_gps.set_base_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/GPS-t/Rinex_stazioni_di_terra");
-		_gps.set_db_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Rilievo/cast_pescaia.sqlite");
 		_gps.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
 
-		_gps.run();
+		//_gps.run();
+		_gps.data_analyze();
 	}
 	return Application::EXIT_OK;
 }

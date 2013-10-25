@@ -1,11 +1,11 @@
 /*
-    File: feature.h
+    File: exports.h
     Author: F.Flamigni
     Date: 2013 October 17
     Comment:
 
     Disclaimer:
-        This file is part of Tabula.
+        This file is part of RT_Controllo_Voli.
 
         Tabula is free software: you can redistribute it and/or modify
         it under the terms of the GNU Lesser General Public License as published by

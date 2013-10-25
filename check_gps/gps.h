@@ -1,12 +1,29 @@
-/*==============================================================================
-!   Filename:  GPS.H
-!
-!   Contents:	interface for rinex manager
-!
-!   History:
-!			28/12/2011	created
-!			07/12/2012	updated
-!================================================================================*/
+/* 
+	File: gps.h
+	Author:  F.Flamigni
+	Date: 2013 October 22
+	Comment:
+
+	Disclaimer:
+		This file is part of RT_Controllo_Voli.
+
+		Tabula is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Lesser General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
+
+		Tabula is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Lesser General Public License for more details.
+
+		You should have received a copy of the GNU Lesser General Public License
+		along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+		Copyright (C) 2013 Geoin s.r.l.
+
+*/
 #ifndef GPS_H
 #define GPS_H
 
@@ -55,8 +72,8 @@ public:
 	double max_base_dst;
 };
 typedef std::vector<GPS_DATA> vGPS;
-bool RinexPost(const std::string& rover, const std::string& out, vGPS* data);//, Abort* ab = NULL);
-bool RinexPost(const std::string& rover, const std::string& base, const std::string& out, MBR* mbr, vGPS* data, GPS_OPT* gps = NULL);//, Abort* ab = NULL);
+
+bool RinexPost(const std::string& rover, const std::string& base, const std::string& out, MBR* mbr, vGPS* data, GPS_OPT* gps = NULL);
 int Crx2Rnx(const char* crx);
 int Raw2Rnx(const char* crx, const char* ext, std::vector<std::string>& vs);
 

@@ -1,3 +1,29 @@
+/* 
+	File: gps_exec.cpp
+	Author:  F.Flamigni
+	Date: 2013 October 22
+	Comment:
+
+	Disclaimer:
+		This file is part of RT_Controllo_Voli.
+
+		Tabula is free software: you can redistribute it and/or modify
+		it under the terms of the GNU Lesser General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
+
+		Tabula is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU Lesser General Public License for more details.
+
+		You should have received a copy of the GNU Lesser General Public License
+		along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+		Copyright (C) 2013 Geoin s.r.l.
+
+*/
 
 #include "check_gps.h"
 #include <set>
@@ -9,19 +35,18 @@
 #include "Poco/String.h"
 #include <spatialite.h>
 #include <sstream>
+#include <spatialite/gaiageo.h>
+
+#define GPS "GPS"
+#define BASI "Basi"
+#define MISSIONI "missioni"
+#define ASSI_VOLO "assi_volo"
 
 void gps_exec::set_out_folder(const std::string& nome)
 {
 	_out_folder = nome;
 }
-//void gps_exec::set_rover_folder(const std::string& nome)
-//{
-//	_rover_folder = nome;
-//}
-//void gps_exec::set_base_folder(const std::string& nome)
-//{
-//	_base_folder = nome;
-//}
+
 std::string gps_exec::_getnome(const std::string& nome, gps_type type) 
 {
 	if ( type == rover_type )
@@ -108,7 +133,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 	fl.setExtension(*sst.begin());
 	return fl.toString();
 }
-void gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
+bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
 {
 	std::string table("Basi");
 	std::stringstream ss;
@@ -119,7 +144,7 @@ void gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 	if (ret != SQLITE_OK) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
-		//return;
+		return false;
 	}
 	ss.str("");	ss.clear(); 
 
@@ -128,13 +153,13 @@ void gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 	if ( ret != SQLITE_OK ) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
-		return;
+		return false;
 	}
 	ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
 	if ( ret != SQLITE_OK ) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
-		return;
+		return false;
 	}
 
 	ss.precision(8);
@@ -150,12 +175,14 @@ void gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 		}
 	}
 	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
+	if ( ret != SQLITE_OK ) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
+		return false;
 	}
+	return true;
 }
-bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std::vector<vGPS*>& vvg, MBR* mbr)
+bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::SharedPtr<vGPS> >& vvg, MBR* mbr)
 {
 	typedef struct {
 		std::string data;
@@ -240,39 +267,74 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 	std::stringstream ss;
 	char *err_msg = NULL;
 
+	// crea la tabella del GPS
 	ss << "CREATE TABLE " << table << 
-		" (id INTEGER NOT NULL PRIMARY KEY,DATE TEXT NOT NULL,TIME TEXT NOT NULL,NSAT INTEGER NOT NULL,PDOP FLOAT NOT NULL,NBASI INTEGER NOT NULL,RMS DOUBLE NOT NULL )";
+		" (id INTEGER NOT NULL PRIMARY KEY,\
+		DATE TEXT NOT NULL,\
+		TIME TEXT NOT NULL,\
+		NSAT INTEGER NOT NULL,\
+		PDOP FLOAT NOT NULL,\
+		NBASI INTEGER NOT NULL,\
+		RMS DOUBLE NOT NULL,\
+		MISSION TEXT NOT NULL )";
 	int ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
 	if (ret != SQLITE_OK) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
-		//return;
+		return false;
 	}
-	ss.str("");	ss.clear(); 
 
+	// aggiunge la colonna geometrica
+	ss.str("");	ss.clear(); 
 	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', 4326, 'POINT', 'XYZ')";
 	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
 	if ( ret != SQLITE_OK ) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
-		//return;
+		return false;
 	}
 
-	long count = 0;
+	ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
+	}
+
+	ss.str("");	ss.clear(); 
+	ss << "INSERT INTO " << table << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION, geom) \
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	ret = sqlite3_prepare_v2 (db_handle, ss.str().c_str(), ss.str().size(), &stmt, NULL);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
+	}
+
+	int nsat;
+	double pdop;
+	double rms;
+	std::string data;
+	std::string time;
+	int nbasi;
+	long id = 1;
+
+	int blob_size;
 
 	std::set<std::string>::iterator it;
-	long id = 1;
 	for ( it = smap.begin(); it != smap.end(); it++) {
 		std::pair<std::multimap<std::string, GRX>::iterator, std::multimap<std::string, GRX>::iterator> ret;
 		std::multimap<std::string, GRX>::iterator itr;
 		ret = mmap.equal_range(*it);
+		time = *it;
 
 		double d = 0;
-		int nsat = 0;
-		double pdop = 1000.;
-		double rms = -INF;
-		std::string data;
-		int nb = 0;
+		nsat = 0;
+		pdop = 1000.;
+		rms = -INF;
+		nbasi = 0;
+
 		DPOINT p;
 		for (itr = ret.first; itr != ret.second; ++itr) {
 			GRX gr = (*itr).second;
@@ -284,7 +346,7 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 			if ( gr.dist != 0 )
 				pi = 1. / gr.dist;
 			d += pi;
-			nb++;
+			nbasi++;
 
 			p.x += gr.pos.x * pi;
 			p.y += gr.pos.y * pi;
@@ -299,27 +361,45 @@ bool gps_exec::SingleTrack(const std::string& nome, const std::string& code, std
 			//cnl.printf("Epoca scartata perché nessuna base");
 			continue;
 		}
-		if ( _gps_opt.Position_mode == GPS_OPT::Single)
-			nb = 0;
 
 		p.x /= d;
 		p.y /= d;
 		p.z /= d;
 
-		ss.str("");	ss.clear(); 
-		ss.precision(8);
-		ss << "INSERT INTO " << table << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, geom) VALUES (" << id++ <<
-			", '" << data << "', '" << (*it).c_str() << "', " << nsat << ", " << pdop << ", " << nb << ", " << rms <<
-			", GeomFromText('POINTZ(" << p.x << " " << p.y << " " << p.z << ")', 4326))";
-		int ret1 = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-		if ( ret1 != SQLITE_OK ) {
-			fprintf (stderr, "Error: %s\n", err_msg);
-			sqlite3_free (err_msg);
-			continue;
-		}
+		sqlite3_reset(stmt);
+		sqlite3_clear_bindings(stmt);
 
+		gaiaGeomCollPtr geo = gaiaAllocGeomColl ();
+		geo->Srid = 4326;
+		geo->DimensionModel  = GAIA_XY_Z;
+		geo->DeclaredType = GAIA_POINTZ;
+		gaiaAddPointToGeomCollXYZ(geo, p.x, p.y, p.z);
+		unsigned char *blob;
+		gaiaToSpatiaLiteBlobWkb(geo, &blob, &blob_size);
 
+		// we can now destroy the geometry object
+		gaiaFreeGeomColl (geo);
+
+		// binding parameters to Prepared Statement
+		sqlite3_bind_int(stmt, 1, id++);
+		sqlite3_bind_text(stmt, 2, data.c_str(), data.size(), SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 3, time.c_str(), time.size(), SQLITE_STATIC);
+		sqlite3_bind_int(stmt, 4, nsat);
+		sqlite3_bind_double(stmt, 5, pdop);
+		sqlite3_bind_int(stmt, 6, nbasi);
+		sqlite3_bind_double(stmt, 7, rms);
+		sqlite3_bind_text(stmt, 8, mission.c_str(), mission.size(), SQLITE_STATIC);
+		sqlite3_bind_blob (stmt, 9, blob, blob_size, SQLITE_STATIC);
+		
+		int retv = sqlite3_step(stmt);
+		if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
+		      printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
+		      sqlite3_finalize (stmt);
+		      break;
+		  }
+		gaiaFree(blob);
 	}
+	sqlite3_finalize(stmt);
 	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
 	if (ret != SQLITE_OK) {
 		fprintf (stderr, "Error: %s\n", err_msg);
@@ -353,27 +433,79 @@ std::string gps_exec::_hathanaka(const std::string& nome)
 	}
 	return std::string("");
 }
-bool gps_exec::RecordData(const std::string& nome, const std::string& code, vGPS& vg, MBR* mbr)
+bool gps_exec::_init()
 {
+	try {
+		//inizializza spatial lite
+		spatialite_init(0);
+
+		// costruisce il nome dl db
+		std::string db_name  = Poco::Path(_proj_dir).getBaseName();
+		Poco::Path db_path(_proj_dir, db_name);
+		db_path.setExtension("sqlite");
+		 
+		// connette il db sqlite
+		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+		if ( ret != SQLITE_OK ) {
+			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
+			sqlite3_close(db_handle);
+			db_handle = NULL;
+			return false;
+		}
+		
+		// inizializza i metadati spaziali
+		char *err_msg = NULL;
+		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
+		if (ret != SQLITE_OK) {
+			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
+			sqlite3_free(err_msg);
+			return false;
+		}
+	} catch (Poco::Exception& e) {
+		fprintf(stderr, "Error: %s\n", e.what());
+		return false;
+	}
 	return true;
 }
 bool gps_exec::run()
 {
-	//inizializza spatial lite
-	spatialite_init(0);
+	try {
+		if ( !_init() )
+			return false;
+		// cancella la tabella del gps
+		char *err_msg = NULL;
+		std::stringstream ss;
+		ss << "DROP TABLE " << GPS;
+		sqlite3_exec(db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
 
-	// imposta la massima distanza per le basi
-	_gps_opt.max_base_dst = 30000.;
+		// cancella la tabella delle basi
+		std::stringstream ss1;
+		ss1 << "DROP TABLE " << BASI;
+		sqlite3_exec(db_handle, ss1.str().c_str(), NULL, NULL, &err_msg);
+		
+		// imposta la massima distanza per le basi
+		_gps_opt.max_base_dst = 30000.;
 
-	Poco::Path fn(_proj_dir);
-	fn.append("rilievo");
+		Poco::Path fn(_proj_dir);
+		fn.append(MISSIONI);
 
-	Poco::File dircnt(fn);
-	std::vector<std::string> files;
-	dircnt.list(files);
-	for (size_t i = 0; i < files.size(); i++) {
-		Poco::Path fn(fn.toString(), files[i]);
-		_mission_process(fn.toString());
+		// ogni cartella presente corrisponde ad una missione
+		Poco::File dircnt(fn);
+		std::vector<std::string> files;
+		dircnt.list(files);
+		for (size_t i = 0; i < files.size(); i++) {
+			Poco::Path fn(fn.toString(), files[i]);
+			Poco::File fl(fn);
+			if ( fl.isDirectory() )
+				_mission_process(fn.toString());
+		}
+
+		// chiude la connessione sqlite
+		sqlite3_close (db_handle);
+	} 
+	catch (...) {
+		fprintf (stderr, "Exception catched\n");
+		return false;
 	}
 	return true;
 }
@@ -383,95 +515,295 @@ bool gps_exec::_mission_process(const std::string& folder)
 	if ( folder.empty() )
 		return false;
 		
-	bool _single = true;
-
 	// nome del file rover da elaborare
 	std::string rover = _getnome(folder, rover_type);
 	if ( rover.empty() )
 		return false;
 
-	std::string bas_fld = folder;
+	// determina le basi da processare
 	std::vector<std::string> bfl;
-	if ( !bas_fld.empty() ) {
-		Poco::File dircnt(folder);
-		std::vector<std::string> files;
-		dircnt.list(files);
-		std::vector<std::string> df;
-		for (size_t i = 0; i < files.size(); i++) {
-			Poco::Path fn(folder, files[i]);
-			df.push_back(fn.toString());
-		}
-		// per ogni base prende l'elenco dei files da elaborare
-		bfl.push_back(bas_fld);
-		for (size_t i = 0; i < df.size(); i++) {
-			Poco::Path base = Poco::Path(folder).pushDirectory(df[i]);
-			if ( Poco::File(df[i]).exists() && Poco::File(df[i]).isDirectory() ) {
-				bfl.push_back(df[i]);
-			}
-		}
-	} else {
-		// se base_folder è vuota si può fare il calcolo solo in modalità single
-		if ( _gps_opt.Position_mode != GPS_OPT::Single )
-			return false;
-		bfl.push_back("X");
-	}
-	std::vector<vGPS*> vvg;
+	Poco::File dircnt(folder);
+	std::vector<std::string> files;
+	dircnt.list(files);
 
-	int ret = sqlite3_open_v2(_db_name.c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
-		sqlite3_close(db_handle);
-		db_handle = NULL;
-		//return -1;
+	for (size_t i = 0; i < files.size(); i++) {
+		Poco::Path fn(folder, files[i]);
+		Poco::File fl(fn);
+		if ( fl.isDirectory() )
+			bfl.push_back(fn.toString());
 	}
 
-	char *err_msg = NULL;
-	ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
-		fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
-		sqlite3_free(err_msg);
-		//return 0;
-	}
-	//int rrows;
- //   ret = load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\assi\\Castiglione_Scarlino",
-	//				   "assi_volo", "cp1252", 32632,
-	//				   "geom", 0,
-	//				   0, 1,
-	//				   1, &rrows,
-	//				   err_msg);
+	std::vector< Poco::SharedPtr<vGPS> > vvg;
 
-	std::string dis;
+	int rrows;
+	char* err_msg = NULL;
+    load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\assi\\Castiglione_Scarlino",
+					   ASSI_VOLO, "cp1252", 32632,
+					   "geom", 0,
+					   0, 1,
+					   1, &rrows,
+					   err_msg);
+	sqlite3_free(err_msg);
+
 	// attiva il calcolo per ogni vbase
 	for ( size_t i = 0; i < bfl.size(); i++ ) {
 		std::string base = _getnome(bfl[i], base_type);
-		if ( base.empty() && _gps_opt.Position_mode != GPS_OPT::Single )
+		if ( base.empty() )
 			continue;
 
 		std::string nome = _rover_name + "_" + _sigla_base;
 		Poco::Path out(folder, nome);
 		out.setExtension("txt");
-		//Poco::Path dis(Wrk.VecPath, nome, "gdf");
 		_vs_base.push_back(_sigla_base);
 
-		vGPS* vg = new vGPS;
-		if ( RinexPost(rover, base, out.toString(), NULL, vg, &_gps_opt) ) {
-			if ( _single )
-				vvg.push_back(vg);
-			else {
-				RecordData(dis, "gps", *vg, NULL);
-				delete vg;
+		fprintf (stderr, "Elaborazione %s\n", _sigla_base.c_str());
+
+		Poco::SharedPtr<vGPS> vg(new vGPS);
+		if ( RinexPost(rover, base, out.toString(), NULL, vg, &_gps_opt) )
+			vvg.push_back(vg);
+	}
+
+	fprintf (stderr, "Registrazione dati \n", _sigla_base);
+	std::string mission = Poco::Path(folder).getBaseName();
+	_single_track(mission, vvg, NULL);
+
+	return true;
+}
+void gps_exec::data_analyze()
+{
+	if ( !_init() )
+		return;
+
+	char *err_msg = NULL;
+	int ret;
+
+	// modifica la tabella degli assi di volo aggiungendo i campi relativi ai parametri oggetto di verifica
+	try {
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN DATE TEXT", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN TIME TEXT", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN MISSION TEXT", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN SUN_HL DOUBLE", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN NBASI INTEGER", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN NSAT INTEGER", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN PDOP DOUBLE", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN RMS DOUBLE", NULL, NULL, &err_msg) != SQLITE_OK )
+			throw std::runtime_error(err_msg);
+	} catch (std::runtime_error& e) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free(err_msg);
+	}
+	int a = 1;
+
+	foo(ASSI_VOLO);
+	return;
+
+	// rilegge il tema degli assi di volo 
+	//std::stringstream ss;
+	//ss << "SELECT NR, geom FROM " << ASSI_VOLO;
+	//int rows, columns;
+	//char **results;
+	//ret = sqlite3_get_table (db_handle, ss.str().c_str(), &results, &rows, &columns, &err_msg);
+	//if ( ret != SQLITE_OK ) {
+	//	fprintf (stderr, "Error: %s\n", err_msg);
+	//	sqlite3_free (err_msg);
+	//	return;
+	//}
+	//if ( rows < 1 ) {
+	//	fprintf (stderr, "Unexpected error: ZERO POINTs found ??????\n");
+	//	return;
+	//} else {
+	//	std::string str;
+	//	gaiaGeomCollPtr* geo;
+	//	for (int i = 1; i <= rows; i++) {
+	//		str = results[(i * columns) + 0];
+	//		geo = gaiaFromSpatiaLiteBlobWkb (results[(i * columns) + 1],
+	//						       unsigned int
+	//						       size);
+	//	}
+	//}
+	//sqlite3_free_table (results);
+
+}
+
+class feature {
+public:
+	gaiaGeomCollPtr geom;
+	std::vector<std::string> attributes;
+};
+class splite_query {
+public:
+	splite_query(): _db_handle(NULL), _stmt(NULL) {}
+	splite_query(sqlite3* db): _db_handle(db), _stmt(NULL) {}
+	bool prepare(const std::string& query) {
+		int ret = sqlite3_prepare_v2(_db_handle, query.c_str(), query.size(), &_stmt, NULL);
+		if ( ret != SQLITE_OK )
+			return false;
+		_n_columns = sqlite3_column_count(_stmt);
+	}
+	bool get_next(feature& f) {
+		int ret = sqlite3_step(_stmt);
+		if ( ret == SQLITE_DONE ) {
+			// there are no more rows to fetch - we can stop looping
+		      return false;
+		}
+		if ( ret == SQLITE_ROW ) {
+			for (int ic = 0; ic < _n_columns; ic++) {
+				if ( sqlite3_column_type(_stmt, ic) == SQLITE_BLOB ) {
+					const void* blob = sqlite3_column_blob(_stmt, ic);
+					int blob_size = sqlite3_column_bytes(_stmt, ic);
+					// checking if this BLOB actually is a GEOMETRY
+					gaiaGeomCollPtr geom = gaiaFromSpatiaLiteBlobWkb((unsigned char*) blob, blob_size);
+					//gaiaFree((void*) blob);
+					if ( geom )
+						f.geom = geom;
+				} else {
+					std::string st = (char*) sqlite3_column_text(_stmt, ic);
+					f.attributes.push_back(st);
+				}
 			}
 		}
 	}
-	std::string nome = _rover_name;
+	void close(void)  {
+		if ( _stmt != NULL )
+			sqlite3_finalize(_stmt);
+		_stmt = NULL;
+	}
+private:
+	sqlite3* _db_handle;
+	sqlite3_stmt* _stmt;
+	int _n_columns;
+};
 
+void gps_exec::foo(const std::string& table)
+{
+	std::stringstream ss;
+	ss << "SELECT * FROM " << table;
 
-	if ( _single ) {
-		SingleTrack(dis, "gps", vvg, NULL);
-		for ( size_t i = 0; i < vvg.size(); i++)
-			delete vvg[i];
+	std::vector<feature> ft;
+	splite_query sq(db_handle);
+	sq.prepare(ss.str());
+
+	feature f;
+	while ( sq.get_next(f) )
+		ft.push_back(f);
+	sq.close();
+
+/*
+
+	int ret = sqlite3_prepare_v2(db_handle, ss.str().c_str(), ss.str().size(), &stmt, NULL);
+	if ( ret != SQLITE_OK ) {
+		// some error occurred
+		printf ("SQL error: %s\n", sqlite3_errmsg (db_handle));
+		return;
 	}
 
-	sqlite3_close (db_handle);
-	return true;
+	// we'll now save the #columns within the result set
+	int n_columns = sqlite3_column_count(stmt);
+	int row_no = 0;
+	const void *blob;
+	int blob_size;
+	int geom_type;
+	gaiaGeomCollPtr geom;
+	double measure;
+
+	while ( 1 ) {
+		// this is an infinite loop, intended to fetch any row
+		// we are now trying to fetch the next available row
+		ret = sqlite3_step(stmt);
+		if ( ret == SQLITE_DONE ) {
+			// there are no more rows to fetch - we can stop looping
+		      break;
+		}
+		if ( ret == SQLITE_ROW ) {
+			// ok, we've just fetched a valid row to process
+			row_no++;
+			printf ("row #%d\n", row_no);
+			for (int ic = 0; ic < n_columns; ic++) {
+	
+				printf ("\t%-10s = ", sqlite3_column_name(stmt, ic));
+				switch (sqlite3_column_type (stmt, ic)) {
+				case SQLITE_NULL:
+					printf ("NULL");
+					break;
+				case SQLITE_INTEGER:
+					printf ("%d", sqlite3_column_int (stmt, ic));
+					break;
+				case SQLITE_FLOAT:
+					printf ("%1.4f",
+					sqlite3_column_double (stmt, ic));
+					break;
+				case SQLITE_TEXT:
+					printf ("'%s'",
+					sqlite3_column_text (stmt, ic));
+					break;
+				case SQLITE_BLOB:
+					blob = sqlite3_column_blob (stmt, ic);
+					blob_size = sqlite3_column_bytes (stmt, ic);
+					// checking if this BLOB actually is a GEOMETRY
+					geom = gaiaFromSpatiaLiteBlobWkb((unsigned char*) blob, blob_size);
+					gaiaFree(blob);
+					if ( !geom ) {
+						// for sure this one is not a GEOMETRY
+						printf ("BLOB [%d bytes]", blob_size);
+					} else {
+						geom_type = gaiaGeometryType (geom);
+						if ( geom_type == GAIA_UNKNOWN )
+							printf ("EMPTY or NULL GEOMETRY");
+						else {
+							char *geom_name;
+							if (geom_type == GAIA_POINT)
+								geom_name = "POINT";
+							if (geom_type == GAIA_LINESTRING)
+								geom_name = "LINESTRING";
+							if (geom_type == GAIA_POLYGON)
+								geom_name = "POLYGON";
+							if (geom_type == GAIA_MULTIPOINT)
+								geom_name = "MULTIPOINT";
+							if (geom_type == GAIA_MULTILINESTRING)
+								geom_name = "MULTILINESTRING";
+							if (geom_type == GAIA_MULTIPOLYGON)
+								geom_name = "MULTIPOLYGON";
+							if (geom_type == GAIA_GEOMETRYCOLLECTION)
+								geom_name = "GEOMETRYCOLLECTION";
+							printf ("%s SRID=%d", geom_name, geom->Srid);
+							if ( geom_type == GAIA_LINESTRING || geom_type == GAIA_MULTILINESTRING) {
+								gaiaGeomCollLength (geom, &measure);
+								printf (" length=%1.2f", measure);
+							}
+							if (geom_type == GAIA_POLYGON || geom_type == GAIA_MULTIPOLYGON ) {
+								gaiaGeomCollArea (geom, &measure);
+								printf (" area=%1.2f", measure);
+							}
+						}
+						// we have now to free the GEOMETRY
+						gaiaFreeGeomColl (geom);
+					}
+					break;
+				}
+					printf ("\n");
+			}
+
+			if ( row_no >= 5 ) {
+				// we'll exit the loop after the first 5 rows - this is only a demo :-)
+			    break;
+			}
+		} else {
+			// some unexpected error occurred
+				printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
+				sqlite3_finalize (stmt);
+				return;
+		}
+	}
+	// we have now to finalize the query [memory cleanup]
+	  sqlite3_finalize(stmt);
+	  printf ("\n\n");
+	  */
 }
