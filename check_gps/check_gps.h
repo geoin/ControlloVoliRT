@@ -29,7 +29,7 @@
 
 #include "gps.h"
 #include "Poco/Util/Application.h"
-#include <spatialite/sqlite3.h>
+#include <spatialite/sqlite.h>
 
 class gps_exec {
 public:

@@ -31,11 +31,14 @@
 #include "Poco/stringtokenizer.h"
 #include "Poco/File.h"
 #include "Poco/Path.h"
+#include "Poco/DateTime.h"
+#include "Poco/DateTimeParser.h"
 #include "ziplib/ziplib.h"
 #include "Poco/String.h"
 #include <spatialite.h>
 #include <sstream>
 #include <spatialite/gaiageo.h>
+#include "photo_util/sun.h"
 
 #define GPS "GPS"
 #define BASI "Basi"
@@ -575,7 +578,6 @@ void gps_exec::data_analyze()
 		return;
 
 	char *err_msg = NULL;
-	int ret;
 
 	// modifica la tabella degli assi di volo aggiungendo i campi relativi ai parametri oggetto di verifica
 	try {
@@ -600,43 +602,31 @@ void gps_exec::data_analyze()
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free(err_msg);
 	}
-	int a = 1;
 
 	foo(ASSI_VOLO);
 	return;
-
-	// rilegge il tema degli assi di volo 
-	//std::stringstream ss;
-	//ss << "SELECT NR, geom FROM " << ASSI_VOLO;
-	//int rows, columns;
-	//char **results;
-	//ret = sqlite3_get_table (db_handle, ss.str().c_str(), &results, &rows, &columns, &err_msg);
-	//if ( ret != SQLITE_OK ) {
-	//	fprintf (stderr, "Error: %s\n", err_msg);
-	//	sqlite3_free (err_msg);
-	//	return;
-	//}
-	//if ( rows < 1 ) {
-	//	fprintf (stderr, "Unexpected error: ZERO POINTs found ??????\n");
-	//	return;
-	//} else {
-	//	std::string str;
-	//	gaiaGeomCollPtr* geo;
-	//	for (int i = 1; i <= rows; i++) {
-	//		str = results[(i * columns) + 0];
-	//		geo = gaiaFromSpatiaLiteBlobWkb (results[(i * columns) + 1],
-	//						       unsigned int
-	//						       size);
-	//	}
-	//}
-	//sqlite3_free_table (results);
-
 }
-
+//class attribute {
+//public:
+//	attribute() {}
+//	attribute(const std::string& n, const std::string& v): nome(n), val(v) {}
+//	std::string nome;
+//	std::string val;
+//};
 class feature {
 public:
+	std::string operator[](const std::string& nome) {
+		std::string s("");
+		if ( attributes.find(nome) == attributes.end() )
+			return s;
+		s = attributes[nome];
+		return s;
+	}
 	gaiaGeomCollPtr geom;
-	std::vector<std::string> attributes;
+	std::map<std::string, std::string> attributes;
+	void clear(void) {
+		attributes.clear();
+	}
 };
 class splite_query {
 public:
@@ -647,8 +637,10 @@ public:
 		if ( ret != SQLITE_OK )
 			return false;
 		_n_columns = sqlite3_column_count(_stmt);
+		return true;
 	}
 	bool get_next(feature& f) {
+		f.clear();
 		int ret = sqlite3_step(_stmt);
 		if ( ret == SQLITE_DONE ) {
 			// there are no more rows to fetch - we can stop looping
@@ -656,7 +648,9 @@ public:
 		}
 		if ( ret == SQLITE_ROW ) {
 			for (int ic = 0; ic < _n_columns; ic++) {
-				if ( sqlite3_column_type(_stmt, ic) == SQLITE_BLOB ) {
+				std::string nome = (char*) sqlite3_column_name(_stmt, ic);
+				switch ( sqlite3_column_type(_stmt, ic) ) {
+				case SQLITE_BLOB: {
 					const void* blob = sqlite3_column_blob(_stmt, ic);
 					int blob_size = sqlite3_column_bytes(_stmt, ic);
 					// checking if this BLOB actually is a GEOMETRY
@@ -664,12 +658,32 @@ public:
 					//gaiaFree((void*) blob);
 					if ( geom )
 						f.geom = geom;
-				} else {
-					std::string st = (char*) sqlite3_column_text(_stmt, ic);
-					f.attributes.push_back(st);
+					break;
+				} 
+				case SQLITE_TEXT: {
+					std::string val = (char*) sqlite3_column_text(_stmt, ic);
+					f.attributes[nome] = val;
+					break;
+				}
+				case SQLITE_FLOAT: {
+					double val = sqlite3_column_double(_stmt, ic);
+					std::stringstream ss;
+					ss.precision(5);
+					ss << val;
+					f.attributes[nome] = ss.str();
+					break;
+				}
+				case SQLITE_INTEGER: {
+					int val = sqlite3_column_int(_stmt, ic);
+					std::stringstream ss;
+					ss << val;
+					f.attributes[nome] = ss.str();
+					break;
+				}
 				}
 			}
 		}
+		return true;
 	}
 	void close(void)  {
 		if ( _stmt != NULL )
@@ -684,126 +698,75 @@ private:
 
 void gps_exec::foo(const std::string& table)
 {
-	std::stringstream ss;
-	ss << "SELECT * FROM " << table;
+	std::string ss = "SELECT a.nr as p1, b.*, min(st_Distance(st_PointN(ST_Transform(a.geom, 4326), ?), b.geom)) \
+	from  assi_volo a, gps b \
+	group by p1";
+	size_t q = ss.find('?');
 
-	std::vector<feature> ft;
 	splite_query sq(db_handle);
-	sq.prepare(ss.str());
+
+	ss.at(q) = '1';
+	if ( !sq.prepare(ss) )
+		return;
 
 	feature f;
+
+	std::vector<feature> ft1;
 	while ( sq.get_next(f) )
-		ft.push_back(f);
+		ft1.push_back(f);
 	sq.close();
 
-/*
-
-	int ret = sqlite3_prepare_v2(db_handle, ss.str().c_str(), ss.str().size(), &stmt, NULL);
-	if ( ret != SQLITE_OK ) {
-		// some error occurred
-		printf ("SQL error: %s\n", sqlite3_errmsg (db_handle));
+	ss.at(q) = '2';
+	if ( !sq.prepare(ss) )
 		return;
-	}
 
-	// we'll now save the #columns within the result set
-	int n_columns = sqlite3_column_count(stmt);
-	int row_no = 0;
-	const void *blob;
-	int blob_size;
-	int geom_type;
-	gaiaGeomCollPtr geom;
-	double measure;
+	std::vector<feature> ft2;
+	while ( sq.get_next(f) )
+		ft2.push_back(f);
+	sq.close();
 
-	while ( 1 ) {
-		// this is an infinite loop, intended to fetch any row
-		// we are now trying to fetch the next available row
-		ret = sqlite3_step(stmt);
-		if ( ret == SQLITE_DONE ) {
-			// there are no more rows to fetch - we can stop looping
-		      break;
-		}
-		if ( ret == SQLITE_ROW ) {
-			// ok, we've just fetched a valid row to process
-			row_no++;
-			printf ("row #%d\n", row_no);
-			for (int ic = 0; ic < n_columns; ic++) {
-	
-				printf ("\t%-10s = ", sqlite3_column_name(stmt, ic));
-				switch (sqlite3_column_type (stmt, ic)) {
-				case SQLITE_NULL:
-					printf ("NULL");
-					break;
-				case SQLITE_INTEGER:
-					printf ("%d", sqlite3_column_int (stmt, ic));
-					break;
-				case SQLITE_FLOAT:
-					printf ("%1.4f",
-					sqlite3_column_double (stmt, ic));
-					break;
-				case SQLITE_TEXT:
-					printf ("'%s'",
-					sqlite3_column_text (stmt, ic));
-					break;
-				case SQLITE_BLOB:
-					blob = sqlite3_column_blob (stmt, ic);
-					blob_size = sqlite3_column_bytes (stmt, ic);
-					// checking if this BLOB actually is a GEOMETRY
-					geom = gaiaFromSpatiaLiteBlobWkb((unsigned char*) blob, blob_size);
-					gaiaFree(blob);
-					if ( !geom ) {
-						// for sure this one is not a GEOMETRY
-						printf ("BLOB [%d bytes]", blob_size);
-					} else {
-						geom_type = gaiaGeometryType (geom);
-						if ( geom_type == GAIA_UNKNOWN )
-							printf ("EMPTY or NULL GEOMETRY");
-						else {
-							char *geom_name;
-							if (geom_type == GAIA_POINT)
-								geom_name = "POINT";
-							if (geom_type == GAIA_LINESTRING)
-								geom_name = "LINESTRING";
-							if (geom_type == GAIA_POLYGON)
-								geom_name = "POLYGON";
-							if (geom_type == GAIA_MULTIPOINT)
-								geom_name = "MULTIPOINT";
-							if (geom_type == GAIA_MULTILINESTRING)
-								geom_name = "MULTILINESTRING";
-							if (geom_type == GAIA_MULTIPOLYGON)
-								geom_name = "MULTIPOLYGON";
-							if (geom_type == GAIA_GEOMETRYCOLLECTION)
-								geom_name = "GEOMETRYCOLLECTION";
-							printf ("%s SRID=%d", geom_name, geom->Srid);
-							if ( geom_type == GAIA_LINESTRING || geom_type == GAIA_MULTILINESTRING) {
-								gaiaGeomCollLength (geom, &measure);
-								printf (" length=%1.2f", measure);
-							}
-							if (geom_type == GAIA_POLYGON || geom_type == GAIA_MULTIPOLYGON ) {
-								gaiaGeomCollArea (geom, &measure);
-								printf (" area=%1.2f", measure);
-							}
-						}
-						// we have now to free the GEOMETRY
-						gaiaFreeGeomColl (geom);
-					}
-					break;
+	for ( size_t i = 0; i < ft1.size(); i++) {
+		const std::string & val = ft1[i].operator []("p1");
+		std::string t1 = ft1[i].operator []("TIME");
+		for ( size_t j = 0; j < ft2.size(); j++) {
+			if ( ft2[j].operator []("p1") == val ) {
+				std::stringstream ss;
+				std::string t2 = ft2[j].operator []("TIME");
+				if ( t1 < t2 ) 
+					ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from gps where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
+				else
+					ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from gps where TIME >= '" << t2 << "' and TIME <= '" << t1 << "'";
+
+				if ( !sq.prepare(ss.str()) )
+					return;
+				if ( !sq.get_next(f) )
+					return;
+				sq.close();
+
+				Sun sun(ft1[i].geom->FirstPoint->Y, ft1[i].geom->FirstPoint->X);
+				int td;
+				std::stringstream ss2;
+				ss2 << f["DATE"] << " " << t1;
+				Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
+				sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
+				double h = sun.altit();
+
+				std::stringstream ss1;
+				ss1 << "update " << "assi_volo" <<" SET MISSION='" << f["MISSION"] << "', DATE='" << f["DATE"] <<
+					"', NSAT=" << f["NSAT"] << ", PDOP=" << f["PDOP"] << ", NBASI=" <<
+					f["NBASI"] << ", SUN_HL=" << sun.altit() << " where NR ='" << val << "'";
+
+				char *err_msg = NULL;
+				int ret = sqlite3_exec (db_handle, ss1.str().c_str(), NULL, NULL, &err_msg);
+				if ( ret != SQLITE_OK ) {
+					fprintf (stderr, "Error: %s\n", err_msg);
+					sqlite3_free (err_msg);
+					return;
 				}
-					printf ("\n");
+				int a = 1;
+				break;
 			}
-
-			if ( row_no >= 5 ) {
-				// we'll exit the loop after the first 5 rows - this is only a demo :-)
-			    break;
-			}
-		} else {
-			// some unexpected error occurred
-				printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
-				sqlite3_finalize (stmt);
-				return;
 		}
 	}
-	// we have now to finalize the query [memory cleanup]
-	  sqlite3_finalize(stmt);
-	  printf ("\n\n");
-	  */
+
 }
