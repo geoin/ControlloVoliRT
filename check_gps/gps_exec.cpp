@@ -88,9 +88,11 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 		files.push_back(fn.toString());
 	}
 
-	std::set<std::string> sst;
-	for (long i = 0; i < (long) files.size(); i++) {
-		// per ogni file selezionato
+    std::set<std::string> sst;
+    for (long i = 0; i < (long) files.size(); i++) {
+
+        // *********************** Scompattatori da mettere nel modulo loader
+        // per ogni file selezionato
 		Poco::Path fn(files[i]);
 		std::string ext = Poco::toLower(fn.getExtension());
 		if ( !ext.size() )
@@ -140,7 +142,9 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 		//	}
 		//	continue;
 		//}
-		if ( tolower(ext[2]) == 'o' ) {
+        // ******************************************************************************
+
+        if ( tolower(ext[2]) == 'o' ) {
 			sst.insert(ext);
 			if ( type == rover_type && _rover_name.empty() ) {
 				_rover_name = Poco::Path(files[i]).getBaseName();
@@ -153,6 +157,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 	}
 	if ( sst.size() != 1 )
 		return "";
+
 	Poco::Path fl(nome, "*");
 	fl.setExtension(*sst.begin());
 	return fl.toString();
