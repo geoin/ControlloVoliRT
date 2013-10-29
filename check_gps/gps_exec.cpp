@@ -33,10 +33,10 @@
 #include "Poco/Path.h"
 #include "Poco/DateTime.h"
 #include "Poco/DateTimeParser.h"
-#include "photo_util/dsm.h"
 #include "Poco/Util/XMLConfiguration.h"
 #include "ziplib/ziplib.h"
 #include "Poco/String.h"
+#include "Poco/AutoPtr.h"
 #include <spatialite.h>
 #include <sstream>
 #include <spatialite/gaiageo.h>
@@ -46,21 +46,34 @@
 #define BASI "Basi"
 #define MISSIONI "missioni"
 #define ASSI_VOLO "assi_volo"
+#define STRIP_NAME "A_VOL_CS"
+#define REFSCALE "RefScale_2000"
+
+using Poco::Util::XMLConfiguration;
+using Poco::AutoPtr;
+using Poco::Path;
+using Poco::File;
+
+std::string get_key(const std::string& val)
+{
+	return std::string(REFSCALE) + "." + val;
+}
+
 
 bool gps_exec::_read_ref_val()
 {
-	Poco::Path ref_file(_proj_dir);
+	Path ref_file(_proj_dir, "*");
 	ref_file.popDirectory();
 	ref_file.setFileName("Regione_Toscana_RefVal.xml");
 	AutoPtr<XMLConfiguration> pConf;
 	try {
-		pConf = new XMLConfiguration(ref_file);
-		_MAX_PDOP = atof(pConf->getdString("MAX_PDOP").c_str());
-		_MIN_SAT = atof(pConf->getString("MIN_SAT").c_str());
-		_MAX_DIST = atof(pConf->getString("MAX_DIST").c_str());
-		_MIN_SAT_ANG = atof(pConf->getString("MIN_SAT_ANG").c_str());
-		_NBASI = atof(pConf->getString("NBASI", "0").c_str());
-		_MIN_ANG_SOL = atof(pConf->getString("MIN_ANG_SOL", "0").c_str());
+		pConf = new XMLConfiguration(ref_file.toString());
+		_MAX_PDOP = pConf->getDouble(get_key("MAX_PDOP"));
+		_MIN_SAT = pConf->getInt(get_key("MIN_SAT"));
+		_MAX_DIST = pConf->getInt(get_key("MAX_DIST")) * 1000;
+		_MIN_SAT_ANG = pConf->getDouble(get_key("MIN_SAT_ANG"));
+		_NBASI = pConf->getInt(get_key("NBASI"));
+		_MIN_ANG_SOL = pConf->getDouble(get_key("MIN_ANG_SOL"));
 	} catch (...) {
 		return false;
 	}
@@ -79,7 +92,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 		_sigla_base.clear();
 
 	// seleziona tutti i files presenti nella cartella
-	Poco::File dircnt(nome);
+	File dircnt(nome);
 	std::vector<std::string> df;
 	dircnt.list(df);
 	std::vector<std::string> files;
@@ -164,7 +177,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 }
 bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
 {
-	std::string table("Basi");
+	std::string table(BASI);
 	std::stringstream ss;
 	char *err_msg = NULL;
 
@@ -462,26 +475,36 @@ std::string gps_exec::_hathanaka(const std::string& nome)
 	}
 	return std::string("");
 }
-bool gps_exec::_init()
+gps_exec::~gps_exec()
+{
+	//if ( db_cache != NULL )
+		spatialite_cleanup();
+	if ( db_handle != NULL )
+		sqlite3_close_v2(db_handle);
+}
+
+bool gps_exec::_init_splite()
 {
 	try {
 		//inizializza spatial lite
-		spatialite_init(0);
+		//spatialite_init(0);
 
 		// costruisce il nome dl db
-		std::string db_name  = Poco::Path(_proj_dir).getBaseName();
-		Poco::Path db_path(_proj_dir, db_name);
-		db_path.setExtension("sqlite");
+		//std::string db_name  = Poco::Path(_proj_dir).getBaseName();
+		Poco::Path db_path(_proj_dir, "geo.sqlite");
+		//db_path.setExtension("sqlite");
 		 
 		// connette il db sqlite
 		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
 		if ( ret != SQLITE_OK ) {
 			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
-			sqlite3_close(db_handle);
-			db_handle = NULL;
+			//sqlite3_close(db_handle);
+			//db_handle = NULL;
 			return false;
 		}
-		
+		db_cache = spatialite_alloc_connection ();
+		spatialite_init_ex(db_handle, db_cache, 0);
+
 		// inizializza i metadati spaziali
 		char *err_msg = NULL;
 		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
@@ -501,7 +524,8 @@ bool gps_exec::_init()
 bool gps_exec::run()
 {
 	try {
-		if ( !_init() )
+		// inizializza la connessione con spatial lite
+		if ( !_init_splite() )
 			return false;
 		// cancella la tabella del gps
 		char *err_msg = NULL;
@@ -515,7 +539,8 @@ bool gps_exec::run()
 		sqlite3_exec(db_handle, ss1.str().c_str(), NULL, NULL, &err_msg);
 		
 		// imposta la massima distanza per le basi
-		_gps_opt.max_base_dst = 30000.;
+		_gps_opt.max_base_dst = _MAX_DIST;
+		_gps_opt.min_sat_angle = _MIN_SAT_ANG;
 
 		Poco::Path fn(_proj_dir);
 		fn.append(MISSIONI);
@@ -532,7 +557,7 @@ bool gps_exec::run()
 		}
 
 		// chiude la connessione sqlite
-		sqlite3_close (db_handle);
+		//sqlite3_close (db_handle);
 	} 
 	catch (...) {
 		fprintf (stderr, "Exception catched\n");
@@ -568,13 +593,14 @@ bool gps_exec::_mission_process(const std::string& folder)
 
 	int rrows;
 	char* err_msg = NULL;
-    load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\assi\\Castiglione_Scarlino",
+    load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\AVOLOV",
 					   ASSI_VOLO, "cp1252", 32632,
 					   "geom", 0,
 					   0, 1,
 					   1, &rrows,
 					   err_msg);
 	sqlite3_free(err_msg);
+
 
 	// attiva il calcolo per ogni vbase
 	for ( size_t i = 0; i < bfl.size(); i++ ) {
@@ -602,45 +628,49 @@ bool gps_exec::_mission_process(const std::string& folder)
 }
 void gps_exec::data_analyze()
 {
-	if ( !_init() )
+	// inizializza la connessione con spatial lite
+	if ( !_init_splite() )
 		return;
 
 	char *err_msg = NULL;
+	std::stringstream ss;
+	ss << "ALTER TABLE " << ASSI_VOLO << " ADD COLUMN ";
+	std::string query;
 
 	// modifica la tabella degli assi di volo aggiungendo i campi relativi ai parametri oggetto di verifica
 	try {
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN DATE TEXT", NULL, NULL, &err_msg) != SQLITE_OK )
+		query = ss.str() + "DATE TEXT";
+		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
 			throw std::runtime_error(err_msg);
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN TIME TEXT", NULL, NULL, &err_msg) != SQLITE_OK )
+		query = ss.str() + "TIME TEXT";
+		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
 			throw std::runtime_error(err_msg);
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN MISSION TEXT", NULL, NULL, &err_msg) != SQLITE_OK )
+		query = ss.str() + "MISSION TEXT";
+		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
 			throw std::runtime_error(err_msg);
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN SUN_HL DOUBLE", NULL, NULL, &err_msg) != SQLITE_OK )
+		query = ss.str() + "SUN_HL DOUBLE";
+		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
 			throw std::runtime_error(err_msg);
-
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN NBASI INTEGER", NULL, NULL, &err_msg) != SQLITE_OK )
+		query = ss.str() + "NBASI INTEGER";
+		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
 			throw std::runtime_error(err_msg);
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN NSAT INTEGER", NULL, NULL, &err_msg) != SQLITE_OK )
+		query = ss.str() + "NSAT INTEGER";
+		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
 			throw std::runtime_error(err_msg);
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN PDOP DOUBLE", NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
-		if ( sqlite3_exec(db_handle, "ALTER TABLE ASSI_VOLO ADD COLUMN RMS DOUBLE", NULL, NULL, &err_msg) != SQLITE_OK )
+		query = ss.str() + "PDOP DOUBLE";
+		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
 			throw std::runtime_error(err_msg);
 	} catch (std::runtime_error& e) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free(err_msg);
 	}
 
-	foo(ASSI_VOLO);
+	// aggiorna la tabella degli assi di volo con i dati della traccia gps
+	_update_assi_volo();
+	_final_check();
 	return;
 }
-//class attribute {
-//public:
-//	attribute() {}
-//	attribute(const std::string& n, const std::string& v): nome(n), val(v) {}
-//	std::string nome;
-//	std::string val;
-//};
+
 class feature {
 public:
 	std::string operator[](const std::string& nome) {
@@ -724,11 +754,14 @@ private:
 	int _n_columns;
 };
 
-void gps_exec::foo(const std::string& table)
+void gps_exec::_update_assi_volo()
 {
-	std::string ss = "SELECT a.nr as p1, b.*, min(st_Distance(st_PointN(ST_Transform(a.geom, 4326), ?), b.geom)) \
-	from  assi_volo a, gps b \
-	group by p1";
+	std::stringstream sst;
+	sst << "SELECT a." << STRIP_NAME << " as p1, b.*, min(st_Distance(st_PointN(ST_Transform(a.geom, 4326), ?), b.geom)) FROM " <<
+		ASSI_VOLO << " a, gps b group by p1";
+
+	std::string ss(sst.str());
+
 	size_t q = ss.find('?');
 
 	splite_query sq(db_handle);
@@ -739,6 +772,7 @@ void gps_exec::foo(const std::string& table)
 
 	feature f;
 
+	// determina l'istante GPS relativo al primo estremo dell'asse
 	std::vector<feature> ft1;
 	while ( sq.get_next(f) )
 		ft1.push_back(f);
@@ -748,11 +782,13 @@ void gps_exec::foo(const std::string& table)
 	if ( !sq.prepare(ss) )
 		return;
 
+	// determina l'istante GPS relativo al secondo estremo dell'asse
 	std::vector<feature> ft2;
 	while ( sq.get_next(f) )
 		ft2.push_back(f);
 	sq.close();
 
+	// per ogni strip determina i parametri gps con cui è stata acquisita
 	for ( size_t i = 0; i < ft1.size(); i++) {
 		const std::string & val = ft1[i].operator []("p1");
 		std::string t1 = ft1[i].operator []("TIME");
@@ -760,10 +796,11 @@ void gps_exec::foo(const std::string& table)
 			if ( ft2[j].operator []("p1") == val ) {
 				std::stringstream ss;
 				std::string t2 = ft2[j].operator []("TIME");
-				if ( t1 < t2 ) 
-					ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from gps where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
-				else
-					ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from gps where TIME >= '" << t2 << "' and TIME <= '" << t1 << "'";
+				if ( t1 > t2 )
+					std::swap(t1, t2);
+				ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
+				//else
+				//	ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t2 << "' and TIME <= '" << t1 << "'";
 
 				if ( !sq.prepare(ss.str()) )
 					return;
@@ -771,6 +808,7 @@ void gps_exec::foo(const std::string& table)
 					return;
 				sq.close();
 
+				// determina l'altezza media del sole sull'orizzonte
 				Sun sun(ft1[i].geom->FirstPoint->Y, ft1[i].geom->FirstPoint->X);
 				int td;
 				std::stringstream ss2;
@@ -780,21 +818,38 @@ void gps_exec::foo(const std::string& table)
 				double h = sun.altit();
 
 				std::stringstream ss1;
-				ss1 << "update " << "assi_volo" <<" SET MISSION='" << f["MISSION"] << "', DATE='" << f["DATE"] <<
+				ss1 << "update " << ASSI_VOLO <<" SET MISSION='" << f["MISSION"] << "', DATE='" << f["DATE"] <<
 					"', NSAT=" << f["NSAT"] << ", PDOP=" << f["PDOP"] << ", NBASI=" <<
-					f["NBASI"] << ", SUN_HL=" << sun.altit() << " where NR ='" << val << "'";
+					f["NBASI"] << ", SUN_HL=" << h << " where " << STRIP_NAME  << "='" << val << "'";
 
 				char *err_msg = NULL;
-				int ret = sqlite3_exec (db_handle, ss1.str().c_str(), NULL, NULL, &err_msg);
+				int ret = sqlite3_exec(db_handle, ss1.str().c_str(), NULL, NULL, &err_msg);
 				if ( ret != SQLITE_OK ) {
 					fprintf (stderr, "Error: %s\n", err_msg);
 					sqlite3_free (err_msg);
 					return;
 				}
-				int a = 1;
 				break;
 			}
 		}
 	}
+}
+void gps_exec::_final_check()
+{
+	// check finale
+	std::stringstream ssq;
+	ssq << "SELECT MISSION, DATE, NSAT PDOP, NBASI, SUN_HL from " << ASSI_VOLO <<  " where NSAT<" << _MIN_SAT <<
+		" OR PDOP >" << _MAX_PDOP << "OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL;
 
+	splite_query sq(db_handle);
+	if ( !sq.prepare(ssq.str()) )
+		return;
+
+	feature f;
+
+	std::vector<feature> ft1;
+	while ( sq.get_next(f) )
+		ft1.push_back(f);
+	sq.close();
+int a = 1;
 }

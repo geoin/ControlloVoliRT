@@ -25,28 +25,46 @@
 
 */
 #include "check_photo.h"
-#include "photo_util/dsm.h"
+#include "dem_interpolate/dsm.h"
 #include "Poco/Util/XMLConfiguration.h"
 #include "Poco/stringtokenizer.h"
 #include "Poco/AutoPtr.h"
 #include "Poco/sharedPtr.h"
 #include <fstream>
+#include <sstream>
+#include <spatialite.h>
 
-#include <QGis-Lisboa/core/qgsproviderregistry.h>
-#include <QGis-Lisboa/core/qgsvectorlayer.h>
-#include "QGis-Lisboa/core/qgsgeometry.h"
-#include <QGis-Lisboa/core/qgsvectorfilewriter.h>
+#define SRID 32632
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::SharedPtr;
+using Poco::Path;
 
 photo_exec::~photo_exec() 
 {
 	if ( _df != NULL )
 		delete _df;
 }
-
+bool photo_exec::_read_ref_val()
+{
+	Path ref_file(_proj_dir, "*");
+	ref_file.popDirectory();
+	ref_file.setFileName("Regione_Toscana_RefVal.xml");
+	AutoPtr<XMLConfiguration> pConf;
+	try {
+		pConf = new XMLConfiguration(ref_file.toString());
+		//_MAX_PDOP = pConf->getDouble(get_key("MAX_PDOP"));
+		//_MIN_SAT = pConf->getInt(get_key("MIN_SAT"));
+		//_MAX_DIST = pConf->getInt(get_key("MAX_DIST")) * 1000;
+		//_MIN_SAT_ANG = pConf->getDouble(get_key("MIN_SAT_ANG"));
+		//_NBASI = pConf->getInt(get_key("NBASI"));
+		//_MIN_ANG_SOL = pConf->getDouble(get_key("MIN_ANG_SOL"));
+	} catch (...) {
+		return false;
+	}
+	return true;
+}
 bool photo_exec::_read_cam()
 {
 	AutoPtr<XMLConfiguration> pConf;
@@ -89,7 +107,6 @@ bool photo_exec::_read_dem()
 	if ( !_df->Open(_dem_name, false) )
 		return false;
 	DSM* ds = _df->GetDsm();
-	unsigned int n = ds->Npt();
 	return true;
 }
 std::string photo_exec::_get_strip(const std::string& nome)
@@ -176,19 +193,92 @@ void photo_exec::set_out_folder(const std::string& nome)
 //	*d1 = dmin;
 //	*d2 = dmax;
 //}
+bool photo_exec::_init_splite()
+{
+	try {
+		//inizializza spatial lite
+		spatialite_init(0);
+
+		// costruisce il nome dl db
+		//std::string db_name  = Poco::Path(_proj_dir).getBaseName();
+		Poco::Path db_path(_proj_dir, "geo.sqlite");
+		//db_path.setExtension("sqlite");
+		 
+		// connette il db sqlite
+		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+		if ( ret != SQLITE_OK ) {
+			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
+			//sqlite3_close(db_handle);
+			//db_handle = NULL;
+			return false;
+		}
+		//db_cache = spatialite_alloc_connection ();
+		//spatialite_init_ex(db_handle, db_cache, 0);
+
+		// inizializza i metadati spaziali
+		char *err_msg = NULL;
+		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
+		if (ret != SQLITE_OK) {
+			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
+			sqlite3_free(err_msg);
+			return false;
+		}
+		// legge i valori di riferimento per la verifica
+		_read_ref_val();
+	} catch (Poco::Exception& e) {
+		fprintf(stderr, "Error: %s\n", e.what());
+		return false;
+	}
+	return true;
+}
 bool photo_exec::_process_photos()
 {
 	DSM* ds = _df->GetDsm();
 
-	QgsFieldMap fields;
-	fields[0] = QgsField("STRIP", QVariant::String);
-	fields[1] = QgsField("NOME", QVariant::String);
-	fields[2] = QgsField("DIMPIX", QVariant::Double);
+	std::string table("Z_FOTOV");
+	std::stringstream ss;
+	char *err_msg = NULL;
 
-	Poco::Path pth(_out_folder, "Foto.shp");
-	QgsVectorFileWriter writer(pth.toString().c_str(), "CP1250", fields, QGis::WKBPolygon, 0, "ESRI Shapefile");
+	// crea la tabella del GPS
+	ss << "CREATE TABLE " << table << " (\
+		Z_FOTO_ID TEXT NOT,\
+		Z_FOTO_CS TEXT NOT NULL, \
+		Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY\
+		Z_FOTO_DIMPIX DOUBLE NOT NULL)";
 
-	QgsFeature fet;
+	int ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
+	}
+	// aggiunge la colonna geometrica
+	ss.str("");	ss.clear(); 
+	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', " << SRID << ", 'POLYGON', 'XYZ')";
+	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
+	}
+
+	ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
+	}
+
+	ss.str("");	ss.clear(); 
+	ss << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, geom) \
+		VALUES (?, ?, ?, ?, ?)";
+
+	ret = sqlite3_prepare_v2(db_handle, ss.str().c_str(), ss.str().size(), &stmt, NULL);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
+	}
 
 	std::map<std::string, VDP>::iterator it;
 	for (it = _vdps.begin(); it != _vdps.end(); it++) {
@@ -216,7 +306,12 @@ bool photo_exec::_process_photos()
 		}
 		//calcola del GSD medio
 		dt = vdp.pix() * dt / (5 * vdp.foc());
-		fet.addAttribute(2, QVariant(dt));
+
+		sqlite3_bind_text(stmt, 1, "Cast_pescaia", SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, _get_strip(it->first).c_str(), _get_strip(it->first).size(), SQLITE_STATIC);
+		sqlite3_bind_int(stmt, 3, atoi(_get_nome(it->first).c_str()));
+		sqlite3_bind_double(stmt, 4, dt);
+
 		polig.push_back(line);
 		fet.setGeometry(QgsGeometry::fromPolygon(polig));
 		_vfoto.push_back(fet);

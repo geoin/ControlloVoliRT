@@ -171,6 +171,10 @@ public:
 	void set_freq(int fre) {
 		_prcopt.nf = fre;
 	}
+	void set_min_el(double min_sat_angle) {
+		_prcopt.elmin = min_sat_angle * D2R;
+	}
+
 	void set_max_base(double max_base_dst) {
 		if ( max_base_dst > 0 )
 	        _prcopt.baseline[1] = max_base_dst;
@@ -489,7 +493,6 @@ bool RinexPost(const std::string& rover, const std::string& out, vGPS* data) //,
 bool RinexPost(const std::string& rover, const std::string& base, const std::string& out, MBR* mbr, vGPS* data, GPS_OPT* gps) //, Abort* ab)
 {
 	// inizializza le callback
-
 	Set_myCoordPlot(fmyCoordPlot);
 	Set_showmsg(fshowmsg);
 	Set_settspan(fsettspan);
@@ -507,6 +510,7 @@ bool RinexPost(const std::string& rover, const std::string& base, const std::str
 	rp.set_nav(gps->Nav_sys);
 	rp.set_type(gps->Solution_type);
 	rp.set_freq(gps->frequence);
+	rp.set_min_el(gps->min_sat_angle);
 	//rp.set_max_base(gps->max_base_dst);
 
 	rp.set_lim(mbr);

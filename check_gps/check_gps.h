@@ -37,7 +37,8 @@ public:
 		rover_type = 0,
 		base_type = 1
 	};
-	gps_exec() {}
+	gps_exec(): db_handle(NULL), stmt(NULL), db_cache(NULL) {}
+	~gps_exec();
 	bool run(void);
 	void data_analyze(void);
 
@@ -46,15 +47,25 @@ public:
 
 private:
 	std::string _getnome(const std::string& nome, gps_type type);
+	// trasforma i file dal formato Hatanaka al formato Rinex
 	std::string _hathanaka(const std::string& nome);
 	std::vector<std::string> _rawConv(const std::string& nome);
+	// compensa le tracce relative alle singole basi producendo una traccia unica
 	bool _single_track(const std::string& mission, std::vector< Poco::SharedPtr<vGPS> >& vvg, MBR* mbr);
+	// registra i dati relativi alle basi utilizzate per la singola missione
 	bool _record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base);
+	// processa la singola missione
 	bool _mission_process(const std::string& folder);
-	bool _init(void);
+	// inizializza la connessione con spatial lite
+	bool _init_splite(void);
+	// rilegge dal fiel di configurazioni i valori di riferimento
 	bool _read_ref_val(void);
 	
-	void foo(const std::string& table);
+	// aggiorna gli assi di volo con i dati della traccia gps
+	void _update_assi_volo(void);
+	// verifica i dati e produce i report
+	void _final_check(void);
+
 
 	std::string _rover_name;
 	std::string _sigla_base;
@@ -68,6 +79,7 @@ private:
 	// parametri connessione a sqlite
 	sqlite3 *db_handle;
 	sqlite3_stmt *stmt;
+	void* db_cache;
 
 	// valori di riferimento
 	double _MAX_PDOP;
@@ -75,7 +87,7 @@ private:
 	int _MAX_DIST;
 	double _MIN_SAT_ANG;
 	int _NBASI;
-	double _MIN_ANG_SOL
+	double _MIN_ANG_SOL;
 
 };
 

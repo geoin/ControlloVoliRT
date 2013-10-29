@@ -29,8 +29,7 @@
 
 #include "photo_util/vdp.h"
 #include "Poco/Util/Application.h"
-#define CORE_EXPORT
-#include <QGis-Lisboa/core/qgsfeature.h>
+#include <spatialite/sqlite.h>
 
 class DSM_Factory;
 class QgsGeometry;
@@ -51,10 +50,11 @@ private:
 	bool _process_models(void);
 	bool _process_strips(void);
 	bool _process_photos(void);
-
+	bool _init_splite(void);
+	bool _read_ref_val(void);
 	std::string _get_strip(const std::string& nome);
 	std::string _get_nome(const std::string& nome);
-	void _get_side(QgsGeometry* fv, double* d1, double* d2) ;
+	//void _get_side(QgsGeometry* fv, double* d1, double* d2);
 
 	bool _get_photo(void);
 	std::string _cam_name;
@@ -62,8 +62,16 @@ private:
 	std::string _dem_name;
 	std::string _out_folder;
 
+	std::string _db_name;
+	std::string _proj_dir;
+
+	// parametri connessione a sqlite
+	sqlite3 *db_handle;
+	sqlite3_stmt *stmt;
+	void* db_cache;
+
 	std::map<std::string, VDP> _vdps;
-	std::vector<QgsFeature> _vfoto;
+	//std::vector<QgsFeature> _vfoto;
 	Camera	_cam;
 	DSM_Factory* _df;
 };

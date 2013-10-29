@@ -70,6 +70,7 @@ public:
 	int Nav_sys;
 	int frequence;
 	double max_base_dst;
+	double min_sat_angle;
 };
 typedef std::vector<GPS_DATA> vGPS;
 
