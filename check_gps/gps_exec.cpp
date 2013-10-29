@@ -33,6 +33,8 @@
 #include "Poco/Path.h"
 #include "Poco/DateTime.h"
 #include "Poco/DateTimeParser.h"
+#include "photo_util/dsm.h"
+#include "Poco/Util/XMLConfiguration.h"
 #include "ziplib/ziplib.h"
 #include "Poco/String.h"
 #include <spatialite.h>
@@ -45,6 +47,25 @@
 #define MISSIONI "missioni"
 #define ASSI_VOLO "assi_volo"
 
+bool gps_exec::_read_ref_val()
+{
+	Poco::Path ref_file(_proj_dir);
+	ref_file.popDirectory();
+	ref_file.setFileName("Regione_Toscana_RefVal.xml");
+	AutoPtr<XMLConfiguration> pConf;
+	try {
+		pConf = new XMLConfiguration(ref_file);
+		_MAX_PDOP = atof(pConf->getdString("MAX_PDOP").c_str());
+		_MIN_SAT = atof(pConf->getString("MIN_SAT").c_str());
+		_MAX_DIST = atof(pConf->getString("MAX_DIST").c_str());
+		_MIN_SAT_ANG = atof(pConf->getString("MIN_SAT_ANG").c_str());
+		_NBASI = atof(pConf->getString("NBASI", "0").c_str());
+		_MIN_ANG_SOL = atof(pConf->getString("MIN_ANG_SOL", "0").c_str());
+	} catch (...) {
+		return false;
+	}
+	return true;
+}
 void gps_exec::set_out_folder(const std::string& nome)
 {
 	_out_folder = nome;
@@ -464,6 +485,8 @@ bool gps_exec::_init()
 			sqlite3_free(err_msg);
 			return false;
 		}
+		// legge i valori di riferimento per la verifica
+		_read_ref_val();
 	} catch (Poco::Exception& e) {
 		fprintf(stderr, "Error: %s\n", e.what());
 		return false;

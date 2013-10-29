@@ -52,6 +52,7 @@ private:
 	bool _record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base);
 	bool _mission_process(const std::string& folder);
 	bool _init(void);
+	bool _read_ref_val(void);
 	
 	void foo(const std::string& table);
 
@@ -64,8 +65,18 @@ private:
 	std::string _db_name;
 	std::string _proj_dir;
 
+	// parametri connessione a sqlite
 	sqlite3 *db_handle;
 	sqlite3_stmt *stmt;
+
+	// valori di riferimento
+	double _MAX_PDOP;
+	int _MIN_SAT;
+	int _MAX_DIST;
+	double _MIN_SAT_ANG;
+	int _NBASI;
+	double _MIN_ANG_SOL
+
 };
 
 class check_gps: public Poco::Util::Application {
