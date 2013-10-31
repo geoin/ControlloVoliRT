@@ -29,7 +29,8 @@
 
 #include "photo_util/vdp.h"
 #include "Poco/Util/Application.h"
-#include <spatialite/sqlite.h>
+#include "w_spatialite.h"
+//#include <spatialite/sqlite.h>
 
 class DSM_Factory;
 class QgsGeometry;
@@ -77,9 +78,10 @@ private:
 	std::string _proj_dir;
 
 	// parametri connessione a sqlite
-	sqlite3 *db_handle;
-	sqlite3_stmt *stmt;
-	void* db_cache;
+	//sqlite3 *db_handle;
+	//sqlite3_stmt *stmt;
+	//void* db_cache;
+	w_spatialite splite;
 
 	std::map<std::string, VDP> _vdps;
 	//std::vector<QgsFeature> _vfoto;

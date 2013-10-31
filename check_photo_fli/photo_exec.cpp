@@ -50,8 +50,14 @@ photo_exec::~photo_exec()
 bool photo_exec::run()
 {
 	// inizializza la connessione con spatial lite
-	if ( !_init_splite() )
+	Poco::Path db_path(_proj_dir, "geo.sqlite");
+
+	if ( !splite.init_splite(db_path.toString()) ) {
+		fprintf(stderr, "Error: %s\n", splite.get_error_msg());
 		return false;
+	}
+	// legge i valori di riferimento per la verifica
+	_read_ref_val();
 
 	if ( !_read_cam() )
 		return false;
@@ -64,7 +70,7 @@ bool photo_exec::run()
 	if ( !_process_models() )
 		return false;
 
-	_release_splite();
+	splite.release_splite();
 	return true;
 }
 void photo_exec::set_vdp_name(const std::string& nome)
@@ -92,49 +98,6 @@ void photo_exec::set_checkType(Check_Type t)
 	_type = t;
 }
 
-bool photo_exec::_init_splite()
-{
-	try {
-		//inizializza spatial lite
-		spatialite_init(0);
-
-		// costruisce il nome dl db
-		Poco::Path db_path(_proj_dir, "geo.sqlite");
-		 
-		// connette il db sqlite
-		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-		if ( ret != SQLITE_OK ) {
-			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
-			//sqlite3_close(db_handle);
-			//db_handle = NULL;
-			return false;
-		}
-		//db_cache = spatialite_alloc_connection ();
-		//spatialite_init_ex(db_handle, db_cache, 0);
-
-		// inizializza i metadati spaziali
-		char *err_msg = NULL;
-		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
-		if (ret != SQLITE_OK) {
-			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
-			sqlite3_free(err_msg);
-			return false;
-		}
-		// legge i valori di riferimento per la verifica
-		_read_ref_val();
-	} catch (Poco::Exception& e) {
-		fprintf(stderr, "Error: %s\n", e.what());
-		return false;
-	}
-	return true;
-}
-void photo_exec::_release_splite()
-{
-	//if ( db_cache != NULL )
-		spatialite_cleanup();
-	if ( db_handle != NULL )
-		sqlite3_close_v2(db_handle);
-}
 bool photo_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
@@ -271,40 +234,58 @@ std::string photo_exec::_get_nome(const std::string& nome)
 bool photo_exec::_process_photos()
 {
 	std::string table(_type == Prj_type ? "Z_FOTOP" : "Z_FOTOV");
-	char *err_msg = NULL;
-	std::stringstream ss;
-	ss << "DROP TABLE " << table;
-	int ret = sqlite3_exec(db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	splite.drop_table(table);
 
 	DSM* ds = _df->GetDsm();
 
-	// crea la tabella del GPS
-	ss.str("");	ss.clear(); 
-	ss << "CREATE TABLE " << table << " (\
-		Z_FOTO_ID TEXT NOT NULL,\
-		Z_FOTO_CS TEXT NOT NULL, \
-		Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY,\
-		Z_FOTO_DIMPIX DOUBLE NOT NULL,\
-		Z_FOTO_PITCH DOUBLE NOT NULL,\
-		Z_FOTO_ROLL DOUBLE NOT NULL)";
-
-	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
+	std::vector<std::string> fields;
+	fields.push_back("Z_FOTO_ID TEXT NOT NULL");
+	fields.push_back("Z_FOTO_CS TEXT NOT NULL");
+	fields.push_back("Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY");
+	fields.push_back("Z_FOTO_DIMPIX DOUBLE NOT NULL");
+	fields.push_back("Z_FOTO_PITCH DOUBLE NOT NULL");
+	fields.push_back("Z_FOTO_ROLL DOUBLE NOT NULL");
+	if ( !splite.create_table(table, fields) ) {
+		fprintf (stderr, "Error: %s\n", splite.get_error_msg());
 		return false;
 	}
+
+	//// crea la tabella del GPS
+	//ss.str("");	ss.clear(); 
+	//ss << "CREATE TABLE " << table << " (\
+	//	Z_FOTO_ID TEXT NOT NULL,\
+	//	Z_FOTO_CS TEXT NOT NULL, \
+	//	Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY,\
+	//	Z_FOTO_DIMPIX DOUBLE NOT NULL,\
+	//	Z_FOTO_PITCH DOUBLE NOT NULL,\
+	//	Z_FOTO_ROLL DOUBLE NOT NULL)";
+
+	//ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	//if ( ret != SQLITE_OK ) {
+	//	fprintf (stderr, "Error: %s\n", err_msg);
+	//	sqlite3_free (err_msg);
+	//	return false;
+	//}
 	// aggiunge la colonna geometrica
-	ss.str("");	ss.clear(); 
-	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', " << SRID << ", 'POLYGON', 'XYZ')";
-	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
+	if (! splite.add_geometry(table, "geom", SRID, w_spatialite::POLYGON, w_spatialite::XYZ) ) {
+		fprintf (stderr, "Error: %s\n", splite.get_error_msg());
+		return false;
+	}
+	
+	fields.clear();
+	fields.push_back("Z_FOTO_ID");
+	fields.push_back("Z_FOTO_CS");
+	fields.push_back("Z_FOTO_NF");
+	fields.push_back("Z_FOTO_DIMPIX");
+	fields.push_back("Z_FOTO_PITCH");
+	fields.push_back("Z_FOTO_ROLL");
+	fields.push_back("geom");
+	if ( !splite.prepare_insert(table, fields) ) {
+		fprintf (stderr, "Error: %s\n", splite.get_error_msg());
 		return false;
 	}
 
-	ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
+	/*ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
 	if (ret != SQLITE_OK) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
@@ -320,7 +301,7 @@ bool photo_exec::_process_photos()
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
 		return false;
-	}
+	}*/
 
 	std::map<std::string, VDP>::iterator it;
 	for (it = _vdps.begin(); it != _vdps.end(); it++) {
@@ -357,8 +338,8 @@ bool photo_exec::_process_photos()
 		//calcola del GSD medio
 		dt = vdp.pix() * dt / (5 * vdp.foc());
 
-		sqlite3_reset(stmt);
-		sqlite3_clear_bindings(stmt);
+		//sqlite3_reset(stmt);
+		//sqlite3_clear_bindings(stmt);
 
 		unsigned char *blob;
 		int blob_size;
@@ -367,24 +348,35 @@ bool photo_exec::_process_photos()
 
 		// we can now destroy the geometry object
 		std::string strip = _get_strip(it->first);
-		sqlite3_bind_text(stmt, 1, SIGLA_PRJ, strlen(SIGLA_PRJ), SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 2, strip.c_str(), strip.size(), SQLITE_STATIC);
-		sqlite3_bind_int(stmt, 3, atoi(_get_nome(it->first).c_str()));
-		sqlite3_bind_double(stmt, 4, dt);
-		sqlite3_bind_double(stmt, 5, RAD_DEG(vdp.om));
-		sqlite3_bind_double(stmt, 6, RAD_DEG(vdp.fi));
-		sqlite3_bind_blob (stmt, 7, blob, blob_size, SQLITE_STATIC);
+		splite.bind(1, SIGLA_PRJ, w_spatialite::TEXT);
+		splite.bind(2, strip.c_str(), w_spatialite::TEXT);
+		int id = atoi(_get_nome(it->first).c_str());
+		splite.bind(3, &id, w_spatialite::INT);
+		splite.bind(4, &dt, w_spatialite::DOUBLE);
+		splite.bind(5, &RAD_DEG(vdp.om), w_spatialite::DOUBLE);
+		splite.bind(6, &RAD_DEG(vdp.fi), w_spatialite::DOUBLE);
+		splite.bind(7, blob, blob, blob_size);
+
+		//sqlite3_bind_text(stmt, 1, SIGLA_PRJ, strlen(SIGLA_PRJ), SQLITE_STATIC);
+		//sqlite3_bind_text(stmt, 2, strip.c_str(), strip.size(), SQLITE_STATIC);
+		//sqlite3_bind_int(stmt, 3, atoi(_get_nome(it->first).c_str()));
+		//sqlite3_bind_double(stmt, 4, dt);
+		//sqlite3_bind_double(stmt, 5, RAD_DEG(vdp.om));
+		//sqlite3_bind_double(stmt, 6, RAD_DEG(vdp.fi));
+		//sqlite3_bind_blob (stmt, 7, blob, blob_size, SQLITE_STATIC);
 		
-		int retv = sqlite3_step(stmt);
-		if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
-		      printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
-		      sqlite3_finalize (stmt);
+		if ( ! splite.step() {
+		//int retv = sqlite3_step(stmt);
+		//if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
+			printf ("sqlite3_step() error: %s\n", splite.get_error_msg());
 		      break;
 		}
 		gaiaFree(blob);
 		//_vfoto.push_back(fet);
 	}
 	sqlite3_finalize(stmt);
+
+	splite.commit();
 	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
 	if (ret != SQLITE_OK) {
 		fprintf (stderr, "Error: %s\n", err_msg);
