@@ -35,6 +35,7 @@
 #include <spatialite.h>
 
 #define SRID 32632
+#define SIGLA_PRJ "CSTP"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -45,6 +46,94 @@ photo_exec::~photo_exec()
 {
 	if ( _df != NULL )
 		delete _df;
+}
+bool photo_exec::run()
+{
+	// inizializza la connessione con spatial lite
+	if ( !_init_splite() )
+		return false;
+
+	if ( !_read_cam() )
+		return false;
+	if ( !_read_vdp() )
+		return false;
+	if ( !_read_dem() )
+		return false;
+	if ( !_process_photos() )
+		return false;
+	if ( !_process_models() )
+		return false;
+
+	_release_splite();
+	return true;
+}
+void photo_exec::set_vdp_name(const std::string& nome)
+{
+	_vdp_name = nome;
+}
+void photo_exec::set_dem_name(const std::string& nome)
+{
+	_dem_name = nome;
+}
+void photo_exec::set_cam_name(const std::string& nome)
+{
+	_cam_name = nome;
+}
+void photo_exec::set_out_folder(const std::string& nome)
+{
+	_out_folder = nome;
+}
+void photo_exec::set_proj_dir(const std::string& nome)
+{
+	_proj_dir = nome;
+}
+void photo_exec::set_checkType(Check_Type t)
+{
+	_type = t;
+}
+
+bool photo_exec::_init_splite()
+{
+	try {
+		//inizializza spatial lite
+		spatialite_init(0);
+
+		// costruisce il nome dl db
+		Poco::Path db_path(_proj_dir, "geo.sqlite");
+		 
+		// connette il db sqlite
+		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+		if ( ret != SQLITE_OK ) {
+			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
+			//sqlite3_close(db_handle);
+			//db_handle = NULL;
+			return false;
+		}
+		//db_cache = spatialite_alloc_connection ();
+		//spatialite_init_ex(db_handle, db_cache, 0);
+
+		// inizializza i metadati spaziali
+		char *err_msg = NULL;
+		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
+		if (ret != SQLITE_OK) {
+			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
+			sqlite3_free(err_msg);
+			return false;
+		}
+		// legge i valori di riferimento per la verifica
+		_read_ref_val();
+	} catch (Poco::Exception& e) {
+		fprintf(stderr, "Error: %s\n", e.what());
+		return false;
+	}
+	return true;
+}
+void photo_exec::_release_splite()
+{
+	//if ( db_cache != NULL )
+		spatialite_cleanup();
+	if ( db_handle != NULL )
+		sqlite3_close_v2(db_handle);
 }
 bool photo_exec::_read_ref_val()
 {
@@ -106,7 +195,6 @@ bool photo_exec::_read_dem()
 	_df = new DSM_Factory;
 	if ( !_df->Open(_dem_name, false) )
 		return false;
-	DSM* ds = _df->GetDsm();
 	return true;
 }
 std::string photo_exec::_get_strip(const std::string& nome)
@@ -123,22 +211,8 @@ std::string photo_exec::_get_nome(const std::string& nome)
 		return "";
 	return tok[1];
 }
-void photo_exec::set_vdp_name(const std::string& nome)
-{
-	_vdp_name = nome;
-}
-void photo_exec::set_dem_name(const std::string& nome)
-{
-	_dem_name = nome;
-}
-void photo_exec::set_cam_name(const std::string& nome)
-{
-	_cam_name = nome;
-}
-void photo_exec::set_out_folder(const std::string& nome)
-{
-	_out_folder = nome;
-}
+
+
 //void photo_exec::_get_side(QgsGeometry* fv, double* d1, double* d2) 
 //{
 //	fv->
@@ -193,61 +267,29 @@ void photo_exec::set_out_folder(const std::string& nome)
 //	*d1 = dmin;
 //	*d2 = dmax;
 //}
-bool photo_exec::_init_splite()
-{
-	try {
-		//inizializza spatial lite
-		spatialite_init(0);
 
-		// costruisce il nome dl db
-		//std::string db_name  = Poco::Path(_proj_dir).getBaseName();
-		Poco::Path db_path(_proj_dir, "geo.sqlite");
-		//db_path.setExtension("sqlite");
-		 
-		// connette il db sqlite
-		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-		if ( ret != SQLITE_OK ) {
-			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
-			//sqlite3_close(db_handle);
-			//db_handle = NULL;
-			return false;
-		}
-		//db_cache = spatialite_alloc_connection ();
-		//spatialite_init_ex(db_handle, db_cache, 0);
-
-		// inizializza i metadati spaziali
-		char *err_msg = NULL;
-		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
-		if (ret != SQLITE_OK) {
-			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
-			sqlite3_free(err_msg);
-			return false;
-		}
-		// legge i valori di riferimento per la verifica
-		_read_ref_val();
-	} catch (Poco::Exception& e) {
-		fprintf(stderr, "Error: %s\n", e.what());
-		return false;
-	}
-	return true;
-}
 bool photo_exec::_process_photos()
 {
+	std::string table(_type == Prj_type ? "Z_FOTOP" : "Z_FOTOV");
+	char *err_msg = NULL;
+	std::stringstream ss;
+	ss << "DROP TABLE " << table;
+	int ret = sqlite3_exec(db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+
 	DSM* ds = _df->GetDsm();
 
-	std::string table("Z_FOTOV");
-	std::stringstream ss;
-	char *err_msg = NULL;
-
 	// crea la tabella del GPS
+	ss.str("");	ss.clear(); 
 	ss << "CREATE TABLE " << table << " (\
-		Z_FOTO_ID TEXT NOT,\
+		Z_FOTO_ID TEXT NOT NULL,\
 		Z_FOTO_CS TEXT NOT NULL, \
-		Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY\
-		Z_FOTO_DIMPIX DOUBLE NOT NULL)";
+		Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY,\
+		Z_FOTO_DIMPIX DOUBLE NOT NULL,\
+		Z_FOTO_PITCH DOUBLE NOT NULL,\
+		Z_FOTO_ROLL DOUBLE NOT NULL)";
 
-	int ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
+	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if ( ret != SQLITE_OK ) {
 		fprintf (stderr, "Error: %s\n", err_msg);
 		sqlite3_free (err_msg);
 		return false;
@@ -270,8 +312,8 @@ bool photo_exec::_process_photos()
 	}
 
 	ss.str("");	ss.clear(); 
-	ss << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, geom) \
-		VALUES (?, ?, ?, ?, ?)";
+	ss << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
+		VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 	ret = sqlite3_prepare_v2(db_handle, ss.str().c_str(), ss.str().size(), &stmt, NULL);
 	if ( ret != SQLITE_OK ) {
@@ -283,16 +325,13 @@ bool photo_exec::_process_photos()
 	std::map<std::string, VDP>::iterator it;
 	for (it = _vdps.begin(); it != _vdps.end(); it++) {
 		VDP& vdp = it->second;
-		fet.addAttribute(0, QVariant(_get_strip(it->first).c_str()));
-		fet.addAttribute(1, QVariant(_get_nome(it->first).c_str()));
-		QgsPolygon polig;
-		QgsPolyline line;
 		double dt = 0.;
 
 		DPOINT Pc(vdp.Pc.GetX()	, vdp.Pc.GetY(), vdp.Pc.GetZ());
+		std::vector<DPOINT> dpol;
 		for ( int i = 0; i < 5; i++) {
-			float x = ( i == 0 || i == 3 ) ? 0 : (i != 4) ? (float) vdp.dimx() : (float) vdp.dimx() / 2.;
-			float y = ( i == 0 || i == 1 ) ? 0 : (i != 4) ? (float) vdp.dimy() : (float) vdp.dimy() / 2.;
+			float x = ( i == 0 || i == 3 ) ? 0.f : (i != 4) ? (float) vdp.dimx() : (float) (vdp.dimx() / 2.);
+			float y = ( i == 0 || i == 1 ) ? 0.f : (i != 4) ? (float) vdp.dimy() : (float) (vdp.dimy() / 2.);
 			DPOINT pd, pt;
 			vdp.GetRay(x, y, &pd);
 			if ( !ds->RayIntersect(Pc, pd, pt) ) {
@@ -301,124 +340,187 @@ bool photo_exec::_process_photos()
 				}
 			}
 			dt += vdp.Pc.GetZ() - pt.z;
-			if ( i != 4 )
-				line.push_back(QgsPoint(pt.x, pt.y));
+			dpol.push_back(pt);
 		}
+
+		gaiaGeomCollPtr geo = gaiaAllocGeomColl();
+		geo->Srid = SRID;
+		geo->DimensionModel  = GAIA_XY_Z;
+		geo->DeclaredType = GAIA_POLYGONZ;
+		gaiaPolygonPtr polyg = gaiaAddPolygonToGeomColl(geo, 5, 0);
+		gaiaRingPtr ring = polyg->Exterior;
+
+		for (int i = 0; i < 4; i++)
+			gaiaSetPointXYZ(ring->Coords, i, dpol[i].x, dpol[i].y, dpol[i].z);
+		gaiaSetPointXYZ(ring->Coords, 4, dpol[0].x, dpol[0].y, dpol[0].z);
+
 		//calcola del GSD medio
 		dt = vdp.pix() * dt / (5 * vdp.foc());
 
-		sqlite3_bind_text(stmt, 1, "Cast_pescaia", SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 2, _get_strip(it->first).c_str(), _get_strip(it->first).size(), SQLITE_STATIC);
+		sqlite3_reset(stmt);
+		sqlite3_clear_bindings(stmt);
+
+		unsigned char *blob;
+		int blob_size;
+		gaiaToSpatiaLiteBlobWkb(geo, &blob, &blob_size);
+		gaiaFreeGeomColl (geo);
+
+		// we can now destroy the geometry object
+		std::string strip = _get_strip(it->first);
+		sqlite3_bind_text(stmt, 1, SIGLA_PRJ, strlen(SIGLA_PRJ), SQLITE_STATIC);
+		sqlite3_bind_text(stmt, 2, strip.c_str(), strip.size(), SQLITE_STATIC);
 		sqlite3_bind_int(stmt, 3, atoi(_get_nome(it->first).c_str()));
 		sqlite3_bind_double(stmt, 4, dt);
-
-		polig.push_back(line);
-		fet.setGeometry(QgsGeometry::fromPolygon(polig));
-		_vfoto.push_back(fet);
-		writer.addFeature(fet);
+		sqlite3_bind_double(stmt, 5, RAD_DEG(vdp.om));
+		sqlite3_bind_double(stmt, 6, RAD_DEG(vdp.fi));
+		sqlite3_bind_blob (stmt, 7, blob, blob_size, SQLITE_STATIC);
+		
+		int retv = sqlite3_step(stmt);
+		if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
+		      printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
+		      sqlite3_finalize (stmt);
+		      break;
+		}
+		gaiaFree(blob);
+		//_vfoto.push_back(fet);
 	}
-	_process_models();
-	_process_strips();
+	sqlite3_finalize(stmt);
+	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+	if (ret != SQLITE_OK) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+	}
+	//_process_models();
+	//_process_strips();
 	return true;
 }
 // costruisce i modelli a partire da fotogrammi consecutivi della stessa strisciata
 bool photo_exec::_process_models()
 {
-	QgsFieldMap fields;
-	fields[0] = QgsField("STRIP", QVariant::String);
-	fields[1] = QgsField("NOME_LEFT", QVariant::String);
-	fields[2] = QgsField("NOME_RIGHT", QVariant::String);
+	std::string table(_type == Prj_type ? "Z_MODELP" : "Z_MODELV");
+	char *err_msg = NULL;
+	std::stringstream ss;
+	ss << "DROP TABLE " << table;
+	int ret = sqlite3_exec(db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
 
-	Poco::Path pth(_out_folder, "Models.shp");
-	QgsVectorFileWriter writer(pth.toString().c_str(), "CP1250", fields, QGis::WKBPolygon, 0, "ESRI Shapefile");
+	DSM* ds = _df->GetDsm();
 
-	std::string str0;
-	//SharedPtr<QgsGeometry> g0;
-	QgsGeometry* g0 = NULL;
-	std::string f0, f1;
-	// scandisce tutti i fotogrammi
-	for (size_t i = 0; i < _vfoto.size(); i++) {
-		QgsFeature& fet = _vfoto[i];
-		//SharedPtr<QgsGeometry> g1(fet.geometry());
-		QgsGeometry* g1 = fet.geometry();
-		const QgsAttributeMap& am = fet.attributeMap();
-		std::string str = am[0].toByteArray();
-		std::string f1 = am[1].toByteArray();
-		if ( str != str0 ) {
-			// inizia una nuova strip
-			str0 = str;
-		} else {
-			QgsFeature ft;
-			// fa l'intersezione del modello attuale (g1) col precedente (g0)
-			ft.setGeometry(g1->intersection(g0));
-			ft.addAttribute(0, QVariant(str0.c_str()));
-			ft.addAttribute(1, QVariant(f0.c_str()));
-			ft.addAttribute(2, QVariant(f1.c_str()));
-			writer.addFeature(ft);
-		}
-		g0 = g1;
-		f0 = f1;
+	// crea la tabella del GPS
+	ss.str("");	ss.clear(); 
+	ss << "CREATE TABLE " << table << " (\
+		Z_MODEL_ID TEXT NOT NULL,\
+		Z_MODEL_CS TEXT NOT NULL, \
+		Z_MODEL_LEFT TEXT NOT NULL,\
+		Z_MODEL_RIGHT TEXT NOT NULL,\
+		Z_MODEL_L_OVERLAP INTEGER NOT NULL,\
+		Z_MODEL_T_OVERLAP INTEGER NOT NULL,\
+		Z_MODEL_D_HEADING DOUBLE NOT NULL)";
+
+	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
 	}
+	// aggiunge la colonna geometrica
+	ss.str("");	ss.clear(); 
+	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', " << SRID << ", 'POLYGON', 'XYZ')";
+	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	if ( ret != SQLITE_OK ) {
+		fprintf (stderr, "Error: %s\n", err_msg);
+		sqlite3_free (err_msg);
+		return false;
+	}
+
+	//ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
+	//if (ret != SQLITE_OK) {
+	//	fprintf (stderr, "Error: %s\n", err_msg);
+	//	sqlite3_free (err_msg);
+	//	return false;
+	//}
+
+	//QgsFieldMap fields;
+	//fields[0] = QgsField("STRIP", QVariant::String);
+	//fields[1] = QgsField("NOME_LEFT", QVariant::String);
+	//fields[2] = QgsField("NOME_RIGHT", QVariant::String);
+
+	//Poco::Path pth(_out_folder, "Models.shp");
+	//QgsVectorFileWriter writer(pth.toString().c_str(), "CP1250", fields, QGis::WKBPolygon, 0, "ESRI Shapefile");
+
+	//std::string str0;
+	////SharedPtr<QgsGeometry> g0;
+	//QgsGeometry* g0 = NULL;
+	//std::string f0, f1;
+	//// scandisce tutti i fotogrammi
+	//for (size_t i = 0; i < _vfoto.size(); i++) {
+	//	QgsFeature& fet = _vfoto[i];
+	//	//SharedPtr<QgsGeometry> g1(fet.geometry());
+	//	QgsGeometry* g1 = fet.geometry();
+	//	const QgsAttributeMap& am = fet.attributeMap();
+	//	std::string str = am[0].toByteArray();
+	//	std::string f1 = am[1].toByteArray();
+	//	if ( str != str0 ) {
+	//		// inizia una nuova strip
+	//		str0 = str;
+	//	} else {
+	//		QgsFeature ft;
+	//		// fa l'intersezione del modello attuale (g1) col precedente (g0)
+	//		ft.setGeometry(g1->intersection(g0));
+	//		ft.addAttribute(0, QVariant(str0.c_str()));
+	//		ft.addAttribute(1, QVariant(f0.c_str()));
+	//		ft.addAttribute(2, QVariant(f1.c_str()));
+	//		writer.addFeature(ft);
+	//	}
+	//	g0 = g1;
+	//	f0 = f1;
+	//}
 	return true;
 }
 // costruisce le strisciate unendo tutte le foto di una stessa strip
 bool photo_exec::_process_strips()
 {
-	QgsFieldMap fields;
-	fields[0] = QgsField("STRIP", QVariant::String);
-	fields[1] = QgsField("N_IMGS", QVariant::Int);
+	//QgsFieldMap fields;
+	//fields[0] = QgsField("STRIP", QVariant::String);
+	//fields[1] = QgsField("N_IMGS", QVariant::Int);
 
-	Poco::Path pth(_out_folder, "Strips.shp");
-	QgsVectorFileWriter writer(pth.toString().c_str(), "CP1250", fields, QGis::WKBPolygon, 0, "ESRI Shapefile");
+	//Poco::Path pth(_out_folder, "Strips.shp");
+	//QgsVectorFileWriter writer(pth.toString().c_str(), "CP1250", fields, QGis::WKBPolygon, 0, "ESRI Shapefile");
 
-	std::string str0;
-	int nimg = 0;
+	//std::string str0;
+	//int nimg = 0;
 
-	//SharedPtr<QgsGeometry> g0;
-	QgsGeometry* g0;
-	for (size_t i = 0; i < _vfoto.size(); i++) {
-		QgsFeature& fet = _vfoto[i];
-		//SharedPtr<QgsGeometry> g1 = fet.geometry();
-		QgsGeometry* g1 = fet.geometry();
-		const QgsAttributeMap& am = fet.attributeMap();
-		std::string str = am[0].toByteArray();
-		if ( str != str0 ) {
-			if ( !str0.empty() ) {
-				QgsFeature ft;
-				ft.setGeometry(g0);
-				ft.addAttribute(0, QVariant(str0.c_str()));
-				ft.addAttribute(1, QVariant(nimg));
-				writer.addFeature(ft);
-			}
-			str0 = str;
-			nimg = 0;
-			g0 = g1;
-		} else {
-			g0 = g1->combine(g0);
-		}
-		nimg++;
-	}
-	if ( nimg ) {
-		QgsFeature ft;
-		ft.setGeometry(g0);
-		ft.addAttribute(0, QVariant(str0.c_str()));
-		ft.addAttribute(1, QVariant(nimg));
-		writer.addFeature(ft);
-	}
+	////SharedPtr<QgsGeometry> g0;
+	//QgsGeometry* g0;
+	//for (size_t i = 0; i < _vfoto.size(); i++) {
+	//	QgsFeature& fet = _vfoto[i];
+	//	//SharedPtr<QgsGeometry> g1 = fet.geometry();
+	//	QgsGeometry* g1 = fet.geometry();
+	//	const QgsAttributeMap& am = fet.attributeMap();
+	//	std::string str = am[0].toByteArray();
+	//	if ( str != str0 ) {
+	//		if ( !str0.empty() ) {
+	//			QgsFeature ft;
+	//			ft.setGeometry(g0);
+	//			ft.addAttribute(0, QVariant(str0.c_str()));
+	//			ft.addAttribute(1, QVariant(nimg));
+	//			writer.addFeature(ft);
+	//		}
+	//		str0 = str;
+	//		nimg = 0;
+	//		g0 = g1;
+	//	} else {
+	//		g0 = g1->combine(g0);
+	//	}
+	//	nimg++;
+	//}
+	//if ( nimg ) {
+	//	QgsFeature ft;
+	//	ft.setGeometry(g0);
+	//	ft.addAttribute(0, QVariant(str0.c_str()));
+	//	ft.addAttribute(1, QVariant(nimg));
+	//	writer.addFeature(ft);
+	//}
 	return true;
 
 }
-bool photo_exec::run()
-{
-	QgsProviderRegistry::instance("C:\\OSGeo4W\\apps\\qgis\\plugins");
 
-	if ( !_read_cam() )
-		return false;
-	if ( !_read_vdp() )
-		return false;
-	if ( !_read_dem() )
-		return false;
-	if ( !_process_photos() )
-		return false;
-	return true;
-}

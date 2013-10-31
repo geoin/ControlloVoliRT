@@ -436,7 +436,7 @@ bool DSM_Grid::GetProperties(const std::string& nome)
 {
     std::fstream txf;
     txf.open(nome.c_str(), std::fstream::in);
-    if ( txf.is_open() )
+    if ( !txf.is_open() )
 		return false;
     char mes[256];
 	int count = 0;
@@ -718,11 +718,12 @@ bool DSM_Factory::Open(const std::string nome, bool verbose, Progress* prb)
 DSM::DSM_Type DSM_Factory::GetType(const std::string nome)
 {
     std::fstream tf;
-    tf.open(nome.c_str());
+    tf.open(nome.c_str(), std::fstream::in);
     if ( tf.is_open() ) {
         char mes[256];
         mes[0] = '\0';
         tf.getline(mes, 255);
+		tf.close();
         if ( !strlen(mes) )
 			return DSM::DSM_UNKN;
 		Poco::StringTokenizer tok(Poco::trim(std::string(mes)), ", \t", Poco::StringTokenizer::TOK_TRIM);

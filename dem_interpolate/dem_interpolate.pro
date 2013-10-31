@@ -10,6 +10,7 @@ TEMPLATE = lib
 
 win32 {
         LIBS += -L"C:/ControlloVoliRT_Tools/lib"
+        DEFINES += DLL_EXPORTS
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib"

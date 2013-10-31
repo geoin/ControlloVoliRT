@@ -195,6 +195,8 @@ int check_photo::main(const std::vector<std::string>& args)
 		_phe.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_ARGEN_CAST_PESC_CP.txt");
 		_phe.set_dem_name("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino_50.asc");
 		_phe.set_out_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/Out");
+		_phe.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
+		_phe.set_checkType(photo_exec::fli_type);
 
 		_phe.run();
 

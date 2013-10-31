@@ -48,6 +48,7 @@
 #define ASSI_VOLO "assi_volo"
 #define STRIP_NAME "A_VOL_CS"
 #define REFSCALE "RefScale_2000"
+#define SRID 32632
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -58,7 +59,89 @@ std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
+gps_exec::~gps_exec()
+{
+	_release_splite();
+}
+void gps_exec::set_proj_dir(const std::string& nome)
+{
+	_proj_dir.assign(nome); 
+}
+void gps_exec::set_out_folder(const std::string& nome)
+{
+	_out_folder = nome;
+}
+bool gps_exec::run()
+{
+	// inizializza la connessione con spatial lite
+	if ( !_init_splite() )
+		return false;
 
+
+	int rrows;
+	char* err_msg = NULL;
+    load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\AVOLOV",
+					   ASSI_VOLO, "cp1252", SRID,
+					   "geom", 0,
+					   0, 1,
+					   1, &rrows,
+					   err_msg);
+	sqlite3_free(err_msg);
+	
+	_create_gps_track();
+	
+	_data_analyze();
+	
+	_final_check();
+	
+	_release_splite();
+	return true;
+}
+bool gps_exec::_init_splite()
+{
+	try {
+		//inizializza spatial lite
+		spatialite_init(0);
+
+		// costruisce il nome dl db
+		//std::string db_name  = Poco::Path(_proj_dir).getBaseName();
+		Poco::Path db_path(_proj_dir, "geo.sqlite");
+		//db_path.setExtension("sqlite");
+		 
+		// connette il db sqlite
+		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+		if ( ret != SQLITE_OK ) {
+			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
+			//sqlite3_close(db_handle);
+			//db_handle = NULL;
+			return false;
+		}
+		//db_cache = spatialite_alloc_connection ();
+		//spatialite_init_ex(db_handle, db_cache, 0);
+
+		// inizializza i metadati spaziali
+		char *err_msg = NULL;
+		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
+		if (ret != SQLITE_OK) {
+			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
+			sqlite3_free(err_msg);
+			return false;
+		}
+		// legge i valori di riferimento per la verifica
+		_read_ref_val();
+	} catch (Poco::Exception& e) {
+		fprintf(stderr, "Error: %s\n", e.what());
+		return false;
+	}
+	return true;
+}
+void gps_exec::_release_splite()
+{
+	//if ( db_cache != NULL )
+		spatialite_cleanup();
+	if ( db_handle != NULL )
+		sqlite3_close_v2(db_handle);
+}
 
 bool gps_exec::_read_ref_val()
 {
@@ -78,10 +161,6 @@ bool gps_exec::_read_ref_val()
 		return false;
 	}
 	return true;
-}
-void gps_exec::set_out_folder(const std::string& nome)
-{
-	_out_folder = nome;
 }
 
 std::string gps_exec::_getnome(const std::string& nome, gps_type type) 
@@ -475,58 +554,10 @@ std::string gps_exec::_hathanaka(const std::string& nome)
 	}
 	return std::string("");
 }
-gps_exec::~gps_exec()
-{
-	//if ( db_cache != NULL )
-		spatialite_cleanup();
-	if ( db_handle != NULL )
-		sqlite3_close_v2(db_handle);
-}
 
-bool gps_exec::_init_splite()
+bool gps_exec::_create_gps_track()
 {
 	try {
-		//inizializza spatial lite
-		//spatialite_init(0);
-
-		// costruisce il nome dl db
-		//std::string db_name  = Poco::Path(_proj_dir).getBaseName();
-		Poco::Path db_path(_proj_dir, "geo.sqlite");
-		//db_path.setExtension("sqlite");
-		 
-		// connette il db sqlite
-		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-		if ( ret != SQLITE_OK ) {
-			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
-			//sqlite3_close(db_handle);
-			//db_handle = NULL;
-			return false;
-		}
-		db_cache = spatialite_alloc_connection ();
-		spatialite_init_ex(db_handle, db_cache, 0);
-
-		// inizializza i metadati spaziali
-		char *err_msg = NULL;
-		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
-		if (ret != SQLITE_OK) {
-			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
-			sqlite3_free(err_msg);
-			return false;
-		}
-		// legge i valori di riferimento per la verifica
-		_read_ref_val();
-	} catch (Poco::Exception& e) {
-		fprintf(stderr, "Error: %s\n", e.what());
-		return false;
-	}
-	return true;
-}
-bool gps_exec::run()
-{
-	try {
-		// inizializza la connessione con spatial lite
-		if ( !_init_splite() )
-			return false;
 		// cancella la tabella del gps
 		char *err_msg = NULL;
 		std::stringstream ss;
@@ -555,9 +586,6 @@ bool gps_exec::run()
 			if ( fl.isDirectory() )
 				_mission_process(fn.toString());
 		}
-
-		// chiude la connessione sqlite
-		//sqlite3_close (db_handle);
 	} 
 	catch (...) {
 		fprintf (stderr, "Exception catched\n");
@@ -591,17 +619,6 @@ bool gps_exec::_mission_process(const std::string& folder)
 
 	std::vector< Poco::SharedPtr<vGPS> > vvg;
 
-	int rrows;
-	char* err_msg = NULL;
-    load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\AVOLOV",
-					   ASSI_VOLO, "cp1252", 32632,
-					   "geom", 0,
-					   0, 1,
-					   1, &rrows,
-					   err_msg);
-	sqlite3_free(err_msg);
-
-
 	// attiva il calcolo per ogni vbase
 	for ( size_t i = 0; i < bfl.size(); i++ ) {
 		std::string base = _getnome(bfl[i], base_type);
@@ -626,12 +643,8 @@ bool gps_exec::_mission_process(const std::string& folder)
 
 	return true;
 }
-void gps_exec::data_analyze()
+void gps_exec::_data_analyze()
 {
-	// inizializza la connessione con spatial lite
-	if ( !_init_splite() )
-		return;
-
 	char *err_msg = NULL;
 	std::stringstream ss;
 	ss << "ALTER TABLE " << ASSI_VOLO << " ADD COLUMN ";
@@ -667,7 +680,6 @@ void gps_exec::data_analyze()
 
 	// aggiorna la tabella degli assi di volo con i dati della traccia gps
 	_update_assi_volo();
-	_final_check();
 	return;
 }
 
@@ -838,8 +850,8 @@ void gps_exec::_final_check()
 {
 	// check finale
 	std::stringstream ssq;
-	ssq << "SELECT MISSION, DATE, NSAT PDOP, NBASI, SUN_HL from " << ASSI_VOLO <<  " where NSAT<" << _MIN_SAT <<
-		" OR PDOP >" << _MAX_PDOP << "OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL;
+	ssq << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI, SUN_HL from " << ASSI_VOLO <<  " where NSAT<" << _MIN_SAT <<
+		" OR PDOP >" << _MAX_PDOP << " OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL;
 
 	splite_query sq(db_handle);
 	if ( !sq.prepare(ssq.str()) )

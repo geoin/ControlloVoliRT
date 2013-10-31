@@ -36,6 +36,10 @@ class QgsGeometry;
 
 class photo_exec {
 public:
+	enum Check_Type {
+		Prj_type = 0,
+		fli_type = 1
+	};
 	photo_exec(): _df(NULL) {}
 	~photo_exec();
 	bool run(void);
@@ -43,6 +47,8 @@ public:
 	void set_vdp_name(const std::string& nome);
 	void set_dem_name(const std::string& nome);
 	void set_out_folder(const std::string& nome);
+	void set_proj_dir(const std::string& nome);
+	void set_checkType(Check_Type t);
 private:
 	bool _read_cam(void);
 	bool _read_vdp(void);
@@ -50,7 +56,10 @@ private:
 	bool _process_models(void);
 	bool _process_strips(void);
 	bool _process_photos(void);
+
 	bool _init_splite(void);
+	void _release_splite(void);
+
 	bool _read_ref_val(void);
 	std::string _get_strip(const std::string& nome);
 	std::string _get_nome(const std::string& nome);
@@ -61,6 +70,8 @@ private:
 	std::string _vdp_name;
 	std::string _dem_name;
 	std::string _out_folder;
+
+	Check_Type _type;
 
 	std::string _db_name;
 	std::string _proj_dir;

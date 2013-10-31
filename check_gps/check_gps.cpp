@@ -167,7 +167,6 @@ int check_gps::main(const std::vector<std::string>& args)
 		_gps.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
 
 		_gps.run();
-		//_gps.data_analyze();
 	}
 	return Application::EXIT_OK;
 }

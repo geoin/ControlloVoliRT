@@ -40,10 +40,9 @@ public:
 	gps_exec(): db_handle(NULL), stmt(NULL), db_cache(NULL) {}
 	~gps_exec();
 	bool run(void);
-	void data_analyze(void);
 
 	void set_out_folder(const std::string& nome);
-	void set_proj_dir(const std::string& nome){ _proj_dir.assign(nome); }
+	void set_proj_dir(const std::string& nome);
 
 private:
 	std::string _getnome(const std::string& nome, gps_type type);
@@ -59,10 +58,16 @@ private:
 	// inizializza la connessione con spatial lite
 	bool _init_splite(void);
 	// rilegge dal fiel di configurazioni i valori di riferimento
+	void _release_splite(void);
 	bool _read_ref_val(void);
 	
+	// crea la tracci agps
+	bool _create_gps_track(void);
 	// aggiorna gli assi di volo con i dati della traccia gps
 	void _update_assi_volo(void);
+	// alanizza le strips e prodiuce il report
+	void _data_analyze(void);
+
 	// verifica i dati e produce i report
 	void _final_check(void);
 

@@ -237,10 +237,10 @@ void IOR::Init(const Camera& camera)
 	_dpix = camera.dpix;
 	_foc = camera.foc;
 
-	xc[0] = camera.xp / camera.dpix;
+	xc[0] = _dimx / 2 + camera.xp / camera.dpix;
 	xc[1] = 1 / _dpix;
 	xc[2] = 0.;
-	yc[0] = camera.yp / camera.dpix;
+	yc[0] = _dimy / 2 + camera.yp / camera.dpix;
 	yc[1] = 0.;
 	yc[2] = -1 / _dpix;
 	zc[0] = 0.;
