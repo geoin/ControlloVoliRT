@@ -13,6 +13,8 @@
 #include "exports.h"
 #include "dem_interpolate/geom.h"
 #include <string>
+#include <map>
+
 
 // classe definizione fotocamera
 class TOOLS_EXPORTS Camera {
@@ -76,6 +78,7 @@ private:
 class TOOLS_EXPORTS VDP {
 public:
 	VDP();
+    VDP(const VDP& v);
 	VDP(const Camera& cam, const std::string& Nome);
 	~VDP();
 	VecOri	Pc;
@@ -120,5 +123,27 @@ public:
 private:
 	IOR		_ior;
 };
+class TOOLS_EXPORTS Collimation {
+public:
+	Collimation(): xi(0), yi(0) {}
+	Collimation(float x, float y): xi(x), yi(y) {}
+	Collimation(const Collimation& c): xi(c.xi), yi(c.yi) {}
+	float xi;
+	float yi;
+};
 
+class TOOLS_EXPORTS VDPC: public VDP {
+public:
+	VDPC(): VDP() {}
+    VDPC(const VDPC& v): VDP(v) {}
+	VDPC(const Camera& cam, const std::string& Nome): VDP(cam, Nome) {}
+	//~VDP();
+    //Collimation& operator[](const std::string& cod) const {
+      //  return cl[cod];
+    //}
+	Collimation& operator[](const std::string& cod) {
+		return cl[cod];
+	}
+	std::map<std::string, Collimation> cl;
+};
 #endif

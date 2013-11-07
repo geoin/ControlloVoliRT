@@ -1,19 +1,40 @@
-/*=============================================================================
-!   Filename:  ORI_VDP.CPP
-!
-!   Contents:	Space resection and DLT
-!
-!   History:
-!			16/01/2004	created
-!			01/11/2012	updated
-!=============================================================================*/
+/*
+    File: vdp.cpp
+    Author:  F.Flamigni
+    Date: 2013 October 15
+    Comment:
+
+    Disclaimer:
+        This file is part of RT_Controllo_Voli.
+
+        Tabula is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Lesser General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        Tabula is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+        Copyright (C) 2013 Geoin s.r.l.
+
+*/
+
 #include "vdp.h"
 
 
 VDP::VDP(): exec(0), om(0.), fi(0.), ka(0.)
 {
 }
-VDP::VDP(const Camera& cam, const std::string& Nome): _ior(cam), nome(Nome)
+VDP::VDP(const Camera& cam, const std::string& Nome): _ior(cam), nome(Nome), exec(0), om(0.), fi(0.), ka(0.)
+{
+}
+VDP::VDP(const VDP& v): _ior(v._ior), nome(v.nome), exec(0), om(0.), fi(0.), ka(0.)
 {
 }
 VDP::~VDP()
@@ -24,6 +45,7 @@ void VDP::operator=(const VDP& vdp)
 	Pc = vdp.Pc;
 	om = vdp.om; fi = vdp.fi; ka = vdp.ka;							
 	mat = vdp.mat;
+    nome = vdp.nome;
 	
 	exec = vdp.exec;								
 	_ior = vdp._ior;
