@@ -311,10 +311,11 @@ bool photo_exec::_process_photos()
 		DPOINT Pc(vdp.Pc.GetX()	, vdp.Pc.GetY(), vdp.Pc.GetZ());
 		std::vector<DPOINT> dpol;
 		for ( int i = 0; i < 5; i++) {
-			float x = ( i == 0 || i == 3 ) ? 0.f : (i != 4) ? (float) vdp.dimx() : (float) (vdp.dimx() / 2.);
-			float y = ( i == 0 || i == 1 ) ? 0.f : (i != 4) ? (float) vdp.dimy() : (float) (vdp.dimy() / 2.);
+			Collimation ci;
+			ci.xi = ( i == 0 || i == 3 ) ? 0.f : (i != 4) ? (float) vdp.dimx() : (float) (vdp.dimx() / 2.);
+			ci.yi = ( i == 0 || i == 1 ) ? 0.f : (i != 4) ? (float) vdp.dimy() : (float) (vdp.dimy() / 2.);
 			DPOINT pd, pt;
-			vdp.GetRay(x, y, &pd);
+			vdp.GetRay(ci, &pd);
 			if ( !ds->RayIntersect(Pc, pd, pt) ) {
 				if ( !ds->IsInside(pt.z) ) {
 					break;
@@ -353,8 +354,9 @@ bool photo_exec::_process_photos()
 		int id = atoi(_get_nome(it->first).c_str());
 		splite.bind(3, &id, w_spatialite::INT);
 		splite.bind(4, &dt, w_spatialite::DOUBLE);
-		splite.bind(5, &RAD_DEG(vdp.om), w_spatialite::DOUBLE);
-		splite.bind(6, &RAD_DEG(vdp.fi), w_spatialite::DOUBLE);
+		double o = RAD_DEG(vdp.om), f = RAD_DEG(vdp.fi);
+		splite.bind(5, &o), w_spatialite::DOUBLE);
+		splite.bind(6, &f, w_spatialite::DOUBLE);
 		splite.bind(7, blob, blob, blob_size);
 
 		//sqlite3_bind_text(stmt, 1, SIGLA_PRJ, strlen(SIGLA_PRJ), SQLITE_STATIC);

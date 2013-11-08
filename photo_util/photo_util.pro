@@ -11,6 +11,7 @@ TEMPLATE = lib
 win32 {
         INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
         DEFINES += DLL_EXPORTS
+        CONFIG += wd4996
 }
 macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
