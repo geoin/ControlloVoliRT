@@ -168,6 +168,7 @@ int check_ta::main(const std::vector<std::string>& args)
 	if ( !_helpRequested ) {
 		_tae.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
 		_tae.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
+		_tae.set_vdp_name2("C:/Google_drive/Regione Toscana Tools/Dati_test/sol3_B.txt");
 		_tae.set_out_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/Out");
 		_tae.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
 

@@ -52,21 +52,23 @@ bool ta_exec::run()
 	// legge i valori di riferimento per la verifica
 	_read_ref_val();
 
-	//if ( !_read_cam() )
-	//	return false;
-	//if ( !_read_vdp() )
-	//	return false;
+	_init_document();
 
 	if ( !_check_differences() )
 		return false;
 	if ( !_check_cpt() )
 		return false;
+	_dbook.write();
 
 	return true;
 }
 void ta_exec::set_vdp_name(const std::string& nome)
 {
 	_vdp_name = nome;
+}
+void ta_exec::set_vdp_name2(const std::string& nome)
+{
+	_vdp_name_2 = nome;
 }
 void ta_exec::set_cam_name(const std::string& nome)
 {
@@ -99,6 +101,108 @@ bool ta_exec::_read_ref_val()
 	}
 	return true;
 }
+void ta_exec::_init_document()
+{
+	Path doc_file(_proj_dir, "*");
+	doc_file.setFileName("check_ta.xml");
+	_dbook.set_name(doc_file.toString());
+	
+	_article = _dbook.add_item("article");
+	_article->add_item("title")->append("Collaudo triangolazione aerea");
+}
+Doc_Item ta_exec::_initpg1()
+{
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Verifica punti appoggio");
+	
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
+	
+	Poco::XML::AttributesImpl attrs;
+	attrs.addAttribute("", "", "cols", "", "6");
+	
+	attrs.clear();
+	attrs.addAttribute("", "", "align", "", "center");
+	tab = tab->add_item("tgroup", attrs);
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+	row->add_item("entry", attrs)->append("Codice");
+	row->add_item("entry", attrs)->append("Foto Sx");
+	row->add_item("entry", attrs)->append("Foto Dx");
+	row->add_item("entry", attrs)->append("sc X");
+	row->add_item("entry", attrs)->append("sc Y");
+	row->add_item("entry", attrs)->append("Sc Z");
+
+	Doc_Item tbody = tab->add_item("tbody");
+	row = tbody->add_item("row");
+	return tbody;
+}
+Doc_Item ta_exec::_initpg2()
+{
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Confronto tra i risultati di due calcoli");
+	
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
+	
+	Poco::XML::AttributesImpl attrs;
+	attrs.addAttribute("", "", "cols", "", "6");
+	
+	attrs.clear();
+	attrs.addAttribute("", "", "align", "", "center");
+	tab = tab->add_item("tgroup", attrs);
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+	row->add_item("entry", attrs)->append("sc pc-X");
+	row->add_item("entry", attrs)->append("sc pc-Y");
+	row->add_item("entry", attrs)->append("sc pc-Z");
+	row->add_item("entry", attrs)->append("sc omega");
+	row->add_item("entry", attrs)->append("sc fi");
+	row->add_item("entry", attrs)->append("Sc ka");
+
+	Doc_Item tbody = tab->add_item("tbody");
+	row = tbody->add_item("row");
+	return tbody;
+}
+void ta_exec::_add_point_to_table(Doc_Item tbody, const VecOri& pt, const VecOri& sc)
+{
+	Doc_Item row = tbody->add_item("row");
+	Poco::XML::AttributesImpl attrr, attrc;
+	attrr.addAttribute("", "", "align", "", "right");
+	attrc.addAttribute("", "", "align", "", "center");
+
+	row->add_item("entry", attrr)->append(pt[0]);
+	row->add_item("entry", attrr)->append(pt[1]);
+	row->add_item("entry", attrr)->append(pt[2]);
+
+	row->add_item("entry", attrr)->append(sc[0]);
+	row->add_item("entry", attrr)->append(sc[1]);
+	row->add_item("entry", attrr)->append(sc[2]);
+}
+
+void ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc)
+{
+	Doc_Item row = tbody->add_item("row");
+	Poco::XML::AttributesImpl attrr, attrc;
+	attrr.addAttribute("", "", "align", "", "right");
+	attrc.addAttribute("", "", "align", "", "center");
+
+	row->add_item("entry", attrc)->append(cod);
+	row->add_item("entry", attrc)->append(nome1);
+	row->add_item("entry", attrc)->append(nome2);
+	if ( sc.x == 0. )
+		row->add_item("entry", attrc)->append("-");
+	else
+		row->add_item("entry", attrr)->append(sc.x);
+	if ( sc.y == 0. )
+		row->add_item("entry", attrc)->append("-");
+	else
+		row->add_item("entry", attrr)->append(sc.y);
+	if ( sc.z == 0. )
+		row->add_item("entry", attrc)->append("-");
+	else
+		row->add_item("entry", attrr)->append(sc.z);
+}
 bool ta_exec::_read_cam()
 {
 	AutoPtr<XMLConfiguration> pConf;
@@ -115,11 +219,13 @@ bool ta_exec::_read_cam()
 	}
 	return true;
 }
-bool ta_exec::_read_vdp()
+bool ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
 {
-	std::ifstream fvdp(_vdp_name.c_str(), std::ifstream::in);
+	std::ifstream fvdp(nome.c_str(), std::ifstream::in);
 	if ( !fvdp.is_open() )
 		return false;
+
+	vdps.clear();
 
 	char buf[256];
 	while ( fvdp.getline(buf, 256) ) {
@@ -128,22 +234,22 @@ bool ta_exec::_read_vdp()
 			continue;
 		if ( atof(tok[1].c_str()) == 0. )
 			continue;
-		//VDPC vdp(_cam, tok[0]);
-		_vdps[tok[0]] = VDPC(_cam, tok[0]);
-		VDPC& vdp = _vdps[tok[0]];
+		vdps[tok[0]] = VDPC(_cam, tok[0]);
+		VDPC& vdp = vdps[tok[0]];
 		vdp.Init(DPOINT(atof(tok[1].c_str()), atof(tok[2].c_str()), atof(tok[3].c_str())), atof(tok[4].c_str()), atof(tok[5].c_str()), atof(tok[6].c_str()));
-		//_vdps[tok[0]] = vdp;
 	}
 	return true;
 
 }
-bool ta_exec::_read_image_pat() 
+bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts) 
 {
 	Poco::Path gf(_vdp_name);
 	std::string nome = gf.getBaseName();
 	nome.append("_image");
 	gf.setBaseName(nome);
 	gf.setExtension("pat");
+
+	pts.clear();
 	
 	std::ifstream fvdp(gf.toString().c_str(), std::ifstream::in);
 	if ( !fvdp.is_open() )
@@ -158,9 +264,9 @@ bool ta_exec::_read_image_pat()
 		if ( tok.count() == 2 ) {
 			// the name of the image and the focal
 			std::string nome = tok[0];
-			if ( _vdps.find(nome) == _vdps.end() )
+			if ( vdps.find(nome) == vdps.end() )
 				vdp = NULL;
-			vdp = &_vdps[nome];
+			vdp = &vdps[nome];
 			// evaluate if the coords are in micron or mm
 			double foc = atof(tok[1].c_str());
 			divisor = foc > 1000 ? 1000 : 1;
@@ -168,54 +274,67 @@ bool ta_exec::_read_image_pat()
 			// the name and the plate coord. of the point
 			std::string cod = tok[0];
 			// only control points are considered
-			if ( _pm.find(cod) != _pm.end() ) {
+			if ( pm.find(cod) != pm.end() ) {
 				// convert to mm
-				double x = atof(tok[1].c_str()) / divisor;
-				double y = atof(tok[2].c_str()) / divisor;
+				Collimation cl(atof(tok[1].c_str()) / divisor, atof(tok[2].c_str()) / divisor);
 				// tranform to image coord
-				float xi, yi;
-				vdp->Las_Img(x, y, &xi, &yi);
-				vdp->operator [](cod) = Collimation(xi, yi);
+				Collimation ci = vdp->Las_Img(cl);
+				vdp->operator [](cod) = ci;
 				// associate each point with the images where it is observed
-				_pts.insert(std::pair<std::string, std::string>(cod, vdp->nome));
+				pts.insert(std::pair<std::string, std::string>(cod, vdp->nome));
 			}
 		}
 	}
 	return true;
 }
-bool ta_exec::_calc_pts()
+std::string ta_exec::_get_strip(const std::string& nome)
 {
-	std::map<std::string, DPOINT>::iterator it;
-	for ( it = _pm.begin(); it != _pm.end(); it++) {
-		std::pair<std::multimap<std::string, std::string>::iterator, std::multimap<std::string, std::string>::iterator> ret;
+	// extract strip name from image name
+	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	if ( tok.count() != 2 )
+		return "";
+	return tok[0];
+}
+bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
+{
+	Doc_Item row = _initpg1();
+	CPT_MAP::const_iterator it;
+	for ( it = pm.begin(); it != pm.end(); it++) {
+		std::pair<CPT_VDP::const_iterator, CPT_VDP::const_iterator> ret;
 		std::string cod = it->first;
 		DPOINT pc = it->second;
-		ret = _pts.equal_range(cod);
-		std::multimap<std::string, std::string>::iterator it1 = ret.first;
+		ret = pts.equal_range(cod);
+		CPT_VDP::const_iterator it1 = ret.first;
 		std::string nome1 = it1->second;
 		it1++;
 		for (; it1 != ret.second; it1++) {
 			std::string nome2 = it1->second;
-			VDPC& vdp1 = _vdps[nome1];
-			VDPC& vdp2 = _vdps[nome2];
-			Collimation c1 = vdp1[cod];
-			Collimation c2 = vdp2[cod];
-			double X, Y, Z;
-			vdp1.Img_TerA(vdp2, c1.xi, c1.yi, c2.xi, c2.yi, &X, &Y, &Z);
-			DPOINT sc;
-			if ( pc.x == 0 && pc.y == 0 )
-				sc = DPOINT(0, 0, pc.z - Z);
-			else if ( pc.z == 0 )
-				sc = DPOINT(pc.x - X, pc.y - Y, 0);
-			else
-				sc = DPOINT(pc.x - X, pc.y - Y, pc.z - Z);
-			std::cout << cod << " " << nome1 << "-" << nome2 << " dx=" << sc.x << " dy=" << sc.y << " dz=" << sc.z << std::endl;
+			if ( _get_strip(nome1) == _get_strip(nome2) ) {
+				// only for images of the same strip
+				VDPC& vdp1 = vdps[nome1];
+				VDPC& vdp2 = vdps[nome2];
+				Collimation c1 = vdp1[cod];
+				Collimation c2 = vdp2[cod];
+				DPOINT pt;
+				vdp1.Img_TerA(vdp2, c1, c2, pt);
+				DPOINT sc;
+				if ( pc.x == 0 && pc.y == 0 )
+					sc = DPOINT(0, 0, pc.z - pt.z);
+				else if ( pc.z == 0 )
+					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
+				else
+					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
+				_add_point_to_table(row, cod, nome1, nome2, sc);
+				//std::cout << cod << " " << nome1 << "-" << nome2 << " dx=" << sc.x << " dy=" << sc.y << " dz=" << sc.z << std::endl;
+			}
+			nome1 = nome2;
 		}
 	}
 	return true;
 }
-bool ta_exec::_read_cont_pat() 
+bool ta_exec::_read_cont_pat(CPT_MAP& pm) 
 {
+	// build the control point file name
 	Poco::Path gf(_vdp_name);
 	std::string nome = gf.getBaseName();
 	nome.append("_cont");
@@ -226,29 +345,31 @@ bool ta_exec::_read_cont_pat()
 	if ( !fvdp.is_open() )
 		return false;
 
+	pm.clear();
+
 	char buf[256];
 	while ( fvdp.getline(buf, 256) ) {
 		Poco::StringTokenizer tok(buf, " \t", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
 		if ( tok.count() == 5 ) {
 			// planimetric point
 			std::string cod = tok[0]; // point name
-			if ( _pm.find(cod) != _pm.end() ) {
-				DPOINT& p = _pm[cod];
+			if ( pm.find(cod) != pm.end() ) {
+				DPOINT& p = pm[cod];
 				p.x = atof(tok[1].c_str());
 				p.y = atof(tok[2].c_str());
 			} else {
 				DPOINT p(atof(tok[1].c_str()), atof(tok[2].c_str()));
-				_pm[cod] = p;
+				pm[cod] = p;
 			}
 		} else if (tok.count() == 4 ) {
 			// altimetric point
 			std::string cod = tok[0];
-			if ( _pm.find(cod) != _pm.end() ) {
-				DPOINT& p = _pm[cod];
+			if ( pm.find(cod) != pm.end() ) {
+				DPOINT& p = pm[cod];
 				p.z = atof(tok[1].c_str());
 			} else {
 				DPOINT p(0., 0., atof(tok[1].c_str()));
-				_pm[cod] = p;
+				pm[cod] = p;
 			}
 		}
 	}
@@ -256,14 +377,39 @@ bool ta_exec::_read_cont_pat()
 }
 bool ta_exec::_check_cpt()
 {
+	VDP_MAP vdps; // mappa nome fotogramma, parametri assetto
+	CPT_MAP pm; // mappa nome punto, coordinate
+	CPT_VDP pts; // mappa nome punto fotogrammi in cui è stato osservato
+
 	_read_cam();
-	_read_vdp();
-	_read_cont_pat();
-	_read_image_pat();
-	_calc_pts();
+	_read_vdp(_vdp_name, vdps);
+	_read_cont_pat(pm);
+	_read_image_pat(vdps, pm, pts);
+	_calc_pts(vdps, pm, pts);
+
 	return true;
 }
 bool ta_exec::_check_differences()
 {
+	Doc_Item row = _initpg2();
+
+	_read_cam();
+	VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
+	VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
+	_read_vdp(_vdp_name, vdps1);
+	_read_vdp(_vdp_name_2, vdps2);
+	VDP_MAP::iterator it;
+	for (it = vdps1.begin(); it != vdps1.end(); it++) {
+		std::string nome = it->first;
+		if ( vdps2.find(nome) != vdps2.end() ) {
+			VDP& vdp1 = vdps1[nome];
+			VDP& vdp2 = vdps2[nome];
+			VecOri pc = vdp1.Pc - vdp2.Pc;
+			VecOri at(RAD_DEG(vdp1.om - vdp2.om), RAD_DEG(vdp1.fi - vdp2.fi), RAD_DEG(vdp1.ka - vdp2.ka));
+
+			_add_point_to_table(row, pc, at);
+			//std::cout << "dX=" << pc[0] << " dY=" << pc[1] << " dZ=" << pc[2] << " dom=" << at[0] << " dfi=" << at[1] << " dka=" << at[2] << std::endl;
+		}
+	}
 	return true;
 }

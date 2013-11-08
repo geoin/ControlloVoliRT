@@ -29,41 +29,51 @@
 
 #include "photo_util/vdp.h"
 #include "Poco/Util/Application.h"
-
+#include "docbook/docbook.h"
 class ta_exec {
 public:
 	enum Check_Type {
 		Prj_type = 0,
 		fli_type = 1
 	};
+	typedef std::map<std::string, VDPC> VDP_MAP;
+	typedef std::map<std::string, DPOINT> CPT_MAP;
+	typedef std::multimap<std::string, std::string> CPT_VDP;
 	ta_exec() {}
 	~ta_exec();
 	bool run(void);
 	void set_cam_name(const std::string& nome);
 	void set_vdp_name(const std::string& nome);
+	void set_vdp_name2(const std::string& nome);
 	void set_out_folder(const std::string& nome);
 	void set_proj_dir(const std::string& nome);
 private:
 	bool _read_cam(void);
-	bool _read_vdp(void);
-	bool _read_image_pat(void);
-	bool _read_cont_pat(void); 
-
+	bool _read_vdp(const std::string& nome, VDP_MAP& vdps);
+	bool _read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts);
+	bool _read_cont_pat(CPT_MAP& pm); 
+	std::string _get_strip(const std::string& nome);
 	bool _check_differences(void);
 	bool _check_cpt(void);
 	bool _read_ref_val(void);
-	bool _calc_pts(void);
+	bool _calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts);
+	void _init_document(void);
+	Doc_Item _initpg1(void);
+	Doc_Item _initpg2(void);
+
+	void _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
+	void _add_point_to_table(Doc_Item tbody, const VecOri& pt, const VecOri& sc);
 
 	bool _get_photo(void);
 	std::string _cam_name;
 	std::string _vdp_name;
+	std::string _vdp_name_2;
 	std::string _out_folder;
 	std::string _proj_dir;
 
-	std::map<std::string, VDPC> _vdps; // mappa nome fotogramma, parametri assetto
-	std::map<std::string, DPOINT> _pm; // mappa nome punto, coordinate
-	std::multimap<std::string, std::string> _pts;
 	Camera	_cam;
+	docbook _dbook;
+	Doc_Item _article;
 };
 
 class check_ta: public Poco::Util::Application {

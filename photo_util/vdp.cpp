@@ -73,124 +73,51 @@ void VDP::Init(const DPOINT& p, double pom, double pfi, double pka)
 !@	From ground to image
 !
 !----------------------------------------------------------------------------*/
-void VDP::Ter_Img(DPOINT *pt, float *x, float *y) const
-{
-	Ter_Img(pt->x, pt->y, pt->z, x, y);
-}
-void VDP::Ter_Img(double X, double Y, double Z, float *x, float *y) const
+Collimation VDP::Ter_Img(const DPOINT& pt) const
 {
 	// trasforma le coord (X, Y, Z) nel sistema fotocamera
-	VecOri v = VecOri(X, Y, Z) - Pc;
+    VecOri v(pt);
 	VecOri dp = mat * v;
 
 	// proietta le coord sul piano del sensore
-	double lsx = -_ior.foc() * dp[0] / dp[2];
-	double lsy = -_ior.foc() * dp[1] / dp[2];
+    Collimation cl(-_ior.foc() * dp[0] / dp[2], -_ior.foc() * dp[1] / dp[2]);
 	// trasforma da coord fotografiche a coord immagine
-	_ior.LastraImg(lsx, lsy, x, y);
+    return _ior.LastraImg(cl);
 }
-void VDP::Img_Las(float xi, float yi, double *xl, double *yl)
+Collimation VDP::Img_Las(const Collimation& ci) const
 {
-	_ior.ImgLastra(xi, yi, xl, yl);
+    return _ior.ImgLastra(ci);
 }
-void VDP::Las_Img(double xl, double yl, float *xi, float *yi) const
+Collimation VDP::Las_Img(const Collimation& cl) const
 {
-	_ior.LastraImg(xl, yl, xi, yi);
+    return _ior.LastraImg(cl);
 }
 // Calcola il vettore che proietta un punto immagine
-void VDP::GetRay(float x, float y, DPOINT* pt)
+void VDP::GetRay(const Collimation& ci, DPOINT* pt) const
 {
 	// da coord immagine a coord fotografiche
-	double lx, ly;
-	_ior.ImgLastra(x, y, &lx, &ly);
+    Collimation cl = _ior.ImgLastra(ci);
 
 	// traspone (equivalente ad invertire) la matrice
 	MatOri m = mat.Transpose(); // m è adesso dal sistema fotografico al sistema terreno
-	VecOri v(lx, ly, -_ior.foc()); // coordinate fotografiche del punto immagine
+    VecOri v(cl.xi, cl.yi, -_ior.foc()); // coordinate fotografiche del punto immagine
 	VecOri v1 = m * v; // coordinate del punto immagine nel sistema terreno
 	// il centro di presa ha coordinate 0, 0, 0
 	v1.Get(*pt); // assegna a pt il vettore v1
 }
 // da immagine a terreno, conoscendo la quota (Z) del punto
-void VDP::Img_Ter(float x, float y, double* X, double* Y, double Z)
+DPOINT VDP::Img_Ter(const Collimation& ci, double Z) const
 {
 	// da immagine a coord. fotografiche
-	double lsx, lsy;
-	_ior.ImgLastra(x, y, &lsx, &lsy);
+    Collimation cl = _ior.ImgLastra(ci);
 	
-	VecOri v(lsx, lsy, -_ior.foc());
+    VecOri v(cl.xi, cl.yi, -_ior.foc());
 	MatOri m1 = mat.Transpose();
 	VecOri v1 = m1 * v; // coord del punto fotografico nel sistema terreno
 	double N = (Z - Pc.GetZ() ) / v1[2];
-	*X = Pc.GetX() + N * v1[0];
-	*Y = Pc.GetY() + N * v1[1];
+    DPOINT p(Pc.GetX() + N * v1[0], Pc.GetY() + N * v1[1], Z);
+    return p;
 }
-
-/*----------------------------------------------------------------------------
-!@  Img_TerAnp
-!@	Image to ground, no parallax
-!
-!----------------------------------------------------------------------------*/
-//double VDP::Img_Ternp(VDP& vdp2, float x1, float y1, float x2, float y2, DPOINT& pt)
-//{
-//	return Img_Ternp(vdp2, x1, y1, x2, y2, &pt.x, &pt.y, &pt.z);
-//}
-//double VDP::Img_Ternp(VDP& vdp2, float x1, float y1, float x2, float y2, double *X, double *Y, double *Z)
-//{
-//	float	xc, yc;
-//
-//	double lx1, ly1;
-//	ior.ImgLastra(x1, y1, &lx1, &ly1);
-//
-//	double lx2, ly2;
-//	vdp2.ior.ImgLastra(x2, y2, &lx2, &ly2);
-//	
-//	VecOri v1(lx1, ly1, -ior.foc);
-//	MatOri m1 = mat.Transpose();
-//	v1 = m1 * v1;
-//
-//	VecOri v2(lx2, ly2, -vdp2.ior.foc);
-//	MatOri m2 = vdp2.mat.Transpose();
-//	v2 = m2 * v2;
-//
-//	double tx1 = v1[0] / v1[2];
-//	double ty1 = v1[1] / v1[2];
-//	double tx2 = v2[0] / v2[2];
-//	double ty2 = v2[1] / v2[2];
-//
-//	LinSys	lSys1;
-//	lSys1.init(3);
-//	lSys1.reset();
-//
-//	lSys1.SetPar(0, -1.);
-//	lSys1.SetPar(1, 0.);
-//	lSys1.SetPar(2, tx1);
-//	lSys1.SetPar(3, tx1 * Zc - Xc);
-//	lSys1.mtcno();
-//	lSys1.SetPar(0, 0);
-//	lSys1.SetPar(1, -1.);
-//	lSys1.SetPar(2, ty1);
-//	lSys1.SetPar(3, ty1 * Zc - Yc);
-//	lSys1.mtcno();
-//	lSys1.SetPar(0, -1.);
-//	lSys1.SetPar(1, 0.);
-//	lSys1.SetPar(2, tx2);
-//	lSys1.SetPar(3, tx2 * vdp2.Zc - vdp2.Xc);
-//	lSys1.mtcno();
-//	lSys1.SetPar(0, 0);
-//	lSys1.SetPar(1, -1.);
-//	lSys1.SetPar(2, ty2);
-//	lSys1.SetPar(3, ty2 * vdp2.Zc - vdp2.Yc);
-//	lSys1.mtcno();
-//	lSys1.Solve();
-//	*X = lSys1.GetRes(0);
-//	*Y = lSys1.GetRes(1);
-//	*Z = lSys1.GetRes(2);
-//
-//	vdp2.Ter_Img(*X, *Y, *Z, &xc, &yc);
-//	double Px = (double) (y2 - yc);
-//	return Px;
-//}
 
 
 /*----------------------------------------------------------------------------
@@ -198,24 +125,20 @@ void VDP::Img_Ter(float x, float y, double* X, double* Y, double Z)
 !@	From image to ground with residual parallax
 !
 !----------------------------------------------------------------------------*/
-double VDP::Img_TerA(VDP& vdp2, float x1, float y1, float x2, float y2, double *X, double *Y, double *Z)
+double VDP::Img_TerA(const VDP& vdp2, const Collimation& ci1, const Collimation& ci2, DPOINT& pt) const
 {
-	float	xc, yc;
+    Collimation cl1 = _ior.ImgLastra(ci1);
+    Collimation cl2 = vdp2._ior.ImgLastra(ci2);
 
-	double lx1, ly1;
-	_ior.ImgLastra(x1, y1, &lx1, &ly1);
-	double lx2, ly2;
-	vdp2._ior.ImgLastra(x2, y2, &lx2, &ly2);
-
-	VecOri v1(lx1, ly1, -_ior.foc());
+    VecOri v1(cl1.xi, cl1.yi, -_ior.foc());
 	MatOri m1 = mat.Transpose();
 	v1 = m1 * v1;
 
-	VecOri v2(lx2, ly2, -vdp2._ior.foc());
+    VecOri v2(cl2.xi, cl2.yi, -vdp2._ior.foc());
 	MatOri m2 = vdp2.mat.Transpose();
 	v2 = m2 * v2;
 
-		double tx1 = v1[0] / v1[2];
+    double tx1 = v1[0] / v1[2];
 	double ty1 = v1[1] / v1[2];
 	double tx2 = v2[0] / v2[2];
 
@@ -234,14 +157,14 @@ double VDP::Img_TerA(VDP& vdp2, float x1, float y1, float x2, float y2, double *
 
 	// la cui soluzione è:
 	
-	*Z = (Pc.GetX() - vdp2.Pc.GetX() + tx2 * vdp2.Pc.GetZ() - tx1 * Pc.GetZ()) / (tx2 - tx1);
-	*X = Pc.GetX() + tx1 * (*Z - Pc.GetZ());
-	*Y = Pc.GetY() + ty1 * (*Z - Pc.GetZ());
+    pt.z = (Pc.GetX() - vdp2.Pc.GetX() + tx2 * vdp2.Pc.GetZ() - tx1 * Pc.GetZ()) / (tx2 - tx1);
+    pt.x = Pc.GetX() + tx1 * (pt.z - Pc.GetZ());
+    pt.y = Pc.GetY() + ty1 * (pt.z - Pc.GetZ());
 
 	// ritrasforma il punto sul secondo fotogramma per calcolare l'eventuale parallasse
-	vdp2.Ter_Img(*X, *Y, *Z, &xc, &yc);
+    Collimation cc = vdp2.Ter_Img(pt);
 	
-	double Px = (double) (y2 - yc); // parallasse
+    double Px = (double) (ci2.yi - cc.yi); // parallasse
 	return Px; 
 }
 
@@ -298,21 +221,25 @@ void IOR::_inverte()
 	zci[0] = (zc[1] * yc[1] - zc[0] * yc[2]) / den;
 	zci[1] = (xc[2] * zc[0] - xc[1] * zc[1]) / den;
 }
-void IOR::ImgLastra(float xi, float yi, double *xl, double *yl)
+Collimation IOR::ImgLastra(const Collimation& ci) const
 {
-	double den = zci[0] * xi + zci[1] * yi + 1.;
-	*xl = (xci[0] + xci[1] * xi + xci[2] * yi) / den;
-	*yl = (yci[0] + yci[1] * xi + yci[2] * yi) / den;
+    double den = zci[0] * ci.xi + zci[1] * ci.yi + 1.;
+    Collimation cl;
+    cl.xi = (xci[0] + xci[1] * ci.xi + xci[2] * ci.yi) / den;
+    cl.yi = (yci[0] + yci[1] * ci.xi + yci[2] * ci.yi) / den;
+    return cl;
 }
 /*----------------------------------------------------------------------------
 !@  LastraImg
 !@	Plate to image
 !
 !----------------------------------------------------------------------------*/
-void IOR::LastraImg(double xl, double yl, float *xi, float *yi) const
+Collimation IOR::LastraImg(const Collimation& cl) const
 {
-	double den = zc[0] * xl + zc[1] * yl + 1.;
-	*xi = (float) ((xc[0] + xc[1] * xl + xc[2] * yl) / den);
-	*yi = (float) ((yc[0] + yc[1] * xl + yc[2] * yl) / den);
+    double den = zc[0] * cl.xi + zc[1] * cl.yi + 1.;
+    Collimation ci;
+    ci.xi = (float) ((xc[0] + xc[1] * cl.xi + xc[2] * cl.yi) / den);
+    ci.yi = (float) ((yc[0] + yc[1] * cl.xi + yc[2] * cl.yi) / den);
+    return ci;
 }
 

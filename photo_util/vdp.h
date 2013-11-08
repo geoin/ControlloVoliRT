@@ -15,6 +15,14 @@
 #include <string>
 #include <map>
 
+class TOOLS_EXPORTS Collimation {
+public:
+    Collimation(): xi(0), yi(0) {}
+    Collimation(double x, double y): xi(x), yi(y) {}
+    Collimation(const Collimation& c): xi(c.xi), yi(c.yi) {}
+    double xi;
+    double yi;
+};
 
 // classe definizione fotocamera
 class TOOLS_EXPORTS Camera {
@@ -48,9 +56,9 @@ public:
 	}
 	void	Init(const Camera& cam);
 	// trasformazione da immagine a coord. fotografiche
-	void	ImgLastra(float xi, float yi, double *xl, double *yl);
+    Collimation	ImgLastra(const Collimation& ci)const;
 	// trasformazione da coord. fotografiche a immagine
-	void	LastraImg(double xl, double yl, float *xi, float *yi) const;
+    Collimation	LastraImg(const Collimation& cl) const;
 	void	Reset(void);
 	long	dimx(void) const {
 		return (long) (_dimx);
@@ -97,8 +105,8 @@ public:
 	}
 
 	void Reset(void);
-	void	Img_Las(float xi, float yi, double *xl, double *yl);
-	void	Las_Img(double xl, double yl, float *xi, float *yi) const;
+    Collimation	Img_Las(const Collimation& ci) const;
+    Collimation Las_Img(const Collimation& cl) const;
 
 	long	dimx(void) const {
 		return _ior.dimx();
@@ -112,24 +120,13 @@ public:
 	double pix(void) const {
 		return _ior.pix();
 	}
-	void Ter_Img(double X, double Y, double Z, float *x, float *y) const;
-	void Ter_Img(DPOINT *pt, float *x, float *y) const;
+    Collimation Ter_Img(const DPOINT& pt) const;
 	// ritorna il vettore dal centro di presa verso il pixel xi, yi
-	void GetRay(float x, float y, DPOINT* pt);
-	void Img_Ter(float x, float y, double* X, double* Y, double Z);
-	//double Img_Ternp(VDP& _vdp_, float xl, float yl, float xr, float yr, double* X, double* Y, double *Z);
-	//double Img_Ternp(VDP& _vdp_, float x1, float y1, float x2, float y2, DPOINT& pt);
-	double Img_TerA(VDP& _vdp_, float x1, float y1, float x2, float y2, double *X, double *Y, double *Z);
+    void GetRay(const Collimation& ci, DPOINT* pt) const;
+    DPOINT Img_Ter(const Collimation& ci, double z) const;
+    double Img_TerA(const VDP& _vdp_, const Collimation& ci1, const Collimation& ci2, DPOINT& pt) const;
 private:
 	IOR		_ior;
-};
-class TOOLS_EXPORTS Collimation {
-public:
-	Collimation(): xi(0), yi(0) {}
-	Collimation(float x, float y): xi(x), yi(y) {}
-	Collimation(const Collimation& c): xi(c.xi), yi(c.yi) {}
-	float xi;
-	float yi;
 };
 
 class TOOLS_EXPORTS VDPC: public VDP {
@@ -138,9 +135,10 @@ public:
     VDPC(const VDPC& v): VDP(v) {}
 	VDPC(const Camera& cam, const std::string& Nome): VDP(cam, Nome) {}
 	//~VDP();
-    //Collimation& operator[](const std::string& cod) const {
-      //  return cl[cod];
-    //}
+    const Collimation& operator[](const std::string& cod) const {
+        std::map<std::string, Collimation>::const_iterator it = cl.find(cod);
+        return it->second;
+    }
 	Collimation& operator[](const std::string& cod) {
 		return cl[cod];
 	}
