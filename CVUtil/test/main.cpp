@@ -17,8 +17,6 @@ int main(int argc, char *argv[]) {
         CV::Util::Spatialite::Statement stmt( cnn );
         stmt.execute("select name from sqlite_master" );
 
-
-
         cnn.initialize_metdata();
         std::cout << "DB spatial init" << std::endl;
 
