@@ -35,22 +35,25 @@
 #include <sstream>
 #include <list>
 
-//using namespace Poco::XML;
-//using namespace Poco;
-
 class docbook_item;
 typedef Poco::SharedPtr<docbook_item> Doc_Item;
 
+// generic docbook item
 class docbook_item {
 public:
+	/// default constructor
 	docbook_item() {}
+	/// constructor without attributes
 	docbook_item(const std::string& tag): _tag(tag) {}
+	/// constructor with attributes
 	docbook_item(const std::string& tag, const Poco::XML::AttributesImpl& attr): _tag(tag), _attrs(attr) {}
+	/// add an item without attributes
 	Doc_Item add_item(const std::string& tag) {
 		Doc_Item dci(new docbook_item(tag));
 		_lst.push_back(dci);
 		return dci;
 	}
+	/// add an item with attributes
 	Doc_Item add_item(const std::string& tag, const Poco::XML::AttributesImpl& attr) {
 		Doc_Item dci(new docbook_item(tag, attr));
 		_lst.push_back(dci);
@@ -59,30 +62,56 @@ public:
 	void set_tag(const std::string& tag) {
 		_tag = tag;
 	}
+	std::string get_tag(void) const {
+		return _tag;
+	}
 
+	Doc_Item get_item(const std::string& tag) {
+		std::list< Doc_Item >::reverse_iterator it;
+		for (it = _lst.rbegin(); it != _lst.rend(); it++) {
+			Doc_Item dbi = *it;
+			if ( dbi->get_tag() == tag )
+				return dbi;
+		}
+		return Doc_Item(NULL);
+	}
+
+	/// append a 
 	void append(const std::string& v, const std::string& tag = "");
 	void append(int v, const std::string& tag = "");
 	void append(double v, const std::string& tag = "", int precision = 3);
+	void add_instr(const std::string& target, const std::string& data);
 
+	/// write a generic item
 	virtual void write(Poco::XML::XMLWriter& writer) {
 		if ( _attrs.getLength() != 0 )
 			writer.startElement("", _tag, "", _attrs);
 		else
 			writer.startElement("", _tag, "");
 
-		std::list< Doc_Item >::iterator it;
-		for (it = _lst.begin(); it != _lst.end(); it++) {
-			docbook_item* dbi = *it;
-			dbi->write(writer);
-		}
+		_write(writer);
+		//std::list< Doc_Item >::iterator it;
+		//for (it = _lst.begin(); it != _lst.end(); it++) {
+		//	docbook_item* dbi = *it;
+		//	dbi->write(writer);
+		//}
 		writer.endElement("", _tag, "");
 	}
 protected:
-	std::list< Doc_Item > _lst;
-	std::string _tag;
-	std::string _text;
-	Poco::XML::AttributesImpl _attrs;
+	void _write(Poco::XML::XMLWriter& writer) {
+		std::list< Doc_Item >::iterator it;
+		for (it = _lst.begin(); it != _lst.end(); it++) {
+			Doc_Item dbi = *it;
+			//docbook_item* dbi = *it;
+			dbi->write(writer);
+		}
+	}
+	std::list< Doc_Item > _lst; /// list of child items
+	std::string _tag; // tag of the item
+	std::string _text; // test of the item
+	Poco::XML::AttributesImpl _attrs;// attributes of the item
 };
+// text item
 class docbook_txt: public docbook_item {
 public:
 	docbook_txt(const std::string& str): _text(str) {}
@@ -90,8 +119,21 @@ public:
 		writer.characters(Poco::XML::toXMLString(_text));
 	}
 private:
-	std::string _text;
+	std::string _text; /// text of the item
 };
+/// instruction item
+class docbook_inst: public docbook_item {
+public:
+	docbook_inst(const std::string& target, const std::string& data):
+	  _target(target), _data(data) {}
+	virtual void write(Poco::XML::XMLWriter& writer) {
+		writer.processingInstruction(_target, _data);
+	}
+private:
+	std::string _target;
+	std::string _data;
+};
+// append text tag is optional to indicate a specific renderer
 inline void docbook_item::append(const std::string& v, const std::string& tag) {
 	if ( !tag.empty() ) {
 		Doc_Item dci(new docbook_item(tag));
@@ -102,6 +144,7 @@ inline void docbook_item::append(const std::string& v, const std::string& tag) {
 		_lst.push_back(dci);
 	}
 }
+/// append an integer item
 inline void docbook_item::append(int v, const std::string& tag) {
 	std::stringstream ss;
 	ss << v;
@@ -112,7 +155,12 @@ inline void docbook_item::append(double v, const std::string& tag, int precision
 	ss.precision(precision);
 	ss << v;
 	append(ss.str(), tag);
-}	
+}
+// append a floating point item
+inline void docbook_item::add_instr(const std::string& target, const std::string& data) {
+	Doc_Item dci(new docbook_inst(target, data));
+	_lst.push_back(dci);
+}
 class docbook: public docbook_item {
 public:
 	docbook() {}
@@ -135,11 +183,13 @@ public:
 		writer.startDocument();
 		writer.startDTD("article", "-//OASIS//DTD DocBook XML V4.5//IT\" \"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd", "");
 		writer.endDTD();
-		std::list< Doc_Item >::iterator it;
-		for (it = _lst.begin(); it != _lst.end(); it++) {
-			docbook_item* dbi = *it;
-			dbi->write(writer);
-		}
+		/// write the item list
+		_write(writer);
+		//std::list< Doc_Item >::iterator it;
+		//for (it = _lst.begin(); it != _lst.end(); it++) {
+		//	docbook_item* dbi = *it;
+		//	dbi->write(writer);
+		//}
 		writer.endDocument();
 	}
 private:
