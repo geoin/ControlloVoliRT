@@ -49,28 +49,34 @@ photo_exec::~photo_exec()
 }
 bool photo_exec::run()
 {
-	// inizializza la connessione con spatial lite
-	Poco::Path db_path(_proj_dir, "geo.sqlite");
+	try {
+		// initialize spatial lite connection
+		Poco::Path db_path(_proj_dir, "geo.sqlite");
+		cnn.create(db_path.toString());
+		cnn.initialize_metdata();
 
-	if ( !splite.init_splite(db_path.toString()) ) {
-		fprintf(stderr, "Error: %s\n", splite.get_error_msg());
-		return false;
+		// Read reference values
+		_read_ref_val();
+
+		// read camera data
+		if ( !_read_cam() )
+			return false;
+		// read photo position and attitude
+		if ( !_read_vdp() )
+			return false;
+		// read digital terrain model
+		if ( !_read_dem() )
+			return false;
+		// produce photos feature
+		if ( !_process_photos() )
+			return false;
+		// produce models features
+		if ( !_process_models() )
+			return false;
 	}
-	// legge i valori di riferimento per la verifica
-	_read_ref_val();
-
-	if ( !_read_cam() )
-		return false;
-	if ( !_read_vdp() )
-		return false;
-	if ( !_read_dem() )
-		return false;
-	if ( !_process_photos() )
-		return false;
-	if ( !_process_models() )
-		return false;
-
-	splite.release_splite();
+    catch(std::exception &e) {
+        std::cout << std::string(e.what()) << std::endl;
+    }
 	return true;
 }
 void photo_exec::set_vdp_name(const std::string& nome)
@@ -234,74 +240,37 @@ std::string photo_exec::_get_nome(const std::string& nome)
 bool photo_exec::_process_photos()
 {
 	std::string table(_type == Prj_type ? "Z_FOTOP" : "Z_FOTOV");
-	splite.drop_table(table);
+	cnn.remove_layer(table);
 
 	DSM* ds = _df->GetDsm();
 
-	std::vector<std::string> fields;
-	fields.push_back("Z_FOTO_ID TEXT NOT NULL");
-	fields.push_back("Z_FOTO_CS TEXT NOT NULL");
-	fields.push_back("Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY");
-	fields.push_back("Z_FOTO_DIMPIX DOUBLE NOT NULL");
-	fields.push_back("Z_FOTO_PITCH DOUBLE NOT NULL");
-	fields.push_back("Z_FOTO_ROLL DOUBLE NOT NULL");
-	if ( !splite.create_table(table, fields) ) {
-		fprintf (stderr, "Error: %s\n", splite.get_error_msg());
-		return false;
-	}
+	//// create the photo table
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"( _FOTO_ID TEXT NOT NULL, " <<
+		"Z_FOTO_ID TEXT NOT NULL, " <<
+		"Z_FOTO_CS TEXT NOT NULL," <<
+		"Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY," <<
+		"Z_FOTO_DIMPIX DOUBLE NOT NULL, " <<
+		"Z_FOTO_PITCH DOUBLE NOT NULL, " <<
+		"Z_FOTO_ROLL DOUBLE NOT NULL)";
+	cnn.execute_immediate(sql.str());
 
-	//// crea la tabella del GPS
-	//ss.str("");	ss.clear(); 
-	//ss << "CREATE TABLE " << table << " (\
-	//	Z_FOTO_ID TEXT NOT NULL,\
-	//	Z_FOTO_CS TEXT NOT NULL, \
-	//	Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY,\
-	//	Z_FOTO_DIMPIX DOUBLE NOT NULL,\
-	//	Z_FOTO_PITCH DOUBLE NOT NULL,\
-	//	Z_FOTO_ROLL DOUBLE NOT NULL)";
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POLYGON'," <<
+		"'XYZ')";
+	cnn.execute_immediate(sql1.str());
 
-	//ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	//if ( ret != SQLITE_OK ) {
-	//	fprintf (stderr, "Error: %s\n", err_msg);
-	//	sqlite3_free (err_msg);
-	//	return false;
-	//}
-	// aggiunge la colonna geometrica
-	if (! splite.add_geometry(table, "geom", SRID, w_spatialite::POLYGON, w_spatialite::XYZ) ) {
-		fprintf (stderr, "Error: %s\n", splite.get_error_msg());
-		return false;
-	}
-	
-	fields.clear();
-	fields.push_back("Z_FOTO_ID");
-	fields.push_back("Z_FOTO_CS");
-	fields.push_back("Z_FOTO_NF");
-	fields.push_back("Z_FOTO_DIMPIX");
-	fields.push_back("Z_FOTO_PITCH");
-	fields.push_back("Z_FOTO_ROLL");
-	fields.push_back("geom");
-	if ( !splite.prepare_insert(table, fields) ) {
-		fprintf (stderr, "Error: %s\n", splite.get_error_msg());
-		return false;
-	}
-
-	/*ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
-
-	ss.str("");	ss.clear(); 
-	ss << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
 		VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-	ret = sqlite3_prepare_v2(db_handle, ss.str().c_str(), ss.str().size(), &stmt, NULL);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}*/
+	CV::Util::Spatialite::Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());
 
 	std::map<std::string, VDP>::iterator it;
 	for (it = _vdps.begin(); it != _vdps.end(); it++) {
@@ -366,24 +335,27 @@ bool photo_exec::_process_photos()
 		//sqlite3_bind_double(stmt, 5, RAD_DEG(vdp.om));
 		//sqlite3_bind_double(stmt, 6, RAD_DEG(vdp.fi));
 		//sqlite3_bind_blob (stmt, 7, blob, blob_size, SQLITE_STATIC);
+
+		stm.execute();
 		
-		if ( ! splite.step() {
-		//int retv = sqlite3_step(stmt);
-		//if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
-			printf ("sqlite3_step() error: %s\n", splite.get_error_msg());
-		      break;
-		}
+		//if ( ! splite.step() {
+		////int retv = sqlite3_step(stmt);
+		////if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
+		//	printf ("sqlite3_step() error: %s\n", splite.get_error_msg());
+		//      break;
+		//}
 		gaiaFree(blob);
 		//_vfoto.push_back(fet);
 	}
-	sqlite3_finalize(stmt);
+	cnn.commit_transaction();
+	//sqlite3_finalize(stmt);
 
-	splite.commit();
-	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-	}
+	//splite.commit();
+	//ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+	//if (ret != SQLITE_OK) {
+	//	fprintf (stderr, "Error: %s\n", err_msg);
+	//	sqlite3_free (err_msg);
+	//}
 	//_process_models();
 	//_process_strips();
 	return true;
@@ -392,46 +364,38 @@ bool photo_exec::_process_photos()
 bool photo_exec::_process_models()
 {
 	std::string table(_type == Prj_type ? "Z_MODELP" : "Z_MODELV");
-	char *err_msg = NULL;
-	std::stringstream ss;
-	ss << "DROP TABLE " << table;
-	int ret = sqlite3_exec(db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
+	cnn.remove_layer(table);
 
 	DSM* ds = _df->GetDsm();
 
-	// crea la tabella del GPS
-	ss.str("");	ss.clear(); 
-	ss << "CREATE TABLE " << table << " (\
-		Z_MODEL_ID TEXT NOT NULL,\
-		Z_MODEL_CS TEXT NOT NULL, \
-		Z_MODEL_LEFT TEXT NOT NULL,\
-		Z_MODEL_RIGHT TEXT NOT NULL,\
-		Z_MODEL_L_OVERLAP INTEGER NOT NULL,\
-		Z_MODEL_T_OVERLAP INTEGER NOT NULL,\
-		Z_MODEL_D_HEADING DOUBLE NOT NULL)";
+	// create the model table
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(Z_MODEL_ID TEXT NOT NULL, " <<
+		"Z_MODEL_CS TEXT NOT NULL, " <<
+		"Z_MODEL_LEFT TEXT NOT NULL, " <<
+		"Z_MODEL_RIGHT TEXT NOT NULL, " <<
+		"Z_MODEL_L_OVERLAP INTEGER NOT NULL, " <<
+		"Z_MODEL_T_OVERLAP INTEGER NOT NULL, " <<
+		"Z_MODEL_D_HEADING DOUBLE NOT NULL)";
+	cnn.execute_immediate(sql.str());
 
-	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
 	// aggiunge la colonna geometrica
-	ss.str("");	ss.clear(); 
-	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', " << SRID << ", 'POLYGON', 'XYZ')";
-	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POLYGON'," <<
+		"'XYZ')";
+	cnn.execute_immediate(sql1.str());
+	
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING, geom) \
+		VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-	//ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
-	//if (ret != SQLITE_OK) {
-	//	fprintf (stderr, "Error: %s\n", err_msg);
-	//	sqlite3_free (err_msg);
-	//	return false;
-	//}
+	CV::Util::Spatialite::Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());	
 
 	//QgsFieldMap fields;
 	//fields[0] = QgsField("STRIP", QVariant::String);

@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]) {
     try {
         CV::Util::Spatialite::Connection cnn;
-        cnn.create("/Users/andrea/ControlloVoliRT/CVUtil/test/geo.sqlite");
+		cnn.create("C:/ControlloVoliRT/CVUtil/test/geo.sqlite");
         std::cout << "DB open" << std::endl;
 
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
         cnn.initialize_metdata();
         std::cout << "DB spatial init" << std::endl;
 
-        int nrows = cnn.load_shapefile("/Users/andrea/ControlloVoliRT/CVUtil/test/Castiglione_Scarlino",
+        int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
                            PLANNED_FLIGHT_LAYER_NAME,
                            SHAPE_CHAR_SET,
                            GAUSS_BOAGA_SRID,

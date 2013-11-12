@@ -29,11 +29,10 @@
 
 #include "photo_util/vdp.h"
 #include "Poco/Util/Application.h"
-#include "w_spatialite.h"
-//#include <spatialite/sqlite.h>
+#include "CVUtil/cvspatialite.h"
 
 class DSM_Factory;
-class QgsGeometry;
+//class QgsGeometry;
 
 class photo_exec {
 public:
@@ -64,7 +63,6 @@ private:
 	bool _read_ref_val(void);
 	std::string _get_strip(const std::string& nome);
 	std::string _get_nome(const std::string& nome);
-	//void _get_side(QgsGeometry* fv, double* d1, double* d2);
 
 	bool _get_photo(void);
 	std::string _cam_name;
@@ -78,13 +76,9 @@ private:
 	std::string _proj_dir;
 
 	// parametri connessione a sqlite
-	//sqlite3 *db_handle;
-	//sqlite3_stmt *stmt;
-	//void* db_cache;
-	w_spatialite splite;
+	CV::Util::Spatialite::Connection cnn;
 
 	std::map<std::string, VDP> _vdps;
-	//std::vector<QgsFeature> _vfoto;
 	Camera	_cam;
 	DSM_Factory* _df;
 };
