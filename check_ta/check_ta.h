@@ -60,9 +60,12 @@ private:
 	void _init_document(void);
 	Doc_Item _initpg1(void);
 	Doc_Item _initpg2(void);
+	void _resume(void);
 
-	void _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
-	void _add_point_to_table(Doc_Item tbody, const VecOri& pt, const VecOri& sc);
+
+	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
+	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
+	bool _print_item(double val, double tol, Doc_Item& row, Poco::XML::AttributesImpl& attr);
 
 	bool _get_photo(void);
 	std::string _cam_name;
@@ -74,6 +77,14 @@ private:
 	Camera	_cam;
 	docbook _dbook;
 	Doc_Item _article;
+	
+	double _T_CP;
+	double _T_PR;
+	double _T_H;
+	double _TP_PA;
+	double _TA_PA;
+	std::list<std::string> _cpt_out_tol;
+	std::list<std::string> _tria_out_tol;
 };
 
 class check_ta: public Poco::Util::Application {

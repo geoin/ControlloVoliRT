@@ -35,39 +35,53 @@
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
+#define REFSCALE "RefScale_2000"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::SharedPtr;
 using Poco::Path;
 
+std::string get_key(const std::string& val)
+{
+	return std::string(REFSCALE) + "." + val;
+}
+
 ta_exec::~ta_exec() 
 {
 }
 bool ta_exec::run()
 {
-	// inizializza la connessione con spatial lite
-	Poco::Path db_path(_proj_dir, "geo.sqlite");
-
 	// legge i valori di riferimento per la verifica
 	_read_ref_val();
 
+	// initialize docbook xml file
 	_init_document();
 
-	if ( !_check_differences() )
-		return false;
+	// che on control points
 	if ( !_check_cpt() )
 		return false;
+
+	// check the differences on two results
+	if ( !_check_differences() )
+		return false;
+
+	// write the result on the docbook report
 	_dbook.write();
 
 	return true;
 }
+void ta_exec::_resume()
+{
+}
 void ta_exec::set_vdp_name(const std::string& nome)
 {
+	// first results file used for comparison and control point check
 	_vdp_name = nome;
 }
 void ta_exec::set_vdp_name2(const std::string& nome)
 {
+	// second results file used for comparison
 	_vdp_name_2 = nome;
 }
 void ta_exec::set_cam_name(const std::string& nome)
@@ -90,12 +104,20 @@ bool ta_exec::_read_ref_val()
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
-		//_MAX_PDOP = pConf->getDouble(get_key("MAX_PDOP"));
-		//_MIN_SAT = pConf->getInt(get_key("MIN_SAT"));
-		//_MAX_DIST = pConf->getInt(get_key("MAX_DIST")) * 1000;
-		//_MIN_SAT_ANG = pConf->getDouble(get_key("MIN_SAT_ANG"));
-		//_NBASI = pConf->getInt(get_key("NBASI"));
-		//_MIN_ANG_SOL = pConf->getDouble(get_key("MIN_ANG_SOL"));
+		// toll of projection center
+		_T_CP = pConf->getDouble(get_key("T_CP"));
+		// toll for pitch and roll
+		_T_PR = pConf->getDouble(get_key("T_PR"));
+		//toll for headin angle
+		_T_H = pConf->getDouble(get_key("T_H"));
+		// toll of planimetric control points
+		_TP_PA = pConf->getDouble(get_key("TP_PA"));
+		// toll of altimetric control points
+		_TA_PA = pConf->getDouble(get_key("TA_PA"));
+
+		_T_CP *= 3 * sqrt(2.);
+		_T_PR *= 3 * sqrt(2.);
+		_T_H *=  3 * sqrt(2.);
 	} catch (...) {
 		return false;
 	}
@@ -120,12 +142,13 @@ Doc_Item ta_exec::_initpg1()
 	
 	Poco::XML::AttributesImpl attrs;
 	attrs.addAttribute("", "", "cols", "", "6");
-	
-	attrs.clear();
-	attrs.addAttribute("", "", "align", "", "center");
 	tab = tab->add_item("tgroup", attrs);
+	
 	Doc_Item thead = tab->add_item("thead");
 	Doc_Item row = thead->add_item("row");
+
+	attrs.clear();
+	attrs.addAttribute("", "", "align", "", "center");
 	row->add_item("entry", attrs)->append("Codice");
 	row->add_item("entry", attrs)->append("Foto Sx");
 	row->add_item("entry", attrs)->append("Foto Dx");
@@ -134,7 +157,6 @@ Doc_Item ta_exec::_initpg1()
 	row->add_item("entry", attrs)->append("Sc Z");
 
 	Doc_Item tbody = tab->add_item("tbody");
-	row = tbody->add_item("row");
 	return tbody;
 }
 Doc_Item ta_exec::_initpg2()
@@ -146,13 +168,15 @@ Doc_Item ta_exec::_initpg2()
 	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
 	
 	Poco::XML::AttributesImpl attrs;
-	attrs.addAttribute("", "", "cols", "", "6");
+	attrs.addAttribute("", "", "cols", "", "7");
+	tab = tab->add_item("tgroup", attrs);
+	
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
 	
 	attrs.clear();
 	attrs.addAttribute("", "", "align", "", "center");
-	tab = tab->add_item("tgroup", attrs);
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
+	row->add_item("entry", attrs)->append("Foto");
 	row->add_item("entry", attrs)->append("sc pc-X");
 	row->add_item("entry", attrs)->append("sc pc-Y");
 	row->add_item("entry", attrs)->append("sc pc-Z");
@@ -161,26 +185,41 @@ Doc_Item ta_exec::_initpg2()
 	row->add_item("entry", attrs)->append("Sc ka");
 
 	Doc_Item tbody = tab->add_item("tbody");
-	row = tbody->add_item("row");
 	return tbody;
 }
-void ta_exec::_add_point_to_table(Doc_Item tbody, const VecOri& pt, const VecOri& sc)
+bool ta_exec::_print_item(double val, double tol, Doc_Item& row, Poco::XML::AttributesImpl& attr)
+{
+	bool ret  = true;
+	if ( fabs(val) > tol ) {
+		Doc_Item r = row->add_item("entry", attr);
+		r->add_instr("dbfo", "bgcolor=\"red\"");
+		r->append(val);
+		ret = false;
+	} else
+		row->add_item("entry", attr)->append(val);
+	return ret;
+}
+/// checks for differences between two triangulations
+bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc)
 {
 	Doc_Item row = tbody->add_item("row");
 	Poco::XML::AttributesImpl attrr, attrc;
 	attrr.addAttribute("", "", "align", "", "right");
 	attrc.addAttribute("", "", "align", "", "center");
 
-	row->add_item("entry", attrr)->append(pt[0]);
-	row->add_item("entry", attrr)->append(pt[1]);
-	row->add_item("entry", attrr)->append(pt[2]);
+	row->add_item("entry", attrc)->append(foto);
 
-	row->add_item("entry", attrr)->append(sc[0]);
-	row->add_item("entry", attrr)->append(sc[1]);
-	row->add_item("entry", attrr)->append(sc[2]);
+	bool b = true;
+	b &= _print_item(pt[0], _T_CP, row, attrr);
+	b &= _print_item(pt[1], _T_CP, row, attrr);
+	b &= _print_item(pt[2], _T_CP, row, attrr);
+	b &= _print_item(sc[0], _T_PR, row, attrr);
+	b &= _print_item(sc[1], _T_PR, row, attrr);
+	b &= _print_item(sc[2], _T_H, row, attrr);
+	return b; // false if at least one element is out of tolerance
 }
 
-void ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc)
+bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc)
 {
 	Doc_Item row = tbody->add_item("row");
 	Poco::XML::AttributesImpl attrr, attrc;
@@ -190,18 +229,12 @@ void ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const 
 	row->add_item("entry", attrc)->append(cod);
 	row->add_item("entry", attrc)->append(nome1);
 	row->add_item("entry", attrc)->append(nome2);
-	if ( sc.x == 0. )
-		row->add_item("entry", attrc)->append("-");
-	else
-		row->add_item("entry", attrr)->append(sc.x);
-	if ( sc.y == 0. )
-		row->add_item("entry", attrc)->append("-");
-	else
-		row->add_item("entry", attrr)->append(sc.y);
-	if ( sc.z == 0. )
-		row->add_item("entry", attrc)->append("-");
-	else
-		row->add_item("entry", attrr)->append(sc.z);
+
+	bool b = true;
+	b &= _print_item(sc.x, _TP_PA, row, attrr);
+	b &= _print_item(sc.y, _TP_PA, row, attrr);
+	b &= _print_item(sc.z, _TA_PA, row, attrr);
+	return b;
 }
 bool ta_exec::_read_cam()
 {
@@ -324,10 +357,27 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
 				else
 					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
-				_add_point_to_table(row, cod, nome1, nome2, sc);
-				//std::cout << cod << " " << nome1 << "-" << nome2 << " dx=" << sc.x << " dy=" << sc.y << " dz=" << sc.z << std::endl;
+				if ( !_add_point_to_table(row, cod, nome1, nome2, sc) )
+					_cpt_out_tol.push_back(cod);
 			}
 			nome1 = nome2;
+		}
+	}
+	Doc_Item sec = _article->get_item("section");
+	if ( sec.get() == NULL )
+		return false;
+	if ( _cpt_out_tol.empty() ) {
+		std::stringstream ss;
+		ss << "Tutti i punti di controllo rientrano nelle tolleranze " << _TP_PA << ", " << _TA_PA;
+		sec->add_item("para")->append(ss.str());
+	} else {
+		std::stringstream ss;
+		ss << "I seguenti punti risultano fuori dalle toleranze " << _TP_PA << ", " << _TA_PA;
+		sec->add_item("para")->append(ss.str());
+		Doc_Item itl = sec->add_item("itemizedlist");
+		std::list<std::string>::iterator it;
+		for (it = _cpt_out_tol.begin(); it != _cpt_out_tol.end(); it++) {
+			itl->add_item("listitem")->append(*it);
 		}
 	}
 	return true;
@@ -391,6 +441,8 @@ bool ta_exec::_check_cpt()
 }
 bool ta_exec::_check_differences()
 {
+	if ( _vdp_name_2.empty() )
+		return false; /// no comparison is required
 	Doc_Item row = _initpg2();
 
 	_read_cam();
@@ -405,10 +457,27 @@ bool ta_exec::_check_differences()
 			VDP& vdp1 = vdps1[nome];
 			VDP& vdp2 = vdps2[nome];
 			VecOri pc = vdp1.Pc - vdp2.Pc;
-			VecOri at(RAD_DEG(vdp1.om - vdp2.om), RAD_DEG(vdp1.fi - vdp2.fi), RAD_DEG(vdp1.ka - vdp2.ka));
+			VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
 
-			_add_point_to_table(row, pc, at);
-			//std::cout << "dX=" << pc[0] << " dY=" << pc[1] << " dZ=" << pc[2] << " dom=" << at[0] << " dfi=" << at[1] << " dka=" << at[2] << std::endl;
+			if ( !_add_point_to_table(row, nome, pc, at) )
+				_tria_out_tol.push_back(nome);
+		}
+	}
+	Doc_Item sec = _article->get_item("section");
+	if ( sec.get() == NULL )
+		return false;
+	if ( _tria_out_tol.empty() ) {
+		std::stringstream ss;
+		ss << "I due risultati sono compatibili";
+		sec->add_item("para")->append(ss.str());
+	} else {
+		std::stringstream ss;
+		ss << "I due risultati risultano diversi nei seguenti fotogrammi";
+		sec->add_item("para")->append(ss.str());
+		Doc_Item itl = sec->add_item("itemizedlist");
+		std::list<std::string>::iterator it;
+		for (it = _tria_out_tol.begin(); it != _tria_out_tol.end(); it++) {
+			itl->add_item("listitem")->append(*it);
 		}
 	}
 	return true;
