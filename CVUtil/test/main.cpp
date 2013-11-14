@@ -14,7 +14,8 @@ int main( int argc, char *argv[]) {
         std::cout << "DB open" << std::endl;
 
         CV::Util::Spatialite::Statement stmt( cnn );
-        stmt.prepare("select name from sqlite_master" );
+        stmt.prepare("select name from sqlite_master where name = :NOME" );
+        stmt[":NOME"] = "AVOLOP";
 
         CV::Util::Spatialite::Recordset rs = stmt.recordset();
         while ( !rs.eof() ){
