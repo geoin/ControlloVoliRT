@@ -84,7 +84,7 @@ namespace CV {
             Recordset rs = stmt.recordset();
             SpatialMetadata ret = NO_SPATIAL_METADATA;
             if ( rs.next() ) {
-                ret = (SpatialMetadata) rs.toInt(0);
+                ret = (SpatialMetadata) rs[0].toInt();
             }
             return ret;
          }
@@ -175,8 +175,11 @@ namespace CV {
         }
 
 
-        sqlite3_stmt *_statement_core::_statement(){
+        sqlite3_stmt *_statement_core::_statement() const {
             return _stmt;
+        }
+
+        Statement::Statement(){
         }
 
         Statement::Statement(const Connection &cnn, std::string const &sql ) :
@@ -207,7 +210,7 @@ namespace CV {
             _stmt.assign(new _statement_core(stmt));
         }
 
-        void Statement::execute( std::string const &sql ){
+        void Statement::execute( std::string const &sql ) {
             prepare(sql);
             execute();
         }
@@ -225,19 +228,108 @@ namespace CV {
        }
 
         Recordset Statement::recordset() {
+            if ( _stmt.isNull() )
+                throw spatialite_error("Invalid Statement");
+            //if ( !is_query() )
+            //    throw spatialite_error("Statement is not a query and has no recordset");
+
             return Recordset(*this);
         }
 
-        sqlite3_stmt *Statement::_statement(){
+        bool Statement::is_query(){
+            if ( _stmt.isNull() )
+                throw spatialite_error("Invalid Statement");
+            int ret = sqlite3_data_count( _statement() );
+            if ( ret == 0 )
+                return false;
+            else
+                return true;
+        }
+
+        sqlite3_stmt *Statement::_statement() const {
             return _stmt->_statement();
         }
 
-        sqlite3 *Statement::_db(){
+        sqlite3 *Statement::_db() {
             return _cnn._db();
         }
 
+        Field::Field(){
+        }
 
-        Recordset::Recordset(const Statement &stmt ): _stmt(stmt) {
+        Field::Field( Field const &fld):
+                        _stmt(fld._stmt),
+                        _name(fld._name),
+                        _index(fld._index),
+                        _type(fld._type) {
+        }
+
+        Field &Field::operator=(Field const &fld) {
+            _stmt = fld._stmt;
+            _name = fld._name;
+            _index  = fld._index;
+            _type = fld._type;
+            return *this;
+        }
+
+        int  Field::toInt() {
+            return sqlite3_column_int( _stmt._statement() , _index );
+        }
+
+        long long  Field::toInt64(){
+            return (long long)sqlite3_column_int64( _stmt._statement() , _index );
+        }
+
+        double  Field::toDouble(){
+            return (double)sqlite3_column_double( _stmt._statement() , _index );
+        }
+
+        std::string  Field::toString(){
+            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
+             unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
+            std::string ret( (const char *) chr, nbytes);
+            return ret;
+        }
+
+        void  Field::toString( std::string &str){
+            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
+            unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
+            str.assign((const char *)chr, nbytes);
+        }
+
+        void  Field::toBlob( std::vector<char> &v ){
+            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
+            const void *chr = sqlite3_column_blob( _stmt._statement() , _index );
+            v.resize(nbytes);
+            memcpy( &v[0], chr, nbytes);
+        }
+
+        std::string const &Field::name() const {
+            return _name;
+        }
+
+        int Field::index() const{
+            return _index;
+        }
+
+        Field::FieldType Field::type() const{
+            return _type;
+        }
+
+        Field::Field( Statement &stmt, int idx): _stmt(stmt), _index(idx) {
+            const char *nm = sqlite3_column_origin_name( _stmt._statement(), idx);
+            _name.assign( nm );
+            _type = (Field::FieldType)sqlite3_column_type(_stmt._statement(), idx );
+        }
+
+        Recordset::Recordset(const Statement &stmt ):
+            _stmt(stmt), _fldcnt(-1),_eof(true) {
+            _eof = next();
+            int i=0;
+            for (i=0; i < fields_count(); i++){
+                Field fld(_stmt, i);
+                _flds[fld.name()] = fld;
+            }
         }
 
         Recordset::~Recordset(){
@@ -247,50 +339,50 @@ namespace CV {
        bool Recordset::next() {
             int ret = sqlite3_step( _stmt._statement() );
             if ( ret == SQLITE_DONE )
-                return false;
+                _eof = true;
             else if (ret == SQLITE_ROW )
-                return true;
+                _eof = false;
             else  {
               std::stringstream err;
               err << "Next error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
               throw spatialite_error(err.str());
              }
+            return _eof;
         }
 
-        int Recordset::toInt(int fldidx){
-            return sqlite3_column_int( _stmt._statement() , fldidx );
+        bool Recordset::eof() const {
+            return _eof;
         }
 
-        long long  Recordset::toInt64(int fldidx){
-            return (long long)sqlite3_column_int64( _stmt._statement() , fldidx );
+        int Recordset::fields_count() const {
+            if ( _fldcnt < 0 )
+                _fldcnt = sqlite3_data_count( _stmt._statement() );
+            return _fldcnt;
         }
 
-        double  Recordset::toDouble(int fldidx){
-            return (double)sqlite3_column_double( _stmt._statement() , fldidx );
-        }
-
-        std::string  Recordset::toString(int fldidx) {
-            int nbytes = sqlite3_column_bytes( _stmt._statement() , fldidx );
-             unsigned char const *chr = sqlite3_column_text( _stmt._statement() , fldidx );
-            std::string ret( (const char *) chr, nbytes);
+        std::string Recordset::column_name(int fldidx) const {
+            if (fldidx < 0 || fldidx >= fields_count() )
+                throw spatialite_error("Field index out of range");
+            const char *nm = sqlite3_column_origin_name( _stmt._statement(), fldidx);
+            std::string ret( nm );
             return ret;
         }
 
-        void  Recordset::toString(int fldidx, std::string &str) {
-            int nbytes = sqlite3_column_bytes( _stmt._statement() , fldidx );
-            unsigned char const *chr = sqlite3_column_text( _stmt._statement() , fldidx );
-            str.assign((const char *)chr, nbytes);
+        int Recordset::column_index(std::string const &name) const {
+           if ( _flds.find(name) == _flds.end())
+               throw spatialite_error("Field name not exists");
+           return _flds[name].index();
         }
 
-        void   Recordset::toBlob( int fldidx, std::vector<char> &v ) {
-            int nbytes = sqlite3_column_bytes( _stmt._statement() , fldidx );
-            const void *chr = sqlite3_column_blob( _stmt._statement() , fldidx );
-            v.resize(nbytes);
-            memcpy( &v[0], chr, nbytes);
+        Field Recordset::operator[](std::string const &name) const {
+            if ( _flds.find(name) == _flds.end())
+                throw spatialite_error("Field name not exists");
+            return _flds[name];
         }
 
-
-
+        Field Recordset::operator[](int fldx) const {
+            return (*this)[column_name(fldx)];
+        }
         } //end Spatialite
     } //end Util
 } //end CV

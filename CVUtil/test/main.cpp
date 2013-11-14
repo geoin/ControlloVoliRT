@@ -7,15 +7,20 @@
 #define GAUSS_BOAGA_SRID  32632
 #define GEOM_COL_NAME "geom"
 
-int main(int argc, char *argv[]) {
+int main( int argc, char *argv[]) {
     try {
         CV::Util::Spatialite::Connection cnn;
 		cnn.create("C:/ControlloVoliRT/CVUtil/test/geo.sqlite");
         std::cout << "DB open" << std::endl;
 
-
         CV::Util::Spatialite::Statement stmt( cnn );
-        stmt.execute("select name from sqlite_master" );
+        stmt.prepare("select name from sqlite_master" );
+
+        CV::Util::Spatialite::Recordset rs = stmt.recordset();
+        while ( !rs.eof() ){
+            std::cout << rs[0].toString() << std::endl;
+            rs.next();
+        }
 
         cnn.initialize_metdata();
         std::cout << "DB spatial init" << std::endl;
@@ -33,7 +38,8 @@ int main(int argc, char *argv[]) {
         bool ret = cnn.check_metadata();
         std::cout << "metatdata " << ret << std::endl;
     }
-    catch(std::exception &e){
+
+    catch( std::exception &e){
         std::cout << std::string(e.what()) << std::endl;
     }
 }
