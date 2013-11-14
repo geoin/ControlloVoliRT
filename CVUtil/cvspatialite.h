@@ -31,6 +31,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <stdexcept>
 #include <Poco/SharedPtr.h>
 
@@ -100,7 +101,7 @@ namespace CV {
         public:
             _statement_core( sqlite3_stmt *stmt );
             ~_statement_core();
-            sqlite3_stmt *_statement();
+            sqlite3_stmt *_statement() const;
 
         private:
             sqlite3_stmt *_stmt;
@@ -110,8 +111,10 @@ namespace CV {
         class Statement {
             friend class _statement_core;
             friend class Recordset;
+            friend class Field;
 
         public:
+            Statement();
             Statement( Connection const &cnn, std::string const &sql );
             Statement ( Connection const &cnn );
             ~Statement();
@@ -119,33 +122,72 @@ namespace CV {
             void execute( std::string const &sql );
             void execute();
             Recordset recordset();
+            bool is_query();
 
         private:
-            sqlite3_stmt *_statement();
+            sqlite3_stmt *_statement() const;
             sqlite3 *_db();
             Poco::SharedPtr<_statement_core>    _stmt;
             Connection                          _cnn;
         };
 
 
-        class Recordset {
-            friend class Statement;
+        class Field {
+            friend class Recordset;
 
         public:
-            Recordset( Statement const &stmt );
-            ~Recordset();
+             typedef enum {
+                INTEGER_TYPE = 1,
+                FLOAT_TYPE = 2,
+                BLOB_TYPE = 4,
+                NULL_TYPE = 5,
+                TEXT_TYPE = 3
+            } FieldType;
+            Field();
+            Field( Field const &fld);
+            Field &operator=(Field const &fld);
 
-            bool next();
-
-            int  toInt(int fldidx);
-            long long  toInt64(int fldidx);
-            double  toDouble(int fldidx);
-            std::string  toString(int fldidx);
-            void  toString(int fldidx, std::string &str);
-            void  toBlob( int fldidx, std::vector<char> &v );
+            int  toInt();
+            long long  toInt64();
+            double  toDouble();
+            std::string  toString();
+            void  toString(std::string &str);
+            void  toBlob( std::vector<char> &v );
+            std::string const &name() const;
+            int index() const;
+            FieldType type() const;
 
         private:
+            Field( Statement &stmt, int idx);
+
             Statement _stmt;
+            std::string mutable _name;
+            int mutable _index;
+            FieldType mutable _type;
+        };
+
+        class Recordset {
+            friend class Statement;
+            friend class Connection;
+
+        public:
+            ~Recordset();
+            bool next();
+            bool eof() const;
+            int fields_count() const;
+            std::string column_name(int fldix) const;
+            int column_index(std::string const &name) const;
+
+            Field operator[](std::string const &name) const;
+            Field operator[](int fldx) const;
+
+        private:
+            Recordset( Statement const &stmt );
+
+            Statement _stmt;
+            int mutable _fldcnt;
+            std::map<std::string, Field> mutable _flds;
+            bool _eof;
         };
 
         } //end Spatialite
