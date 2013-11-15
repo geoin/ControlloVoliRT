@@ -57,9 +57,6 @@ private:
 	bool _process_strips(void);
 	bool _process_photos(void);
 
-	bool _init_splite(void);
-	void _release_splite(void);
-
 	bool _read_ref_val(void);
 	std::string _get_strip(const std::string& nome);
 	std::string _get_nome(const std::string& nome);
@@ -75,7 +72,7 @@ private:
 	std::string _db_name;
 	std::string _proj_dir;
 
-	// parametri connessione a sqlite
+	// spatial lite connection
 	CV::Util::Spatialite::Connection cnn;
 
 	std::map<std::string, VDP> _vdps;

@@ -29,7 +29,7 @@
 
 #include "gps.h"
 #include "Poco/Util/Application.h"
-#include <spatialite/sqlite.h>
+#include "CVUtil/cvspatialite.h"
 
 class gps_exec {
 public:
@@ -37,7 +37,7 @@ public:
 		rover_type = 0,
 		base_type = 1
 	};
-	gps_exec(): db_handle(NULL), stmt(NULL), db_cache(NULL) {}
+	gps_exec() {}
 	~gps_exec();
 	bool run(void);
 
@@ -71,7 +71,6 @@ private:
 	// verifica i dati e produce i report
 	void _final_check(void);
 
-
 	std::string _rover_name;
 	std::string _sigla_base;
 	std::vector<std::string> _vs_base;
@@ -81,10 +80,8 @@ private:
 	std::string _db_name;
 	std::string _proj_dir;
 
-	// parametri connessione a sqlite
-	sqlite3 *db_handle;
-	sqlite3_stmt *stmt;
-	void* db_cache;
+	// spatial lite connection
+	CV::Util::Spatialite::Connection cnn;
 
 	// valori di riferimento
 	double _MAX_PDOP;

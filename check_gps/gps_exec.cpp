@@ -49,6 +49,7 @@
 #define STRIP_NAME "A_VOL_CS"
 #define REFSCALE "RefScale_2000"
 #define SRID 32632
+#define SHAPE_CHAR_SET "CP1252"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -73,74 +74,33 @@ void gps_exec::set_out_folder(const std::string& nome)
 }
 bool gps_exec::run()
 {
-	// inizializza la connessione con spatial lite
-	if ( !_init_splite() )
-		return false;
-
-
-	int rrows;
-	char* err_msg = NULL;
-    load_shapefile (db_handle, "C:\\Google_drive\\Regione Toscana Tools\\Dati_test\\assi volo\\AVOLOV",
-					   ASSI_VOLO, "cp1252", SRID,
-					   "geom", 0,
-					   0, 1,
-					   1, &rrows,
-					   err_msg);
-	sqlite3_free(err_msg);
-	
-	_create_gps_track();
-	
-	_data_analyze();
-	
-	_final_check();
-	
-	_release_splite();
-	return true;
-}
-bool gps_exec::_init_splite()
-{
 	try {
-		//inizializza spatial lite
-		spatialite_init(0);
-
-		// costruisce il nome dl db
-		//std::string db_name  = Poco::Path(_proj_dir).getBaseName();
+		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, "geo.sqlite");
-		//db_path.setExtension("sqlite");
-		 
-		// connette il db sqlite
-		int ret = sqlite3_open_v2(db_path.toString().c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-		if ( ret != SQLITE_OK ) {
-			fprintf (stderr, "cannot open '%s': %s\n", _db_name.c_str(), sqlite3_errmsg(db_handle));
-			//sqlite3_close(db_handle);
-			//db_handle = NULL;
-			return false;
-		}
-		//db_cache = spatialite_alloc_connection ();
-		//spatialite_init_ex(db_handle, db_cache, 0);
+		cnn.create(db_path.toString());
+		cnn.initialize_metdata();
 
-		// inizializza i metadati spaziali
-		char *err_msg = NULL;
-		ret = sqlite3_exec(db_handle, "SELECT InitSpatialMetadata()", NULL, NULL, &err_msg);
-		if (ret != SQLITE_OK) {
-			fprintf (stderr, "InitSpatialMetadata() error: %s\n", err_msg);
-			sqlite3_free(err_msg);
-			return false;
-		}
-		// legge i valori di riferimento per la verifica
-		_read_ref_val();
-	} catch (Poco::Exception& e) {
-		fprintf(stderr, "Error: %s\n", e.what());
-		return false;
+		int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
+		   ASSI_VOLO,
+		   SHAPE_CHAR_SET,
+		   SRID,
+		   "geom",
+		   false,
+		   false,
+		   false);
+		
+		_create_gps_track();
+		
+		_data_analyze();
+		
+		_final_check();
+		
+		_release_splite();
 	}
+	catch(std::exception &e) {
+        std::cout << std::string(e.what()) << std::endl;
+    }
 	return true;
-}
-void gps_exec::_release_splite()
-{
-	//if ( db_cache != NULL )
-		spatialite_cleanup();
-	if ( db_handle != NULL )
-		sqlite3_close_v2(db_handle);
 }
 
 bool gps_exec::_read_ref_val()
@@ -257,50 +217,36 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
 {
 	std::string table(BASI);
-	std::stringstream ss;
-	char *err_msg = NULL;
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
+		"name TEXT NOT NULL)";			// base name
+	cnn.execute_immediate(sql.str());
 
-	ss << "CREATE TABLE " << table << " (id INTEGER NOT NULL PRIMARY KEY,name TEXT NOT NULL)";
-	int ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
-	ss.str("");	ss.clear(); 
-
-	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', 4326, 'POINT', 'XYZ')";
-	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
-	ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
-
-	ss.precision(8);
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POINT'," <<
+		"'XYZ')";
+	cnn.execute_immediate(sql1.str());
+	
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (id, nome, ) \
+		VALUES (?1, ?2)";
+	
+	CV::Util::Spatialite::Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());	
+	
 	for ( size_t i = 0; i < basi.size(); i++) {
-		ss.str("");	ss.clear(); 
-		ss << "INSERT INTO " << table << " (id, name, geom) VALUES (" << i + 1 << ", '" << vs_base[i] << 
-			"', GeomFromText('POINTZ(" << basi[i].x << " " << basi[i].y << " " << basi[i].z << ")', 4326))";
-		ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-		if ( ret != SQLITE_OK ) {
-			fprintf (stderr, "Error: %s\n", err_msg);
-			sqlite3_free (err_msg);
-			continue;
-		}
+		stm[1] = (int) (i + 1);
+		stm[2] = vs_base[i];
+		stm.execute();
+		stm.reset();
 	}
-	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
+	cnn.commit_transaction();
+
 	return true;
 }
 bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::SharedPtr<vGPS> >& vvg, MBR* mbr)
@@ -385,11 +331,11 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	_record_base_file(basi, _vs_base);
 
 	std::string table("Gps");
-	std::stringstream ss;
-	char *err_msg = NULL;
 
 	// crea la tabella del GPS
-	ss << "CREATE TABLE " << table << 
+	cnn.remove_layer(table);
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
 		" (id INTEGER NOT NULL PRIMARY KEY,\
 		DATE TEXT NOT NULL,\
 		TIME TEXT NOT NULL,\
@@ -398,40 +344,23 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		NBASI INTEGER NOT NULL,\
 		RMS DOUBLE NOT NULL,\
 		MISSION TEXT NOT NULL )";
-	int ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
+	cnn.execute_immediate(sql.str());
 
-	// aggiunge la colonna geometrica
-	ss.str("");	ss.clear(); 
-	ss << "SELECT AddGeometryColumn('" << table << "', 'geom', 4326, 'POINT', 'XYZ')";
-	ret = sqlite3_exec (db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POINT'," <<
+		"'XYZ')";
+	cnn.execute_immediate(sql1.str());
 
-	ret = sqlite3_exec (db_handle, "BEGIN", NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
-
-	ss.str("");	ss.clear(); 
-	ss << "INSERT INTO " << table << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION, geom) \
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-	ret = sqlite3_prepare_v2 (db_handle, ss.str().c_str(), ss.str().size(), &stmt, NULL);
-	if ( ret != SQLITE_OK ) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-		return false;
-	}
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)";
+	
+	CV::Util::Spatialite::Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());	
 
 	int nsat;
 	double pdop;
@@ -487,9 +416,6 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		p.y /= d;
 		p.z /= d;
 
-		sqlite3_reset(stmt);
-		sqlite3_clear_bindings(stmt);
-
 		gaiaGeomCollPtr geo = gaiaAllocGeomColl ();
 		geo->Srid = 4326;
 		geo->DimensionModel  = GAIA_XY_Z;
@@ -501,31 +427,42 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		// we can now destroy the geometry object
 		gaiaFreeGeomColl (geo);
 
+		stm[1] = id++;
+		stm[2] = data;
+		stm[3] = time;
+		stm[4] = nsat;
+		stm[5] = pdop;
+		stm[6] = nbasi;
+		stm[7] = rms;
+		stm[8] = mission;
+		stm.execute();
+		stm.reset();
 		// binding parameters to Prepared Statement
-		sqlite3_bind_int(stmt, 1, id++);
-		sqlite3_bind_text(stmt, 2, data.c_str(), data.size(), SQLITE_STATIC);
-		sqlite3_bind_text(stmt, 3, time.c_str(), time.size(), SQLITE_STATIC);
-		sqlite3_bind_int(stmt, 4, nsat);
-		sqlite3_bind_double(stmt, 5, pdop);
-		sqlite3_bind_int(stmt, 6, nbasi);
-		sqlite3_bind_double(stmt, 7, rms);
-		sqlite3_bind_text(stmt, 8, mission.c_str(), mission.size(), SQLITE_STATIC);
-		sqlite3_bind_blob (stmt, 9, blob, blob_size, SQLITE_STATIC);
+		//sqlite3_bind_int(stmt, 1, id++);
+		//sqlite3_bind_text(stmt, 2, data.c_str(), data.size(), SQLITE_STATIC);
+		//sqlite3_bind_text(stmt, 3, time.c_str(), time.size(), SQLITE_STATIC);
+		//sqlite3_bind_int(stmt, 4, nsat);
+		//sqlite3_bind_double(stmt, 5, pdop);
+		//sqlite3_bind_int(stmt, 6, nbasi);
+		//sqlite3_bind_double(stmt, 7, rms);
+		//sqlite3_bind_text(stmt, 8, mission.c_str(), mission.size(), SQLITE_STATIC);
+		//sqlite3_bind_blob (stmt, 9, blob, blob_size, SQLITE_STATIC);
 		
-		int retv = sqlite3_step(stmt);
-		if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
-		      printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
-		      sqlite3_finalize (stmt);
-		      break;
-		  }
+		//int retv = sqlite3_step(stmt);
+		//if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
+		//      printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
+		//      sqlite3_finalize (stmt);
+		//      break;
+		//  }
 		gaiaFree(blob);
 	}
-	sqlite3_finalize(stmt);
-	ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-	if (ret != SQLITE_OK) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free (err_msg);
-	}
+	cnn.commit_transaction();
+	//sqlite3_finalize(stmt);
+	//ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
+	//if (ret != SQLITE_OK) {
+	//	fprintf (stderr, "Error: %s\n", err_msg);
+	//	sqlite3_free (err_msg);
+	//}
 	return true;
 }
 
@@ -558,17 +495,6 @@ std::string gps_exec::_hathanaka(const std::string& nome)
 bool gps_exec::_create_gps_track()
 {
 	try {
-		// cancella la tabella del gps
-		char *err_msg = NULL;
-		std::stringstream ss;
-		ss << "DROP TABLE " << GPS;
-		sqlite3_exec(db_handle, ss.str().c_str(), NULL, NULL, &err_msg);
-
-		// cancella la tabella delle basi
-		std::stringstream ss1;
-		ss1 << "DROP TABLE " << BASI;
-		sqlite3_exec(db_handle, ss1.str().c_str(), NULL, NULL, &err_msg);
-		
 		// imposta la massima distanza per le basi
 		_gps_opt.max_base_dst = _MAX_DIST;
 		_gps_opt.min_sat_angle = _MIN_SAT_ANG;
@@ -645,7 +571,6 @@ bool gps_exec::_mission_process(const std::string& folder)
 }
 void gps_exec::_data_analyze()
 {
-	char *err_msg = NULL;
 	std::stringstream ss;
 	ss << "ALTER TABLE " << ASSI_VOLO << " ADD COLUMN ";
 	std::string query;
@@ -653,29 +578,21 @@ void gps_exec::_data_analyze()
 	// modifica la tabella degli assi di volo aggiungendo i campi relativi ai parametri oggetto di verifica
 	try {
 		query = ss.str() + "DATE TEXT";
-		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
+		cnn.execute_immediate(query);
 		query = ss.str() + "TIME TEXT";
-		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
+		cnn.execute_immediate(query);
 		query = ss.str() + "MISSION TEXT";
-		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
+		cnn.execute_immediate(query);
 		query = ss.str() + "SUN_HL DOUBLE";
-		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
+		cnn.execute_immediate(query);
 		query = ss.str() + "NBASI INTEGER";
-		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
+		cnn.execute_immediate(query);
 		query = ss.str() + "NSAT INTEGER";
-		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
+		cnn.execute_immediate(query);
 		query = ss.str() + "PDOP DOUBLE";
-		if ( sqlite3_exec(db_handle, query.c_str(), NULL, NULL, &err_msg) != SQLITE_OK )
-			throw std::runtime_error(err_msg);
+		cnn.execute_immediate(query);
 	} catch (std::runtime_error& e) {
-		fprintf (stderr, "Error: %s\n", err_msg);
-		sqlite3_free(err_msg);
+        std::cout << std::string(e.what()) << std::endl;
 	}
 
 	// aggiorna la tabella degli assi di volo con i dati della traccia gps

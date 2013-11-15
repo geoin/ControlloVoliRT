@@ -73,7 +73,8 @@ bool photo_exec::run()
 		// produce models features
 		if ( !_process_models() )
 			return false;
-	}
+		if ( !_process_strips() )
+			return false;	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
     }
@@ -243,16 +244,15 @@ bool photo_exec::_process_photos()
 
 	DSM* ds = _df->GetDsm();
 
-	//// create the photo table
+	// create the photo table
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
-		"( _FOTO_ID TEXT NOT NULL, " <<
-		"Z_FOTO_ID TEXT NOT NULL, " <<
-		"Z_FOTO_CS TEXT NOT NULL," <<
-		"Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY," <<
-		"Z_FOTO_DIMPIX DOUBLE NOT NULL, " <<
-		"Z_FOTO_PITCH DOUBLE NOT NULL, " <<
-		"Z_FOTO_ROLL DOUBLE NOT NULL)";
+		"(Z_FOTO_ID TEXT NOT NULL, " <<		// project short name
+		"Z_FOTO_CS TEXT NOT NULL," <<		//  strip name
+		"Z_FOTO_NF TEXT NOT NULL PRIMARY KEY," << // photo name
+		"Z_FOTO_DIMPIX DOUBLE NOT NULL, " <<	// GSD pixel size
+		"Z_FOTO_PITCH DOUBLE NOT NULL, " <<		// pitch
+		"Z_FOTO_ROLL DOUBLE NOT NULL)";			// roll
 	cnn.execute_immediate(sql.str());
 
 	std::stringstream sql1;
@@ -264,8 +264,8 @@ bool photo_exec::_process_photos()
 	cnn.execute_immediate(sql1.str());
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
-		VALUES (?, ?, ?, ?, ?, ?, ?)";
+	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6)";
 
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
@@ -304,11 +304,8 @@ bool photo_exec::_process_photos()
 			gaiaSetPointXYZ(ring->Coords, i, dpol[i].x, dpol[i].y, dpol[i].z);
 		gaiaSetPointXYZ(ring->Coords, 4, dpol[0].x, dpol[0].y, dpol[0].z);
 
-		//calcola del GSD medio
+		// calculate mean GSD
 		dt = vdp.pix() * dt / (5 * vdp.foc());
-
-		//sqlite3_reset(stmt);
-		//sqlite3_clear_bindings(stmt);
 
 		unsigned char *blob;
 		int blob_size;
@@ -317,54 +314,19 @@ bool photo_exec::_process_photos()
 
 		stm[1] = SIGLA_PRJ;
 		stm[2] = _get_strip(it->first);
-		stm[3] = atoi(_get_nome(it->first).c_str());
+		stm[3] =it->first;
 		stm[4] = dt;
 		stm[5] = vdp.om;
 		stm[6] = vdp.fi;
-		//stm[7] = dt;
-
-		// we can now destroy the geometry object
-		//std::string strip = _get_strip(it->first);
-		//splite.bind(1, SIGLA_PRJ, w_spatialite::TEXT);
-		//splite.bind(2, strip.c_str(), w_spatialite::TEXT);
-		//int id = atoi(_get_nome(it->first).c_str());
-		//splite.bind(3, &id, w_spatialite::INT);
-		//splite.bind(4, &dt, w_spatialite::DOUBLE);
-		//double o = RAD_DEG(vdp.om), f = RAD_DEG(vdp.fi);
-		//splite.bind(5, &o), w_spatialite::DOUBLE);
-		//splite.bind(6, &f, w_spatialite::DOUBLE);
-		//splite.bind(7, blob, blob, blob_size);
-
-		//sqlite3_bind_text(stmt, 1, SIGLA_PRJ, strlen(SIGLA_PRJ), SQLITE_STATIC);
-		//sqlite3_bind_text(stmt, 2, strip.c_str(), strip.size(), SQLITE_STATIC);
-		//sqlite3_bind_int(stmt, 3, atoi(_get_nome(it->first).c_str()));
-		//sqlite3_bind_double(stmt, 4, dt);
-		//sqlite3_bind_double(stmt, 5, RAD_DEG(vdp.om));
-		//sqlite3_bind_double(stmt, 6, RAD_DEG(vdp.fi));
-		//sqlite3_bind_blob (stmt, 7, blob, blob_size, SQLITE_STATIC);
+		//stm[7] = blob;
 
 		stm.execute();
+		stm.reset();
 		
-		//if ( ! splite.step() {
-		////int retv = sqlite3_step(stmt);
-		////if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
-		//	printf ("sqlite3_step() error: %s\n", splite.get_error_msg());
-		//      break;
-		//}
 		gaiaFree(blob);
 		//_vfoto.push_back(fet);
 	}
 	cnn.commit_transaction();
-	//sqlite3_finalize(stmt);
-
-	//splite.commit();
-	//ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-	//if (ret != SQLITE_OK) {
-	//	fprintf (stderr, "Error: %s\n", err_msg);
-	//	sqlite3_free (err_msg);
-	//}
-	//_process_models();
-	//_process_strips();
 	return true;
 }
 // costruisce i modelli a partire da fotogrammi consecutivi della stessa strisciata
@@ -373,21 +335,19 @@ bool photo_exec::_process_models()
 	std::string table(_type == Prj_type ? "Z_MODELP" : "Z_MODELV");
 	cnn.remove_layer(table);
 
-	DSM* ds = _df->GetDsm();
-
 	// create the model table
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
-		"(Z_MODEL_ID TEXT NOT NULL, " <<
-		"Z_MODEL_CS TEXT NOT NULL, " <<
-		"Z_MODEL_LEFT TEXT NOT NULL, " <<
-		"Z_MODEL_RIGHT TEXT NOT NULL, " <<
-		"Z_MODEL_L_OVERLAP INTEGER NOT NULL, " <<
-		"Z_MODEL_T_OVERLAP INTEGER NOT NULL, " <<
-		"Z_MODEL_D_HEADING DOUBLE NOT NULL)";
+		"(Z_MODEL_ID TEXT NOT NULL, " <<	// sigla del lavoro
+		"Z_MODEL_CS TEXT NOT NULL, " <<		// strisciata
+		"Z_MODEL_LEFT TEXT NOT NULL, " <<	// nome foto sinistra
+		"Z_MODEL_RIGHT TEXT NOT NULL, " <<	// nome foto destra
+		"Z_MODEL_L_OVERLAP INTEGER NOT NULL, " <<	// overlap longitudinale
+		"Z_MODEL_T_OVERLAP INTEGER NOT NULL, " <<	// overlap trasversale
+		"Z_MODEL_D_HEADING DOUBLE NOT NULL)";		// differenza di heading tra i fotogrammi
 	cnn.execute_immediate(sql.str());
 
-	// aggiunge la colonna geometrica
+	// add the geometry column
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
@@ -397,95 +357,128 @@ bool photo_exec::_process_models()
 	cnn.execute_immediate(sql1.str());
 	
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING, geom) \
-		VALUES (?, ?, ?, ?, ?, ?, ?)";
-
+	sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)";
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
-	stm.prepare(sql2.str());	
+	stm.prepare(sql2.str());
 
-	//QgsFieldMap fields;
-	//fields[0] = QgsField("STRIP", QVariant::String);
-	//fields[1] = QgsField("NOME_LEFT", QVariant::String);
-	//fields[2] = QgsField("NOME_RIGHT", QVariant::String);
+	std::stringstream sql3;
+	std::string tablef(_type == Prj_type ? "Z_FOTOP" : "Z_FOTOV");
+	sql3 << "select distinct Z_FOTO_CS from " << tablef << " order by Z_FOTO_CS";
 
-	//Poco::Path pth(_out_folder, "Models.shp");
-	//QgsVectorFileWriter writer(pth.toString().c_str(), "CP1250", fields, QGis::WKBPolygon, 0, "ESRI Shapefile");
-
-	//std::string str0;
-	////SharedPtr<QgsGeometry> g0;
-	//QgsGeometry* g0 = NULL;
-	//std::string f0, f1;
-	//// scandisce tutti i fotogrammi
-	//for (size_t i = 0; i < _vfoto.size(); i++) {
-	//	QgsFeature& fet = _vfoto[i];
-	//	//SharedPtr<QgsGeometry> g1(fet.geometry());
-	//	QgsGeometry* g1 = fet.geometry();
-	//	const QgsAttributeMap& am = fet.attributeMap();
-	//	std::string str = am[0].toByteArray();
-	//	std::string f1 = am[1].toByteArray();
-	//	if ( str != str0 ) {
-	//		// inizia una nuova strip
-	//		str0 = str;
-	//	} else {
-	//		QgsFeature ft;
-	//		// fa l'intersezione del modello attuale (g1) col precedente (g0)
-	//		ft.setGeometry(g1->intersection(g0));
-	//		ft.addAttribute(0, QVariant(str0.c_str()));
-	//		ft.addAttribute(1, QVariant(f0.c_str()));
-	//		ft.addAttribute(2, QVariant(f1.c_str()));
-	//		writer.addFeature(ft);
-	//	}
-	//	g0 = g1;
-	//	f0 = f1;
-	//}
+	CV::Util::Spatialite::Statement stm1(cnn);
+	stm1.prepare(sql3.str());
+	CV::Util::Spatialite::Recordset rs = stm1.recordset();
+	
+	while ( !rs.eof() ) { //for every strip
+		std::string strip = rs[0].toString();
+		std::stringstream sql4;
+		sql4 << "select * from " << tablef << " where Z_FOTO_CS=" << strip;
+		CV::Util::Spatialite::Statement stm2(cnn);
+		stm2.prepare(sql4.str());
+		CV::Util::Spatialite::Recordset rs1 = stm2.recordset();
+		std::string nomeleft;
+		std::string id;
+		double lo = 60, to = 95, dh = 1;
+		double first = true;
+		while ( !rs1.eof() ) {
+			if ( first ) {
+				first = false;
+				id = rs1["Z_FOTO_ID"].toString();
+				strip = rs1["Z_FOTO_CS"].toString();
+				nomeleft = rs1["Z_FOTO_NF"].toString();
+				// acquisisce e memorizza la geom
+			} else {
+				std::string nomeright = rs1["Z_FOTO_NF"].toString();
+				// acquisisce la geom
+				// esegue l'intersezione
+				// calcola lo e to
+				// calcola dh
+				stm[1] = id;
+				stm[2] = strip;
+				stm[3] = nomeleft;
+				stm[4] = nomeright;
+				stm[5] = lo;
+				stm[6] = to;
+				stm[7] = dh;
+				stm.execute();
+				stm.reset();
+				nomeleft = nomeright;
+			}
+            rs1.next();
+        }
+		rs.next();
+	}
+	cnn.commit_transaction();
 	return true;
 }
 // costruisce le strisciate unendo tutte le foto di una stessa strip
 bool photo_exec::_process_strips()
 {
-	//QgsFieldMap fields;
-	//fields[0] = QgsField("STRIP", QVariant::String);
-	//fields[1] = QgsField("N_IMGS", QVariant::Int);
+	std::string table(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
+	cnn.remove_layer(table);
 
-	//Poco::Path pth(_out_folder, "Strips.shp");
-	//QgsVectorFileWriter writer(pth.toString().c_str(), "CP1250", fields, QGis::WKBPolygon, 0, "ESRI Shapefile");
+	// create the strip table
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
+		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
+		"Z_STRIP_T_OVERLAP INTEGER)";  // overlap trasversale
+	cnn.execute_immediate(sql.str());
 
-	//std::string str0;
-	//int nimg = 0;
+	// add the geometry column
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POLYGON'," <<
+		"'XYZ')";
+	cnn.execute_immediate(sql1.str());
+	
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS) \
+		VALUES (?1, ?2)";
+	CV::Util::Spatialite::Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());
 
-	////SharedPtr<QgsGeometry> g0;
-	//QgsGeometry* g0;
-	//for (size_t i = 0; i < _vfoto.size(); i++) {
-	//	QgsFeature& fet = _vfoto[i];
-	//	//SharedPtr<QgsGeometry> g1 = fet.geometry();
-	//	QgsGeometry* g1 = fet.geometry();
-	//	const QgsAttributeMap& am = fet.attributeMap();
-	//	std::string str = am[0].toByteArray();
-	//	if ( str != str0 ) {
-	//		if ( !str0.empty() ) {
-	//			QgsFeature ft;
-	//			ft.setGeometry(g0);
-	//			ft.addAttribute(0, QVariant(str0.c_str()));
-	//			ft.addAttribute(1, QVariant(nimg));
-	//			writer.addFeature(ft);
-	//		}
-	//		str0 = str;
-	//		nimg = 0;
-	//		g0 = g1;
-	//	} else {
-	//		g0 = g1->combine(g0);
-	//	}
-	//	nimg++;
-	//}
-	//if ( nimg ) {
-	//	QgsFeature ft;
-	//	ft.setGeometry(g0);
-	//	ft.addAttribute(0, QVariant(str0.c_str()));
-	//	ft.addAttribute(1, QVariant(nimg));
-	//	writer.addFeature(ft);
-	//}
+	std::stringstream sql3;
+	std::string tablef(_type == Prj_type ? "Z_MODELP" : "Z_MODELV");
+	
+	sql3 << "select distinct Z_MODEL_CS from " << tablef << " order by Z_MODEL_CS";
+	CV::Util::Spatialite::Statement stm1(cnn);
+	stm1.prepare(sql3.str());
+	CV::Util::Spatialite::Recordset rs = stm1.recordset();
+	
+	while ( !rs.eof() ) { //for every strip
+		std::string strip = rs[0].toString();
+		std::stringstream sql4;
+		sql4 << "select * from " << tablef << " where Z_MODEL_CS=" << strip;
+		CV::Util::Spatialite::Statement stm2(cnn);
+		stm2.prepare(sql4.str());
+		CV::Util::Spatialite::Recordset rs1 = stm2.recordset();
+		std::string id;
+		bool first = true;
+		while ( !rs1.eof() ) {
+			if ( first ) {
+				id = rs1["Z_MODEL_ID"].toString();
+				strip = rs1["Z_MODEL_CS"].toString();
+				first = false;
+			} else {
+				// unisce tutti i modelli
+				;
+			}
+			rs1.next();
+		}
+		stm[1] = id;
+		stm[2] = strip;
+		stm.execute();
+		stm.reset();
+		
+		rs.next();
+	}
+	cnn.commit_transaction();
 	return true;
-
 }
 
