@@ -540,7 +540,8 @@ namespace CV {
         std::string Recordset::column_name(int fldidx) const {
             if (fldidx < 0 || fldidx >= fields_count() )
                 throw spatialite_error("Field index out of range");
-            const char *nm = sqlite3_column_origin_name( _stmt._statement(), fldidx);
+            //const char *nm = sqlite3_column_origin_name( _stmt._statement(), fldidx);
+            const char *nm = sqlite3_column_name( _stmt._statement(), fldidx);
             std::string ret( nm );
             return ret;
         }
