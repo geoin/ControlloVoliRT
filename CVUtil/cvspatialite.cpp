@@ -366,7 +366,8 @@ namespace CV {
         }
 
         QueryField::QueryField( Statement &stmt, int idx): Field(stmt, idx) {
-            const char *nm = sqlite3_column_origin_name( _stmt._statement(), idx);
+            const char *nm = sqlite3_column_name( _stmt._statement(), idx);
+            //const char *nm = sqlite3_column_origin_name( _stmt._statement(), idx);
             _name.assign( nm );
             _type = (QueryField::FieldType)sqlite3_column_type(_stmt._statement(), idx );
         }

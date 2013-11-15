@@ -181,7 +181,6 @@ std::string photo_exec::_get_nome(const std::string& nome)
 	return tok[1];
 }
 
-
 //void photo_exec::_get_side(QgsGeometry* fv, double* d1, double* d2) 
 //{
 //	fv->
@@ -316,17 +315,25 @@ bool photo_exec::_process_photos()
 		gaiaToSpatiaLiteBlobWkb(geo, &blob, &blob_size);
 		gaiaFreeGeomColl (geo);
 
+		stm[1] = SIGLA_PRJ;
+		stm[2] = _get_strip(it->first);
+		stm[3] = atoi(_get_nome(it->first).c_str());
+		stm[4] = dt;
+		stm[5] = vdp.om;
+		stm[6] = vdp.fi;
+		//stm[7] = dt;
+
 		// we can now destroy the geometry object
-		std::string strip = _get_strip(it->first);
-		splite.bind(1, SIGLA_PRJ, w_spatialite::TEXT);
-		splite.bind(2, strip.c_str(), w_spatialite::TEXT);
-		int id = atoi(_get_nome(it->first).c_str());
-		splite.bind(3, &id, w_spatialite::INT);
-		splite.bind(4, &dt, w_spatialite::DOUBLE);
-		double o = RAD_DEG(vdp.om), f = RAD_DEG(vdp.fi);
-		splite.bind(5, &o), w_spatialite::DOUBLE);
-		splite.bind(6, &f, w_spatialite::DOUBLE);
-		splite.bind(7, blob, blob, blob_size);
+		//std::string strip = _get_strip(it->first);
+		//splite.bind(1, SIGLA_PRJ, w_spatialite::TEXT);
+		//splite.bind(2, strip.c_str(), w_spatialite::TEXT);
+		//int id = atoi(_get_nome(it->first).c_str());
+		//splite.bind(3, &id, w_spatialite::INT);
+		//splite.bind(4, &dt, w_spatialite::DOUBLE);
+		//double o = RAD_DEG(vdp.om), f = RAD_DEG(vdp.fi);
+		//splite.bind(5, &o), w_spatialite::DOUBLE);
+		//splite.bind(6, &f, w_spatialite::DOUBLE);
+		//splite.bind(7, blob, blob, blob_size);
 
 		//sqlite3_bind_text(stmt, 1, SIGLA_PRJ, strlen(SIGLA_PRJ), SQLITE_STATIC);
 		//sqlite3_bind_text(stmt, 2, strip.c_str(), strip.size(), SQLITE_STATIC);
