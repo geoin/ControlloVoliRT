@@ -42,7 +42,7 @@ namespace CV {
             if (_handle) sqlite3_close (_handle);
         }
 
-        sqlite3     *_connection_core::_db(){
+        sqlite3     *_connection_core::_db() const{
             return _handle;
         }
 
@@ -162,7 +162,7 @@ namespace CV {
             stmt.execute();
         }
 
-        sqlite3 *Connection::_db() {
+        sqlite3 *Connection::_db() const {
             return _cnn_core->_db();
         }
 
@@ -179,16 +179,18 @@ namespace CV {
             return _stmt;
         }
 
-        Statement::Statement(){
+        Statement::Statement(): _bndfldcnt(-1) {
         }
 
         Statement::Statement(const Connection &cnn, std::string const &sql ) :
-            _cnn(cnn) {
+            _cnn(cnn),
+            _bndfldcnt(-1) {
             prepare( sql );
         }
 
         Statement::Statement( const Connection &cnn ) :
-            _cnn(cnn) {
+            _cnn(cnn),
+            _bndfldcnt(-1) {
         }
 
         Statement::~Statement() {
@@ -208,6 +210,27 @@ namespace CV {
               throw spatialite_error(err.str());
              }
             _stmt.assign(new _statement_core(stmt));
+
+            _bndflds.clear();
+            _bndfldcnt = sqlite3_bind_parameter_count(stmt);
+            for (int i=1; i <= _bndfldcnt; i++ ){
+                BindField bfld(*this, i);
+                _bndflds[i] = bfld;
+            }
+        }
+
+        void Statement::reset() const {
+            // check preconditions
+            if ( !_cnn.is_valid() )
+                throw spatialite_error("Invalid Connection");
+            if ( _stmt.isNull() )
+                throw spatialite_error("Invalid Statement");
+            int ret = sqlite3_reset(_stmt->_statement());
+            if ( ret != SQLITE_OK ) {
+                std::stringstream err;
+                err << "Reset error: " <<  std::string( sqlite3_errmsg(_db()) );
+                throw spatialite_error(err.str());
+            }
         }
 
         void Statement::execute( std::string const &sql ) {
@@ -225,14 +248,11 @@ namespace CV {
               err << "Execute error: " <<  std::string( sqlite3_errmsg( _db() ) );
               throw spatialite_error(err.str());
              }
-       }
+        }
 
         Recordset Statement::recordset() {
             if ( _stmt.isNull() )
                 throw spatialite_error("Invalid Statement");
-            //if ( !is_query() )
-            //    throw spatialite_error("Statement is not a query and has no recordset");
-
             return Recordset(*this);
         }
 
@@ -246,11 +266,25 @@ namespace CV {
                 return true;
         }
 
+        BindField &Statement::operator[]( int i){
+            if ( i < 1 || i > _bndfldcnt )
+                throw spatialite_error("Invalid bind field index");
+            return _bndflds[i];
+        }
+
+        BindField &Statement::operator[]( std::string const &nm){
+            int idx = sqlite3_bind_parameter_index(_statement(), nm.c_str());
+            if (idx == 0 )
+                throw spatialite_error("Invalid bind filed name");
+            return _bndflds[idx];
+        }
+
+
         sqlite3_stmt *Statement::_statement() const {
             return _stmt->_statement();
         }
 
-        sqlite3 *Statement::_db() {
+        sqlite3 *Statement::_db() const {
             return _cnn._db();
         }
 
@@ -260,48 +294,17 @@ namespace CV {
         Field::Field( Field const &fld):
                         _stmt(fld._stmt),
                         _name(fld._name),
-                        _index(fld._index),
-                        _type(fld._type) {
+                        _index(fld._index) {
         }
 
         Field &Field::operator=(Field const &fld) {
             _stmt = fld._stmt;
             _name = fld._name;
             _index  = fld._index;
-            _type = fld._type;
             return *this;
         }
 
-        int  Field::toInt() {
-            return sqlite3_column_int( _stmt._statement() , _index );
-        }
-
-        long long  Field::toInt64(){
-            return (long long)sqlite3_column_int64( _stmt._statement() , _index );
-        }
-
-        double  Field::toDouble(){
-            return (double)sqlite3_column_double( _stmt._statement() , _index );
-        }
-
-        std::string  Field::toString(){
-            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
-             unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
-            std::string ret( (const char *) chr, nbytes);
-            return ret;
-        }
-
-        void  Field::toString( std::string &str){
-            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
-            unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
-            str.assign((const char *)chr, nbytes);
-        }
-
-        void  Field::toBlob( std::vector<char> &v ){
-            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
-            const void *chr = sqlite3_column_blob( _stmt._statement() , _index );
-            v.resize(nbytes);
-            memcpy( &v[0], chr, nbytes);
+        Field::Field(Statement &stmt, int idx): _stmt(stmt), _index(idx) {
         }
 
         std::string const &Field::name() const {
@@ -312,22 +315,196 @@ namespace CV {
             return _index;
         }
 
-        Field::FieldType Field::type() const{
+        QueryField::QueryField(): Field() {
+        }
+
+        QueryField::QueryField( QueryField const &fld):
+                        Field(fld),
+                        _type(fld._type) {
+        }
+
+        QueryField &QueryField::operator=(QueryField const &fld) {
+            Field::operator=(fld);
+            _type = fld._type;
+            return *this;
+        }
+
+        int  QueryField::toInt() {
+            return sqlite3_column_int( _stmt._statement() , _index );
+        }
+
+        long long  QueryField::toInt64(){
+            return (long long)sqlite3_column_int64( _stmt._statement() , _index );
+        }
+
+        double  QueryField::toDouble(){
+            return (double)sqlite3_column_double( _stmt._statement() , _index );
+        }
+
+        std::string  QueryField::toString(){
+            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
+             unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
+            std::string ret( (const char *) chr, nbytes);
+            return ret;
+        }
+
+        void  QueryField::toString( std::string &str){
+            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
+            unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
+            str.assign((const char *)chr, nbytes);
+        }
+
+        void  QueryField::toBlob( std::vector<char> &v ){
+            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
+            const void *chr = sqlite3_column_blob( _stmt._statement() , _index );
+            v.resize(nbytes);
+            memcpy( &v[0], chr, nbytes);
+        }
+
+        QueryField::FieldType QueryField::type() const {
             return _type;
         }
 
-        Field::Field( Statement &stmt, int idx): _stmt(stmt), _index(idx) {
+        QueryField::QueryField( Statement &stmt, int idx): Field(stmt, idx) {
             const char *nm = sqlite3_column_origin_name( _stmt._statement(), idx);
             _name.assign( nm );
-            _type = (Field::FieldType)sqlite3_column_type(_stmt._statement(), idx );
+            _type = (QueryField::FieldType)sqlite3_column_type(_stmt._statement(), idx );
+        }
+
+        BindField::BindField(): Field() {
+        }
+
+        BindField::BindField( BindField const &fld):
+                        Field(fld) {
+        }
+
+        BindField &BindField::operator=(BindField const &fld) {
+            Field::operator=(fld);
+            return *this;
+        }
+
+        int  BindField::toInt(){
+            return Poco::AnyCast<int>(_value);
+        }
+
+        long long  BindField::toInt64(){
+            return Poco::AnyCast<long long>(_value);
+        }
+
+        double  BindField::toDouble(){
+            return Poco::AnyCast<double>(_value);
+        }
+
+        std::string  BindField::toString(){
+            return Poco::AnyCast<std::string>(_value);
+        }
+
+        void  BindField::toString(std::string &str) {
+            str = Poco::AnyCast<std::string>(_value);
+        }
+
+        void  BindField::toBlob( std::vector<char> &v ){
+            v = Poco::RefAnyCast< std::vector<char> >(_value);
+        }
+
+        void BindField::fromInt(int v){
+            _value = v;
+            int ret = sqlite3_bind_int(_stmt._statement(), _index, v );
+            if (ret != SQLITE_OK) {
+                std::stringstream err;
+                err << "Bind integer error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
+                throw spatialite_error(err.str());
+            }
+        }
+
+        void BindField::fromInt64(long long v){
+            _value = v;
+            int ret = sqlite3_bind_int64(_stmt._statement(), _index, v );
+            if (ret != SQLITE_OK) {
+                std::stringstream err;
+                err << "Bind int64 error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
+                throw spatialite_error(err.str());
+            }
+       }
+
+        void BindField::fromDouble(double v){
+            _value = v;
+            int ret = sqlite3_bind_double(_stmt._statement(), _index, v );
+            if (ret != SQLITE_OK) {
+                std::stringstream err;
+                err << "Bind double error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
+                throw spatialite_error(err.str());
+            }
+        }
+
+        void BindField::fromString(std::string const &v){
+            _value = v;
+            const char *c = Poco::RefAnyCast<std::string>(_value).c_str();
+            int ret = sqlite3_bind_text(_stmt._statement(), _index, c, v.size(), SQLITE_STATIC );
+            if (ret != SQLITE_OK) {
+                std::stringstream err;
+                err << "Bind string error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
+                throw spatialite_error(err.str());
+            }
+        }
+
+        void BindField::fromBlob( std::vector<char> const &v ){
+            _value = v;
+            const char *c = &(Poco::RefAnyCast< std::vector<char> >(_value))[0];
+            int ret = sqlite3_bind_text(_stmt._statement(), _index, &v[0], v.size(), SQLITE_STATIC );
+            if (ret != SQLITE_OK) {
+                std::stringstream err;
+                err << "Bind blob error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
+                throw spatialite_error(err.str());
+            }
+        }
+
+        void BindField::fromBlob( char * const v, int l ){
+            _value = v;
+            int ret = sqlite3_bind_text(_stmt._statement(), _index, v, l, SQLITE_TRANSIENT );
+            if (ret != SQLITE_OK) {
+                std::stringstream err;
+                err << "Bind blob error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
+                throw spatialite_error(err.str());
+            }
+        }
+
+        BindField &BindField::operator=(int v) {
+            fromInt(v);
+            return *this;
+        }
+
+        BindField &BindField::operator=(long long v) {
+            fromInt64(v);
+            return *this;
+        }
+
+        BindField &BindField::operator=(double v) {
+            fromDouble(v);
+            return *this;
+        }
+
+        BindField &BindField::operator=(std::string const &v) {
+            fromString(v);
+            return *this;
+        }
+
+        BindField &BindField::operator=( std::vector<char> const &v) {
+            fromBlob(v);
+            return *this;
+        }
+
+        BindField::BindField( Statement &stmt, int idx): Field( stmt, idx ) {
+            const char *nm = sqlite3_bind_parameter_name( _stmt._statement(), idx);
+            _name.assign( nm );
         }
 
         Recordset::Recordset(const Statement &stmt ):
             _stmt(stmt), _fldcnt(-1),_eof(true) {
             _eof = next();
             int i=0;
-            for (i=0; i < fields_count(); i++){
-                Field fld(_stmt, i);
+            for (i=0; i < fields_count(); i++) {
+                QueryField fld(_stmt, i);
                 _flds[fld.name()] = fld;
             }
         }
@@ -374,13 +551,13 @@ namespace CV {
            return _flds[name].index();
         }
 
-        Field Recordset::operator[](std::string const &name) const {
+        QueryField &Recordset::operator[](std::string const &name) const {
             if ( _flds.find(name) == _flds.end())
                 throw spatialite_error("Field name not exists");
             return _flds[name];
         }
 
-        Field Recordset::operator[](int fldx) const {
+        QueryField &Recordset::operator[](int fldx) const {
             return (*this)[column_name(fldx)];
         }
         } //end Spatialite

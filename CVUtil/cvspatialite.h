@@ -34,6 +34,7 @@
 #include <map>
 #include <stdexcept>
 #include <Poco/SharedPtr.h>
+#include <Poco/Any.h>
 
 #include <sqlite3.h>
 #include "spatialite.h"
@@ -49,7 +50,7 @@ namespace CV {
         public:
             _connection_core( sqlite3 *handle, void *cache);
             ~_connection_core();
-            sqlite3     *_db();
+            sqlite3     *_db() const;
 
         private:
             void        *_cache;
@@ -92,7 +93,7 @@ namespace CV {
             void execute_immediate(std::string const &sql);
 
         private:
-           sqlite3 *_db();
+           sqlite3 *_db() const;
            Poco::SharedPtr< _connection_core > _cnn_core;
         };
 
@@ -108,10 +109,12 @@ namespace CV {
         };
 
         class Recordset;
+        class BindField;
         class Statement {
             friend class _statement_core;
             friend class Recordset;
-            friend class Field;
+            friend class QueryField;
+            friend class BindField;
 
         public:
             Statement();
@@ -119,20 +122,50 @@ namespace CV {
             Statement ( Connection const &cnn );
             ~Statement();
             void prepare( std::string const &sql );
+            void reset() const;
             void execute( std::string const &sql );
             void execute();
             Recordset recordset();
             bool is_query();
 
+            BindField &operator[]( int i);
+            BindField &operator[]( std::string const &nm);
+
         private:
             sqlite3_stmt *_statement() const;
-            sqlite3 *_db();
+            sqlite3 *_db() const;
             Poco::SharedPtr<_statement_core>    _stmt;
             Connection                          _cnn;
+
+            int mutable _bndfldcnt;
+            std::map<int, BindField> mutable _bndflds;
         };
 
-
         class Field {
+            friend class Recordset;
+
+        public:
+            Field();
+            Field( Field const &fld);
+            Field &operator=(Field const &fld);
+
+            virtual int  toInt() = 0;
+            virtual long long  toInt64() = 0;
+            virtual double  toDouble() = 0;
+            virtual std::string  toString() = 0;
+            virtual void  toString(std::string &str) = 0;
+            virtual void  toBlob( std::vector<char> &v ) = 0;
+            std::string const &name() const;
+            int index() const;
+
+        protected:
+            Field( Statement &stmt, int idx);
+            Statement _stmt;
+            std::string mutable _name;
+            int mutable _index;
+        };
+
+        class QueryField : public Field {
             friend class Recordset;
 
         public:
@@ -143,28 +176,55 @@ namespace CV {
                 NULL_TYPE = 5,
                 TEXT_TYPE = 3
             } FieldType;
-            Field();
-            Field( Field const &fld);
-            Field &operator=(Field const &fld);
+            QueryField();
+            QueryField( QueryField const &fld);
+            QueryField &operator=(QueryField const &fld);
 
-            int  toInt();
-            long long  toInt64();
-            double  toDouble();
-            std::string  toString();
-            void  toString(std::string &str);
-            void  toBlob( std::vector<char> &v );
-            std::string const &name() const;
-            int index() const;
+            virtual int  toInt();
+            virtual long long  toInt64();
+            virtual double  toDouble();
+            virtual std::string  toString();
+            virtual void  toString(std::string &str);
+            virtual void  toBlob( std::vector<char> &v );
             FieldType type() const;
 
         private:
-            Field( Statement &stmt, int idx);
-
-            Statement _stmt;
-            std::string mutable _name;
-            int mutable _index;
+            QueryField( Statement &stmt, int idx);
             FieldType mutable _type;
         };
+
+        class BindField : public Field {
+            friend class Recordset;
+            friend class Statement;
+        public:
+            BindField();
+            BindField( BindField const &fld);
+            BindField &operator=(BindField const &fld);
+
+            virtual int  toInt();
+            virtual long long  toInt64();
+            virtual double  toDouble();
+            virtual std::string  toString();
+            virtual void  toString(std::string &str);
+            virtual void  toBlob( std::vector<char> &v );
+
+            void fromInt(int v);
+            void fromInt64(long long v);
+            void fromDouble(double v);
+            void fromString(std::string const &v);
+            void fromBlob(const std::vector<char> &v );
+            void fromBlob( char * const v, int l );
+
+            BindField &operator=(int v);
+            BindField &operator=(long long v);
+            BindField &operator=(double v);
+            BindField &operator=(std::string const &v);
+            BindField &operator=( std::vector<char> const &v);
+
+        private:
+            BindField( Statement &stmt, int idx);
+            Poco::Any _value;
+         };
 
         class Recordset {
             friend class Statement;
@@ -178,15 +238,15 @@ namespace CV {
             std::string column_name(int fldix) const;
             int column_index(std::string const &name) const;
 
-            Field operator[](std::string const &name) const;
-            Field operator[](int fldx) const;
+            QueryField &operator[](std::string const &name) const;
+            QueryField &operator[](int fldx) const;
 
         private:
             Recordset( Statement const &stmt );
 
             Statement _stmt;
             int mutable _fldcnt;
-            std::map<std::string, Field> mutable _flds;
+            std::map<std::string, QueryField> mutable _flds;
             bool _eof;
         };
 
