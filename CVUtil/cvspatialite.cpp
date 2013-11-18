@@ -83,7 +83,7 @@ namespace CV {
             Statement stmt(*this, "SELECT CheckSpatialMetadata()");
             Recordset rs = stmt.recordset();
             SpatialMetadata ret = NO_SPATIAL_METADATA;
-            if ( rs.next() ) {
+            if ( !rs.eof() ) {
                 ret = (SpatialMetadata) rs[0].toInt();
             }
             return ret;
@@ -354,7 +354,7 @@ namespace CV {
             str.assign((const char *)chr, nbytes);
         }
 
-        void  QueryField::toBlob( std::vector<char> &v ){
+        void  QueryField::toBlob(std::vector<unsigned char> &v ){
             int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
             const void *chr = sqlite3_column_blob( _stmt._statement() , _index );
             v.resize(nbytes);
@@ -366,8 +366,10 @@ namespace CV {
         }
 
         QueryField::QueryField( Statement &stmt, int idx): Field(stmt, idx) {
-            const char *nm = sqlite3_column_origin_name( _stmt._statement(), idx);
-            _name.assign( nm );
+            const char *nm = sqlite3_column_name( _stmt._statement(), idx);
+            _name.clear();
+            if ( nm )
+                _name.assign( nm );
             _type = (QueryField::FieldType)sqlite3_column_type(_stmt._statement(), idx );
         }
 
@@ -403,8 +405,8 @@ namespace CV {
             str = Poco::AnyCast<std::string>(_value);
         }
 
-        void  BindField::toBlob( std::vector<char> &v ){
-            v = Poco::RefAnyCast< std::vector<char> >(_value);
+        void  BindField::toBlob(std::vector<unsigned char> &v ){
+            v = Poco::RefAnyCast< std::vector<unsigned char> >(_value);
         }
 
         void BindField::fromInt(int v){
@@ -448,10 +450,10 @@ namespace CV {
             }
         }
 
-        void BindField::fromBlob( std::vector<char> const &v ){
+        void BindField::fromBlob( std::vector<unsigned char> const &v ){
             _value = v;
-            const char *c = &(Poco::RefAnyCast< std::vector<char> >(_value))[0];
-            int ret = sqlite3_bind_text(_stmt._statement(), _index, &v[0], v.size(), SQLITE_STATIC );
+            unsigned char const *c = &(Poco::RefAnyCast< std::vector<unsigned char> >(_value))[0];
+            int ret = sqlite3_bind_text(_stmt._statement(), _index, (const char *)&v[0], v.size(), SQLITE_STATIC );
             if (ret != SQLITE_OK) {
                 std::stringstream err;
                 err << "Bind blob error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
@@ -459,9 +461,9 @@ namespace CV {
             }
         }
 
-        void BindField::fromBlob( char * const v, int l ){
+        void BindField::fromBlob( unsigned char const *v, int l ){
             _value = v;
-            int ret = sqlite3_bind_text(_stmt._statement(), _index, v, l, SQLITE_TRANSIENT );
+            int ret = sqlite3_bind_text(_stmt._statement(), _index, (const char *)v, l, SQLITE_TRANSIENT );
             if (ret != SQLITE_OK) {
                 std::stringstream err;
                 err << "Bind blob error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
@@ -489,7 +491,7 @@ namespace CV {
             return *this;
         }
 
-        BindField &BindField::operator=( std::vector<char> const &v) {
+        BindField &BindField::operator=( std::vector<unsigned char> const &v) {
             fromBlob(v);
             return *this;
         }

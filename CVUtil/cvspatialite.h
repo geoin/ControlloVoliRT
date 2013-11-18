@@ -154,7 +154,7 @@ namespace CV {
             virtual double  toDouble() = 0;
             virtual std::string  toString() = 0;
             virtual void  toString(std::string &str) = 0;
-            virtual void  toBlob( std::vector<char> &v ) = 0;
+            virtual void  toBlob( std::vector<unsigned char> &v ) = 0;
             std::string const &name() const;
             int index() const;
 
@@ -185,7 +185,7 @@ namespace CV {
             virtual double  toDouble();
             virtual std::string  toString();
             virtual void  toString(std::string &str);
-            virtual void  toBlob( std::vector<char> &v );
+            virtual void  toBlob( std::vector<unsigned char> &v );
             FieldType type() const;
 
         private:
@@ -206,20 +206,20 @@ namespace CV {
             virtual double  toDouble();
             virtual std::string  toString();
             virtual void  toString(std::string &str);
-            virtual void  toBlob( std::vector<char> &v );
+            virtual void  toBlob( std::vector<unsigned char> &v );
 
             void fromInt(int v);
             void fromInt64(long long v);
             void fromDouble(double v);
             void fromString(std::string const &v);
-            void fromBlob(const std::vector<char> &v );
-            void fromBlob( char * const v, int l );
+            void fromBlob(const std::vector<unsigned char> &v );
+            void fromBlob( unsigned char const *v, int l );
 
             BindField &operator=(int v);
             BindField &operator=(long long v);
             BindField &operator=(double v);
             BindField &operator=(std::string const &v);
-            BindField &operator=( std::vector<char> const &v);
+            BindField &operator=( std::vector<unsigned char> const &v);
 
         private:
             BindField( Statement &stmt, int idx);

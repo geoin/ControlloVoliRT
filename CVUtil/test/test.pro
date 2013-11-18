@@ -18,7 +18,7 @@ macx {
     LIBS += -L"/opt/local/lib"
 }
 
-LIBS += -lspatialite -lsqlite3
+LIBS += -lspatialite -lsqlite3 -lgdal
 
 CONFIG(debug, debug|release) {
         LIBS += -lPocoFoundationd  -lPocoUtild -lCVUtild
