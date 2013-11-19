@@ -264,8 +264,8 @@ bool photo_exec::_process_photos()
 	cnn.execute_immediate(sql1.str());
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6)";
+	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)";
 
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
@@ -318,7 +318,8 @@ bool photo_exec::_process_photos()
 		stm[4] = dt;
 		stm[5] = vdp.om;
 		stm[6] = vdp.fi;
-		//stm[7] = blob;
+		//sqlite3_bind_blob (stm.stmt, 7, blob, blob_size, SQLITE_STATIC);
+		stm[7].fromBlob(blob, blob_size);
 
 		stm.execute();
 		stm.reset();
@@ -389,6 +390,12 @@ bool photo_exec::_process_models()
 				strip = rs1["Z_FOTO_CS"].toString();
 				nomeleft = rs1["Z_FOTO_NF"].toString();
 				// acquisisce e memorizza la geom
+
+				std::vector<unsigned char> v;
+				rs1["geom"].toBlob(v);
+				int blob_size;
+				gaiaGeomCollPtr geo = gaiaFromSpatiaLiteBlobWkb(&v, v.size());
+				gaiaPolygon pol = geo->FirstPolygon();
 			} else {
 				std::string nomeright = rs1["Z_FOTO_NF"].toString();
 				// acquisisce la geom

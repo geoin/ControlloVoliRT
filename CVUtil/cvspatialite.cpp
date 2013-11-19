@@ -463,7 +463,8 @@ namespace CV {
 
         void BindField::fromBlob( unsigned char const *v, int l ){
             _value = v;
-            int ret = sqlite3_bind_text(_stmt._statement(), _index, (const char *)v, l, SQLITE_TRANSIENT );
+            int ret = sqlite3_bind_blob (_stmt._statement(), _index, (const char *)v, l, SQLITE_TRANSIENT);
+            //int ret = sqlite3_bind_text(_stmt._statement(), _index, (const char *)v, l, SQLITE_TRANSIENT );
             if (ret != SQLITE_OK) {
                 std::stringstream err;
                 err << "Bind blob error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );

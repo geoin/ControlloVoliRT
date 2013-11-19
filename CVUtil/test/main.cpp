@@ -1,7 +1,7 @@
 #include <Poco/Logger.h>
 #include "CVUtil/cvspatialite.h"
 #include <iostream>
-#include "ogr_geometry.h"
+#include "gdal/ogr_geometry.h"
 
 #define PLANNED_FLIGHT_LAYER_NAME "AVOLOP"
 #define SHAPE_CHAR_SET "CP1252"
@@ -203,6 +203,6 @@ int main( int argc, char *argv[]) {
     //dump_shape();
 
     // read linear layer, split line in points e copy points in another layer
-    layer_line2point();
+   layer_line2point();
 
 }
