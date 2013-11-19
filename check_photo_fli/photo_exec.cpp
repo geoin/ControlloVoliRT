@@ -33,9 +33,12 @@
 #include <fstream>
 #include <sstream>
 #include <spatialite.h>
+#include "gdal/ogr_geometry.h"
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
+#define CARTO "CARTO"
+#define SHAPE_CHAR_SET "CP1252"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -55,6 +58,14 @@ bool photo_exec::run()
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
+		int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Carto/zona2castpescaia",
+		   CARTO,
+		   SHAPE_CHAR_SET,
+		   SRID,
+		   "geom",
+		   false,
+		   false,
+		   false);
 		// Read reference values
 		_read_ref_val();
 
@@ -74,12 +85,16 @@ bool photo_exec::run()
 		if ( !_process_models() )
 			return false;
 		if ( !_process_strips() )
-			return false;	}
+			return false;	
+		if ( !_process_block() )
+			return false;	
+	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
     }
 	return true;
 }
+
 void photo_exec::set_vdp_name(const std::string& nome)
 {
 	_vdp_name = nome;
@@ -123,6 +138,62 @@ bool photo_exec::_read_ref_val()
 		return false;
 	}
 	return true;
+}
+OGRGeometry* photo_exec::GetGeom(CV::Util::Spatialite::QueryField& rs)
+{
+	std::vector<unsigned char> blob;
+	rs.toBlob(blob);
+	OGRGeometryFactory gf;
+	OGRGeometry* pol;
+	int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol);
+	return pol;
+}
+void photo_exec::SetGeom(CV::Util::Spatialite::BindField& bf, const OGRGeometry* og)
+{
+	std::vector<unsigned char> buffin;
+	int size_in = og->WkbSize();
+	buffin.resize(size_in);
+	og->exportToWkb(wkbNDR, &buffin[0]);
+	bf.fromBlob(buffin);
+}
+
+OGRPolygon* photo_exec::_get_carto() 
+{
+	std::string table(CARTO);
+
+	std::stringstream sql3;
+	std::string tablef(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
+	
+	sql3 << "select AsBinary(geom) from " << table;
+	CV::Util::Spatialite::Statement stm1(cnn);
+	stm1.prepare(sql3.str());
+	CV::Util::Spatialite::Recordset rs = stm1.recordset();
+	
+	bool first = true;
+	OGRGeometry* blk;
+
+	while ( !rs.eof() ) { //for every strip
+		if ( first ) {
+			first = false;
+			blk = GetGeom(rs[0]);
+			//std::vector<unsigned char> blob;
+			//rs[0].toBlob(blob);
+			//OGRGeometryFactory gf;
+		 //   int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &blk);
+		} else {
+			//std::vector<unsigned char> blob;
+			//rs[0].toBlob(blob);
+			//OGRGeometryFactory gf;
+			OGRGeometry* pol2 = GetGeom(rs[0]);
+		    //int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol2);
+			OGRGeometry* pol1 = blk->Union(pol2);
+			OGRGeometryFactory::destroyGeometry(blk);
+			OGRGeometryFactory::destroyGeometry(pol2);
+			blk = pol1;
+		}
+		rs.next();
+	}
+	return (OGRPolygon*) blk;
 }
 bool photo_exec::_read_cam()
 {
@@ -182,60 +253,35 @@ std::string photo_exec::_get_nome(const std::string& nome)
 	return tok[1];
 }
 
-//void photo_exec::_get_side(QgsGeometry* fv, double* d1, double* d2) 
-//{
-//	fv->
-//	if ( !fv.IsChiusaP() )
-//		return;
-//	int np = fv.GetCount();
-//	int idx = -1;
-//	for (int i = 0; i < np - 1; i++) {
-//		int j = i + 1;
-//		int k = i == 0 ? np - 2 : i - 1;
-//		double alfa = fabs(angdir(fv[j].p[0], fv[j].p[1], fv[i].p[0], fv[i].p[1]) - angdir(fv[i].p[0], fv[i].p[1], fv[k].p[0], fv[k].p[1]));
-//		if ( fabs(alfa) > M_PI / 4 ) {
-//			idx = i;
-//			break;
-//		}
-//	}
-//	FVDATA fvp;
-//	if ( idx != 0 ) {
-//		int kk = idx;
-//		do {
-//			fvp.Add(&fv[kk++]);
-//			if ( kk >= np -1 ) 
-//				kk = 0;
-//			if ( kk == idx )
-//				fvp.Add(&fv[kk]);
-//		} while ( kk != idx );
-//	} else
-//		fvp = fv;
-//
-//	double dmax = -1.e30;
-//	double dmin = 1.e30;
-//	double dl = 0.;
-//	for (int i = 1; i < fvp.GetCount(); i++) {
-//		double d = fvp[i].dist2D(fvp[i - 1]);
-//		if ( dl == 0. )
-//			dl += d;
-//		else {
-//			double alfa = fabs(angdir(fvp[i].p[0], fvp[i].p[1], fvp[i - 1].p[0], fvp[i - 1].p[1]) - angdir(fvp[i - 1].p[0], fvp[i - 1].p[1], fvp[i - 2].p[0], fvp[i - 2].p[1]));
-//			if ( fabs(alfa) < M_PI / 4 )
-//				dl += d;
-//			else {
-//				dmin = min(dmin, dl);
-//				dmax = max(dmax, dl);
-//				dl = d;
-//			}
-//		}
-//	}
-//	if ( dl != 0. ) {
-//		dmin = min(dmin, dl);
-//		dmax = max(dmax, dl);
-//	}
-//	*d1 = dmin;
-//	*d2 = dmax;
-//}
+void photo_exec::_get_elong(OGRPolygon* fv, double ka, double* d1, double* d2) 
+{
+	OGRPoint po;
+	if ( fv->Centroid(&po) != OGRERR_NONE )
+		return;
+	OGRLinearRing* or = (OGRLinearRing*) fv->getExteriorRing();
+	double xm = 1.e20, ym = 1.e20;
+	double xM = -1.e20, yM = -1.e20;
+
+	for (int i = 0; i < or->getNumPoints(); i++) {
+		double x = or->getX(i) - po.getX();
+		double y = or->getY(i) - po.getY();
+		double x1 = x * cos(ka) + y * sin(ka);
+		double y1 = -x * sin(ka) + y * cos(ka);
+		xm = min(xm, x1);
+		ym = min(ym, y1);
+		xM = max(xM, x1);
+		yM = max(yM, y1);
+	}
+	double l1 = fabs(xM - xm);
+	double l2 = fabs(yM - ym);
+	if ( l1 > l2 ) {
+		*d1 = l2;
+		*d2 = l1;
+	} else {
+		*d1 = l1;
+		*d2 = l2;
+	}
+}
 
 bool photo_exec::_process_photos()
 {
@@ -260,12 +306,13 @@ bool photo_exec::_process_photos()
 		"'geom'," <<
 		SRID << "," <<
 		"'POLYGON'," <<
-		"'XYZ')";
+		"'XY')";
 	cnn.execute_immediate(sql1.str());
 
 	std::stringstream sql2;
+
 	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)";
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
 
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
@@ -276,7 +323,7 @@ bool photo_exec::_process_photos()
 		VDP& vdp = it->second;
 		double dt = 0.;
 
-		DPOINT Pc(vdp.Pc.GetX()	, vdp.Pc.GetY(), vdp.Pc.GetZ());
+		DPOINT Pc(vdp.Pc);
 		std::vector<DPOINT> dpol;
 		for ( int i = 0; i < 5; i++) {
 			Collimation ci;
@@ -289,43 +336,49 @@ bool photo_exec::_process_photos()
 					break;
 				}
 			}
-			dt += vdp.Pc.GetZ() - pt.z;
+			dt += vdp.Pc.z - pt.z;
 			dpol.push_back(pt);
 		}
 
-		gaiaGeomCollPtr geo = gaiaAllocGeomColl();
-		geo->Srid = SRID;
-		geo->DimensionModel  = GAIA_XY_Z;
-		geo->DeclaredType = GAIA_POLYGONZ;
-		gaiaPolygonPtr polyg = gaiaAddPolygonToGeomColl(geo, 5, 0);
-		gaiaRingPtr ring = polyg->Exterior;
+		OGRSpatialReference sr;
+		sr.importFromEPSG(SRID);
+
+	    OGRGeometryFactory gf;
+		OGRLinearRing* gp = (OGRLinearRing*) OGRGeometryFactory::createGeometry(wkbLinearRing);
+		gp->setCoordinateDimension(2);
+		gp->assignSpatialReference(&sr);
 
 		for (int i = 0; i < 4; i++)
-			gaiaSetPointXYZ(ring->Coords, i, dpol[i].x, dpol[i].y, dpol[i].z);
-		gaiaSetPointXYZ(ring->Coords, 4, dpol[0].x, dpol[0].y, dpol[0].z);
+			gp->addPoint(dpol[i].x, dpol[i].y);
+		gp->closeRings();
+
+		OGRPolygon* pol  = (OGRPolygon*) gf.createGeometry(wkbPolygon);
+		pol->setCoordinateDimension(2);
+		pol->assignSpatialReference(&sr);
+		pol->addRing(gp);
 
 		// calculate mean GSD
 		dt = vdp.pix() * dt / (5 * vdp.foc());
 
-		unsigned char *blob;
-		int blob_size;
-		gaiaToSpatiaLiteBlobWkb(geo, &blob, &blob_size);
-		gaiaFreeGeomColl (geo);
+		//std::vector<unsigned char> buffin;
+		//int size_in = pol->WkbSize();
+		//buffin.resize(size_in);
+		//pol->exportToWkb(wkbNDR, &buffin[0]);
 
 		stm[1] = SIGLA_PRJ;
 		stm[2] = _get_strip(it->first);
-		stm[3] =it->first;
+		stm[3] = it->first;
 		stm[4] = dt;
-		stm[5] = vdp.om;
-		stm[6] = vdp.fi;
-		//sqlite3_bind_blob (stm.stmt, 7, blob, blob_size, SQLITE_STATIC);
-		stm[7].fromBlob(blob, blob_size);
+		stm[5] = RAD_DEG(vdp.om);
+		stm[6] = RAD_DEG(vdp.fi);
+		SetGeom(stm[7], pol);
+		//stm[7].fromBlob(buffin);
 
 		stm.execute();
 		stm.reset();
 		
-		gaiaFree(blob);
-		//_vfoto.push_back(fet);
+		OGRGeometryFactory::destroyGeometry(gp);
+		OGRGeometryFactory::destroyGeometry(pol);
 	}
 	cnn.commit_transaction();
 	return true;
@@ -354,12 +407,12 @@ bool photo_exec::_process_models()
 		"'geom'," <<
 		SRID << "," <<
 		"'POLYGON'," <<
-		"'XYZ')";
+		"'XY')";
 	cnn.execute_immediate(sql1.str());
 	
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)";
+	sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -375,12 +428,13 @@ bool photo_exec::_process_models()
 	while ( !rs.eof() ) { //for every strip
 		std::string strip = rs[0].toString();
 		std::stringstream sql4;
-		sql4 << "select * from " << tablef << " where Z_FOTO_CS=" << strip;
+		sql4 << "select Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, AsBinary(geom) from " << tablef << " where Z_FOTO_CS=" << strip;
 		CV::Util::Spatialite::Statement stm2(cnn);
 		stm2.prepare(sql4.str());
 		CV::Util::Spatialite::Recordset rs1 = stm2.recordset();
 		std::string nomeleft;
 		std::string id;
+		OGRGeometry* pol1;
 		double lo = 60, to = 95, dh = 1;
 		double first = true;
 		while ( !rs1.eof() ) {
@@ -389,32 +443,66 @@ bool photo_exec::_process_models()
 				id = rs1["Z_FOTO_ID"].toString();
 				strip = rs1["Z_FOTO_CS"].toString();
 				nomeleft = rs1["Z_FOTO_NF"].toString();
-				// acquisisce e memorizza la geom
 
-				std::vector<unsigned char> v;
-				rs1["geom"].toBlob(v);
-				int blob_size;
-				gaiaGeomCollPtr geo = gaiaFromSpatiaLiteBlobWkb(&v, v.size());
-				gaiaPolygon pol = geo->FirstPolygon();
+				// acquisisce e memorizza la geom
+				pol1 = GetGeom(rs1[6]);
+				//std::vector<unsigned char> blob;
+				//rs1[6].toBlob(blob);
+				//OGRGeometryFactory gf;
+			 //   int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol1);
 			} else {
 				std::string nomeright = rs1["Z_FOTO_NF"].toString();
-				// acquisisce la geom
-				// esegue l'intersezione
+
+				// acquisisce e memorizza la geom
+				OGRGeometry* pol2 = GetGeom(rs1[6]);
+				std::vector<unsigned char> blob;
+				//rs1[6].toBlob(blob);
+				//OGRGeometryFactory gf;
+				//OGRGeometry* pol2;
+
+			 //   int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol2);
+				OGRGeometry* mod = pol1->Intersection(pol2);
+		
+				int size_in = mod->WkbSize();
+				blob.resize(size_in);
+				mod->exportToWkb(wkbNDR, &blob[0]);
+				double dh = _vdps[nomeleft].ka - _vdps[nomeright].ka;
+				if ( dh > M_PI ) {
+					dh -= 2 * M_PI;
+				} else if ( dh < -M_PI ) {
+					dh += 2 * M_PI;
+				}
+				dh = RAD_DEG(dh);
+				dh = (int)(dh * 1000.);
+				dh /= 1000.;
+
+				double d1f, d2f, d1m, d2m;
+				_get_elong((OGRPolygon*) pol1, _vdps[nomeleft].ka, &d1f, &d2f);
+				_get_elong((OGRPolygon*) mod, _vdps[nomeleft].ka, &d1m, &d2m);
+				lo = 100 * d1m / d1f;
+				to = 100 * d2m / d2f;
+
 				// calcola lo e to
 				// calcola dh
 				stm[1] = id;
 				stm[2] = strip;
 				stm[3] = nomeleft;
 				stm[4] = nomeright;
-				stm[5] = lo;
-				stm[6] = to;
+				stm[5] = (int) lo;
+				stm[6] = (int) to;
 				stm[7] = dh;
+				stm[8].fromBlob(blob);
 				stm.execute();
 				stm.reset();
 				nomeleft = nomeright;
+				OGRGeometryFactory::destroyGeometry(pol1);
+				OGRGeometryFactory::destroyGeometry(mod);
+				pol1 = pol2;
+
 			}
             rs1.next();
         }
+		OGRGeometryFactory::destroyGeometry(pol1);
 		rs.next();
 	}
 	cnn.commit_transaction();
@@ -430,8 +518,9 @@ bool photo_exec::_process_strips()
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
 		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
-		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
-		"Z_STRIP_T_OVERLAP INTEGER)";  // overlap trasversale
+		"Z_STRIP_CS TEXT NOT NULL, " <<
+		"Z_STRIP_FIRST TEXT NOT NULL, " <<
+		"Z_STRIP_LAST TEXT NOT NULL)";  // overlap trasversale
 	cnn.execute_immediate(sql.str());
 
 	// add the geometry column
@@ -440,12 +529,12 @@ bool photo_exec::_process_strips()
 		"'geom'," <<
 		SRID << "," <<
 		"'POLYGON'," <<
-		"'XYZ')";
+		"'XY')";
 	cnn.execute_immediate(sql1.str());
 	
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS) \
-		VALUES (?1, ?2)";
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_STRIP_FIRST, Z_STRIP_LAST, geom) \
+		VALUES (?1, ?2, ?3, ?4, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -461,25 +550,53 @@ bool photo_exec::_process_strips()
 	while ( !rs.eof() ) { //for every strip
 		std::string strip = rs[0].toString();
 		std::stringstream sql4;
-		sql4 << "select * from " << tablef << " where Z_MODEL_CS=" << strip;
+
+		sql4 << "select Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, AsBinary(geom) from " << tablef << " where Z_MODEL_CS=" << strip;
 		CV::Util::Spatialite::Statement stm2(cnn);
 		stm2.prepare(sql4.str());
 		CV::Util::Spatialite::Recordset rs1 = stm2.recordset();
 		std::string id;
+		OGRGeometry* pol1;
+		std::string firstname, lastname;
 		bool first = true;
 		while ( !rs1.eof() ) {
 			if ( first ) {
 				id = rs1["Z_MODEL_ID"].toString();
 				strip = rs1["Z_MODEL_CS"].toString();
+				firstname = rs1["Z_MODEL_LEFT"].toString();
 				first = false;
+
+				std::vector<unsigned char> blob;
+				rs1[4].toBlob(blob);
+				OGRGeometryFactory gf;
+			    int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol1);
+
 			} else {
+				lastname = rs1["Z_MODEL_RIGHT"].toString();
 				// unisce tutti i modelli
-				;
+				OGRGeometry* pol2;
+				std::vector<unsigned char> blob;
+				rs1[4].toBlob(blob);
+				OGRGeometryFactory gf;
+			    int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol2);
+				OGRGeometry* mod = pol1->Union(pol2);
+				OGRGeometryFactory::destroyGeometry(pol1);
+				OGRGeometryFactory::destroyGeometry(pol2);
+				pol1 = mod;
 			}
 			rs1.next();
 		}
+		int size_in = pol1->WkbSize();
+		std::vector<unsigned char> blob;
+		blob.resize(size_in);
+		pol1->exportToWkb(wkbNDR, &blob[0]);
+		OGRGeometryFactory::destroyGeometry(pol1);
+
 		stm[1] = id;
 		stm[2] = strip;
+		stm[3] = firstname;
+		stm[4] = lastname;
+		stm[5].fromBlob(blob);
 		stm.execute();
 		stm.reset();
 		
@@ -488,4 +605,80 @@ bool photo_exec::_process_strips()
 	cnn.commit_transaction();
 	return true;
 }
+bool photo_exec::_process_block()
+{
+	std::string table(_type == Prj_type ? "Z_BLOCKP" : "Z_BLOCKV");
+	cnn.remove_layer(table);
 
+	// create the strip table
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
+		"Z_STRIP1 TEXT NOT NULL, " <<
+		"Z_STRIP2 TEXT NOT NULL, " <<
+		"Z_STRIP_T_OVERLAP INT NOT NULL)";  // overlap trasversale
+	cnn.execute_immediate(sql.str());
+
+	std::stringstream sql3;
+	std::string tablef(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
+	
+	sql3 << "select Z_STRIP_CS, Z_STRIP_FIRST, Z_STRIP_LAST, AsBinary(geom) from " << tablef << " order by Z_STRIP_CS";
+	CV::Util::Spatialite::Statement stm1(cnn);
+	stm1.prepare(sql3.str());
+	CV::Util::Spatialite::Recordset rs = stm1.recordset();
+	
+	typedef struct strp {
+		std::string strip;
+		std::string first;
+		std::string last;
+	};
+	std::vector<strp> vs;
+	bool first = true;
+	OGRGeometry* blk;
+
+	while ( !rs.eof() ) { //for every strip
+		strp s;
+		s.strip = rs[0].toString();
+		s.first = rs[1].toString();
+		s.last = rs[2].toString();
+		vs.push_back(s);
+		if ( first ) {
+			first = false;
+			std::vector<unsigned char> blob;
+			rs[3].toBlob(blob);
+			OGRGeometryFactory gf;
+		    int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &blk);
+		} else {
+			std::vector<unsigned char> blob;
+			rs[3].toBlob(blob);
+			OGRGeometryFactory gf;
+			OGRGeometry* pol2;
+		    int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol2);
+			OGRGeometry* pol1 = blk->Union(pol2);
+			OGRGeometryFactory::destroyGeometry(blk);
+			OGRGeometryFactory::destroyGeometry(pol2);
+			blk = pol1;
+		}
+		rs.next();
+	}
+
+	OGRPolygon* carto = _get_carto();
+	OGRPolygon* inter = (OGRPolygon*) carto->Intersection(blk);
+	double a1 = carto->get_Area();
+	double a2 = inter->get_Area();
+
+	for (size_t i = 0; i < vs.size(); i++) {
+		VDP& vdp1 = _vdps[vs[i].first];
+		VDP& vdp2 = _vdps[vs[i].last];
+		double k1 = vdp2.Pc.angdir(vdp1.Pc);
+		for (size_t j = i + 1; i < vs.size(); i++) {
+			VDP& vdp3 = _vdps[vs[j].first];
+			VDP& vdp4 = _vdps[vs[j].last];
+			double k2 = vdp4.Pc.angdir(vdp3.Pc);
+			double dk = fabs(RAD_DEG(k2 - k1));
+			int  a = 1;
+			//if ( dk < 5 
+		}
+	}
+	return true;
+}

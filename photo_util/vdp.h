@@ -89,7 +89,7 @@ public:
     VDP(const VDP& v);
 	VDP(const Camera& cam, const std::string& Nome);
 	~VDP();
-	VecOri	Pc;
+	DPOINT	Pc;
 	double	om, fi, ka;							// photo angles
 	MatOri mat;
 	int		exec;								// vdp execution flag

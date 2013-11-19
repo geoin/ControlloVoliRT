@@ -13,7 +13,7 @@
 #define  TEST_SHAPE_FILE "/Users/andrea/ControlloVoliRT/CVUtil/test/avolov"
 #else
 #define TEST_GEO_DB "C:/ControlloVoliRT/CVUtil/test/geo.sqlite"
-#define  TEST_SHAPE_FILE "C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov"
+#define  TEST_SHAPE_FILE "C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/originali/avolov"
 #endif
 
 // Load a shape file
@@ -134,14 +134,14 @@ void layer_line2point(){
     //create output layer
     cnn.begin_transaction();
     cnn.execute_immediate("Create table AVOLOP_PT ( PK_UID INTEGER PRIMARY KEY AUTOINCREMENT, id double )");
-    cnn.execute_immediate("select AddGeometryColumn('AVOLOP_PT', 'geom', 32632, 'POINT', 'XYZ' )");
+    cnn.execute_immediate("select AddGeometryColumn('AVOLOP_PT', 'geom', 32632, 'POINT' )");
     cnn.commit_transaction();
 
-    CV::Util::Spatialite::Statement stmt(cnn, "select ID, HEIGHT, AsBinary(geom) from AVOLOP");
+    CV::Util::Spatialite::Statement stmt(cnn, "select id, HEIGHT, AsBinary(geom) from AVOLOP");
     CV::Util::Spatialite::Recordset rs = stmt.recordset();
 
-    CV::Util::Spatialite::Statement stmt_out( cnn, "insert into AVOLOP_PT (id, geom) values (:id, :geom) ");
-
+    CV::Util::Spatialite::Statement stmt_out( cnn, "insert into AVOLOP_PT (id, geom) values (:id, ST_GeomFromWKB(:geom, 32632) )");
+    //CV::Util::Spatialite::Statement stmt_out( cnn, "insert into AVOLOP_PT (id, geom) values (:id, ST_GeomFromTEXT('POINTZ(648322.57782173 4736657.061840324 2500.2)', 32632) )");
     while( !rs.eof() ){
 
         int id = rs[0].toInt();
@@ -153,17 +153,24 @@ void layer_line2point(){
         OGRPoint firstlast[2];
         //return first and last point of the line string
         line2end_points(gg, firstlast);
-        firstlast[0].setZ(height);
-        firstlast[1].setZ(height);
+//        firstlast[0].setZ(height);
+//        firstlast[1].setZ(height);
 
         for( int i=0; i<2; i++){
             std::vector<unsigned char> buffin;
-            unsigned char *buffout=NULL;
+            char *buffout=NULL;
             int size_out = 0, size_in = firstlast[i].WkbSize();
             buffin.resize(size_in);
             firstlast[i].exportToWkb(wkbNDR, &buffin[0]);
+            firstlast[i].exportToWkt(&buffout);
+            std::cout << std::string(buffout) << std::endl;
+            OGRFree(buffout);
+
+            /*
             gaiaGeomCollPtr geo = gaiaFromWkb(&buffin[0], size_in);
             geo->Srid = 32632;
+            geo->DimensionModel  = GAIA_XY_Z;
+            geo->DeclaredType = GAIA_POINTZ;
 
             // debug in wkt
             gaiaOutBuffer wkt;
@@ -173,36 +180,121 @@ void layer_line2point(){
             gaiaOutBufferReset(&wkt);
 
             gaiaToSpatiaLiteBlobWkb(geo, &buffout, &size_out);
-            try {
-                stmt_out[1] = id;
-                stmt_out[2].fromBlob((const unsigned char *)buffout, size_out);
-                stmt_out.execute();
-                stmt_out.reset();
-            }
-            catch(std::exception &e){
-                gaiaFree(buffout);
-                gaiaFreeGeomColl(geo);
-                std::cout << std::string(e.what()) << std::endl;
-            }
+            std::vector<unsigned char> vtmp;
+            vtmp.resize(size_out);
+            memcpy(&vtmp[0], buffout, size_out);
             gaiaFree(buffout);
             gaiaFreeGeomColl(geo);
+            */
+
+            stmt_out[1] = id;
+            stmt_out[2].fromBlob(buffin);
+            stmt_out.execute();
+            stmt_out.reset();
         }
 
-        std::cout << std::endl;
         rs.next();
     }
 
 
 }
 
-int main( int argc, char *argv[]) {
+void layer_poly3point(){
+    CV::Util::Spatialite::Connection cnn;
+    cnn.open(TEST_GEO_DB);
+    std::cout << "DB open" << std::endl;
 
+    if ( cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA ){
+        std::cout << "DB with no spatial metadata" << std::endl;
+        return;
+    }
+    std::cout << "DB is spatial initialized " << std::endl;
+
+    try {
+        cnn.remove_layer("AVOLOP_PY");
+    }
+    catch(...){}
+
+    //create output layer
+    cnn.begin_transaction();
+    cnn.execute_immediate("Create table AVOLOP_PY ( PK_UID INTEGER PRIMARY KEY AUTOINCREMENT, id double )");
+    cnn.execute_immediate("select AddGeometryColumn('AVOLOP_PY', 'geom', 32632, 'POLYGON' )");
+    cnn.commit_transaction();
+
+    CV::Util::Spatialite::Statement stmt(cnn, "select id, HEIGHT, AsBinary(geom) from AVOLOP");
+    CV::Util::Spatialite::Recordset rs = stmt.recordset();
+
+    CV::Util::Spatialite::Statement stmt_out( cnn, "insert into AVOLOP_PY (id, geom) values (:id, ST_GeomFromWKB(:geom, 32632) )");
+    //CV::Util::Spatialite::Statement stmt_out( cnn, "insert into AVOLOP_PT (id, geom) values (:id, ST_GeomFromTEXT('POINTZ(648322.57782173 4736657.061840324 2500.2)', 32632) )");
+    while( !rs.eof() ){
+
+        int id = rs[0].toInt();
+        double height = rs[1].toDouble();
+
+        std::vector<unsigned char> gg;
+        rs[2].toBlob(gg);
+
+        OGRPoint firstlast[2];
+        //return first and last point of the line string
+        line2end_points(gg, firstlast);
+//        firstlast[0].setZ(height);
+//        firstlast[1].setZ(height);
+
+        for( int i=0; i<2; i++){
+            std::vector<unsigned char> buffin;
+            char *buffout=NULL;
+            int size_out = 0, size_in = firstlast[i].WkbSize();
+            buffin.resize(size_in);
+            firstlast[i].exportToWkb(wkbNDR, &buffin[0]);
+            firstlast[i].exportToWkt(&buffout);
+            std::cout << std::string(buffout) << std::endl;
+            OGRFree(buffout);
+
+            /*
+            gaiaGeomCollPtr geo = gaiaFromWkb(&buffin[0], size_in);
+            geo->Srid = 32632;
+            geo->DimensionModel  = GAIA_XY_Z;
+            geo->DeclaredType = GAIA_POINTZ;
+
+            // debug in wkt
+            gaiaOutBuffer wkt;
+            gaiaOutBufferInitialize(&wkt);
+            gaiaToEWKT(&wkt, geo);
+            std::cout << std::string(wkt.Buffer, wkt.BufferSize) << std::endl;
+            gaiaOutBufferReset(&wkt);
+
+            gaiaToSpatiaLiteBlobWkb(geo, &buffout, &size_out);
+            std::vector<unsigned char> vtmp;
+            vtmp.resize(size_out);
+            memcpy(&vtmp[0], buffout, size_out);
+            gaiaFree(buffout);
+            gaiaFreeGeomColl(geo);
+            */
+
+            stmt_out[1] = id;
+            stmt_out[2].fromBlob(buffin);
+            stmt_out.execute();
+            stmt_out.reset();
+        }
+
+        rs.next();
+    }
+
+
+}
+int main( int argc, char *argv[]) {
+try {
     //load_shape();
 
     // get geometry form db
     //dump_shape();
 
     // read linear layer, split line in points e copy points in another layer
-   layer_line2point();
+    layer_line2point();
+}
+catch(std::runtime_error const &e){
+    std::cout << std::string(e.what()) <<  std::endl;
+    std::cout.flush();
+}
 
 }

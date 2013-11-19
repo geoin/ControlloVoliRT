@@ -32,7 +32,10 @@
 #include "CVUtil/cvspatialite.h"
 
 class DSM_Factory;
-//class QgsGeometry;
+class OGRPolygon;
+class OGRGeometry;
+class CV::Util::Spatialite::QueryField;
+class CV::Util::Spatialite::BindField;
 
 class photo_exec {
 public:
@@ -56,6 +59,14 @@ private:
 	bool _process_models(void);
 	bool _process_strips(void);
 	bool _process_photos(void);
+	bool _process_block(void);
+	void _get_elong(OGRPolygon* fv, double ka, double* d1, double* d2);
+	OGRPolygon* _get_carto(void);
+	OGRGeometry* GetGeom(CV::Util::Spatialite::QueryField& rs);
+	void SetGeom(CV::Util::Spatialite::BindField& bf, const OGRGeometry* og);
+
+
+
 
 	bool _read_ref_val(void);
 	std::string _get_strip(const std::string& nome);

@@ -55,13 +55,13 @@ void VDP::Reset()
 {
 	_ior.Reset();
 	exec = 0;
-	Pc.Set(0., 0., 0.);
+	Pc.set(0., 0., 0.);
 	mat.Reset();
 	om = fi = ka = 0.;
 }
 void VDP::Init(const DPOINT& p, double pom, double pfi, double pka)
 {
-	Pc = VecOri(p.x, p.y, p.z);
+	Pc = p;//VecOri(p.x, p.y, p.z);
 	om = DEG_RAD(pom);	// omega positivo antiorario
 	fi = -DEG_RAD(pfi); // per convenzione internamente fi e ka sono positivi se orari
 	ka = -DEG_RAD(pka);
@@ -76,8 +76,8 @@ void VDP::Init(const DPOINT& p, double pom, double pfi, double pka)
 Collimation VDP::Ter_Img(const DPOINT& pt) const
 {
 	// trasforma le coord (X, Y, Z) nel sistema fotocamera
-    VecOri v(pt);
-	VecOri dp = mat * v;
+    //VecOri v(pt);
+	DPOINT dp = mat * pt;
 
 	// proietta le coord sul piano del sensore
     Collimation cl(-_ior.foc() * dp[0] / dp[2], -_ior.foc() * dp[1] / dp[2]);
@@ -114,8 +114,8 @@ DPOINT VDP::Img_Ter(const Collimation& ci, double Z) const
     VecOri v(cl.xi, cl.yi, -_ior.foc());
 	MatOri m1 = mat.Transpose();
 	VecOri v1 = m1 * v; // coord del punto fotografico nel sistema terreno
-	double N = (Z - Pc.GetZ() ) / v1[2];
-    DPOINT p(Pc.GetX() + N * v1[0], Pc.GetY() + N * v1[1], Z);
+	double N = (Z - Pc.z ) / v1[2];
+    DPOINT p(Pc.x + N * v1[0], Pc.y + N * v1[1], Z);
     return p;
 }
 
@@ -157,9 +157,9 @@ double VDP::Img_TerA(const VDP& vdp2, const Collimation& ci1, const Collimation&
 
 	// la cui soluzione è:
 	
-    pt.z = (Pc.GetX() - vdp2.Pc.GetX() + tx2 * vdp2.Pc.GetZ() - tx1 * Pc.GetZ()) / (tx2 - tx1);
-    pt.x = Pc.GetX() + tx1 * (pt.z - Pc.GetZ());
-    pt.y = Pc.GetY() + ty1 * (pt.z - Pc.GetZ());
+    pt.z = (Pc.x - vdp2.Pc.x + tx2 * vdp2.Pc.z - tx1 * Pc.z) / (tx2 - tx1);
+    pt.x = Pc.x + tx1 * (pt.z - Pc.z);
+    pt.y = Pc.y + ty1 * (pt.z - Pc.z);
 
 	// ritrasforma il punto sul secondo fotogramma per calcolare l'eventuale parallasse
     Collimation cc = vdp2.Ter_Img(pt);
