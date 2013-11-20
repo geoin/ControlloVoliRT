@@ -24,15 +24,18 @@ CONFIG(debug, debug|release) {
 }
 
 SOURCES += \
-    cvspatialite.cpp
+    cvspatialite.cpp \
+    ogrgeomptr.cpp
 
 HEADERS += \
-    cvspatialite.h
+    cvspatialite.h \
+    ogrgeomptr.h
 
 DESTDIR = ../lib
 
 incl.path = ../include/CVUtil
-incl.files = ../CVUtil/cvspatialite.h
+incl.files += ../CVUtil/cvspatialite.h
+incl.files += ../CVUtil/ogrgeomptr.h
 INSTALLS += incl
 
 

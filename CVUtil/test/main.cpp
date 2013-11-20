@@ -1,7 +1,7 @@
 #include <Poco/Logger.h>
 #include "CVUtil/cvspatialite.h"
 #include <iostream>
-#include "ogr_geometry.h"
+#include "CVUtil/ogrgeomptr.h"
 
 #define PLANNED_FLIGHT_LAYER_NAME "AVOLOP"
 #define SHAPE_CHAR_SET "CP1252"
@@ -43,21 +43,13 @@ void load_shape() {
 }
 
 void dump_geometry(std::vector<unsigned char> &wkb){
-    OGRGeometryFactory gf;
-    OGRGeometry *gg;
-    int ret = gf.createFromWkb( (unsigned char *)&wkb[0], NULL, &gg);
-    if (ret != OGRERR_NONE ){
-        std::cout << "Invalid geometry";
-        return;
-    }
+    CV::Util::Geometry::OGRGeomPtr gg(wkb);
 
     char *txt=NULL;
     gg->exportToWkt(&txt);
     std::cout << std::string(txt) ;
-
     // free allocated memory
     OGRFree(txt);
-    OGRGeometryFactory::destroyGeometry(gg);
 }
 
 //dump all linear geometry of a shape file
@@ -204,10 +196,10 @@ try {
     //load_shape();
 
     // get geometry form db
-    //dump_shape();
+    dump_shape();
 
     // read linear layer, split line in points e copy points in another layer
-    layer_line2point();
+    //layer_line2point();
 }
 catch(std::runtime_error const &e){
     std::cout << std::string(e.what()) <<  std::endl;
