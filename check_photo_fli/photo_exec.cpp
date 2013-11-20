@@ -63,7 +63,7 @@ bool photo_exec::run()
 		   SHAPE_CHAR_SET,
 		   SRID,
 		   "geom",
-		   false,
+		   true,
 		   false,
 		   false);
 		// Read reference values
@@ -150,24 +150,22 @@ OGRGeometry* photo_exec::GetGeom(CV::Util::Spatialite::QueryField& rs)
 }
 void photo_exec::SetGeom(CV::Util::Spatialite::BindField& bf, const OGRGeometry* og)
 {
-	std::vector<unsigned char> buffin;
+	static std::vector<unsigned char> buffin;
 	int size_in = og->WkbSize();
 	buffin.resize(size_in);
 	og->exportToWkb(wkbNDR, &buffin[0]);
 	bf.fromBlob(buffin);
 }
 
-OGRPolygon* photo_exec::_get_carto() 
+OGRGeometry* photo_exec::_get_carto() 
 {
 	std::string table(CARTO);
 
-	std::stringstream sql3;
-	std::string tablef(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
-	
-	sql3 << "select AsBinary(geom) from " << table;
-	CV::Util::Spatialite::Statement stm1(cnn);
-	stm1.prepare(sql3.str());
-	CV::Util::Spatialite::Recordset rs = stm1.recordset();
+	std::stringstream sql;
+	sql << "select AsBinary(geom) from " << table;
+	CV::Util::Spatialite::Statement stm(cnn);
+	stm.prepare(sql.str());
+	CV::Util::Spatialite::Recordset rs = stm.recordset();
 	
 	bool first = true;
 	OGRGeometry* blk;
@@ -176,16 +174,8 @@ OGRPolygon* photo_exec::_get_carto()
 		if ( first ) {
 			first = false;
 			blk = GetGeom(rs[0]);
-			//std::vector<unsigned char> blob;
-			//rs[0].toBlob(blob);
-			//OGRGeometryFactory gf;
-		 //   int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &blk);
 		} else {
-			//std::vector<unsigned char> blob;
-			//rs[0].toBlob(blob);
-			//OGRGeometryFactory gf;
 			OGRGeometry* pol2 = GetGeom(rs[0]);
-		    //int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol2);
 			OGRGeometry* pol1 = blk->Union(pol2);
 			OGRGeometryFactory::destroyGeometry(blk);
 			OGRGeometryFactory::destroyGeometry(pol2);
@@ -193,7 +183,7 @@ OGRPolygon* photo_exec::_get_carto()
 		}
 		rs.next();
 	}
-	return (OGRPolygon*) blk;
+	return blk;
 }
 bool photo_exec::_read_cam()
 {
@@ -301,6 +291,7 @@ bool photo_exec::_process_photos()
 		"Z_FOTO_ROLL DOUBLE NOT NULL)";			// roll
 	cnn.execute_immediate(sql.str());
 
+	// add the geom column
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
@@ -309,8 +300,8 @@ bool photo_exec::_process_photos()
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
 
+	// create the insertion query
 	std::stringstream sql2;
-
 	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
 		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
 
@@ -359,11 +350,6 @@ bool photo_exec::_process_photos()
 
 		// calculate mean GSD
 		dt = vdp.pix() * dt / (5 * vdp.foc());
-
-		//std::vector<unsigned char> buffin;
-		//int size_in = pol->WkbSize();
-		//buffin.resize(size_in);
-		//pol->exportToWkb(wkbNDR, &buffin[0]);
 
 		stm[1] = SIGLA_PRJ;
 		stm[2] = _get_strip(it->first);
@@ -444,43 +430,31 @@ bool photo_exec::_process_models()
 				strip = rs1["Z_FOTO_CS"].toString();
 				nomeleft = rs1["Z_FOTO_NF"].toString();
 
-				// acquisisce e memorizza la geom
+				// Get the first photo geometry
 				pol1 = GetGeom(rs1[6]);
-				//std::vector<unsigned char> blob;
-				//rs1[6].toBlob(blob);
-				//OGRGeometryFactory gf;
-			 //   int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol1);
 			} else {
 				std::string nomeright = rs1["Z_FOTO_NF"].toString();
 
-				// acquisisce e memorizza la geom
+				// get the next photo geometry
 				OGRGeometry* pol2 = GetGeom(rs1[6]);
-				std::vector<unsigned char> blob;
-				//rs1[6].toBlob(blob);
-				//OGRGeometryFactory gf;
-				//OGRGeometry* pol2;
-
-			 //   int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol2);
+				// the model is the intersection of two photos
 				OGRGeometry* mod = pol1->Intersection(pol2);
 		
-				int size_in = mod->WkbSize();
-				blob.resize(size_in);
-				mod->exportToWkb(wkbNDR, &blob[0]);
 				double dh = _vdps[nomeleft].ka - _vdps[nomeright].ka;
 				if ( dh > M_PI ) {
 					dh -= 2 * M_PI;
 				} else if ( dh < -M_PI ) {
 					dh += 2 * M_PI;
 				}
-				dh = RAD_DEG(dh);
-				dh = (int)(dh * 1000.);
-				dh /= 1000.;
+				//dh = RAD_DEG(dh);
+				dh = (int)(RAD_DEG(dh) * 1000.) / 1000.;
+				//dh /= 1000.;
 
 				double d1f, d2f, d1m, d2m;
 				_get_elong((OGRPolygon*) pol1, _vdps[nomeleft].ka, &d1f, &d2f);
 				_get_elong((OGRPolygon*) mod, _vdps[nomeleft].ka, &d1m, &d2m);
-				lo = 100 * d1m / d1f;
-				to = 100 * d2m / d2f;
+				lo = 100 * d1m / d1f; // longitudinal overlap
+				to = 100 * d2m / d2f; // trasversal overlap
 
 				// calcola lo e to
 				// calcola dh
@@ -491,7 +465,7 @@ bool photo_exec::_process_models()
 				stm[5] = (int) lo;
 				stm[6] = (int) to;
 				stm[7] = dh;
-				stm[8].fromBlob(blob);
+				SetGeom(stm[8], mod);
 				stm.execute();
 				stm.reset();
 				nomeleft = nomeright;
@@ -520,7 +494,8 @@ bool photo_exec::_process_strips()
 		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
 		"Z_STRIP_CS TEXT NOT NULL, " <<
 		"Z_STRIP_FIRST TEXT NOT NULL, " <<
-		"Z_STRIP_LAST TEXT NOT NULL)";  // overlap trasversale
+		"Z_STRIP_LAST TEXT NOT NULL, "  // overlap trasversale
+		"Z_STRIP_LENGTH DOUBLE NOT NULL)";  // strip length
 	cnn.execute_immediate(sql.str());
 
 	// add the geometry column
@@ -533,8 +508,8 @@ bool photo_exec::_process_strips()
 	cnn.execute_immediate(sql1.str());
 	
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_STRIP_FIRST, Z_STRIP_LAST, geom) \
-		VALUES (?1, ?2, ?3, ?4, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_STRIP_FIRST, Z_STRIP_LAST, Z_STRIP_LENGTH, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -566,19 +541,11 @@ bool photo_exec::_process_strips()
 				firstname = rs1["Z_MODEL_LEFT"].toString();
 				first = false;
 
-				std::vector<unsigned char> blob;
-				rs1[4].toBlob(blob);
-				OGRGeometryFactory gf;
-			    int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol1);
-
+				pol1 = GetGeom(rs1[4]);
 			} else {
 				lastname = rs1["Z_MODEL_RIGHT"].toString();
 				// unisce tutti i modelli
-				OGRGeometry* pol2;
-				std::vector<unsigned char> blob;
-				rs1[4].toBlob(blob);
-				OGRGeometryFactory gf;
-			    int ret = gf.createFromWkb( (unsigned char *)&blob[0], NULL, &pol2);
+				OGRGeometry* pol2 = GetGeom(rs1[4]);
 				OGRGeometry* mod = pol1->Union(pol2);
 				OGRGeometryFactory::destroyGeometry(pol1);
 				OGRGeometryFactory::destroyGeometry(pol2);
@@ -586,17 +553,13 @@ bool photo_exec::_process_strips()
 			}
 			rs1.next();
 		}
-		int size_in = pol1->WkbSize();
-		std::vector<unsigned char> blob;
-		blob.resize(size_in);
-		pol1->exportToWkb(wkbNDR, &blob[0]);
-		OGRGeometryFactory::destroyGeometry(pol1);
-
+		double l = _vdps[firstname].Pc.dist2D(_vdps[lastname].Pc) / 1000.; // strip length in km
 		stm[1] = id;
 		stm[2] = strip;
 		stm[3] = firstname;
 		stm[4] = lastname;
-		stm[5].fromBlob(blob);
+		stm[5] = l;
+		SetGeom(stm[6], pol1);
 		stm.execute();
 		stm.reset();
 		
@@ -637,6 +600,7 @@ bool photo_exec::_process_block()
 	OGRGeometry* blk;
 
 	while ( !rs.eof() ) { //for every strip
+		std::string s1 = rs[0].toString();
 		strp s;
 		s.strip = rs[0].toString();
 		s.first = rs[1].toString();
@@ -662,7 +626,7 @@ bool photo_exec::_process_block()
 		rs.next();
 	}
 
-	OGRPolygon* carto = _get_carto();
+	OGRGeometry* carto = _get_carto();
 	OGRPolygon* inter = (OGRPolygon*) carto->Intersection(blk);
 	double a1 = carto->get_Area();
 	double a2 = inter->get_Area();

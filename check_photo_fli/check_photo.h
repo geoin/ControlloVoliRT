@@ -61,7 +61,7 @@ private:
 	bool _process_photos(void);
 	bool _process_block(void);
 	void _get_elong(OGRPolygon* fv, double ka, double* d1, double* d2);
-	OGRPolygon* _get_carto(void);
+	OGRGeometry* _get_carto(void);
 	OGRGeometry* GetGeom(CV::Util::Spatialite::QueryField& rs);
 	void SetGeom(CV::Util::Spatialite::BindField& bf, const OGRGeometry* og);
 
