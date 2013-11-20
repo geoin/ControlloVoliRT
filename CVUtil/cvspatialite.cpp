@@ -492,7 +492,7 @@ namespace CV {
         }
 
         BindField &BindField::operator=( std::vector<unsigned char> const &v) {
-            fromBlob(v);
+            fromBlob(&v[0], v.size());
             return *this;
         }
 

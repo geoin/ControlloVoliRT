@@ -30,6 +30,8 @@
 #include "photo_util/vdp.h"
 #include "Poco/Util/Application.h"
 #include "CVUtil/cvspatialite.h"
+#include "CVUtil/ogrgeomptr.h"
+#include "docbook/docbook.h"
 
 class DSM_Factory;
 class OGRPolygon;
@@ -60,17 +62,16 @@ private:
 	bool _process_strips(void);
 	bool _process_photos(void);
 	bool _process_block(void);
-	void _get_elong(OGRPolygon* fv, double ka, double* d1, double* d2);
-	OGRGeometry* _get_carto(void);
-	OGRGeometry* GetGeom(CV::Util::Spatialite::QueryField& rs);
-	void SetGeom(CV::Util::Spatialite::BindField& bf, const OGRGeometry* og);
+	void _final_report(void);
+	void _get_elong(CV::Util::Geometry::OGRGeomPtr fv, double ka, double* d1, double* d2);
+	bool _get_carto(CV::Util::Geometry::OGRGeomPtr blk);
+	void _uncovered(std::vector<CV::Util::Geometry::OGRGeomPtr>& vs);
 
-
-
-
+	void _init_document(void);
+	bool _foto_report(void);
+	bool _model_report(void);
+	bool _strip_report(void);
 	bool _read_ref_val(void);
-	std::string _get_strip(const std::string& nome);
-	std::string _get_nome(const std::string& nome);
 
 	bool _get_photo(void);
 	std::string _cam_name;
@@ -86,9 +87,19 @@ private:
 	// spatial lite connection
 	CV::Util::Spatialite::Connection cnn;
 
+	docbook _dbook;
+	Doc_Item _article;
+
 	std::map<std::string, VDP> _vdps;
 	Camera	_cam;
 	DSM_Factory* _df;
+
+	double _GSD, _MAX_GSD;
+	double _MODEL_OVERLAP, _MODEL_OVERLAP_RANGE, _MODEL_OVERLAP_T;
+	double _STRIP_OVERLAP, _STRIP_OVERLAP_RANGE;
+	double _MAX_STRIP_LENGTH;
+	double _MAX_HEADING_DIFF;
+	double _MAX_ANG;
 };
 
 class check_photo: public Poco::Util::Application {
