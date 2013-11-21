@@ -149,16 +149,18 @@ namespace CV {
             Field( Field const &fld);
             Field &operator=(Field const &fld);
 
-            virtual int  toInt() = 0;
-            virtual long long  toInt64() = 0;
-            virtual double  toDouble() = 0;
-            virtual std::string  toString() = 0;
-            virtual void  toString(std::string &str) = 0;
-            virtual void  toBlob( std::vector<unsigned char> &v ) = 0;
+            virtual int  toInt() const = 0;
+            virtual long long  toInt64() const = 0;
+            virtual double  toDouble() const = 0;
+            virtual std::string  const &toString() const = 0;
+            virtual std::vector< unsigned char > const &toBlob() const = 0;
             std::string const &name() const;
             int index() const;
 
         protected:
+            std::string mutable _tmpstr;
+            std::vector< unsigned char > mutable _tmpv;
+
             Field( Statement &stmt, int idx);
             Statement _stmt;
             std::string mutable _name;
@@ -180,15 +182,20 @@ namespace CV {
             QueryField( QueryField const &fld);
             QueryField &operator=(QueryField const &fld);
 
-            virtual int  toInt();
-            virtual long long  toInt64();
-            virtual double  toDouble();
-            virtual std::string  toString();
-            virtual void  toString(std::string &str);
-            virtual void  toBlob( std::vector<unsigned char> &v );
+            virtual int  toInt() const;
+            virtual long long  toInt64() const;
+            virtual double  toDouble() const;
+            virtual std::string  const &toString() const;
+            virtual std::vector<unsigned char> const &toBlob() const;
             FieldType type() const;
 
-        private:
+            operator int();
+            operator long long();
+            operator double();
+            operator std::string const &();
+            operator std::vector< unsigned char> const &();
+
+       private:
             QueryField( Statement &stmt, int idx);
             FieldType mutable _type;
         };
@@ -201,12 +208,17 @@ namespace CV {
             BindField( BindField const &fld);
             BindField &operator=(BindField const &fld);
 
-            virtual int  toInt();
-            virtual long long  toInt64();
-            virtual double  toDouble();
-            virtual std::string  toString();
-            virtual void  toString(std::string &str);
-            virtual void  toBlob( std::vector<unsigned char> &v );
+            virtual int  toInt() const;
+            virtual long long  toInt64() const ;
+            virtual double  toDouble() const;
+            virtual std::string  const &toString() const;
+            virtual std::vector<unsigned char> const &toBlob() const;
+
+            operator int();
+            operator long long();
+            operator double();
+            operator std::string const &();
+            operator std::vector< unsigned char> const &();
 
             void fromInt(int v);
             void fromInt64(long long v);

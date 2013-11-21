@@ -71,8 +71,8 @@ void dump_shape(){
         int id = rs[0].toInt();
         std::cout << id <<  ": --> " ;
 
-        std::vector<unsigned char> gg;
-        rs[1].toBlob(gg);
+        std::vector<unsigned char> gg = rs[1];
+        //rs[1].toBlob(gg);
         dump_geometry(gg);
         std::cout << std::endl;
 
@@ -139,8 +139,8 @@ void layer_line2point(){
         int id = rs[0].toInt();
         double height = rs[1].toDouble();
 
-        std::vector<unsigned char> gg;
-        rs[2].toBlob(gg);
+        std::vector<unsigned char> gg = rs[2];
+       //rs[2].toBlob(gg);
 
         OGRPoint firstlast[2];
         //return first and last point of the line string
