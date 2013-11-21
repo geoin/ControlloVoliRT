@@ -59,15 +59,13 @@ private:
 
 	bool _read_ref_val(void);
 	
-	// crea la tracci agps
+	// calculate the gps track
 	bool _create_gps_track(void);
-	// aggiorna gli assi di volo con i dati della traccia gps
+	// Update the flight lines with gps data
 	void _update_assi_volo(void);
-	// alanizza le strips e prodiuce il report
-	void _data_analyze(void);
 
-	// verifica i dati e produce i report
-	void _final_check(void);
+	// check with the limit parameters
+	void _final_report(void);
 	void _init_document(void);
 
 	std::string _rover_name;
@@ -76,7 +74,6 @@ private:
 	GPS_OPT _gps_opt;
 
 	std::string _out_folder;
-	std::string _db_name;
 	std::string _proj_dir;
 
 	// spatial lite connection
@@ -85,14 +82,13 @@ private:
 	docbook _dbook;
 	Doc_Item _article;
 
-	// valori di riferimento
+	// reference values
 	double _MAX_PDOP;
 	int _MIN_SAT;
 	int _MAX_DIST;
 	double _MIN_SAT_ANG;
 	int _NBASI;
 	double _MIN_ANG_SOL;
-
 };
 
 class check_gps: public Poco::Util::Application {

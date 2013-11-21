@@ -41,18 +41,49 @@ using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::SharedPtr;
 using Poco::Path;
-
+/**************************************************************************/
+enum CHECK_TYPE {
+	less_ty = 0,
+	great_ty = 1,
+	abs_less_ty = 2,
+	between_ty =3
+};
+bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
+{
+	bool rv = true;
+	switch ( ty ) {
+		case less_ty:
+			rv = val < tol1;
+			break;
+		case great_ty:
+			rv = val > tol1;
+			break;
+		case abs_less_ty:
+			rv = fabs(val) < tol1;
+			break;
+		case between_ty:
+			rv = val > tol1 && val < tol2;
+			break;
+	}
+	if ( !rv ) {
+		Doc_Item r = row->add_item("entry", attr);
+		r->add_instr("dbfo", "bgcolor=\"red\"");
+		r->append(val);
+	} else
+		row->add_item("entry", attr)->append(val);
+	return rv;
+}
 std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
-
+/***************************************************************************************/
 ta_exec::~ta_exec() 
 {
 }
 bool ta_exec::run()
 {
-	// legge i valori di riferimento per la verifica
+	// Read the reference values
 	_read_ref_val();
 
 	// initialize docbook xml file
@@ -136,6 +167,15 @@ Doc_Item ta_exec::_initpg1()
 {
 	Doc_Item sec = _article->add_item("section");
 	sec->add_item("title")->append("Verifica punti appoggio");
+
+	sec->add_item("para")->append("Valori di riferimento:");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Tolleranza planimetrica " << _TP_PA << " m";
+	itl->add_item("listitem")->append(ss.str());
+	std::stringstream ss1;
+	ss1 << "Tolleranza altimetrica " << _TA_PA << " m";
+	itl->add_item("listitem")->append(ss1.str());
 	
 	Doc_Item tab = sec->add_item("table");
 	tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
@@ -164,6 +204,18 @@ Doc_Item ta_exec::_initpg2()
 	Doc_Item sec = _article->add_item("section");
 	sec->add_item("title")->append("Confronto tra i risultati di due calcoli");
 	
+	sec->add_item("para")->append("Valori di riferimento:");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Massima differenza tra ciascuna coordinata dei centri di presa " << _T_CP << " m";
+	itl->add_item("listitem")->append(ss.str());
+	std::stringstream ss1;
+	ss1 << "Massima differenza tra i valori di pitch e roll " << _T_PR << " mdeg";
+	itl->add_item("listitem")->append(ss1.str());
+	std::stringstream ss2;
+	ss2 << "Massima differenza tra i valori ddellheading " << _T_PR << " mdeg";
+	itl->add_item("listitem")->append(ss2.str());
+
 	Doc_Item tab = sec->add_item("table");
 	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
 	
@@ -187,18 +239,7 @@ Doc_Item ta_exec::_initpg2()
 	Doc_Item tbody = tab->add_item("tbody");
 	return tbody;
 }
-bool ta_exec::_print_item(double val, double tol, Doc_Item& row, Poco::XML::AttributesImpl& attr)
-{
-	bool ret  = true;
-	if ( fabs(val) > tol ) {
-		Doc_Item r = row->add_item("entry", attr);
-		r->add_instr("dbfo", "bgcolor=\"red\"");
-		r->append(val);
-		ret = false;
-	} else
-		row->add_item("entry", attr)->append(val);
-	return ret;
-}
+
 /// checks for differences between two triangulations
 bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc)
 {
@@ -210,12 +251,12 @@ bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& foto, const
 	row->add_item("entry", attrc)->append(foto);
 
 	bool b = true;
-	b &= _print_item(pt[0], _T_CP, row, attrr);
-	b &= _print_item(pt[1], _T_CP, row, attrr);
-	b &= _print_item(pt[2], _T_CP, row, attrr);
-	b &= _print_item(sc[0], _T_PR, row, attrr);
-	b &= _print_item(sc[1], _T_PR, row, attrr);
-	b &= _print_item(sc[2], _T_H, row, attrr);
+	b &= print_item(row, attrr, pt[0], abs_less_ty, _T_CP);
+	b &= print_item(row, attrr, pt[1], abs_less_ty, _T_CP);
+	b &= print_item(row, attrr, pt[2], abs_less_ty, _T_CP);
+	b &= print_item(row, attrr, sc[0], abs_less_ty, _T_PR);
+	b &= print_item(row, attrr, sc[1], abs_less_ty, _T_PR);
+	b &= print_item(row, attrr, sc[2], abs_less_ty, _T_H);
 	return b; // false if at least one element is out of tolerance
 }
 
@@ -231,9 +272,18 @@ bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const 
 	row->add_item("entry", attrc)->append(nome2);
 
 	bool b = true;
-	b &= _print_item(sc.x, _TP_PA, row, attrr);
-	b &= _print_item(sc.y, _TP_PA, row, attrr);
-	b &= _print_item(sc.z, _TA_PA, row, attrr);
+	if ( sc.x == 0 )
+		row->add_item("entry", attrc)->append("-");
+	else
+		b &= print_item(row, attrr, sc.x, abs_less_ty, _TP_PA);
+	if ( sc.y == 0 )
+		row->add_item("entry", attrc)->append("-");
+	else
+		b &= print_item(row, attrr, sc.y, abs_less_ty, _TP_PA);
+	if ( sc.z == 0 )
+		row->add_item("entry", attrc)->append("-");
+	else
+		b &= print_item(row, attrr, sc.z, abs_less_ty, _TA_PA);
 	return b;
 }
 bool ta_exec::_read_cam()
@@ -356,7 +406,7 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 				else if ( pc.z == 0 )
 					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
 				else
-					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
+					sc = pc - pt;//DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
 				if ( !_add_point_to_table(row, cod, nome1, nome2, sc) )
 					_cpt_out_tol.push_back(cod);
 			}
@@ -368,11 +418,11 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 		return false;
 	if ( _cpt_out_tol.empty() ) {
 		std::stringstream ss;
-		ss << "Tutti i punti di controllo rientrano nelle tolleranze " << _TP_PA << ", " << _TA_PA;
+		ss << "Tutti i punti di controllo rientrano nelle tolleranze";
 		sec->add_item("para")->append(ss.str());
 	} else {
 		std::stringstream ss;
-		ss << "I seguenti punti risultano fuori dalle toleranze " << _TP_PA << ", " << _TA_PA;
+		ss << "I seguenti punti risultano fuori dalle toleranze";
 		sec->add_item("para")->append(ss.str());
 		Doc_Item itl = sec->add_item("itemizedlist");
 		std::list<std::string>::iterator it;
@@ -472,7 +522,7 @@ bool ta_exec::_check_differences()
 		sec->add_item("para")->append(ss.str());
 	} else {
 		std::stringstream ss;
-		ss << "I due risultati risultano diversi nei seguenti fotogrammi";
+		ss << "I due risultati sono diversi nei seguenti fotogrammi";
 		sec->add_item("para")->append(ss.str());
 		Doc_Item itl = sec->add_item("itemizedlist");
 		std::list<std::string>::iterator it;

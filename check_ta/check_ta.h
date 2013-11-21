@@ -30,6 +30,7 @@
 #include "photo_util/vdp.h"
 #include "Poco/Util/Application.h"
 #include "docbook/docbook.h"
+
 class ta_exec {
 public:
 	enum Check_Type {
@@ -62,10 +63,8 @@ private:
 	Doc_Item _initpg2(void);
 	void _resume(void);
 
-
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
-	bool _print_item(double val, double tol, Doc_Item& row, Poco::XML::AttributesImpl& attr);
 
 	bool _get_photo(void);
 	std::string _cam_name;

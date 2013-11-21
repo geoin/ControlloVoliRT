@@ -26,8 +26,6 @@
 */
 
 #include "check_gps.h"
-#include <set>
-#include "Poco/autoPtr.h"
 #include "Poco/stringtokenizer.h"
 #include "Poco/File.h"
 #include "Poco/Path.h"
@@ -37,9 +35,7 @@
 #include "ziplib/ziplib.h"
 #include "Poco/String.h"
 #include "Poco/AutoPtr.h"
-#include <spatialite.h>
 #include <sstream>
-#include <spatialite/gaiageo.h>
 #include "photo_util/sun.h"
 
 #define GPS "GPS"
@@ -95,13 +91,7 @@ std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
-OGRGeomPtr GetGeom(QueryField& rs)
-{
-	std::vector<unsigned char> blob;
-	rs.toBlob(blob);
-	OGRGeomPtr og(blob);
-	return og;
-}
+typedef std::vector<unsigned char> Blob;
 /****************************************************************/
 
 gps_exec::~gps_exec()
@@ -123,21 +113,19 @@ bool gps_exec::run()
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
-		int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
-		   ASSI_VOLO,
-		   SHAPE_CHAR_SET,
-		   SRID,
-		   "geom",
-		   true, // to have only XY
-		   false,
-		   false);
+		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
+		//   ASSI_VOLO,
+		//   SHAPE_CHAR_SET,
+		//   SRID,
+		//   "geom",
+		//   true, // to have only XY
+		//   false,
+		//   false);
 
 		_read_ref_val();
 
 		// create the gps track
-#ifdef PPP
 		_create_gps_track();
-#endif
 
 		// add information to the fligth lines
 		_update_assi_volo();
@@ -145,7 +133,7 @@ bool gps_exec::run()
 		// initialize docbook xml file
 		_init_document();
 		
-		_final_check();
+		_final_report();
 		
 		// write the result on the docbook report
 		_dbook.write();
@@ -192,7 +180,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 	if ( type == base_type )
 		_sigla_base.clear();
 
-	// seleziona tutti i files presenti nella cartella
+	// select all the files in the folder
 	File dircnt(nome);
 	std::vector<std::string> df;
 	dircnt.list(df);
@@ -206,13 +194,13 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
     for (long i = 0; i < (long) files.size(); i++) {
 
         // *********************** Scompattatori da mettere nel modulo loader
-        // per ogni file selezionato
+        // for every file look at the extension
 		Poco::Path fn(files[i]);
 		std::string ext = Poco::toLower(fn.getExtension());
 		if ( !ext.size() )
 			continue;
 		if ( ext == "zip" ) {
-			// se si tratta di uno zip
+			// it is a zip file
 			MyUnZip mz(files[i]);
 			if ( mz.IsValid() ) {
 				std::vector< std::string  >& vs = mz.GetDir();
@@ -340,38 +328,38 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 
 	std::string actdate;
 	std::string mintime, maxtime;
-	// scandisce i dati relativi ad ogni base
+	// for every base used
 	for (size_t l = 0; l < vvg.size(); l++) {
 		vGPS& vg = *vvg[l];
 		DPOINT pbase;
 
+		// for every epoch
 		for ( size_t i = 0; i < vg.size(); i++ ) {
 			double x = RAD_DEG(vg[i].pos.x);
 			double y = RAD_DEG(vg[i].pos.y);
 			double z = vg[i].pos.z;
 
-			if ( vg[i].data == "base" ) {
+			if ( vg[i].data == "base" ) { // means base name and coordinate
 				pbase = DPOINT(x, y, z);
 				basi.push_back(pbase);
 				continue;
 			}
-			if ( mbr != NULL &&  !mbr->IsInside(vg[i].pos.x,  vg[i].pos.y) )
+			if ( mbr != NULL && !mbr->IsInside(vg[i].pos.x,  vg[i].pos.y) )
 				continue;
 
 			GRX gr;
 			gr.pos = DPOINT(x, y, z);
-			if ( _gps_opt.Position_mode != GPS_OPT::Single ) {
-				gr.dist = gr.pos.dist_lat2D(pbase);
-			} else {
-				gr.dist = 0;
-			}
+			// calculate the distance to the base
+			gr.dist = gr.pos.dist_lat2D(pbase);
+
+			// parse the data field
 			Poco::StringTokenizer tok(vg[i].data, ";");
 			std::string time;
 			if ( tok.count() >= 3 ) {
-				Poco::StringTokenizer tok1(tok[0], " ");
+				Poco::StringTokenizer tok1(tok[0], " "); // tok 0 is date - time
 				if ( tok1.count() == 2 ) {
-					gr.data = tok1[0];
-					time = tok1[1];
+					gr.data = tok1[0]; // split it in date and time
+					time = tok1[1];	
 
 					if ( actdate.empty() )
 						actdate = gr.data;
@@ -388,21 +376,24 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 							maxtime = time;
 					}
 				}
-				gr.nsat = atoi(tok[1].c_str());
-				gr.pdop = atof(tok[2].c_str());
+				gr.nsat = atoi(tok[1].c_str()); // token 1 is number of sat
+				gr.pdop = atof(tok[2].c_str());	// token 2 is pdop
 				if ( tok.count() >= 5 ) {
-                    gr.rms = max(atof(tok[3].c_str()), atof(tok[4].c_str()));
+                    gr.rms = max(atof(tok[3].c_str()), atof(tok[4].c_str())); // token 3 and 4 are rmsx and rmsy
 				}
 				gr.id_base = (int) l;
+
+				// insert the data in a multi map with time as key
 				mmap.insert(std::pair<std::string, GRX>(time, gr));
 				smap.insert(time);
 			}
 		}
 	}
 
+	// create a layer for the basis
 	_record_base_file(basi, _vs_base);
 
-	// crea la tabella del GPS
+	// create the GPS table
 	std::stringstream sql;
 	sql << "CREATE TABLE " << GPS << 
 		" (id INTEGER NOT NULL PRIMARY KEY,\
@@ -443,10 +434,11 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	sr.importFromEPSG(SRIDGEO);
 
 	std::set<std::string>::iterator it;
+	// iterate on the multimap
 	for ( it = smap.begin(); it != smap.end(); it++) {
 		std::pair<std::multimap<std::string, GRX>::iterator, std::multimap<std::string, GRX>::iterator> ret;
 		std::multimap<std::string, GRX>::iterator itr;
-		ret = mmap.equal_range(*it);
+		ret = mmap.equal_range(*it); // get all the result for every epoch
 		time = *it;
 
 		double d = 0;
@@ -459,6 +451,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		for (itr = ret.first; itr != ret.second; ++itr) {
 			GRX gr = (*itr).second;
 
+			// discard the point if the base is too far
 			if ( gr.dist > _gps_opt.max_base_dst ) {
 				continue;
 			}
@@ -468,15 +461,16 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 			d += pi;
 			nbasi++;
 
-			p += (gr.pos * pi);
+			p += (gr.pos * pi); // weigth the point with the reciprocal of the distance to the base
 
 			data = gr.data;
             nsat = max(nsat, gr.nsat);
             pdop = min(pdop, gr.pdop);
             rms = max(rms, gr.rms);
 		}
-		if ( d == 0  && _gps_opt.Position_mode != GPS_OPT::Single ) {
-			//cnl.printf("Epoca scartata perché nessuna base");
+
+		// the epoch is discarted because no base are available
+		if ( d == 0 ) {
 			continue;
 		}
 
@@ -507,8 +501,9 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 
 bool gps_exec::_create_gps_track()
 {
-	// imposta la massima distanza per le basi
+	// se the msx distance allowed for the base stations
 	_gps_opt.max_base_dst = _MAX_DIST;
+	// set the minimum angle for the satellite
 	_gps_opt.min_sat_angle = _MIN_SAT_ANG;
 
 	Poco::Path fn(_proj_dir);
@@ -517,7 +512,7 @@ bool gps_exec::_create_gps_track()
 	cnn.remove_layer(BASI);
 	cnn.remove_layer(GPS);
 
-	// ogni cartella presente corrisponde ad una missione
+	// every folder is a different mission
 	Poco::File dircnt(fn);
 	std::vector<std::string> files;
 	dircnt.list(files);
@@ -531,16 +526,16 @@ bool gps_exec::_create_gps_track()
 }
 bool gps_exec::_mission_process(const std::string& folder)
 {
-	// cartella dati rover non impostata
+	// rover data folder must be set
 	if ( folder.empty() )
 		return false;
 		
-	// nome del file rover da elaborare
+	// Get the name of the rover
 	std::string rover = _getnome(folder, rover_type);
 	if ( rover.empty() )
 		return false;
 
-	// determina le basi da processare
+	// get the base list
 	std::vector<std::string> bfl;
 	Poco::File dircnt(folder);
 	std::vector<std::string> files;
@@ -555,7 +550,7 @@ bool gps_exec::_mission_process(const std::string& folder)
 
 	std::vector< Poco::SharedPtr<vGPS> > vvg;
 
-	// attiva il calcolo per ogni vbase
+	// for every base station calculate the gps track
 	for ( size_t i = 0; i < bfl.size(); i++ ) {
 		std::string base = _getnome(bfl[i], base_type);
 		if ( base.empty() )
@@ -566,14 +561,14 @@ bool gps_exec::_mission_process(const std::string& folder)
 		out.setExtension("txt");
 		_vs_base.push_back(_sigla_base);
 
-		fprintf (stderr, "Elaborazione %s\n", _sigla_base.c_str());
+		std::cout  << "Elaborazione di " << _sigla_base << std::endl;
 
 		Poco::SharedPtr<vGPS> vg(new vGPS);
 		if ( RinexPost(rover, base, out.toString(), NULL, vg, &_gps_opt) )
 			vvg.push_back(vg);
 	}
 
-	fprintf (stderr, "Registrazione dati \n", _sigla_base);
+	std::cout  << "Registrazione dei dati" << std::endl;
 	std::string mission = Poco::Path(folder).getBaseName();
 	_single_track(mission, vvg, NULL);
 
@@ -586,12 +581,10 @@ void gps_exec::_add_column(const std::string& col_name)
 	try {
 		cnn.execute_immediate(sql.str());
 	}
-	catch(std::exception e) {
+		catch(std::exception e) {
 	}
 }
-void gps_exec::_data_analyze()
-{
-}
+
 typedef struct feature {
 	std::string strip;
 	std::string time;
@@ -605,6 +598,7 @@ typedef struct feature {
 
 void gps_exec::_update_assi_volo()
 {
+	// add the columns for the gps data
 	_add_column("DATE TEXT");
 	_add_column("TIME_S TEXT");
 	_add_column("TIME_E TEXT");
@@ -614,52 +608,48 @@ void gps_exec::_update_assi_volo()
 	_add_column("NSAT INTEGER");
 	_add_column("PDOP DOUBLE");
 
+	// query to associate to the first and last point of each flight line the nearest point of the gps track
 	std::stringstream sql;
-	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?), b.geom)) FROM " <<
+	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
 		ASSI_VOLO << " a, gps b group by strip";
 
-	std::string ss(sql.str());
-
-	size_t q = ss.find('?');
-
 	Statement stm(cnn);
+	stm.prepare(sql.str());
 
-	ss.at(q) = '1';
-	stm.prepare(ss);
+	stm[1] = 1;
 	Recordset rs = stm.recordset();
 
-	// determina l'istante GPS relativo al primo estremo dell'asse
+	// for every strip get the GPS time of the first point
 	std::vector<feature> ft1;
 	while ( !rs.eof() ) {
 		feature f;
-		f.strip = rs["strip"].toString();
-		f.mission = rs["MISSION"].toString();
-		f.time = rs["TIME"].toString();
-		f.date = rs["DATE"].toString();
-		f.nsat = rs["NSAT"].toInt();
-		f.nbasi = rs["NBASI"].toInt();
-		f.pdop = rs["PDOP"].toDouble();
-		f.pt = GetGeom(rs["geo"]);
+		f.strip = rs["strip"];
+		f.mission = rs["MISSION"];
+		f.time = rs["TIME"];
+		f.date = rs["DATE"];
+		f.nsat = rs["NSAT"];
+		f.nbasi = rs["NBASI"];
+		f.pdop = rs["PDOP"];
+		f.pt = (Blob) rs["geo"];
 		ft1.push_back(f);
 		rs.next();
 	}
-
-	ss.at(q) = '2';
-	stm.prepare(ss);
+	stm.reset();
+	stm[1] = 2;
 	rs = stm.recordset();
 
-	// determina l'istante GPS relativo al secondo estremo dell'asse
+	// for every strip get the GPS time of the last point
 	std::vector<feature> ft2;
 	while ( !rs.eof() ) {
 		feature f;
-		f.strip = rs["strip"].toString();
-		f.mission = rs["MISSION"].toString();
-		f.time = rs["TIME"].toString();
-		f.date = rs["DATE"].toString();
-		f.nsat = rs["NSAT"].toInt();
-		f.nbasi = rs["NBASI"].toInt();
-		f.pdop = rs["PDOP"].toDouble();
-		f.pt = GetGeom(rs["geo"]);
+		f.strip = rs["strip"];
+		f.mission = rs["MISSION"];
+		f.time = rs["TIME"];
+		f.date = rs["DATE"];
+		f.nsat = rs["NSAT"];
+		f.nbasi = rs["NBASI"];
+		f.pdop = rs["PDOP"];
+		f.pt = (Blob) rs["geo"];
 		ft2.push_back(f);
 		rs.next();
 	}
@@ -697,7 +687,7 @@ void gps_exec::_update_assi_volo()
 				sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
 				double h = sun.altit();
 
-				stm1[1] = rs[0].toString(); // mission
+				stm1[1] = (std::string const &) rs[0]; // mission
 				stm1[2] = rs[1].toString(); // date
 				stm1[3] = t1;
 				stm1[4] = t2;
@@ -714,20 +704,74 @@ void gps_exec::_update_assi_volo()
 	}
 	cnn.commit_transaction();
 }
-void gps_exec::_final_check()
+void gps_exec::_final_report()
 {
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Verifica traccia GPS");
+
+	sec->add_item("para")->append("Valori di riferimento:");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Minimo numero di satelli con angolo sull'orizzonte superiore a " << _MIN_SAT_ANG << " deg non inferiore a " << _MIN_SAT;
+	itl->add_item("listitem")->append(ss.str());
+	std::stringstream ss1;
+	ss1 << "Massimo PDOP non superiore a " << _MAX_PDOP;
+	itl->add_item("listitem")->append(ss1.str());
+	std::stringstream ss2;
+	ss2 << "Minimo numero di stazioni permanenti entro " << _MAX_DIST / 1000 << " km non inferiore a " << _NBASI;
+	itl->add_item("listitem")->append(ss2.str());
+	std::stringstream ss3;
+	ss3 << "Minimo angolo del sole rispetto all'orizzonte al momento del rilievo " << _MIN_ANG_SOL << " deg";
+	itl->add_item("listitem")->append(ss3.str());
+
 	// check finale
 	std::stringstream sql;
 	sql << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI, SUN_HL from " << ASSI_VOLO <<  " where NSAT<" << _MIN_SAT <<
-		" OR PDOP >" << _MAX_PDOP << " OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL;
+		" OR PDOP >" << _MAX_PDOP << " OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL << " order by " << STRIP_NAME;
 
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
-
-	//std::vector<feature> ft1;
-	while ( !rs.eof() ) {
-		//ft1.push_back(f);
-		;//rs.eof
+	if ( rs.fields_count() == 0 ) {
+		sec->add_item("para")->append("Durante l'acquisizione delle strisciate i parametri del GPS rientrano nei range previsti");
+		return;
 	}
+
+	sec->add_item("para")->append("Le seguenti strisciate presentano dei parametri che non rientrano nei range previsti");
+	
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("Strisciate acquisite con parametri GPS con parametri fuori range");
+
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "5");
+	tab = tab->add_item("tgroup", attr);
+
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+
+	attr.clear();
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Strip");
+	row->add_item("entry", attr)->append("N. sat.");
+	row->add_item("entry", attr)->append("PDOP");
+	row->add_item("entry", attr)->append("N. staz.");
+	row->add_item("entry", attr)->append("Ang. sole");
+
+	Doc_Item tbody = tab->add_item("tbody");
+
+	Poco::XML::AttributesImpl attrr;
+	attrr.addAttribute("", "", "align", "", "right");
+
+	while ( !rs.eof() ) {
+		row = tbody->add_item("row");
+
+		row->add_item("entry", attr)->append(rs[STRIP_NAME].toString());
+		
+		print_item(row, attrr, rs["NSAT"], great_ty, _MIN_SAT);
+		print_item(row, attrr, rs["PDOP"], less_ty, _MAX_PDOP);
+		print_item(row, attrr, rs["NBASI"], great_ty, _NBASI);
+		print_item(row, attrr, rs["SUN_HL"], great_ty, _MIN_ANG_SOL);
+		rs.next();
+	}
+	return;
 }

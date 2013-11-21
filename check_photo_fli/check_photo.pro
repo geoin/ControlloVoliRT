@@ -19,11 +19,11 @@ macx {
 
 LIBS += -lspatialite_i
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -lsqlite3_i -ldem_interpolated
+        LIBS += -lPocoUtild -lphoto_utild -ldem_interpolated -lspatialite4 -lsqlite3_i -lCVutild -lgdald_i
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoFoundation -lPocoUtil -lrtklib -lziplib -lphoto_utild
+        LIBS += -lPocoUtil -lphoto_utild -ldem_interpolate -lspatialite4 -lsqlite3_i -lCVutil -lgdal_i
 }
 
 win32 {

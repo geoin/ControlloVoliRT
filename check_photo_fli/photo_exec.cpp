@@ -32,6 +32,7 @@
 #include "Poco/sharedPtr.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include "gdal/ogr_geometry.h"
 
 #define SRID 32632
@@ -88,13 +89,6 @@ std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
-OGRGeomPtr GetGeom(QueryField& rs)
-{
-	std::vector<unsigned char> blob;
-	rs.toBlob(blob);
-	OGRGeomPtr og(blob);
-	return og;
-}
 std::string get_strip(const std::string& nome)
 {
 	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
@@ -109,7 +103,7 @@ std::string get_nome(const std::string& nome)
 		return "";
 	return tok[1];
 }
-
+typedef std::vector<unsigned char> Blob;
 /**************************************************************/
 
 photo_exec::~photo_exec() 
@@ -159,7 +153,7 @@ bool photo_exec::run()
 		_init_document();
 
 		// produce photos feature
-#ifdef ppp
+
 		if ( !_process_photos() )
 			return false;
 		// produce models features
@@ -169,7 +163,7 @@ bool photo_exec::run()
 			return false;	
 		if ( !_process_block() )
 			return false;
-#endif
+
 		_final_report();
 
 		// write the result on the docbook report
@@ -246,9 +240,9 @@ bool photo_exec::_get_carto(OGRGeomPtr strips)
 	while ( !rs.eof() ) { //for every strip
 		if ( first ) {
 			first = false;
-			blk = GetGeom(rs[0]);
+			blk = (Blob) rs[0];
 		} else {
-			OGRGeomPtr pol2 = GetGeom(rs[0]);
+			OGRGeomPtr pol2 = (Blob) rs[0];
 			OGRGeomPtr pol1 = blk->Union(pol2);
 			blk = pol1;
 		}
@@ -530,7 +524,7 @@ bool photo_exec::_process_models()
 	CV::Util::Spatialite::Recordset rs = stm1.recordset();
 	
 	while ( !rs.eof() ) { //for every strip
-		std::string strip = rs[0].toString();
+		std::string strip = rs[0];
 		std::stringstream sql4;
 		sql4 << "select Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, AsBinary(geom) from " << tablef << " where Z_FOTO_CS=" << strip;
 		CV::Util::Spatialite::Statement stm2(cnn);
@@ -543,17 +537,17 @@ bool photo_exec::_process_models()
 		while ( !rs1.eof() ) {
 			if ( first ) {
 				first = false;
-				id = rs1["Z_FOTO_ID"].toString();
-				strip = rs1["Z_FOTO_CS"].toString();
-				nomeleft = rs1["Z_FOTO_NF"].toString();
+				id = rs1["Z_FOTO_ID"];
+				strip = rs1["Z_FOTO_CS"];
+				nomeleft = rs1["Z_FOTO_NF"];
 
 				// Get the first photo geometry
-				pol1 = GetGeom(rs1[6]);
+				pol1 = (Blob) rs1[6];
 			} else {
-				std::string nomeright = rs1["Z_FOTO_NF"].toString();
+				std::string nomeright = rs1["Z_FOTO_NF"];
 
 				// get the next photo geometry
-				OGRGeomPtr pol2 = GetGeom(rs1[6]);
+				OGRGeomPtr pol2 = (Blob) rs1[6];
 				// the model is the intersection of two photos
 				OGRGeomPtr mod = pol1->Intersection(pol2);
 		
@@ -636,7 +630,7 @@ bool photo_exec::_process_strips()
 	CV::Util::Spatialite::Recordset rs = stm1.recordset();
 	
 	while ( !rs.eof() ) { //for every strip
-		std::string strip = rs[0].toString();
+		std::string strip = rs[0];
 		std::stringstream sql4;
 
 		sql4 << "select Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, AsBinary(geom) from " << tablef << " where Z_MODEL_CS=" << strip;
@@ -650,16 +644,16 @@ bool photo_exec::_process_strips()
 		int count = 1;
 		while ( !rs1.eof() ) {
 			if ( first ) {
-				id = rs1["Z_MODEL_ID"].toString();
-				strip = rs1["Z_MODEL_CS"].toString();
-				firstname = rs1["Z_MODEL_LEFT"].toString();
+				id = rs1["Z_MODEL_ID"];
+				strip = rs1["Z_MODEL_CS"];
+				firstname = rs1["Z_MODEL_LEFT"];
 				first = false;
 
-				pol1 = GetGeom(rs1[4]);
+				pol1 = (Blob) rs1[4];
 			} else {
-				lastname = rs1["Z_MODEL_RIGHT"].toString();
+				lastname = rs1["Z_MODEL_RIGHT"];
 				// joins all the models
-				OGRGeomPtr pol2 = GetGeom(rs1[4]);
+				OGRGeomPtr pol2 = (Blob) rs1[4];
 				OGRGeomPtr mod = pol1->Union(pol2);
 				pol1 = mod;
 			}
@@ -716,15 +710,15 @@ bool photo_exec::_process_block()
 
 	while ( !rs.eof() ) { //for every strip
 		mstrp s;
-		s.strip = rs[0].toString();
-		s.first = rs[1].toString();
-		s.last = rs[2].toString();
+		s.strip = rs[0];
+		s.first = rs[1];
+		s.last = rs[2];
 		if ( first ) {
 			first = false;
-			blk = GetGeom(rs[3]);
+			blk = (Blob) rs[3];
 			s.geo = blk;
 		} else {
-			OGRGeomPtr pol2 = GetGeom(rs[3]);
+			OGRGeomPtr pol2 = (Blob) (rs[3]);
 			s.geo = pol2;
 			OGRGeomPtr pol1 = blk->Union(pol2);
 			blk = pol1;
@@ -792,10 +786,10 @@ bool photo_exec::_foto_report()
 	sec->add_item("para")->append("Valori di riferimento:");
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
-	ss << "GSD compreso tra " << v1 << " e " << v2;
+	ss << "GSD compreso tra " << v1 << " m e " << v2 << " m";
 	itl->add_item("listitem")->append(ss.str());
 	std::stringstream ss1;
-	ss1 << "angoli di pitch e roll minori di " << _MAX_ANG;
+	ss1 << "angoli di pitch e roll minori di " << _MAX_ANG << " deg";
 	itl->add_item("listitem")->append(ss1.str());
 
 	// verifica della dimensione del pixel e dei valori di picth e roll
@@ -838,9 +832,9 @@ bool photo_exec::_foto_report()
 
 		row->add_item("entry", attr)->append(rs[0].toString());
 		
-		print_item(row, attrr, rs[1].toDouble(), between_ty, v1, v2);
-		print_item(row, attrr, rs[2].toDouble(), abs_less_ty, _MAX_ANG);
-		print_item(row, attrr, rs[3].toDouble(), abs_less_ty, _MAX_ANG);
+		print_item(row, attrr, rs[1], between_ty, v1, v2);
+		print_item(row, attrr, rs[2], abs_less_ty, _MAX_ANG);
+		print_item(row, attrr, rs[3], abs_less_ty, _MAX_ANG);
 		rs.next();
 	}
 	return false;
@@ -862,10 +856,10 @@ bool photo_exec::_model_report()
 	ss1 << "Ricoprimento trasversale maggiore di " << _MODEL_OVERLAP_T << "%";
 	itl->add_item("listitem")->append(ss1.str());
 	std::stringstream ss2;
-	ss2 << "Differenza di heading tra i fotogrammi minori di " << _MAX_HEADING_DIFF;
+	ss2 << "Differenza di heading tra i fotogrammi minori di " << _MAX_HEADING_DIFF << " deg";
 	itl->add_item("listitem")->append(ss2.str());
 
-	// verifica ricoprimento tra fotogrammi
+	// Check the photos
 	std::string table = std::string(Z_MODEL) + (_type == Prj_type ? "P" : "V");
 	std::stringstream sql;
 	sql << "SELECT Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING FROM " << table << " WHERE Z_MODEL_L_OVERLAP not between " << v1 << " and " << v2 <<
@@ -899,7 +893,6 @@ bool photo_exec::_model_report()
 
 	Doc_Item tbody = tab->add_item("tbody");
 
-	//Doc_Item row = tbody->add_item("row");
 	Poco::XML::AttributesImpl attrr;
 	attrr.addAttribute("", "", "align", "", "right");
 	while ( !rs.eof() ) {
@@ -908,9 +901,9 @@ bool photo_exec::_model_report()
 		row->add_item("entry", attr)->append(rs[0].toString());
 		row->add_item("entry", attr)->append(rs[1].toString());
 		
-		print_item(row, attrr, rs[2].toDouble(), between_ty, v1, v2);
-		print_item(row, attrr, rs[3].toDouble(), great_ty, _MODEL_OVERLAP_T);
-		print_item(row, attrr, rs[4].toDouble(), abs_less_ty, _MAX_HEADING_DIFF);
+		print_item(row, attrr, rs[2], between_ty, v1, v2);
+		print_item(row, attrr, rs[3], great_ty, _MODEL_OVERLAP_T);
+		print_item(row, attrr, rs[4], abs_less_ty, _MAX_HEADING_DIFF);
 		rs.next();
 	}
 	return false;
@@ -929,7 +922,7 @@ bool photo_exec::_strip_report()
 	ss << "Ricoprimento Trasversale compreso tra " << v1 << "% e " << v2 << "%";
 	itl->add_item("listitem")->append(ss.str());
 	std::stringstream ss1;
-	ss1 << "Massima lunghezza strisciate minore di " << _MAX_STRIP_LENGTH;
+	ss1 << "Massima lunghezza strisciate minore di " << _MAX_STRIP_LENGTH << " km";
 	itl->add_item("listitem")->append(ss1.str());
 
 	// Strip verification
@@ -974,8 +967,8 @@ bool photo_exec::_strip_report()
 
 		row->add_item("entry", attr)->append(rs[0].toString());
 		
-		print_item(row, attrr, rs[1].toDouble(), less_ty, _MAX_STRIP_LENGTH);
-		print_item(row, attrr, rs[2].toDouble(), between_ty, v1, v2);
+		print_item(row, attrr, rs[1], less_ty, _MAX_STRIP_LENGTH);
+		print_item(row, attrr, rs[2], between_ty, v1, v2);
 
 		row->add_item("entry", attr)->append(rs[3].toString());
 		rs.next();
@@ -1002,7 +995,7 @@ void photo_exec::_final_report()
 	Doc_Item sec = _article->add_item("section");
 	sec->add_item("title")->append("Verifica Copertura aree da cartografare");
 
-	int cv = rs[0].toInt();
+	int cv = rs[0];
 	if ( cv == 0 ) {
 		sec->add_item("para")->append("Tutte le aree da cartografare sono state ricoperte da modelli stereoscopici");
 	} else {
