@@ -78,7 +78,6 @@ void dump_shape(){
 
         rs.next();
     }
-
 }
 
 
@@ -192,18 +191,18 @@ void layer_line2point(){
 }
 
 int main( int argc, char *argv[]) {
-try {
-    //load_shape();
+    try {
+        //load_shape();
 
-    // get geometry form db
-    dump_shape();
+        // get geometry form db
+        dump_shape();
 
-    // read linear layer, split line in points e copy points in another layer
-    //layer_line2point();
-}
-catch(std::runtime_error const &e){
-    std::cout << std::string(e.what()) <<  std::endl;
-    std::cout.flush();
-}
+        // read linear layer, split line in points e copy points in another layer
+        //layer_line2point();
+    }
 
+    catch(std::runtime_error const &e){
+        std::cout << std::string(e.what()) <<  std::endl;
+        std::cout.flush();
+    }
 }
