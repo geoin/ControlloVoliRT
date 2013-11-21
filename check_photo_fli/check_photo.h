@@ -71,6 +71,8 @@ private:
 	bool _foto_report(void);
 	bool _model_report(void);
 	bool _strip_report(void);
+	bool _prj_report(void);
+
 	bool _read_ref_val(void);
 
 	bool _get_photo(void);

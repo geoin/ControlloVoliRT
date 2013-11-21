@@ -75,7 +75,8 @@ public:
 typedef std::vector<GPS_DATA> vGPS;
 
 bool RinexPost(const std::string& rover, const std::string& base, const std::string& out, MBR* mbr, vGPS* data, GPS_OPT* gps = NULL);
-int Crx2Rnx(const char* crx);
-int Raw2Rnx(const char* crx, const char* ext, std::vector<std::string>& vs);
-
+//int Crx2Rnx(const char* crx);
+//int Raw2Rnx(const char* crx, const char* ext, std::vector<std::string>& vs);
+std::vector<std::string> RawConv(const std::string& nome);
+std::string Hathanaka(const std::string& nome);
 #endif

@@ -28,7 +28,7 @@
 #include "gps.h"
 #include "rtklib/rtklib.h"
 #include <Poco/Path.h>
-
+#include "Poco/File.h"
 #include <vector>
 
 #define PRGNAME     "RTKPOST"
@@ -542,4 +542,28 @@ int Raw2Rnx(const char* crx, const char* ext, std::vector<std::string>& vs)
 
 	return ret;
 }
-
+std::vector<std::string> RawConv(const std::string& nome) 
+{
+	Poco::Path fn(nome);
+	std::string ext = fn.getExtension();
+	std::vector<std::string> vs;
+	Raw2Rnx(nome.c_str(), ext.c_str(), vs);
+	return vs;
+}
+std::string Hathanaka(const std::string& nome)
+{
+	Poco::Path fn(nome);
+	std::string ext = fn.getExtension();
+	if ( tolower(ext[2]) == 'd' ) {
+		Poco::Path fn1(nome);
+		std::string ext1 = ext;
+		ext1[2] = 'o';
+		fn1.setExtension(ext1);
+		Poco::File f(fn1.toString());
+		if ( !f.exists() )
+			if ( Crx2Rnx(nome.c_str()) != 1 ) {
+				return fn1.toString();
+			}
+	}
+	return std::string("");
+}

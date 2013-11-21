@@ -30,6 +30,8 @@
 #include "gps.h"
 #include "Poco/Util/Application.h"
 #include "CVUtil/cvspatialite.h"
+#include "CVUtil/ogrgeomptr.h"
+#include "docbook/docbook.h"
 
 class gps_exec {
 public:
@@ -46,19 +48,15 @@ public:
 
 private:
 	std::string _getnome(const std::string& nome, gps_type type);
-	// trasforma i file dal formato Hatanaka al formato Rinex
-	std::string _hathanaka(const std::string& nome);
-	std::vector<std::string> _rawConv(const std::string& nome);
+	void _add_column(const std::string& col_name) ;
+
 	// compensa le tracce relative alle singole basi producendo una traccia unica
 	bool _single_track(const std::string& mission, std::vector< Poco::SharedPtr<vGPS> >& vvg, MBR* mbr);
 	// registra i dati relativi alle basi utilizzate per la singola missione
 	bool _record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base);
 	// processa la singola missione
 	bool _mission_process(const std::string& folder);
-	// inizializza la connessione con spatial lite
-	bool _init_splite(void);
-	// rilegge dal fiel di configurazioni i valori di riferimento
-	void _release_splite(void);
+
 	bool _read_ref_val(void);
 	
 	// crea la tracci agps
@@ -70,6 +68,7 @@ private:
 
 	// verifica i dati e produce i report
 	void _final_check(void);
+	void _init_document(void);
 
 	std::string _rover_name;
 	std::string _sigla_base;
@@ -82,6 +81,9 @@ private:
 
 	// spatial lite connection
 	CV::Util::Spatialite::Connection cnn;
+	
+	docbook _dbook;
+	Doc_Item _article;
 
 	// valori di riferimento
 	double _MAX_PDOP;

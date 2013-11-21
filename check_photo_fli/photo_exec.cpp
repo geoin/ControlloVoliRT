@@ -32,7 +32,6 @@
 #include "Poco/sharedPtr.h"
 #include <fstream>
 #include <sstream>
-//#include <spatialite.h>
 #include "gdal/ogr_geometry.h"
 
 #define SRID 32632
@@ -40,6 +39,11 @@
 #define CARTO "CARTO"
 #define SHAPE_CHAR_SET "CP1252"
 #define REFSCALE "RefScale_2000"
+
+#define Z_FOTO "Z_FOTO"
+#define Z_MODEL "Z_MODEL"
+#define Z_STRIP "Z_STRIP"
+#define Z_BLOCK "Z_BLOCK"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -232,9 +236,9 @@ bool photo_exec::_get_carto(OGRGeomPtr strips)
 
 	std::stringstream sql;
 	sql << "select AsBinary(geom) from " << table;
-	CV::Util::Spatialite::Statement stm(cnn);
+	Statement stm(cnn);
 	stm.prepare(sql.str());
-	CV::Util::Spatialite::Recordset rs = stm.recordset();
+	Recordset rs = stm.recordset();
 	
 	bool first = true;
 	OGRGeomPtr blk;
@@ -246,8 +250,6 @@ bool photo_exec::_get_carto(OGRGeomPtr strips)
 		} else {
 			OGRGeomPtr pol2 = GetGeom(rs[0]);
 			OGRGeomPtr pol1 = blk->Union(pol2);
-			//OGRGeometryFactory::destroyGeometry(blk);
-			//OGRGeometryFactory::destroyGeometry(pol2);
 			blk = pol1;
 		}
 		rs.next();
@@ -262,8 +264,6 @@ bool photo_exec::_get_carto(OGRGeomPtr strips)
 			OGRGeomPtr inter = pol->Difference(strips);
 			OGRPolygon* p1 = (OGRPolygon*) ((OGRGeometry*) pol);
 			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) inter);
-			//double a1 = p1->get_Area();
-			//double a2 = p2->get_Area();
 			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
 				vs.push_back(inter);
 			}
@@ -395,7 +395,7 @@ void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 
 bool photo_exec::_process_photos()
 {
-	std::string table(_type == Prj_type ? "Z_FOTOP" : "Z_FOTOV");
+	std::string table = std::string(Z_FOTO) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 
 	DSM* ds = _df->GetDsm();
@@ -425,9 +425,12 @@ bool photo_exec::_process_photos()
 	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
 		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
 
-	CV::Util::Spatialite::Statement stm(cnn);
+	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
+		
+	OGRSpatialReference sr;
+	sr.importFromEPSG(SRID);
 
 	std::map<std::string, VDP>::iterator it;
 	for (it = _vdps.begin(); it != _vdps.end(); it++) {
@@ -451,11 +454,7 @@ bool photo_exec::_process_photos()
 			dpol.push_back(pt);
 		}
 
-		OGRSpatialReference sr;
-		sr.importFromEPSG(SRID);
-
 		OGRGeometryFactory gf;
-		//OGRLinearRing* gp = (OGRLinearRing*) gf.createGeometry(wkbLinearRing);
 		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
 		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
 		gp->setCoordinateDimension(2);
@@ -465,7 +464,6 @@ bool photo_exec::_process_photos()
 			gp->addPoint(dpol[i].x, dpol[i].y);
 		gp->closeRings();
 
-		//OGRPolygon* pol  = (OGRPolygon*) gf.createGeometry(wkbPolygon);
 		OGRGeomPtr pol = gf.createGeometry(wkbPolygon);
 		OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) pol);
 		p->setCoordinateDimension(2);
@@ -489,10 +487,10 @@ bool photo_exec::_process_photos()
 	cnn.commit_transaction();
 	return true;
 }
-// costruisce i modelli a partire da fotogrammi consecutivi della stessa strisciata
+// builds the models from adjacent Photos of the same strip
 bool photo_exec::_process_models()
 {
-	std::string table(_type == Prj_type ? "Z_MODELP" : "Z_MODELV");
+	std::string table = std::string(Z_MODEL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 
 	// create the model table
@@ -541,7 +539,6 @@ bool photo_exec::_process_models()
 		std::string nomeleft;
 		std::string id;
 		OGRGeomPtr pol1;
-		double lo = 60, to = 95;
 		double first = true;
 		while ( !rs1.eof() ) {
 			if ( first ) {
@@ -573,8 +570,8 @@ bool photo_exec::_process_models()
 				double d1f, d2f, d1m, d2m;
 				_get_elong(pol1, _vdps[nomeleft].ka, &d1f, &d2f);
 				_get_elong(mod, _vdps[nomeleft].ka, &d1m, &d2m);
-				lo = 100 * d1m / d1f; // longitudinal overlap
-				to = 100 * d2m / d2f; // trasversal overlap
+				double lo = 100 * d1m / d1f; // longitudinal overlap
+				double to = 100 * d2m / d2f; // trasversal overlap
 
 				stm[1] = id;
 				stm[2] = strip;
@@ -590,9 +587,9 @@ bool photo_exec::_process_models()
 				pol1 = pol2;
 
 			}
-            rs1.next();
+            rs1.next(); // recordset on the foto 
         }
-		rs.next();
+		rs.next(); // recordset on the strips
 	}
 	cnn.commit_transaction();
 	return true;
@@ -600,7 +597,7 @@ bool photo_exec::_process_models()
 // costruisce le strisciate unendo tutte le foto di una stessa strip
 bool photo_exec::_process_strips()
 {
-	std::string table(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
+	std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 
 	// create the strip table
@@ -661,7 +658,7 @@ bool photo_exec::_process_strips()
 				pol1 = GetGeom(rs1[4]);
 			} else {
 				lastname = rs1["Z_MODEL_RIGHT"].toString();
-				// unisce tutti i modelli
+				// joins all the models
 				OGRGeomPtr pol2 = GetGeom(rs1[4]);
 				OGRGeomPtr mod = pol1->Union(pol2);
 				pol1 = mod;
@@ -693,7 +690,7 @@ typedef struct mstrp {
 } mstrp;
 bool photo_exec::_process_block()
 {
-	std::string table(_type == Prj_type ? "Z_BLOCKP" : "Z_BLOCKV");
+	std::string table = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 
 	// create the strip table
@@ -755,7 +752,7 @@ bool photo_exec::_process_block()
 			VDP& vdp4 = _vdps[vs[j].last];
 			VecOri v2(vdp4.Pc - vdp3.Pc);
 			double ct = RAD_DEG(acos((v1 % v2) / (v1.module() * v2.module())));
-			if ( fabs(ct) < 10 || fabs(ct) > 170 ) {
+			if ( fabs(ct) < 10 || fabs(ct) > 170 ) { // 10 deg difference in the heading means they are parallel
 				OGRGeomPtr g1 = vs[i].geo;
 				OGRGeomPtr g2 = vs[j].geo;
 				if ( g1->Intersect(g2) ) {
@@ -777,8 +774,11 @@ bool photo_exec::_process_block()
 	cnn.commit_transaction();
 	return true;
 }
-bool _prj_report()
+bool photo_exec::_prj_report()
 {
+	// se si tratta di controllo del volo va verificata la congruenza col progetto
+	// 1 numero e lunghezza delle strisciate
+	// 2 per ogni strisciata numero di fotogrammi
 	return false;
 }
 bool photo_exec::_foto_report()
@@ -800,7 +800,7 @@ bool photo_exec::_foto_report()
 
 	// verifica della dimensione del pixel e dei valori di picth e roll
 	std::stringstream sql;
-	std::string table = (_type == Prj_type ? "Z_FOTOP" : "Z_FOTOV");
+	std::string table = std::string(Z_FOTO) + (_type == Prj_type ? "P" : "V");
 	sql << "SELECT Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL FROM " << table << " WHERE Z_FOTO_DIMPIX not between " << v1 << " and " << v2 <<
 		" OR Z_FOTO_PITCH>" << _MAX_ANG << " OR Z_FOTO_ROLL>" << _MAX_ANG;
 	Statement stm(cnn);
@@ -815,26 +815,26 @@ bool photo_exec::_foto_report()
 	Doc_Item tab = sec->add_item("table");
 	tab->add_item("title")->append("Immagini con parametri fuori range");
 
-	Poco::XML::AttributesImpl attrs;
-	attrs.addAttribute("", "", "cols", "", "4");
-	tab = tab->add_item("tgroup", attrs);
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "4");
+	tab = tab->add_item("tgroup", attr);
 
 	Doc_Item thead = tab->add_item("thead");
 	Doc_Item row = thead->add_item("row");
 
-	attrs.clear();
-	attrs.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attrs)->append("Foto");
-	row->add_item("entry", attrs)->append("GSD");
-	row->add_item("entry", attrs)->append("Pitch");
-	row->add_item("entry", attrs)->append("Roll");
+	attr.clear();
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Foto");
+	row->add_item("entry", attr)->append("GSD");
+	row->add_item("entry", attr)->append("Pitch");
+	row->add_item("entry", attr)->append("Roll");
 
 	Doc_Item tbody = tab->add_item("tbody");
 
+	Poco::XML::AttributesImpl attrr;
+	attrr.addAttribute("", "", "align", "", "right");
 	while ( !rs.eof() ) {
-		Doc_Item row = tbody->add_item("row");
-		Poco::XML::AttributesImpl attrr, attr;
-		attr.addAttribute("", "", "align", "", "right");
+		row = tbody->add_item("row");
 
 		row->add_item("entry", attr)->append(rs[0].toString());
 		
@@ -866,7 +866,7 @@ bool photo_exec::_model_report()
 	itl->add_item("listitem")->append(ss2.str());
 
 	// verifica ricoprimento tra fotogrammi
-	std::string table = (_type == Prj_type ? "Z_MODELP" : "Z_MODELV");
+	std::string table = std::string(Z_MODEL) + (_type == Prj_type ? "P" : "V");
 	std::stringstream sql;
 	sql << "SELECT Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING FROM " << table << " WHERE Z_MODEL_L_OVERLAP not between " << v1 << " and " << v2 <<
 		" OR Z_MODEL_T_OVERLAP <" << _MODEL_OVERLAP_T << " OR Z_MODEL_D_HEADING >" << _MAX_HEADING_DIFF;
@@ -882,27 +882,28 @@ bool photo_exec::_model_report()
 	Doc_Item tab = sec->add_item("table");
 	tab->add_item("title")->append("modelli con parametri fuori range");
 
-	Poco::XML::AttributesImpl attrs;
-	attrs.addAttribute("", "", "cols", "", "5");
-	tab = tab->add_item("tgroup", attrs);
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "5");
+	tab = tab->add_item("tgroup", attr);
 
 	Doc_Item thead = tab->add_item("thead");
 	Doc_Item row = thead->add_item("row");
 
-	attrs.clear();
-	attrs.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attrs)->append("Foto Sx");
-	row->add_item("entry", attrs)->append("Foto Dx");
-	row->add_item("entry", attrs)->append("Ric. long.");
-	row->add_item("entry", attrs)->append("Ric. trasv.");
-	row->add_item("entry", attrs)->append("Dif. head.");
+	attr.clear();
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Foto Sx");
+	row->add_item("entry", attr)->append("Foto Dx");
+	row->add_item("entry", attr)->append("Ric. long.");
+	row->add_item("entry", attr)->append("Ric. trasv.");
+	row->add_item("entry", attr)->append("Dif. head.");
 
 	Doc_Item tbody = tab->add_item("tbody");
 
+	//Doc_Item row = tbody->add_item("row");
+	Poco::XML::AttributesImpl attrr;
+	attrr.addAttribute("", "", "align", "", "right");
 	while ( !rs.eof() ) {
-		Doc_Item row = tbody->add_item("row");
-		Poco::XML::AttributesImpl attrr, attr;
-		attr.addAttribute("", "", "align", "", "right");
+		row = tbody->add_item("row");
 
 		row->add_item("entry", attr)->append(rs[0].toString());
 		row->add_item("entry", attr)->append(rs[1].toString());
@@ -916,21 +917,83 @@ bool photo_exec::_model_report()
 }
 bool photo_exec::_strip_report()
 {
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Verifica parametri strisciate");
+
+	double v1 = _STRIP_OVERLAP * (1 - _STRIP_OVERLAP_RANGE / 100);
+	double v2 = _STRIP_OVERLAP * (1 + _STRIP_OVERLAP_RANGE / 100);
+
+	sec->add_item("para")->append("Valori di riferimento:");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Ricoprimento Trasversale compreso tra " << v1 << "% e " << v2 << "%";
+	itl->add_item("listitem")->append(ss.str());
+	std::stringstream ss1;
+	ss1 << "Massima lunghezza strisciate minore di " << _MAX_STRIP_LENGTH;
+	itl->add_item("listitem")->append(ss1.str());
+
+	// Strip verification
+	std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
+	std::string table2 = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
+	std::stringstream sql;
+	sql << "SELECT Z_STRIP_CS, Z_STRIP_LENGTH, Z_STRIP_T_OVERLAP, Z_STRIP2 FROM " << table << " a inner JOIN " << 
+		table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << _MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << v1 << " OR Z_STRIP_T_OVERLAP>" << v2;
+
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	if ( rs.fields_count() == 0 ) {
+		sec->add_item("para")->append("In tutte le strisciate i parametri verificati rientrano nei range previsti");
+		return true;
+	}
+	sec->add_item("para")->append("Nelle seguenti strisciate i parametri verificati non rientrano nei range previsti");
+	
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("Strisciate con parametri fuori range");
+
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "4");
+	tab = tab->add_item("tgroup", attr);
+
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+
+	attr.clear();
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Strip.");
+	row->add_item("entry", attr)->append("Lung.");
+	row->add_item("entry", attr)->append("Ric. trasv.");
+	row->add_item("entry", attr)->append("Strip adiac.");
+
+	Doc_Item tbody = tab->add_item("tbody");
+
+	Poco::XML::AttributesImpl attrr;
+	attrr.addAttribute("", "", "align", "", "right");
+	while ( !rs.eof() ) {
+		row = tbody->add_item("row");
+
+		row->add_item("entry", attr)->append(rs[0].toString());
+		
+		print_item(row, attrr, rs[1].toDouble(), less_ty, _MAX_STRIP_LENGTH);
+		print_item(row, attrr, rs[2].toDouble(), between_ty, v1, v2);
+
+		row->add_item("entry", attr)->append(rs[3].toString());
+		rs.next();
+	}
 	return false;
 }
 void photo_exec::_final_report()
 {
+	// test to be done only for the real flight
 	if ( _type == fli_type ) {
-		// se si tratta di controllo del volo va verificata la congruenza col progetto
-		// 1 numero e lunghezza delle strisciate
-		// 2 per ogni strisciata numero di fotogrammi
-		;
+		_prj_report();
 	}
-	// in ogni caso
 
-	// copertura areee da cartografare
+	// common tests
+
+	// coverage of cartographic areas
 	std::stringstream sql;
-	std::string table(_type == Prj_type ? "Z_BLOCKP" : "Z_BLOCKV");
+	std::string table = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
 	sql << "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" <<table << "'";
 	Statement stm(cnn);
 	stm.prepare(sql.str());
@@ -947,4 +1010,5 @@ void photo_exec::_final_report()
 	}
 	_foto_report();
 	_model_report();
+	_strip_report();
 }

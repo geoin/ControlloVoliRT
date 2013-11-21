@@ -45,24 +45,67 @@
 #define GPS "GPS"
 #define BASI "Basi"
 #define MISSIONI "missioni"
-#define ASSI_VOLO "assi_volo"
+#define ASSI_VOLO "AVOLOV"
 #define STRIP_NAME "A_VOL_CS"
 #define REFSCALE "RefScale_2000"
-#define SRID 32632
+#define SRID 32632 // SRID UTM32 wgs84
+#define SRIDGEO 4326 // SRID lat lon wgs84
 #define SHAPE_CHAR_SET "CP1252"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::Path;
 using Poco::File;
+using namespace CV::Util::Spatialite;
+using namespace CV::Util::Geometry;
 
+/**************************************************************/
+enum CHECK_TYPE {
+	less_ty = 0,
+	great_ty = 1,
+	abs_less_ty = 2,
+	between_ty =3
+};
+bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
+{
+	bool rv = true;
+	switch ( ty ) {
+		case less_ty:
+			rv = val < tol1;
+			break;
+		case great_ty:
+			rv = val > tol1;
+			break;
+		case abs_less_ty:
+			rv = fabs(val) < tol1;
+			break;
+		case between_ty:
+			rv = val > tol1 && val < tol2;
+			break;
+	}
+	if ( !rv ) {
+		Doc_Item r = row->add_item("entry", attr);
+		r->add_instr("dbfo", "bgcolor=\"red\"");
+		r->append(val);
+	} else
+		row->add_item("entry", attr)->append(val);
+	return rv;
+}
 std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
+OGRGeomPtr GetGeom(QueryField& rs)
+{
+	std::vector<unsigned char> blob;
+	rs.toBlob(blob);
+	OGRGeomPtr og(blob);
+	return og;
+}
+/****************************************************************/
+
 gps_exec::~gps_exec()
 {
-	_release_splite();
 }
 void gps_exec::set_proj_dir(const std::string& nome)
 {
@@ -85,22 +128,41 @@ bool gps_exec::run()
 		   SHAPE_CHAR_SET,
 		   SRID,
 		   "geom",
-		   false,
+		   true, // to have only XY
 		   false,
 		   false);
-		
+
+		_read_ref_val();
+
+		// create the gps track
+#ifdef PPP
 		_create_gps_track();
+#endif
+
+		// add information to the fligth lines
+		_update_assi_volo();
 		
-		_data_analyze();
+		// initialize docbook xml file
+		_init_document();
 		
 		_final_check();
 		
-		_release_splite();
+		// write the result on the docbook report
+		_dbook.write();
 	}
-	catch(std::exception &e) {
+    catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
     }
 	return true;
+}
+void gps_exec::_init_document()
+{
+	Path doc_file(_proj_dir, "*");
+	doc_file.setFileName("check_gps.xml");
+	_dbook.set_name(doc_file.toString());	
+
+	_article = _dbook.add_item("article");
+	_article->add_item("title")->append("Collaudo  dati GPS");
 }
 
 bool gps_exec::_read_ref_val()
@@ -179,7 +241,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 			continue;
 		}
 		// controlla se deve essere processato con Hatanaka
-		std::string st = _hathanaka(fn.toString());
+		std::string st = Hathanaka(fn.toString());
 		if ( !st.empty() ) {
 			files.push_back(st);
 			continue;
@@ -216,32 +278,42 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 }
 bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
 {
-	std::string table(BASI);
 	std::stringstream sql;
-	sql << "CREATE TABLE " << table << 
+	sql << "CREATE TABLE " << BASI << 
 		"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
-		"name TEXT NOT NULL)";			// base name
+		"nome TEXT NOT NULL)";			// base name
 	cnn.execute_immediate(sql.str());
 
 	std::stringstream sql1;
-	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+	sql1 << "SELECT AddGeometryColumn('" << BASI << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRIDGEO << "," <<
 		"'POINT'," <<
-		"'XYZ')";
+		"'XY')";
 	cnn.execute_immediate(sql1.str());
 	
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (id, nome, ) \
-		VALUES (?1, ?2)";
+	sql2 << "INSERT INTO " << BASI << " (id, nome, geom) \
+		VALUES (?1, ?2, ST_GeomFromWKB(:geom, " << SRIDGEO << ") )";
 	
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());	
-	
+
+	OGRSpatialReference sr;
+	sr.importFromEPSG(SRIDGEO);
+
 	for ( size_t i = 0; i < basi.size(); i++) {
+		OGRGeometryFactory gf;
+		OGRGeomPtr gp_ = gf.createGeometry(wkbPoint);
+		gp_->setCoordinateDimension(2);
+		gp_->assignSpatialReference(&sr);
+		OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
+		gp->setX(basi[i].x); gp->setY(basi[i].y);
+
 		stm[1] = (int) (i + 1);
 		stm[2] = vs_base[i];
+		stm[3].fromBlob(gp_); 
 		stm.execute();
 		stm.reset();
 	}
@@ -330,12 +402,9 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 
 	_record_base_file(basi, _vs_base);
 
-	std::string table("Gps");
-
 	// crea la tabella del GPS
-	cnn.remove_layer(table);
 	std::stringstream sql;
-	sql << "CREATE TABLE " << table << 
+	sql << "CREATE TABLE " << GPS << 
 		" (id INTEGER NOT NULL PRIMARY KEY,\
 		DATE TEXT NOT NULL,\
 		TIME TEXT NOT NULL,\
@@ -347,16 +416,16 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	cnn.execute_immediate(sql.str());
 
 	std::stringstream sql1;
-	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+	sql1 << "SELECT AddGeometryColumn('" << GPS << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRIDGEO << "," <<
 		"'POINT'," <<
-		"'XYZ')";
+		"'XY')";
 	cnn.execute_immediate(sql1.str());
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)";
+	sql2 << "INSERT INTO " << GPS << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ST_GeomFromWKB(:geom, " << SRIDGEO << ") )";
 	
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
@@ -370,7 +439,8 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	int nbasi;
 	long id = 1;
 
-	int blob_size;
+	OGRSpatialReference sr;
+	sr.importFromEPSG(SRIDGEO);
 
 	std::set<std::string>::iterator it;
 	for ( it = smap.begin(); it != smap.end(); it++) {
@@ -398,9 +468,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 			d += pi;
 			nbasi++;
 
-			p.x += gr.pos.x * pi;
-			p.y += gr.pos.y * pi;
-			p.z += gr.pos.z * pi;
+			p += (gr.pos * pi);
 
 			data = gr.data;
             nsat = max(nsat, gr.nsat);
@@ -412,20 +480,14 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 			continue;
 		}
 
-		p.x /= d;
-		p.y /= d;
-		p.z /= d;
-
-		gaiaGeomCollPtr geo = gaiaAllocGeomColl ();
-		geo->Srid = 4326;
-		geo->DimensionModel  = GAIA_XY_Z;
-		geo->DeclaredType = GAIA_POINTZ;
-		gaiaAddPointToGeomCollXYZ(geo, p.x, p.y, p.z);
-		unsigned char *blob;
-		gaiaToSpatiaLiteBlobWkb(geo, &blob, &blob_size);
-
-		// we can now destroy the geometry object
-		gaiaFreeGeomColl (geo);
+		p /= d;
+		
+		OGRGeometryFactory gf;
+		OGRGeomPtr gp_ = gf.createGeometry(wkbPoint);
+		gp_->setCoordinateDimension(2);
+		gp_->assignSpatialReference(&sr);
+		OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
+		*gp = OGRPoint(p.x, p.y);
 
 		stm[1] = id++;
 		stm[2] = data;
@@ -435,87 +497,35 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		stm[6] = nbasi;
 		stm[7] = rms;
 		stm[8] = mission;
+		stm[9].fromBlob(gp_); 
 		stm.execute();
 		stm.reset();
-		// binding parameters to Prepared Statement
-		//sqlite3_bind_int(stmt, 1, id++);
-		//sqlite3_bind_text(stmt, 2, data.c_str(), data.size(), SQLITE_STATIC);
-		//sqlite3_bind_text(stmt, 3, time.c_str(), time.size(), SQLITE_STATIC);
-		//sqlite3_bind_int(stmt, 4, nsat);
-		//sqlite3_bind_double(stmt, 5, pdop);
-		//sqlite3_bind_int(stmt, 6, nbasi);
-		//sqlite3_bind_double(stmt, 7, rms);
-		//sqlite3_bind_text(stmt, 8, mission.c_str(), mission.size(), SQLITE_STATIC);
-		//sqlite3_bind_blob (stmt, 9, blob, blob_size, SQLITE_STATIC);
-		
-		//int retv = sqlite3_step(stmt);
-		//if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
-		//      printf ("sqlite3_step() error: %s\n", sqlite3_errmsg (db_handle));
-		//      sqlite3_finalize (stmt);
-		//      break;
-		//  }
-		gaiaFree(blob);
 	}
 	cnn.commit_transaction();
-	//sqlite3_finalize(stmt);
-	//ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-	//if (ret != SQLITE_OK) {
-	//	fprintf (stderr, "Error: %s\n", err_msg);
-	//	sqlite3_free (err_msg);
-	//}
 	return true;
-}
-
-std::vector<std::string> gps_exec::_rawConv(const std::string& nome) 
-{
-	Poco::Path fn(nome);
-	std::string ext = fn.getExtension();
-	std::vector<std::string> vs;
-	Raw2Rnx(nome.c_str(), ext.c_str(), vs);
-	return vs;
-}
-std::string gps_exec::_hathanaka(const std::string& nome)
-{
-	Poco::Path fn(nome);
-	std::string ext = fn.getExtension();
-	if ( tolower(ext[2]) == 'd' ) {
-		Poco::Path fn1(nome);
-		std::string ext1 = ext;
-		ext1[2] = 'o';
-		fn1.setExtension(ext1);
-		Poco::File f(fn1.toString());
-		if ( !f.exists() )
-			if ( Crx2Rnx(nome.c_str()) != 1 ) {
-				return fn1.toString();
-			}
-	}
-	return std::string("");
 }
 
 bool gps_exec::_create_gps_track()
 {
-	try {
-		// imposta la massima distanza per le basi
-		_gps_opt.max_base_dst = _MAX_DIST;
-		_gps_opt.min_sat_angle = _MIN_SAT_ANG;
+	// imposta la massima distanza per le basi
+	_gps_opt.max_base_dst = _MAX_DIST;
+	_gps_opt.min_sat_angle = _MIN_SAT_ANG;
 
-		Poco::Path fn(_proj_dir);
-		fn.append(MISSIONI);
+	Poco::Path fn(_proj_dir);
+	fn.append(MISSIONI);
 
-		// ogni cartella presente corrisponde ad una missione
-		Poco::File dircnt(fn);
-		std::vector<std::string> files;
-		dircnt.list(files);
-		for (size_t i = 0; i < files.size(); i++) {
-			Poco::Path fn(fn.toString(), files[i]);
-			Poco::File fl(fn);
-			if ( fl.isDirectory() )
-				_mission_process(fn.toString());
-		}
-	} 
-	catch (...) {
-		fprintf (stderr, "Exception catched\n");
-		return false;
+	cnn.remove_layer(BASI);
+	cnn.remove_layer(GPS);
+
+	// ogni cartella presente corrisponde ad una missione
+	Poco::File dircnt(fn);
+	std::vector<std::string> files;
+	dircnt.list(files);
+	for (size_t i = 0; i < files.size(); i++) {
+		Poco::Path fn(fn.toString(), files[i]);
+		Poco::File fl(fn);
+		if ( fl.isDirectory() )
+			_mission_process(fn.toString());
 	}
 	return true;
 }
@@ -569,216 +579,155 @@ bool gps_exec::_mission_process(const std::string& folder)
 
 	return true;
 }
+void gps_exec::_add_column(const std::string& col_name) 
+{
+	std::stringstream sql;
+	sql << "ALTER TABLE " << ASSI_VOLO << " ADD COLUMN " << col_name;
+	try {
+		cnn.execute_immediate(sql.str());
+	}
+	catch(std::exception e) {
+	}
+}
 void gps_exec::_data_analyze()
 {
-	std::stringstream ss;
-	ss << "ALTER TABLE " << ASSI_VOLO << " ADD COLUMN ";
-	std::string query;
-
-	// modifica la tabella degli assi di volo aggiungendo i campi relativi ai parametri oggetto di verifica
-	try {
-		query = ss.str() + "DATE TEXT";
-		cnn.execute_immediate(query);
-		query = ss.str() + "TIME TEXT";
-		cnn.execute_immediate(query);
-		query = ss.str() + "MISSION TEXT";
-		cnn.execute_immediate(query);
-		query = ss.str() + "SUN_HL DOUBLE";
-		cnn.execute_immediate(query);
-		query = ss.str() + "NBASI INTEGER";
-		cnn.execute_immediate(query);
-		query = ss.str() + "NSAT INTEGER";
-		cnn.execute_immediate(query);
-		query = ss.str() + "PDOP DOUBLE";
-		cnn.execute_immediate(query);
-	} catch (std::runtime_error& e) {
-        std::cout << std::string(e.what()) << std::endl;
-	}
-
-	// aggiorna la tabella degli assi di volo con i dati della traccia gps
-	_update_assi_volo();
-	return;
 }
-
-class feature {
-public:
-	std::string operator[](const std::string& nome) {
-		std::string s("");
-		if ( attributes.find(nome) == attributes.end() )
-			return s;
-		s = attributes[nome];
-		return s;
-	}
-	gaiaGeomCollPtr geom;
-	std::map<std::string, std::string> attributes;
-	void clear(void) {
-		attributes.clear();
-	}
-};
-class splite_query {
-public:
-	splite_query(): _db_handle(NULL), _stmt(NULL) {}
-	splite_query(sqlite3* db): _db_handle(db), _stmt(NULL) {}
-	bool prepare(const std::string& query) {
-		int ret = sqlite3_prepare_v2(_db_handle, query.c_str(), query.size(), &_stmt, NULL);
-		if ( ret != SQLITE_OK )
-			return false;
-		_n_columns = sqlite3_column_count(_stmt);
-		return true;
-	}
-	bool get_next(feature& f) {
-		f.clear();
-		int ret = sqlite3_step(_stmt);
-		if ( ret == SQLITE_DONE ) {
-			// there are no more rows to fetch - we can stop looping
-		      return false;
-		}
-		if ( ret == SQLITE_ROW ) {
-			for (int ic = 0; ic < _n_columns; ic++) {
-				std::string nome = (char*) sqlite3_column_name(_stmt, ic);
-				switch ( sqlite3_column_type(_stmt, ic) ) {
-				case SQLITE_BLOB: {
-					const void* blob = sqlite3_column_blob(_stmt, ic);
-					int blob_size = sqlite3_column_bytes(_stmt, ic);
-					// checking if this BLOB actually is a GEOMETRY
-					gaiaGeomCollPtr geom = gaiaFromSpatiaLiteBlobWkb((unsigned char*) blob, blob_size);
-					//gaiaFree((void*) blob);
-					if ( geom )
-						f.geom = geom;
-					break;
-				} 
-				case SQLITE_TEXT: {
-					std::string val = (char*) sqlite3_column_text(_stmt, ic);
-					f.attributes[nome] = val;
-					break;
-				}
-				case SQLITE_FLOAT: {
-					double val = sqlite3_column_double(_stmt, ic);
-					std::stringstream ss;
-					ss.precision(5);
-					ss << val;
-					f.attributes[nome] = ss.str();
-					break;
-				}
-				case SQLITE_INTEGER: {
-					int val = sqlite3_column_int(_stmt, ic);
-					std::stringstream ss;
-					ss << val;
-					f.attributes[nome] = ss.str();
-					break;
-				}
-				}
-			}
-		}
-		return true;
-	}
-	void close(void)  {
-		if ( _stmt != NULL )
-			sqlite3_finalize(_stmt);
-		_stmt = NULL;
-	}
-private:
-	sqlite3* _db_handle;
-	sqlite3_stmt* _stmt;
-	int _n_columns;
-};
+typedef struct feature {
+	std::string strip;
+	std::string time;
+	std::string date;
+	std::string mission;
+	int nsat;
+	int nbasi;
+	double pdop;
+	OGRGeomPtr pt;
+} feature;
 
 void gps_exec::_update_assi_volo()
 {
-	std::stringstream sst;
-	sst << "SELECT a." << STRIP_NAME << " as p1, b.*, min(st_Distance(st_PointN(ST_Transform(a.geom, 4326), ?), b.geom)) FROM " <<
-		ASSI_VOLO << " a, gps b group by p1";
+	_add_column("DATE TEXT");
+	_add_column("TIME_S TEXT");
+	_add_column("TIME_E TEXT");
+	_add_column("MISSION TEXT");
+	_add_column("SUN_HL DOUBLE");
+	_add_column("NBASI INTEGER");
+	_add_column("NSAT INTEGER");
+	_add_column("PDOP DOUBLE");
 
-	std::string ss(sst.str());
+	std::stringstream sql;
+	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?), b.geom)) FROM " <<
+		ASSI_VOLO << " a, gps b group by strip";
+
+	std::string ss(sql.str());
 
 	size_t q = ss.find('?');
 
-	splite_query sq(db_handle);
+	Statement stm(cnn);
 
 	ss.at(q) = '1';
-	if ( !sq.prepare(ss) )
-		return;
-
-	feature f;
+	stm.prepare(ss);
+	Recordset rs = stm.recordset();
 
 	// determina l'istante GPS relativo al primo estremo dell'asse
 	std::vector<feature> ft1;
-	while ( sq.get_next(f) )
+	while ( !rs.eof() ) {
+		feature f;
+		f.strip = rs["strip"].toString();
+		f.mission = rs["MISSION"].toString();
+		f.time = rs["TIME"].toString();
+		f.date = rs["DATE"].toString();
+		f.nsat = rs["NSAT"].toInt();
+		f.nbasi = rs["NBASI"].toInt();
+		f.pdop = rs["PDOP"].toDouble();
+		f.pt = GetGeom(rs["geo"]);
 		ft1.push_back(f);
-	sq.close();
+		rs.next();
+	}
 
 	ss.at(q) = '2';
-	if ( !sq.prepare(ss) )
-		return;
+	stm.prepare(ss);
+	rs = stm.recordset();
 
 	// determina l'istante GPS relativo al secondo estremo dell'asse
 	std::vector<feature> ft2;
-	while ( sq.get_next(f) )
+	while ( !rs.eof() ) {
+		feature f;
+		f.strip = rs["strip"].toString();
+		f.mission = rs["MISSION"].toString();
+		f.time = rs["TIME"].toString();
+		f.date = rs["DATE"].toString();
+		f.nsat = rs["NSAT"].toInt();
+		f.nbasi = rs["NBASI"].toInt();
+		f.pdop = rs["PDOP"].toDouble();
+		f.pt = GetGeom(rs["geo"]);
 		ft2.push_back(f);
-	sq.close();
+		rs.next();
+	}
+
+	std::stringstream sql1;
+	sql1 << "UPDATE " << ASSI_VOLO << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8 where " << STRIP_NAME  << "=?9";
+	Statement stm1(cnn);
+	stm1.prepare(sql1.str());
+	cnn.begin_transaction();
 
 	// per ogni strip determina i parametri gps con cui è stata acquisita
 	for ( size_t i = 0; i < ft1.size(); i++) {
-		const std::string & val = ft1[i].operator []("p1");
-		std::string t1 = ft1[i].operator []("TIME");
+		const std::string & val = ft1[i].strip;
+		std::string t1 = ft1[i].time;
 		for ( size_t j = 0; j < ft2.size(); j++) {
-			if ( ft2[j].operator []("p1") == val ) {
-				std::stringstream ss;
-				std::string t2 = ft2[j].operator []("TIME");
+			if ( ft2[j].strip == ft1[i].strip ) {
+				std::string t2 = ft2[j].time;
 				if ( t1 > t2 )
 					std::swap(t1, t2);
-				ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
-				//else
-				//	ss << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t2 << "' and TIME <= '" << t1 << "'";
 
-				if ( !sq.prepare(ss.str()) )
+				std::stringstream sql;
+				sql << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
+				stm.prepare(sql.str());
+				rs = stm.recordset();
+				if ( rs.eof() )
 					return;
-				if ( !sq.get_next(f) )
-					return;
-				sq.close();
 
 				// determina l'altezza media del sole sull'orizzonte
-				Sun sun(ft1[i].geom->FirstPoint->Y, ft1[i].geom->FirstPoint->X);
+				OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft1[i].pt);
+				Sun sun(pt->getY(), pt->getX());
 				int td;
 				std::stringstream ss2;
-				ss2 << f["DATE"] << " " << t1;
+				ss2 << ft1[i].date << " " << t1;
 				Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
 				sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
 				double h = sun.altit();
 
-				std::stringstream ss1;
-				ss1 << "update " << ASSI_VOLO <<" SET MISSION='" << f["MISSION"] << "', DATE='" << f["DATE"] <<
-					"', NSAT=" << f["NSAT"] << ", PDOP=" << f["PDOP"] << ", NBASI=" <<
-					f["NBASI"] << ", SUN_HL=" << h << " where " << STRIP_NAME  << "='" << val << "'";
-
-				char *err_msg = NULL;
-				int ret = sqlite3_exec(db_handle, ss1.str().c_str(), NULL, NULL, &err_msg);
-				if ( ret != SQLITE_OK ) {
-					fprintf (stderr, "Error: %s\n", err_msg);
-					sqlite3_free (err_msg);
-					return;
-				}
+				stm1[1] = rs[0].toString(); // mission
+				stm1[2] = rs[1].toString(); // date
+				stm1[3] = t1;
+				stm1[4] = t2;
+				stm1[5] = rs[2].toInt(); // minimal number of satellite
+				stm1[6] = rs[3].toDouble(); // max pdop
+				stm1[7] = rs[4].toInt(); // number of bases
+				stm1[8] = h;	// sun elevation
+				stm1[9] = val;
+				stm1.execute();
+				stm1.reset();
 				break;
 			}
 		}
 	}
+	cnn.commit_transaction();
 }
 void gps_exec::_final_check()
 {
 	// check finale
-	std::stringstream ssq;
-	ssq << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI, SUN_HL from " << ASSI_VOLO <<  " where NSAT<" << _MIN_SAT <<
+	std::stringstream sql;
+	sql << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI, SUN_HL from " << ASSI_VOLO <<  " where NSAT<" << _MIN_SAT <<
 		" OR PDOP >" << _MAX_PDOP << " OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL;
 
-	splite_query sq(db_handle);
-	if ( !sq.prepare(ssq.str()) )
-		return;
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
 
-	feature f;
-
-	std::vector<feature> ft1;
-	while ( sq.get_next(f) )
-		ft1.push_back(f);
-	sq.close();
-int a = 1;
+	//std::vector<feature> ft1;
+	while ( !rs.eof() ) {
+		//ft1.push_back(f);
+		;//rs.eof
+	}
 }
