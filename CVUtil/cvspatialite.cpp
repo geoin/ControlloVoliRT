@@ -329,36 +329,52 @@ namespace CV {
             return *this;
         }
 
-        int  QueryField::toInt() {
+        int  QueryField::toInt() const {
             return sqlite3_column_int( _stmt._statement() , _index );
         }
 
-        long long  QueryField::toInt64(){
+        long long  QueryField::toInt64() const {
             return (long long)sqlite3_column_int64( _stmt._statement() , _index );
         }
 
-        double  QueryField::toDouble(){
+        double  QueryField::toDouble() const{
             return (double)sqlite3_column_double( _stmt._statement() , _index );
         }
 
-        std::string  QueryField::toString(){
+        std::string  const &QueryField::toString() const {
             int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
              unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
-            std::string ret( (const char *) chr, nbytes);
-            return ret;
+            _tmpstr.assign( (const char *) chr, nbytes);
+            return _tmpstr;
         }
 
-        void  QueryField::toString( std::string &str){
-            int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
-            unsigned char const *chr = sqlite3_column_text( _stmt._statement() , _index );
-            str.assign((const char *)chr, nbytes);
-        }
 
-        void  QueryField::toBlob(std::vector<unsigned char> &v ){
+        std::vector<unsigned char> const &QueryField::toBlob() const {
             int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
             const void *chr = sqlite3_column_blob( _stmt._statement() , _index );
-            v.resize(nbytes);
-            memcpy( &v[0], chr, nbytes);
+            _tmpv.resize(nbytes);
+            memcpy( &_tmpv[0], chr, nbytes);
+            return _tmpv;
+        }
+
+        QueryField::operator int(){
+            return toInt();
+        }
+
+        QueryField::operator long long(){
+            return toInt64();
+        }
+
+        QueryField::operator double(){
+            return toDouble();
+        }
+
+        QueryField::operator std::string const &(){
+            return toString();
+        }
+
+        QueryField::operator std::vector< unsigned char> const &(){
+            return toBlob();
         }
 
         QueryField::FieldType QueryField::type() const {
@@ -385,29 +401,48 @@ namespace CV {
             return *this;
         }
 
-        int  BindField::toInt(){
+        int  BindField::toInt() const {
             return Poco::AnyCast<int>(_value);
         }
 
-        long long  BindField::toInt64(){
+        long long  BindField::toInt64() const {
             return Poco::AnyCast<long long>(_value);
         }
 
-        double  BindField::toDouble(){
+        double  BindField::toDouble() const {
             return Poco::AnyCast<double>(_value);
         }
 
-        std::string  BindField::toString(){
-            return Poco::AnyCast<std::string>(_value);
+        std::string  const &BindField::toString() const {
+            _tmpstr = Poco::RefAnyCast<std::string>(_value);
+            return _tmpstr;
         }
 
-        void  BindField::toString(std::string &str) {
-            str = Poco::AnyCast<std::string>(_value);
+        std::vector<unsigned char> const &BindField::toBlob() const {
+            _tmpv = Poco::RefAnyCast< std::vector<unsigned char> >(_value);
+            return _tmpv;
         }
 
-        void  BindField::toBlob(std::vector<unsigned char> &v ){
-            v = Poco::RefAnyCast< std::vector<unsigned char> >(_value);
+        BindField::operator int(){
+            return toInt();
         }
+
+        BindField::operator long long(){
+            return toInt64();
+        }
+
+        BindField::operator double(){
+            return toDouble();
+        }
+
+        BindField::operator std::string const &(){
+            return toString();
+        }
+
+        BindField::operator std::vector< unsigned char> const &(){
+            return toBlob();
+        }
+
 
         void BindField::fromInt(int v){
             _value = v;
@@ -453,7 +488,7 @@ namespace CV {
         void BindField::fromBlob( std::vector<unsigned char> const &v ){
             _value = v;
             unsigned char const *c = &(Poco::RefAnyCast< std::vector<unsigned char> >(_value))[0];
-            int ret = sqlite3_bind_blob(_stmt._statement(), _index, (const char *)&v[0], v.size(), SQLITE_STATIC );
+            int ret = sqlite3_bind_blob(_stmt._statement(), _index, (const char *)c, v.size(), SQLITE_STATIC );
             if (ret != SQLITE_OK) {
                 std::stringstream err;
                 err << "Bind blob error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );
@@ -462,8 +497,12 @@ namespace CV {
         }
 
         void BindField::fromBlob( unsigned char const *v, int l ){
-            _value = v;
-            int ret = sqlite3_bind_blob (_stmt._statement(), _index, (const char *)v, l, SQLITE_TRANSIENT);
+            std::vector<unsigned char> vv;
+            vv.resize(l);
+            memcpy(&vv[0], v, l);
+            _value = vv;
+            unsigned char const *c = &(Poco::RefAnyCast< std::vector<unsigned char> >(_value))[0];
+            int ret = sqlite3_bind_blob (_stmt._statement(), _index, (const char *)c, l, SQLITE_STATIC);
             if (ret != SQLITE_OK) {
                 std::stringstream err;
                 err << "Bind blob error: " <<  std::string( sqlite3_errmsg(_stmt._db()) );

@@ -18,7 +18,7 @@ namespace CV {
                 _assign(v);
             }
 
-            OGRGeomPtr::OGRGeomPtr( OGRGeometry const *g ){
+            OGRGeomPtr::OGRGeomPtr( OGRGeometry *g ){
                 _assign(g);
             }
 
@@ -32,7 +32,7 @@ namespace CV {
                 return (*this);
             }
 
-            OGRGeomPtr &OGRGeomPtr::operator=( OGRGeometry const *g ){
+            OGRGeomPtr &OGRGeomPtr::operator=( OGRGeometry *g ){
                 _assign(g);
                 return (*this);
             }
@@ -53,9 +53,9 @@ namespace CV {
                 _geom.assign(geom);
             }
 
-            void OGRGeomPtr::_assign(const OGRGeometry *g) {
+            void OGRGeomPtr:: _assign( OGRGeometry *g) {
                 OGRGeometry *geom;
-                geom = g->clone();
+                //geom = g->clone();
                 _geom.assign(geom);
             }
 

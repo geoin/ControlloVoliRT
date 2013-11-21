@@ -1,7 +1,7 @@
 #ifndef OGRGEOMPTR_H
 #define OGRGEOMPTR_H
 #include <Poco/SharedPtr.h>
-#include <gdal/ogr_geometry.h>
+#include <ogr_geometry.h>
 #include <vector>
 
 namespace CV {
@@ -23,10 +23,10 @@ namespace CV {
                 OGRGeomPtr();
                 OGRGeomPtr( OGRGeomPtr const &gptr );
                 OGRGeomPtr( std::vector<unsigned char> &v );
-                OGRGeomPtr( OGRGeometry const *g );
+                OGRGeomPtr( OGRGeometry  *g );
                 OGRGeomPtr &operator=( OGRGeomPtr const &gptr );
                 OGRGeomPtr &operator=( std::vector<unsigned char>  &v );
-                OGRGeomPtr &operator=( OGRGeometry const *g );
+                OGRGeomPtr &operator=( OGRGeometry *g );
 
                 OGRGeometry *operator->();
                 OGRGeometry const *operator->() const;
@@ -37,7 +37,7 @@ namespace CV {
 
             private:
                 void _assign(std::vector<unsigned char> &v);
-                void _assign(OGRGeometry const *g);
+                void _assign(OGRGeometry *g);
 
                 std::vector<unsigned char> mutable _v;
                 Poco::SharedPtr< OGRGeometry, Poco::ReferenceCounter , OGRGeometryReleasePolicy<OGRGeometry> > _geom;
