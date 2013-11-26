@@ -195,10 +195,10 @@ int main( int argc, char *argv[]) {
         //load_shape();
 
         // get geometry form db
-        dump_shape();
+        //dump_shape();
 
         // read linear layer, split line in points e copy points in another layer
-        //layer_line2point();
+        layer_line2point();
     }
 
     catch(std::runtime_error const &e){

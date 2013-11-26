@@ -1,7 +1,7 @@
 /*
-    File: check_ta.h
+    File: check_lidar.h
     Author:  F.Flamigni
-    Date: 2013 November 06
+    Date: 2013 November 22
     Comment:
 
     Disclaimer:
@@ -31,7 +31,7 @@
 #include "Poco/Util/Application.h"
 #include "docbook/docbook.h"
 
-class ta_exec {
+class lidar_exec {
 public:
 	enum Check_Type {
 		Prj_type = 0,
@@ -40,12 +40,13 @@ public:
 	typedef std::map<std::string, VDPC> VDP_MAP;
 	typedef std::map<std::string, DPOINT> CPT_MAP;
 	typedef std::multimap<std::string, std::string> CPT_VDP;
-	ta_exec() {}
-	~ta_exec();
+	lidar_exec() {}
+	~lidar_exec();
 	bool run(void);
 	void set_cam_name(const std::string& nome);
 	void set_vdp_name(const std::string& nome);
 	void set_vdp_name2(const std::string& nome);
+	void set_out_folder(const std::string& nome);
 	void set_proj_dir(const std::string& nome);
 private:
 	bool _read_cam(void);
@@ -60,7 +61,7 @@ private:
 	void _init_document(void);
 	Doc_Item _initpg1(void);
 	Doc_Item _initpg2(void);
-	void _resume(void);
+
 
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
@@ -85,9 +86,9 @@ private:
 	std::list<std::string> _tria_out_tol;
 };
 
-class check_ta: public Poco::Util::Application {
+class check_lidar: public Poco::Util::Application {
 public:
-	check_ta();
+    check_lidar();
 
 protected:	
 	void initialize(Poco::Util::Application& self);
@@ -109,7 +110,7 @@ private:
 	void handleConfig(const std::string& name, const std::string& value);
 	bool _helpRequested;
 
-	ta_exec _tae;
+	lidar_exec _lix;
 };
 
 #endif

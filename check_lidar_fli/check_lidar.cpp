@@ -1,7 +1,7 @@
 /*
-    File: check_ta.cpp
+    File: check_lidar.cpp
     Author:  F.Flamigni
-    Date: 2013 November 06
+    Date: 2013 November 22
     Comment:
 
     Disclaimer:
@@ -25,7 +25,7 @@
 
 */
 
-#include "check_ta.h"
+#include "check_lidar.h"
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Util/HelpFormatter.h"
@@ -39,27 +39,27 @@ using Poco::Util::AbstractConfiguration;
 using Poco::Util::OptionCallback;
 
 
-check_ta::check_ta(): _helpRequested(false) 
+check_lidar::check_lidar(): _helpRequested(false) 
 {
 }
-void check_ta::initialize(Application& self) 
+void check_lidar::initialize(Application& self) 
 {
 	loadConfiguration(); // load default configuration files, if present
 	Application::initialize(self);
 	// add your own initialization code here
 }
 
-void check_ta::uninitialize() 
+void check_lidar::uninitialize() 
 {
 	// add your own uninitialization code here
 	Application::uninitialize();
 }
-void check_ta::reinitialize(Application& self)
+void check_lidar::reinitialize(Application& self)
 {
 	Application::reinitialize(self);
 	// add your own reinitialization code here
 }
-void check_ta::defineOptions(OptionSet& options)
+void check_lidar::defineOptions(OptionSet& options)
 {
 	Application::defineOptions(options);
 
@@ -67,14 +67,14 @@ void check_ta::defineOptions(OptionSet& options)
 		Option("help", "h", "mostra le informazioni sui parametri da specificare")
 			.required(false)
 			.repeatable(false)
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleHelp)));
+			.callback(OptionCallback<check_lidar>(this, &check_lidar::handleHelp)));
 
 	options.addOption(
 		Option("prj", "j", "Specifica il file di progetto")
 			.required(false)
 			.repeatable(false)
 			.argument("shape-file")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handlePrj)));
+			.callback(OptionCallback<check_lidar>(this, &check_lidar::handlePrj)));
 	
 	//options.addOption(
 	//	Option("pline", "p", "Specifica il file con le linee di volo proposte")
@@ -118,39 +118,39 @@ void check_ta::defineOptions(OptionSet& options)
 			.argument("file di testo")
 			.callback(OptionCallback<check_ta>(this, &check_ta::handleDtm)));*/
 }
-void check_ta::handleCam(const std::string & name, const std::string & value)
+void check_lidar::handleCam(const std::string & name, const std::string & value)
 {
 	int a = 1;
 }
-void check_ta::handlePrj(const std::string & name, const std::string & value) {
+void check_lidar::handlePrj(const std::string & name, const std::string & value) {
 	int a = 1;
 }
-void check_ta::handleHelp(const std::string& name, const std::string& value) {
+void check_lidar::handleHelp(const std::string& name, const std::string& value) {
 	_helpRequested = true;
 	displayHelp();
 	stopOptionsProcessing();
 }
 
-void check_ta::handleDefine(const std::string& name, const std::string& value)
+void check_lidar::handleDefine(const std::string& name, const std::string& value)
 {
 	defineProperty(value);
 }
 
-void check_ta::handleConfig(const std::string& name, const std::string& value)
+void check_lidar::handleConfig(const std::string& name, const std::string& value)
 {
 	loadConfiguration(value);
 }
 	
-void check_ta::displayHelp()
+void check_lidar::displayHelp()
 {
 	HelpFormatter helpFormatter(options());
 	helpFormatter.setCommand(commandName());
 	helpFormatter.setUsage("OPZIONI");
-	helpFormatter.setHeader("Applicazione per la verifica della triangolazione aerea");
+	helpFormatter.setHeader("Applicazione per la verifica del volo / progetto di ripresa lidar");
 	helpFormatter.format(std::cout);
 }
 	
-void check_ta::defineProperty(const std::string& def)
+void check_lidar::defineProperty(const std::string& def)
 {
 	std::string name;
 	std::string value;
@@ -163,20 +163,20 @@ void check_ta::defineProperty(const std::string& def)
 	config().setString(name, value);
 }
 
-int check_ta::main(const std::vector<std::string>& args) 
+int check_lidar::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
-		_tae.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
-		_tae.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
-		_tae.set_vdp_name2("C:/Google_drive/Regione Toscana Tools/Dati_test/sol3_B.txt");
-		_tae.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
+        _lix.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
+        _lix.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
+        _lix.set_out_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/Out");
+        _lix.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
 
-		_tae.run();
+        _lix.run();
 	}
 	return Application::EXIT_OK;
 }
 	
-void check_ta::printProperties(const std::string& base)
+void check_lidar::printProperties(const std::string& base)
 {
 	AbstractConfiguration::Keys keys;
 	config().keys(base, keys);
@@ -199,4 +199,4 @@ void check_ta::printProperties(const std::string& base)
 	}
 }
 
-POCO_APP_MAIN(check_ta)
+POCO_APP_MAIN(check_lidar)

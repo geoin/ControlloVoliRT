@@ -28,32 +28,27 @@
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Util/HelpFormatter.h"
-#include "Poco/Util/AbstractConfiguration.h"
-#include "Poco/AutoPtr.h"
-#include "Poco/StringTokenizer.h"
+//#include "Poco/Util/AbstractConfiguration.h"
+//#include "Poco/AutoPtr.h"
+//#include "Poco/StringTokenizer.h"
 #include "Poco/String.h"
-
 #include <iostream>
-
 #include <set>
 
 using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
 using Poco::Util::HelpFormatter;
-using Poco::Util::AbstractConfiguration;
+//using Poco::Util::AbstractConfiguration;
 using Poco::Util::OptionCallback;
-using Poco::AutoPtr;
+//using Poco::AutoPtr;
 
 check_gps::check_gps(): _helpRequested(false) 
 {
 }
-
 void check_gps::initialize(Application& self)
 {
-    //loadConfiguration(); // load default configuration files, if present
     Application::initialize(self);
-	// add your own initialization code here
 }
 
 void check_gps::uninitialize()
@@ -84,20 +79,6 @@ void check_gps::defineOptions(OptionSet& options)
 			.repeatable(false)
 			.argument("file di testo")
 			.callback(OptionCallback<check_gps>(this, &check_gps::_handlePrj)));
-		
-	options.addOption(
-        Option("config_file", "c", "Specifica il file con i valori di riferimento")
-			.required(false)
-			.repeatable(false)
-			.argument("file di testo")
-            .callback(OptionCallback<check_gps>(this, &check_gps::_handleConfigFile)));
-
-    options.addOption(
-        Option("config_type", "t", "Specifica la tipologa di configurazione")
-            .required(false)
-            .repeatable(false)
-            .argument("file di testo")
-            .callback(OptionCallback<check_gps>(this, &check_gps::_handleConfigType)));
 }
 
 void check_gps::_handlePrj(const std::string & name, const std::string & value)
@@ -114,21 +95,6 @@ void check_gps::_handleHelp(const std::string& name, const std::string& value)
 	_helpRequested = true;
 	displayHelp();
 	stopOptionsProcessing();
-}
-
-void check_gps::_handleConfigFile(const std::string& name, const std::string& value)
-{
-    // Controlllo esistenza file
-
-    // Caricamento ed assegnazione del file di configurazione
-}
-
-void check_gps::_handleConfigType(const std::string& name, const std::string& value)
-{
-    // verifica esistenza della sezione del file di configurazione
-
-    // impostazione del valore della sezione
-    //_config_type = ...
 }
 
 void check_gps::displayHelp() 
@@ -162,8 +128,6 @@ int check_gps::main(const std::vector<std::string>& args)
 		//	logger().information(*it);
 		//}
 		//logger().information("Application properties:");
-		//printProperties("");
-		_gps.set_out_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/Out");
 		_gps.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
 
 		_gps.run();

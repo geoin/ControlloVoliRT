@@ -119,10 +119,6 @@ void ta_exec::set_cam_name(const std::string& nome)
 {
 	_cam_name = nome;
 }
-void ta_exec::set_out_folder(const std::string& nome)
-{
-	_out_folder = nome;
-}
 void ta_exec::set_proj_dir(const std::string& nome)
 {
 	_proj_dir = nome;

@@ -40,6 +40,10 @@
 #define CARTO "CARTO"
 #define SHAPE_CHAR_SET "CP1252"
 #define REFSCALE "RefScale_2000"
+#define DB_NAME "geo.sqlite"
+#define OUT_DOCV "check_photoV.xml"
+#define OUT_DOCP "check_photoP.xml"
+#define REF_FILE "Regione_Toscana_RefVal.xml"
 
 #define Z_FOTO "Z_FOTO"
 #define Z_MODEL "Z_MODEL"
@@ -114,7 +118,7 @@ photo_exec::~photo_exec()
 void photo_exec::_init_document()
 {
 	Path doc_file(_proj_dir, "*");
-	doc_file.setFileName(_type == fli_type ? "check_photoV.xml" : "check_photoP.xml");
+	doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
 	_dbook.set_name(doc_file.toString());	
 
 	_article = _dbook.add_item("article");
@@ -124,7 +128,7 @@ bool photo_exec::run()
 {
 	try {
 		// initialize spatial lite connection
-		Poco::Path db_path(_proj_dir, "geo.sqlite");
+		Poco::Path db_path(_proj_dir, DB_NAME);
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
@@ -187,10 +191,6 @@ void photo_exec::set_cam_name(const std::string& nome)
 {
 	_cam_name = nome;
 }
-void photo_exec::set_out_folder(const std::string& nome)
-{
-	_out_folder = nome;
-}
 void photo_exec::set_proj_dir(const std::string& nome)
 {
 	_proj_dir = nome;
@@ -204,7 +204,7 @@ bool photo_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
 	ref_file.popDirectory();
-	ref_file.setFileName("Regione_Toscana_RefVal.xml");
+	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
@@ -450,7 +450,10 @@ bool photo_exec::_process_photos()
 
 		OGRGeometryFactory gf;
 		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
-		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
+		OGRGeometry* og = (OGRGeometry*) gp_;
+		OGRLinearRing* gpo = (OGRLinearRing*)og;
+
+		OGRLinearRing* gp = (OGRLinearRing*)gf.createGeometry(wkbLinearRing);//(OGRLinearRing*) ((OGRGeometry*) gp_);
 		gp->setCoordinateDimension(2);
 		gp->assignSpatialReference(&sr);
 

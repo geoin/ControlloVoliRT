@@ -51,13 +51,13 @@ public:
 	void set_cam_name(const std::string& nome);
 	void set_vdp_name(const std::string& nome);
 	void set_dem_name(const std::string& nome);
-	void set_out_folder(const std::string& nome);
 	void set_proj_dir(const std::string& nome);
 	void set_checkType(Check_Type t);
 private:
 	bool _read_cam(void);
 	bool _read_vdp(void);
 	bool _read_dem(void);
+
 	bool _process_models(void);
 	bool _process_strips(void);
 	bool _process_photos(void);
@@ -79,7 +79,6 @@ private:
 	std::string _cam_name;
 	std::string _vdp_name;
 	std::string _dem_name;
-	std::string _out_folder;
 
 	Check_Type _type;
 

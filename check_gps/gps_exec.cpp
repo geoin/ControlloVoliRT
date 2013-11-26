@@ -47,6 +47,9 @@
 #define SRID 32632 // SRID UTM32 wgs84
 #define SRIDGEO 4326 // SRID lat lon wgs84
 #define SHAPE_CHAR_SET "CP1252"
+#define DB_NAME "geo.sqlite"
+#define OUT_DOC "check_gps.xml"
+#define REF_FILE "Regione_Toscana_RefVal.xml"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -101,15 +104,11 @@ void gps_exec::set_proj_dir(const std::string& nome)
 {
 	_proj_dir.assign(nome); 
 }
-void gps_exec::set_out_folder(const std::string& nome)
-{
-	_out_folder = nome;
-}
 bool gps_exec::run()
 {
 	try {
 		// initialize spatial lite connection
-		Poco::Path db_path(_proj_dir, "geo.sqlite");
+		Poco::Path db_path(_proj_dir, DB_NAME);
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
@@ -146,7 +145,7 @@ bool gps_exec::run()
 void gps_exec::_init_document()
 {
 	Path doc_file(_proj_dir, "*");
-	doc_file.setFileName("check_gps.xml");
+	doc_file.setFileName(OUT_DOC);
 	_dbook.set_name(doc_file.toString());	
 
 	_article = _dbook.add_item("article");
@@ -157,7 +156,7 @@ bool gps_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
 	ref_file.popDirectory();
-	ref_file.setFileName("Regione_Toscana_RefVal.xml");
+	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());

@@ -42,8 +42,6 @@ public:
 	gps_exec() {}
 	~gps_exec();
 	bool run(void);
-
-	void set_out_folder(const std::string& nome);
 	void set_proj_dir(const std::string& nome);
 
 private:
@@ -73,7 +71,6 @@ private:
 	std::vector<std::string> _vs_base;
 	GPS_OPT _gps_opt;
 
-	std::string _out_folder;
 	std::string _proj_dir;
 
 	// spatial lite connection
@@ -103,11 +100,8 @@ protected:
 	void displayHelp(void);
 	void defineProperty(const std::string& def);
 	int main(const std::vector<std::string>& args);
-	void printProperties(const std::string& base);
 private:
 	void _handlePrj(const std::string & name, const std::string & value);
-    void _handleConfigFile(const std::string & name, const std::string & value);
-    void _handleConfigType(const std::string & name, const std::string & value);
 	void _handleHelp(const std::string& name, const std::string& value);
 	bool _helpRequested;
 };
