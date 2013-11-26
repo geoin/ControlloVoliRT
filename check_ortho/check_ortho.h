@@ -44,7 +44,7 @@ public:
 private:
 	bool _process_imgs(void);
 	bool _read_tfw(const std::string& nome);
-	bool _process_photos(void);
+	bool _final_report(void);
 
 	bool _read_ref_val(void);
 	void _init_document(void);

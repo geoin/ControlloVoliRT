@@ -146,7 +146,10 @@ namespace CV {
         }
 
         bool Connection::layer_exists(std::string const &layername) {
-
+            gaiaVectorLayersListPtr gvl = gaiaGetVectorLayersList(_db(), layername.c_str(), NULL, GAIA_VECTORS_LIST_FAST);
+            bool ret ( gvl != NULL );
+            gaiaFreeVectorLayersList(gvl);
+            return ret;
         }
 
         void Connection::begin_transaction() {

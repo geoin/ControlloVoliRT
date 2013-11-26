@@ -42,6 +42,7 @@
 #define SHAPE_CHAR_SET "CP1252"
 #define REFSCALE "RefScale_2000"
 #define QUADRO_RT "Quadro_RT"
+#define QUADRO "Z_Quadro"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOC "check_ortho.xml"
 #define REF_FILE "Regione_Toscana_RefVal.xml"
@@ -242,8 +243,8 @@ bool ortho_exec::_process_imgs()
 		OGRGeometryFactory gf;
 		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
 		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
-		//gp->setCoordinateDimension(2);
-		//gp->assignSpatialReference(&sr);
+		gp->setCoordinateDimension(2);
+		gp->assignSpatialReference(&sr);
 		for (int j = 0; j < 4; j++) {
 			DPOINT pi( j == 0 || j == 3 ? 0 : vtfw[i].dimx(), j == 0 || j == 1 ? vtfw[i].dimy() :  0, 1);
 			DPOINT pt = vtfw[i].img_ter(pi);
@@ -267,125 +268,47 @@ bool ortho_exec::_process_imgs()
 	cnn.commit_transaction();
 	return true;
 }
-bool ortho_exec::_process_photos()
+bool ortho_exec::_final_report()
 {
-	//std::string table("Z_QUADRO");
-	//cnn.remove_layer(table);
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Verifica completezza tavole");
 
-	////// create the photo table
-	//std::stringstream sql;
-	//sql << "CREATE TABLE " << table << 
-	//	"( _FOTO_ID TEXT NOT NULL, " <<
-	//	"Z_FOTO_ID TEXT NOT NULL, " <<
-	//	"Z_FOTO_CS TEXT NOT NULL," <<
-	//	"Z_FOTO_NF INTEGER NOT NULL PRIMARY KEY," <<
-	//	"Z_FOTO_DIMPIX DOUBLE NOT NULL, " <<
-	//	"Z_FOTO_PITCH DOUBLE NOT NULL, " <<
-	//	"Z_FOTO_ROLL DOUBLE NOT NULL)";
-	//cnn.execute_immediate(sql.str());
+	//check if all the tables have been executed
+	std::string table_rt(QUADRO_RT);
+	std::string table(QUADRO);
 
-	//std::stringstream sql1;
-	//sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
-	//	"'geom'," <<
-	//	SRID << "," <<
-	//	"'POLYGON'," <<
-	//	"'XYZ')";
-	//cnn.execute_immediate(sql1.str());
+	std::stringstream sql;
+	sql << "select * from " << table_rt << " a left join " << table << " b on a.foglio=b.foglio where b.foglio is null";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	if ( rs.fields_count() == 0 ) {
+		sec->add_item("para")->append("Tutti i fogli previsti sono state realizzati");
+		return true;
+	} else {
+		sec->add_item("para")->append("I seguenti fogli non sono stati realizzati");
+		Doc_Item itl = sec->add_item("itemizedlist");
+		while ( !rs.eof() ) {
+			itl->add_item("listitem")->append(rs["FOGLIO"].toString());
+		}
+	}
 
-	//std::stringstream sql2;
-	//sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
-	//	VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-	//CV::Util::Spatialite::Statement stm(cnn);
-	//cnn.begin_transaction();
-	//stm.prepare(sql2.str());
-
-	//std::map<std::string, VDP>::iterator it;
-	//for (it = _vdps.begin(); it != _vdps.end(); it++) {
-	//	VDP& vdp = it->second;
-	//	double dt = 0.;
-
-	//	DPOINT Pc(vdp.Pc.GetX()	, vdp.Pc.GetY(), vdp.Pc.GetZ());
-	//	std::vector<DPOINT> dpol;
-	//	for ( int i = 0; i < 5; i++) {
-	//		Collimation ci;
-	//		ci.xi = ( i == 0 || i == 3 ) ? 0.f : (i != 4) ? (float) vdp.dimx() : (float) (vdp.dimx() / 2.);
-	//		ci.yi = ( i == 0 || i == 1 ) ? 0.f : (i != 4) ? (float) vdp.dimy() : (float) (vdp.dimy() / 2.);
-	//		DPOINT pd, pt;
-	//		vdp.GetRay(ci, &pd);
-	//		if ( !ds->RayIntersect(Pc, pd, pt) ) {
-	//			if ( !ds->IsInside(pt.z) ) {
-	//				break;
-	//			}
-	//		}
-	//		dt += vdp.Pc.GetZ() - pt.z;
-	//		dpol.push_back(pt);
-	//	}
-
-	//	gaiaGeomCollPtr geo = gaiaAllocGeomColl();
-	//	geo->Srid = SRID;
-	//	geo->DimensionModel  = GAIA_XY_Z;
-	//	geo->DeclaredType = GAIA_POLYGONZ;
-	//	gaiaPolygonPtr polyg = gaiaAddPolygonToGeomColl(geo, 5, 0);
-	//	gaiaRingPtr ring = polyg->Exterior;
-
-	//	for (int i = 0; i < 4; i++)
-	//		gaiaSetPointXYZ(ring->Coords, i, dpol[i].x, dpol[i].y, dpol[i].z);
-	//	gaiaSetPointXYZ(ring->Coords, 4, dpol[0].x, dpol[0].y, dpol[0].z);
-
-	//	//calcola del GSD medio
-	//	dt = vdp.pix() * dt / (5 * vdp.foc());
-
-	//	//sqlite3_reset(stmt);
-	//	//sqlite3_clear_bindings(stmt);
-
-	//	unsigned char *blob;
-	//	int blob_size;
-	//	gaiaToSpatiaLiteBlobWkb(geo, &blob, &blob_size);
-	//	gaiaFreeGeomColl (geo);
-
-	//	// we can now destroy the geometry object
-	//	std::string strip = _get_strip(it->first);
-	//	splite.bind(1, SIGLA_PRJ, w_spatialite::TEXT);
-	//	splite.bind(2, strip.c_str(), w_spatialite::TEXT);
-	//	int id = atoi(_get_nome(it->first).c_str());
-	//	splite.bind(3, &id, w_spatialite::INT);
-	//	splite.bind(4, &dt, w_spatialite::DOUBLE);
-	//	double o = RAD_DEG(vdp.om), f = RAD_DEG(vdp.fi);
-	//	splite.bind(5, &o), w_spatialite::DOUBLE);
-	//	splite.bind(6, &f, w_spatialite::DOUBLE);
-	//	splite.bind(7, blob, blob, blob_size);
-
-	//	//sqlite3_bind_text(stmt, 1, SIGLA_PRJ, strlen(SIGLA_PRJ), SQLITE_STATIC);
-	//	//sqlite3_bind_text(stmt, 2, strip.c_str(), strip.size(), SQLITE_STATIC);
-	//	//sqlite3_bind_int(stmt, 3, atoi(_get_nome(it->first).c_str()));
-	//	//sqlite3_bind_double(stmt, 4, dt);
-	//	//sqlite3_bind_double(stmt, 5, RAD_DEG(vdp.om));
-	//	//sqlite3_bind_double(stmt, 6, RAD_DEG(vdp.fi));
-	//	//sqlite3_bind_blob (stmt, 7, blob, blob_size, SQLITE_STATIC);
-
-	//	stm.execute();
-	//	
-	//	//if ( ! splite.step() {
-	//	////int retv = sqlite3_step(stmt);
-	//	////if ( retv != SQLITE_DONE && retv != SQLITE_ROW) {
-	//	//	printf ("sqlite3_step() error: %s\n", splite.get_error_msg());
-	//	//      break;
-	//	//}
-	//	gaiaFree(blob);
-	//	//_vfoto.push_back(fet);
-	//}
-	//cnn.commit_transaction();
-	////sqlite3_finalize(stmt);
-
-	////splite.commit();
-	////ret = sqlite3_exec (db_handle, "COMMIT", NULL, NULL, &err_msg);
-	////if (ret != SQLITE_OK) {
-	////	fprintf (stderr, "Error: %s\n", err_msg);
-	////	sqlite3_free (err_msg);
-	////}
-	////_process_models();
-	////_process_strips();
+	// check if there are additional tables
+	std::stringstream sql1;
+	sql << "select * from " << table << " a left join " << table_rt << " b on a.foglio=b.foglio where b.foglio is null";
+	Statement stm1(cnn);
+	stm.prepare(sql1.str());
+	rs = stm1.recordset();
+	if ( rs.fields_count() == 0 ) {
+		sec->add_item("para")->append("Non sono state realizzate tavole extra");
+		return true;
+	} else {
+		sec->add_item("para")->append("Sono stati realizzati i seguenti fogli non richiesti");
+		Doc_Item itl = sec->add_item("itemizedlist");
+		while ( !rs.eof() ) {
+			itl->add_item("listitem")->append(rs["FOGLIO"].toString());
+		}
+	}
 	return true;
 }
 

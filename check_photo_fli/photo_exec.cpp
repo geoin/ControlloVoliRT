@@ -450,10 +450,8 @@ bool photo_exec::_process_photos()
 
 		OGRGeometryFactory gf;
 		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
-		OGRGeometry* og = (OGRGeometry*) gp_;
-		OGRLinearRing* gpo = (OGRLinearRing*)og;
 
-		OGRLinearRing* gp = (OGRLinearRing*)gf.createGeometry(wkbLinearRing);//(OGRLinearRing*) ((OGRGeometry*) gp_);
+		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
 		gp->setCoordinateDimension(2);
 		gp->assignSpatialReference(&sr);
 
