@@ -85,7 +85,7 @@ namespace CV {
                                 bool spatial_index );
 
             void remove_layer(std::string const &layername);
-
+            bool layer_exists(std::string const &layername);
             void begin_transaction();
             void commit_transaction();
             void rollback_transaction();

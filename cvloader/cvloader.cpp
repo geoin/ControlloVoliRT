@@ -49,10 +49,12 @@ using Poco::Util::OptionCallback;
 using Poco::AutoPtr;
 
 #define PLANNED_FLIGHT_LAYER_NAME "AVOLOP"
+#define FLIGHT_LAYER_NAME "AVOLOV"
 #define SHAPE_CHAR_SET "CP1252"
 #define GAUSS_BOAGA_SRID  32632
 #define GEOM_COL_NAME "geom"
 #define MAX_MSG_LEN 250
+#define GEO_DB_NAME "geo.sqlite"
 
 class CVLoader: public Application
     /// This sample demonstrates some of the features of the Util::Application class,
@@ -135,9 +137,16 @@ protected:
     }
 
     void handlePlannedFlightLines(const std::string& name, const std::string& value) {
-        Poco::File pfl(value);
+        // if have not extension set "shp" extension to verify existence
+        Poco::Path pfl_path(value);
+        if ( pfl_path.getExtension().empty())
+            pfl_path.setExtension(".shp");
+
+        Poco::File pfl;
+        pfl = pfl_path;
+
         if ( pfl.exists() && ( pfl.isFile() || pfl.isLink()) ) {
-            Poco::Path pfl_path(value);
+            // remove extension
             pfl_path.setExtension("");
             _planned_flight_line = pfl_path.toString();
         }
@@ -148,7 +157,24 @@ protected:
     }
 
     void handleFlightLines(const std::string& name, const std::string& value) {
-        std::cout << name << " = " << value << std::endl;
+        // if have not extension set "shp" extension to verify existence
+        Poco::Path fl_path(value);
+        if ( fl_path.getExtension().empty())
+            fl_path.setExtension(".shp");
+
+        Poco::File fl;
+        fl = fl_path;
+
+        if ( fl.exists() && ( fl.isFile() || fl.isLink()) ) {
+            // remove extension
+            fl_path.setExtension("");
+            _flight_line = pfl_path.toString();
+        }
+        else {
+            logger().error(Poco::format("error: \"%s\" is not a file", value ));
+            stopOptionsProcessing();
+        }
+
     }
 
     void displayHelp() {
@@ -159,77 +185,17 @@ protected:
         helpFormatter.format(std::cout);
     }
 
-//    int load_planned_flight_lines() {
-//        // Open sqlite connection
-//        sqlite3 *handle;
-//        Poco::Path dbpath(_prjdir);
-//        dbpath.makeDirectory(); // we are sure this is a directory
-//        dbpath.setFileName("geo.sqlite");
-//        logger().information(Poco::format("DB file: %s", dbpath.toString()));
-//        int ret = sqlite3_open_v2 (dbpath.toString().c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-//        if (ret != SQLITE_OK) {
-//            logger().error(Poco::format("error: cannot open '%s': %s",dbpath.toString(),sqlite3_errmsg (handle)));
-//            sqlite3_close (handle);
-//            return Application::EXIT_DATAERR;
-//         }
-//        // Initialize spatialite
-//        void *cache = spatialite_alloc_connection ();
-//        spatialite_init_ex (handle, cache, 0);
-
-
-//        // initialize spatial metadata if not initialized
-//        char *err_msg=NULL;
-//        ret = sqlite3_exec (handle, "SELECT InitSpatialMetadata(1)", NULL, NULL, &err_msg);
-//        if (ret != SQLITE_OK) {
-//          logger().error(Poco::format("error: InitSpatialMetadata() %s",err_msg));
-//          sqlite3_close (handle);
-//          return Application::EXIT_DATAERR;
-//         }
-
-//        // If PLANNED_FLIGHT_LAYER_NAME remove it
-
-//        // Load shapefile
-//        int nrows=0;
-//        char filename[MAX_MSG_LEN];
-//        char err_msg1[MAX_MSG_LEN];err_msg1[MAX_MSG_LEN-1] = 0;
-//        strcpy(filename, _planned_flight_line.c_str());
-//        ret = load_shapefile(handle,
-//                       filename,
-//                       PLANNED_FLIGHT_LAYER_NAME,
-//                       SHAPE_CHAR_SET,
-//                       GAUSS_BOAGA_SRID,
-//                       GEOM_COL_NAME,
-//                       FALSE,
-//                       FALSE,
-//                       FALSE,
-//                       FALSE,
-//                       &nrows,
-//                       err_msg1
-//                       );
-//        std::string errstring(err_msg1);
-//        if ( ret == 0 ){ //failure
-//            logger().error(Poco::format("error: Load from shape \"%s\"  failed! -- %s", _planned_flight_line, errstring));
-//            ret = Application::EXIT_DATAERR;
-//        }
-//        else { //success
-//            logger().error(Poco::format("Loaded %d rows from shape -- %s", nrows, _planned_flight_line));
-//            ret = Application::EXIT_OK;
-//        }
-
-//        spatialite_cleanup_ex(cache);
-//        sqlite3_close(handle);
-//        return ret;
-//    }
-
     int load_planned_flight_lines() {
         int nrows;
         try {
             Poco::Path dbpath( _prjdir );
             dbpath.makeDirectory( ); // we are sure this is a directory
-            dbpath.setFileName( "geo.sqlite" );
+            dbpath.setFileName( GEO_DB_NAME);
             CV::Util::Spatialite::Connection cnn;
             cnn.create( dbpath.toString() ); // Create or open spatialite db
-            cnn.initialize_metdata(); // Initialize metadata (if already initialized noop)
+            if ( cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA )
+                cnn.initialize_metdata(); // Initialize metadata (if already initialized noop)
+
             // load shapefile
             nrows = cnn.load_shapefile(_planned_flight_line,
                                PLANNED_FLIGHT_LAYER_NAME,
@@ -248,6 +214,34 @@ protected:
         return Application::EXIT_OK;
     }
 
+    int load_flight_lines() {
+        int nrows;
+        try {
+            Poco::Path dbpath( _prjdir );
+            dbpath.makeDirectory( ); // we are sure this is a directory
+            dbpath.setFileName( GEO_DB_NAME );
+            CV::Util::Spatialite::Connection cnn;
+            cnn.create( dbpath.toString() ); // Create or open spatialite db
+            if ( cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA )
+                cnn.initialize_metdata(); // Initialize metadata (if already initialized noop)
+
+            // load shapefile
+            nrows = cnn.load_shapefile(_flight_line,
+                               PLANNED_FLIGHT_LAYER_NAME,
+                               SHAPE_CHAR_SET,
+                               GAUSS_BOAGA_SRID,
+                               GEOM_COL_NAME,
+                               false,
+                               false,
+                               false);
+        }
+        catch(std::exception const& e){
+            logger().error(std::string( e.what()) );
+            return Application::EXIT_DATAERR;
+        }
+        logger().error(Poco::format("Loaded %d rows from %s", nrows, _flight_line ) );
+        return Application::EXIT_OK;
+    }
 
     int main(const std::vector<std::string>& args) {
         if (_exit_err != Application::EXIT_OK )
@@ -257,6 +251,11 @@ protected:
             return load_planned_flight_lines();
         }
 
+        if (!_flight_line.empty() ){
+            return load_flight_lines();
+        }
+
+
         return Application::EXIT_OK;
     }
 
@@ -264,6 +263,7 @@ private:
     bool _helpRequested;
     std::string _prjdir; // Project directory
     std::string _planned_flight_line; // planned flight line shape file
+    std::string _flight_line; // flight line shape
     int _exit_err;
 };
 

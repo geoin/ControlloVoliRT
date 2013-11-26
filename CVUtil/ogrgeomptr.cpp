@@ -54,9 +54,7 @@ namespace CV {
             }
 
             void OGRGeomPtr:: _assign( OGRGeometry *g) {
-                OGRGeometry *geom;
-                //geom = g->clone();
-                _geom.assign(geom);
+                _geom.assign(g);
             }
 
             OGRGeomPtr::operator OGRGeometry const *() const {

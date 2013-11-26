@@ -145,6 +145,10 @@ namespace CV {
             }
         }
 
+        bool Connection::layer_exists(std::string const &layername) {
+
+        }
+
         void Connection::begin_transaction() {
             execute_immediate("BEGIN TRANSACTION");
         }
