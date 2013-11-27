@@ -191,11 +191,11 @@ void check_photo::defineProperty(const std::string& def)
 int check_photo::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
-		_phe.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
-		_phe.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
-		_phe.set_dem_name("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino_50.asc");
-		_phe.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
-		_phe.set_checkType(photo_exec::fli_type);
+		//_phe.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
+		//_phe.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
+		//_phe.set_dem_name("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino_50.asc");
+		_phe.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+		_phe.set_checkType(photo_exec::Prj_type);
 
 		_phe.run();
 

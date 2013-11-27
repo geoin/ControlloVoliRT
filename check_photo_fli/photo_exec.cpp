@@ -33,11 +33,12 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "gdal/ogr_geometry.h"
+#include "ogr_geometry.h"
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
+#define UNCOVER "Z_UNCOVER"
 #define SHAPE_CHAR_SET "CP1252"
 #define REFSCALE "RefScale_2000"
 #define DB_NAME "geo.sqlite"
@@ -45,10 +46,16 @@
 #define OUT_DOCP "check_photoP.xml"
 #define REF_FILE "Regione_Toscana_RefVal.xml"
 
+#define CAMERA "camera.xml"
+#define ASSETTI "assetti"
+#define DEM "dem.asc"
+
 #define Z_FOTO "Z_FOTO"
 #define Z_MODEL "Z_MODEL"
 #define Z_STRIP "Z_STRIP"
 #define Z_BLOCK "Z_BLOCK"
+#define Z_UNCOVER "Z_UNCOVER"
+#define Z_STR_OVL "Z_STR_OVL"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -132,14 +139,29 @@ bool photo_exec::run()
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
-		/*int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Carto/zona2castpescaia",
+		_cam_name = Path(_proj_dir, CAMERA).toString();
+		std::string assetti = std::string(ASSETTI) + (_type == Prj_type ? "P" : "V") + ".txt";
+		_vdp_name = Path(_proj_dir, assetti).toString();
+		_dem_name = Path(_proj_dir, DEM).toString();
+
+		int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/Carto/zona2castpescaia-argent-scarlin",
 		   CARTO,
 		   SHAPE_CHAR_SET,
 		   SRID,
 		   "geom",
 		   true,
 		   false,
-		   false);*/
+		   false);
+		
+		nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/assi_volo/avolop",
+		   "AVOLOP",
+		   SHAPE_CHAR_SET,
+		   SRID,
+		   "geom",
+		   true,
+		   false,
+		   false);
+
 		// Read reference values
 		_read_ref_val();
 
@@ -223,8 +245,24 @@ bool photo_exec::_read_ref_val()
 	}
 	return true;
 }
-
-bool photo_exec::_get_carto(OGRGeomPtr strips) 
+OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>& blocks)
+{
+	// detetect the difference between the carto polygon
+	// and the liest of blocks
+	OGRGeomPtr dif;
+	for ( size_t i = 0; i < blocks.size(); i++) {
+		if ( cart->Intersect(blocks[i]) ) {
+			dif =  cart->Difference(blocks[i]);
+			OGRPolygon* p1 = (OGRPolygon*) cart;
+			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
+			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
+				break;
+			}
+		}
+	}
+	return dif;
+}
+bool photo_exec::_get_carto(std::vector<OGRGeomPtr>& blocks) 
 {
 	std::string table(CARTO);
 
@@ -254,20 +292,16 @@ bool photo_exec::_get_carto(OGRGeomPtr strips)
 		OGRGeometryCollection* oc = (OGRGeometryCollection*) ((OGRGeometry*) blk);
 		int np = oc->getNumGeometries();
 		for (int i = 0; i < np; i++ ) {
-			OGRGeomPtr pol = oc->getGeometryRef(i);
-			OGRGeomPtr inter = pol->Difference(strips);
-			OGRPolygon* p1 = (OGRPolygon*) ((OGRGeometry*) pol);
-			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) inter);
-			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
-				vs.push_back(inter);
+			OGRGeometry* pol = oc->getGeometryRef(i);
+			OGRGeomPtr dif = _get_dif(pol, blocks);
+			if ( !dif->IsEmpty() ) {
+				vs.push_back(dif);
 			}
 		}
 	} else {
-		OGRPolygon* p1 = (OGRPolygon*) ((OGRGeometry*) blk);
-		OGRGeomPtr inter = blk->Difference(strips);
-		OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) inter);
-		if ( fabs(p1->get_Area() - p2->get_Area()) < 5 ) {
-			vs.push_back(inter);
+		OGRGeomPtr dif = _get_dif(blk, blocks);
+		if ( !dif->IsEmpty() ) {
+			vs.push_back(dif);
 		}
 	}
 	_uncovered(vs);
@@ -275,7 +309,7 @@ bool photo_exec::_get_carto(OGRGeomPtr strips)
 }
 void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
 {
-	std::string table(_type == Prj_type ? "Z_UNCOVERP" : "Z_UNCOVERV");
+	std::string table = std::string(UNCOVER) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 	if ( vs.empty() )
 		return;
@@ -682,13 +716,86 @@ typedef struct mstrp {
 	std::string first;
 	std::string last;
 	OGRGeomPtr geo;
+	bool used;
 } mstrp;
 bool photo_exec::_process_block()
 {
-	std::string table = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
+	std::stringstream sql2;
+	std::string tablef(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
+	
+	sql2 << "select Z_STRIP_CS, Z_STRIP_FIRST, Z_STRIP_LAST, AsBinary(geom) from " << tablef << " order by Z_STRIP_CS";
+	Statement stm1(cnn);
+	stm1.prepare(sql2.str());
+	Recordset rs = stm1.recordset();
+	
+	std::vector<mstrp> vs;
+
+	while ( !rs.eof() ) { //for every strip
+		mstrp s;
+		s.strip = rs[0];
+		s.first = rs[1];
+		s.last = rs[2];
+		s.geo = (Blob) rs[3];
+		s.used = false;
+		vs.push_back(s);
+		rs.next();
+	}
+
+	std::vector<OGRGeomPtr> blks;
+	if ( !vs.empty() ) {
+		OGRGeomPtr blk;
+		for (size_t k = 0; k < vs.size(); k++) {
+			if ( !vs[k].used ) {
+				blk = vs[k].geo;
+				vs[k].used = true;
+				bool finished = false;
+				while ( !finished ) {
+					finished = true;
+					for ( size_t i = 1; i < vs.size(); i++) {
+						OGRGeomPtr& geo = vs[i].geo;
+						if ( !vs[i].used && geo->Intersect(blk) ) {
+							blk = geo->Union(blk);
+							vs[i].used = true;
+							finished = false;
+						}
+					}
+				}
+				blks.push_back(blk);
+			}
+		}
+	}
+	std::string tableb = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
+	cnn.remove_layer(tableb);
+	std::stringstream sqla;
+	sqla << "CREATE TABLE " << tableb << 
+		"(Z_BLOCK_ID TEXT NOT NULL)";	// sigla del lavoro
+	cnn.execute_immediate(sqla.str());
+	// add the geometry column
+	std::stringstream sqlb;
+	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POLYGON'," <<
+		"'XY')";
+	cnn.execute_immediate(sqlb.str());
+	std::stringstream sqlc;
+	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	Statement stm0(cnn);
+	cnn.begin_transaction();
+	stm0.prepare(sqlc.str());
+	for ( size_t i = 0; i < blks.size(); i++) {
+		stm0[1] = SIGLA_PRJ;
+		stm0[2].fromBlob(blks[i]);
+		stm0.execute();
+		stm0.reset();
+	}
+	cnn.commit_transaction();
+	_get_carto(blks);
+
+	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 
-	// create the strip table
+	// create the strip overlap table
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
 		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
@@ -696,39 +803,6 @@ bool photo_exec::_process_block()
 		"Z_STRIP2 TEXT NOT NULL, " <<
 		"Z_STRIP_T_OVERLAP INT NOT NULL)";  // overlap trasversale
 	cnn.execute_immediate(sql.str());
-
-	std::stringstream sql2;
-	std::string tablef(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
-	
-	sql2 << "select Z_STRIP_CS, Z_STRIP_FIRST, Z_STRIP_LAST, AsBinary(geom) from " << tablef << " order by Z_STRIP_CS";
-	CV::Util::Spatialite::Statement stm1(cnn);
-	stm1.prepare(sql2.str());
-	CV::Util::Spatialite::Recordset rs = stm1.recordset();
-	
-	std::vector<mstrp> vs;
-	bool first = true;
-	OGRGeomPtr blk;
-
-	while ( !rs.eof() ) { //for every strip
-		mstrp s;
-		s.strip = rs[0];
-		s.first = rs[1];
-		s.last = rs[2];
-		if ( first ) {
-			first = false;
-			blk = (Blob) rs[3];
-			s.geo = blk;
-		} else {
-			OGRGeomPtr pol2 = (Blob) (rs[3]);
-			s.geo = pol2;
-			OGRGeomPtr pol1 = blk->Union(pol2);
-			blk = pol1;
-		}
-		vs.push_back(s);
-		rs.next();
-	}
-
-	_get_carto(blk);
 
 	std::stringstream sql3;
 	sql3 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP1, Z_STRIP2, Z_STRIP_T_OVERLAP) VALUES (?1, ?2, ?3, ?4)";
@@ -928,7 +1002,7 @@ bool photo_exec::_strip_report()
 
 	// Strip verification
 	std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
-	std::string table2 = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
+	std::string table2 = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	std::stringstream sql;
 	sql << "SELECT Z_STRIP_CS, Z_STRIP_LENGTH, Z_STRIP_T_OVERLAP, Z_STRIP2 FROM " << table << " a inner JOIN " << 
 		table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << _MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << v1 << " OR Z_STRIP_T_OVERLAP>" << v2;
@@ -987,8 +1061,8 @@ void photo_exec::_final_report()
 
 	// coverage of cartographic areas
 	std::stringstream sql;
-	std::string table = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
-	sql << "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" <<table << "'";
+	std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
+	sql << "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" << table << "'";
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();

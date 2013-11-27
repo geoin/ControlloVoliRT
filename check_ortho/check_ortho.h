@@ -33,6 +33,7 @@
 #include "CVUtil/ogrgeomptr.h"
 #include "docbook/docbook.h"
 
+
 class ortho_exec {
 public:
 
@@ -43,6 +44,9 @@ public:
 	void set_img_dir(const std::string& nome);
 private:
 	bool _process_imgs(void);
+	bool _process_borders(void);
+	bool _process_img_border(const std::string& foglio, CV::Util::Geometry::OGRGeomPtr& pol);
+
 	bool _read_tfw(const std::string& nome);
 	bool _final_report(void);
 
@@ -51,6 +55,7 @@ private:
 
 	std::string _proj_dir;
 	std::string _img_dir;
+	std::vector<std::string> _fogli;
 
 	// parametri connessione a sqlite
 	CV::Util::Spatialite::Connection cnn;

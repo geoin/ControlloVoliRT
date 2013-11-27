@@ -34,7 +34,7 @@
 #include "Poco/string.h"
 #include <fstream>
 #include <sstream>
-#include "gdal/ogr_geometry.h"
+#include "ogr_geometry.h"
 #include "tiff_util.h"
 
 #define SRID 32632
@@ -43,6 +43,7 @@
 #define REFSCALE "RefScale_2000"
 #define QUADRO_RT "Quadro_RT"
 #define QUADRO "Z_Quadro"
+#define CONTORNO_RT "CONTORNO_RT"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOC "check_ortho.xml"
 #define REF_FILE "Regione_Toscana_RefVal.xml"
@@ -130,9 +131,19 @@ bool ortho_exec::run()
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
-		// loads the refverence union table
+		// loads the reference union table
 		int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Quadro/qu-ofc-cast_pescaia-scarlino-etrf89",
 		   QUADRO_RT,
+		   SHAPE_CHAR_SET,
+		   SRID,
+		   "geom",
+		   true,
+		   false,
+		   false);
+		
+		// loads the region borders
+		nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Contorno regione/ContornoRT",
+		   CONTORNO_RT,
 		   SHAPE_CHAR_SET,
 		   SRID,
 		   "geom",
@@ -143,11 +154,19 @@ bool ortho_exec::run()
 		// Read reference values
 		_read_ref_val();
 
+		// create the union table and check with the one of RT
 		if ( !_process_imgs() )
+			return false;
+
+		// create the polygons of the used surface of each table
+		if ( !_process_borders() )
 			return false;
 
 		// initialize docbook xml file
 		_init_document();
+
+		// performs all the checks
+		_final_report();
 
 		// write the result on the docbook report
 		_dbook.write();
@@ -185,7 +204,85 @@ bool ortho_exec::_read_ref_val()
 	}
 	return true;
 }
+bool ortho_exec::_process_img_border(const std::string& foglio, OGRGeomPtr& pol)
+{
+	std::vector<DPOINT> pt;
 
+	Poco::Path img_name(_img_dir, foglio);
+	img_name.setExtension("tif");
+	BorderLine bl;
+	bl.Evaluate(img_name.toString(), pt);
+
+	OGRGeometryFactory gf;
+	pol = gf.createGeometry(wkbPolygon);
+	if ( pt.size() > 3 ) {
+		OGRSpatialReference sr;
+		sr.importFromEPSG(SRID);
+		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
+		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
+		gp->setCoordinateDimension(2);
+		gp->assignSpatialReference(&sr);
+
+		img_name.setExtension("tfw");
+		TFW tf(img_name.toString());
+		for ( size_t i = 0; i < pt.size(); i++) {
+			pt[i] = tf.img_ter(pt[i]);
+			gp->addPoint(pt[i].x, pt[i].y);
+		}
+		gp->closeRings();
+		OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) pol);
+		p->setCoordinateDimension(2);
+		p->assignSpatialReference(&sr);
+		p->addRing(gp);
+		return true;
+	}
+	return false;
+}
+bool ortho_exec::_process_borders()
+{
+	std::string table("BORDERS_O");
+	cnn.remove_layer(table);
+
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"( FOGLIO TEXT NOT NULL PRIMARY KEY)";
+	cnn.execute_immediate(sql.str());
+	
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POLYGON'," <<
+		"'XY')";
+	cnn.execute_immediate(sql1.str());	
+
+	// create the insertion query
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (FOGLIO, geom) \
+		VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+
+	Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());
+
+	for ( size_t i = 0; i < _fogli.size(); i++) {
+		
+		std::string foglio(_fogli[i]);
+		//if ( foglio != "07I34" )
+		//	continue;
+
+		OGRGeomPtr pol;
+		if ( _process_img_border(foglio, pol) ) {
+			stm[1] = foglio;
+			stm[2].fromBlob(pol);
+
+			stm.execute();
+			stm.reset();
+		}
+	}
+	cnn.commit_transaction();
+	return true;
+}
 bool ortho_exec::_process_imgs()
 {
 	// select all the tfw files in the folder
@@ -262,6 +359,8 @@ bool ortho_exec::_process_imgs()
 		stm[2] = vtfw[i].pix_size();
 		stm[3].fromBlob(pol);
 
+		_fogli.push_back(vtfw[i].nome());
+
 		stm.execute();
 		stm.reset();
 	}
@@ -309,6 +408,8 @@ bool ortho_exec::_final_report()
 			itl->add_item("listitem")->append(rs["FOGLIO"].toString());
 		}
 	}
+
+
 	return true;
 }
 

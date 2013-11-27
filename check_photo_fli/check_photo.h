@@ -64,7 +64,9 @@ private:
 	bool _process_block(void);
 	void _final_report(void);
 	void _get_elong(CV::Util::Geometry::OGRGeomPtr fv, double ka, double* d1, double* d2);
-	bool _get_carto(CV::Util::Geometry::OGRGeomPtr blk);
+	bool _get_carto(std::vector<CV::Util::Geometry::OGRGeomPtr>& blocks);
+	CV::Util::Geometry::OGRGeomPtr _get_dif(const OGRGeometry* cart, std::vector<CV::Util::Geometry::OGRGeomPtr>& blocks);
+
 	void _uncovered(std::vector<CV::Util::Geometry::OGRGeomPtr>& vs);
 
 	void _init_document(void);

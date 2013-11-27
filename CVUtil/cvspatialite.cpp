@@ -146,9 +146,16 @@ namespace CV {
         }
 
         bool Connection::layer_exists(std::string const &layername) {
-            gaiaVectorLayersListPtr gvl = gaiaGetVectorLayersList(_db(), layername.c_str(), NULL, GAIA_VECTORS_LIST_FAST);
-            bool ret ( gvl != NULL );
-            gaiaFreeVectorLayersList(gvl);
+            gaiaVectorLayersListPtr vllp= gaiaGetVectorLayersList(_db(), layername.c_str(), "geom", GAIA_VECTORS_LIST_FAST);
+            if (vllp == NULL){
+                std::stringstream err;
+                err << "error: Generic error in reading vector layer " << layername;
+                throw spatialite_error( err.str() );
+            }
+            bool ret = false;
+            if ( vllp->Current != NULL)
+                ret = true;
+            gaiaFreeVectorLayersList(vllp);
             return ret;
         }
 
