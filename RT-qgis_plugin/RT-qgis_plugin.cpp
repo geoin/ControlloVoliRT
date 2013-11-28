@@ -1,3 +1,29 @@
+/*
+    File: RT-qgis_plugin.cpp
+    Author:  F.Flamigni
+    Date: 2013 November 28
+    Comment:
+
+    Disclaimer:
+        This file is part of RT_Controllo_Voli.
+
+        Tabula is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Lesser General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        Tabula is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+        Copyright (C) 2013 Geoin s.r.l.
+
+*/
 
 #include "RT-qgis_plugin.h"
 #include "qgisinterface.h"
@@ -5,15 +31,19 @@
 #include "qgsvectordataprovider.h"
 #include "qgsvectorlayer.h"
 #include <qgsvectorfilewriter.h>
+#include <qgsdatasourceuri.h>
 #include <QFileDialog>
-#include <QMessageBox>
+//#include <QMessageBox>
 #include <QTextStream>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QToolBar>
 #include <QAction>
 #include <QMenu>
-//#include "Poco/Process.h"
+#include <QLabel>
+#include <QLineEdit>
+#include <QTextEdit>
+#include <QComboBox>
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
@@ -21,23 +51,107 @@
 #define QGISEXTERN extern "C"
 #endif
 
-dbox::dbox(QWidget* parent)
+dbox::dbox()
 {
-	setWindowTitle("GEOIN");
-	QPushButton* bok = new QPushButton;
-	bok->setText("OK");
-	connect(bok, SIGNAL(clicked(bool)), this, SLOT(esegui(bool)));
-
-	QVBoxLayout* qvb = new QVBoxLayout;
-	qvb->addWidget(bok);
-	setLayout(qvb);
 }
-void dbox::esegui(bool b)
+void dbox::_init(QVBoxLayout* qvb)
 {
-	QMessageBox::information(0, tr("premuto ok"), tr("GEOIN PLUGIN"), QMessageBox::Ok);
-	done(0);
+    _out = new QTextEdit(this);
+     _out->setFixedHeight(200);
+     qvb->addWidget(_out);
+
+    QPushButton* bok = new QPushButton("Esegui");
+    connect(bok, SIGNAL(clicked(bool)), this, SLOT(_esegui(bool)));
+    QPushButton* bcanc = new QPushButton("Esci");
+    connect(bcanc, SIGNAL(clicked(bool)), this, SLOT(_esci(bool)));
+    QHBoxLayout* hl2 = new QHBoxLayout;
+    hl2->addWidget(bok);
+    hl2->addWidget(bcanc);
+
+    qvb->addLayout(hl2);
+    setLayout(qvb);
+
+    connect(this, SIGNAL(finished(int)), this, SLOT(_chiudi(int)));
 }
 
+void dbox::_chiudi(int result)
+{
+    deleteLater();
+}
+void dbox::_esci(bool b)
+{
+    done(0);
+}
+void dbox::_received()
+{
+    QByteArray qba = _qp.readAllStandardOutput();
+    QString qs(qba.data());
+    if ( !qs.isEmpty() )
+        _out->append(qs);
+}
+void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
+{
+    _qm.done(0);
+    QMessageBox::information(0, tr("GEOIN PLUGIN"), tr("tool terminated "), QMessageBox::Ok);
+}
+void dbox::_esegui(bool b)
+{
+    _qp.start(_executable);
+    connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
+    connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
+
+    _qm.information(0, tr("GEOIN PLUGIN"), tr("tool running "), QMessageBox::Ok);
+    _qp.kill();
+}
+/***************************************************/
+Check_photo::Check_photo()
+{
+    setWindowTitle("Controllo progetto di volo");
+    _executable = "C:/OSGeo4W/apps/qgis/plugins/comunication.exe";
+
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    QLabel* l1 = new QLabel("Cartella progetto:");
+    _e1 = new QLineEdit;
+    QPushButton* b1 = new QPushButton("...");
+    b1->setFixedWidth(20);
+    connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist(bool)));
+    QHBoxLayout* hl1 = new QHBoxLayout;
+    hl1->addWidget(l1);
+    hl1->addWidget(_e1);
+    hl1->addWidget(b1);
+    qvb->addLayout(hl1);
+
+    QLabel* l2 = new QLabel("tipo di verifica:");
+    QComboBox* cmb = new QComboBox;
+    cmb->addItem("Progetto di volo");
+    cmb->addItem("Volo effettuato");
+    cmb->setCurrentIndex(0);
+    connect(cmb, SIGNAL(currentIndexChanged(int)), this, SLOT(_optype(int)));
+    QHBoxLayout* hl2 = new QHBoxLayout;
+    hl2->addWidget(l2);
+    hl2->addWidget(cmb);
+    qvb->addLayout(hl2);
+
+    _init(qvb);
+}
+void Check_photo::_optype(int index)
+{
+    _index = index;
+}
+
+bool Check_photo::_dirlist(bool)
+{
+    QFileDialog qf;
+    QString dirName = _e1->text();
+    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
+    if ( !dirName.isEmpty() )
+        _e1->setText(dirName);
+    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    return true;
+}
+
+/*******************************************/
 const QString icon_path("C:/Google_Drive/Regione Toscana Tools/icons");
 
 /*******************************************/
@@ -118,15 +232,19 @@ void QgsRTtoolsPlugin::unload()
 /*********************** SLOTS attivazione comandi ************/
 void QgsRTtoolsPlugin::set_prj()
 {
-//	std::auto_ptr<Poco::ProcessHandle> ph;
-//	Poco::Process::Args args;
-//	ph.reset( new Poco::ProcessHandle(Poco::Process::launch("C:/Regione Toscana Tools/check_gps/Debug/check_gps.exe", args)) );
+
 }
 void QgsRTtoolsPlugin::ver_gps()
 {
+    Check_photo* db = new Check_photo;
+    db->open();
 }
 void QgsRTtoolsPlugin::ver_proj_volo()
 {
+    QgsDataSourceURI uri;
+    uri.setDatabase("C:/Google_drive/Regione Toscana Tools/Dati_test/Cast_Pescaia/geo.sqlite");
+    uri.setDataSource("", "AVOLOV", "geom"); // schema, nome layer, nome colonna geografica
+    mIface->addVectorLayer(uri.uri(), "AVOLOV", "spatialite"); // uri, nome lnella legenda, nome provider
 }
 void QgsRTtoolsPlugin::ver_volo()
 {

@@ -1,16 +1,47 @@
+/*
+    File: RT-qgis_plugin.h
+    Author:  F.Flamigni
+    Date: 2013 November 28
+    Comment:
+
+    Disclaimer:
+        This file is part of RT_Controllo_Voli.
+
+        Tabula is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Lesser General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        Tabula is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+        Copyright (C) 2013 Geoin s.r.l.
+
+*/
+
 #ifndef RT_QGSPLUGIN_H
 #define RT_QGSPLUGIN_H
 
 #include "qgisplugin.h"
 #include <QObject>
 #include <QDialog>
-#include <QVector>
+#include <QProcess>
+#include <QMessageBox>
 
 class QAction;
 class QgsGeometry;
 class QTextStream;
 class QToolBar;
 class QMenu;
+class QLineEdit;
+class QTextEdit;
+class QVBoxLayout;
 
 class QgsRTtoolsPlugin: public QObject, public QgisPlugin {
 	Q_OBJECT
@@ -40,9 +71,31 @@ private slots:
 class dbox: public QDialog {
 	Q_OBJECT
 public:
-	dbox(QWidget* parent = NULL);
-private slots:
-	void esegui(bool);
+    dbox();
+protected slots:
+    void _esegui(bool);
+    void _esci(bool);
+    void _chiudi(int);
+    void _terminated(int, QProcess::ExitStatus);
+    void _received();
+protected:
+    void _init(QVBoxLayout* qvb);
+    QTextEdit* _out;
+    QMessageBox _qm;
+    QProcess _qp;
+    QString _executable;
+};
+
+class Check_photo: public dbox {
+    Q_OBJECT
+public:
+    Check_photo();
+protected slots:
+    bool _dirlist(bool);
+    void _optype(int index);
+private:
+    QLineEdit* _e1;
+    int _index;
 };
 
 #endif
