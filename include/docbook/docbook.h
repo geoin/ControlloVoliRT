@@ -169,6 +169,7 @@ public:
 	void set_name(const std::string& name) {
 		_name = name;
 	}
+	std::string name(void) const { return _name; }
 	/// write the document
 	void write(void) {
 		if ( _name.empty() )

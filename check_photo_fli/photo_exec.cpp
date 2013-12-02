@@ -40,7 +40,7 @@
 #define CARTO "CARTO"
 #define UNCOVER "Z_UNCOVER"
 #define SHAPE_CHAR_SET "CP1252"
-#define REFSCALE "RefScale_2000"
+//#define REFSCALE "RefScale_2000"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOCV "check_photoV.xml"
 #define OUT_DOCP "check_photoP.xml"
@@ -96,10 +96,6 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 		row->add_item("entry", attr)->append(val);
 	return rv;
 }
-std::string get_key(const std::string& val)
-{
-	return std::string(REFSCALE) + "." + val;
-}
 std::string get_strip(const std::string& nome)
 {
 	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
@@ -131,8 +127,18 @@ void photo_exec::_init_document()
 	_article = _dbook.add_item("article");
 	_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
 }
+std::string photo_exec::_get_key(const std::string& val)
+{
+	return _refscale + "." + val;
+}
+
 bool photo_exec::run()
 {
+	if ( _proj_dir.empty() )
+		throw std::runtime_error("cartella di lavoro non impostata");
+	if ( _refscale.empty() )
+		throw std::runtime_error("scala di lavoro non impostata");
+
 	try {
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
@@ -152,6 +158,8 @@ bool photo_exec::run()
 		   true,
 		   false,
 		   false);
+	
+		std::cout << "Layer:" << CARTO << std::endl;
 		
 		nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/assi_volo/avolop",
 		   "AVOLOP",
@@ -162,38 +170,37 @@ bool photo_exec::run()
 		   false,
 		   false);
 
+		std::cout << "Layer:" << "AVOLOP" << std::endl;
+
 		// Read reference values
 		_read_ref_val();
 
 		// read camera data
 		if ( !_read_cam() )
-			return false;
+			throw std::runtime_error("Fotocamera non trovata");
 		// read photo position and attitude
 		if ( !_read_vdp() )
-			return false;
+			throw std::runtime_error("File assetti non trovato");
 		// read digital terrain model
 		if ( !_read_dem() )
-			return false;
+			throw std::runtime_error("Modello numerico non trovato");
 
 		// initialize docbook xml file
 		_init_document();
 
 		// produce photos feature
 
-		if ( !_process_photos() )
-			return false;
-		// produce models features
-		if ( !_process_models() )
-			return false;
-		if ( !_process_strips() )
-			return false;	
-		if ( !_process_block() )
-			return false;
+		_process_photos();
+		_process_models();
+		_process_strips();
+		_process_block();
 
+		std::cout << "Produzione del report finale" << std::endl;
 		_final_report();
 
 		// write the result on the docbook report
 		_dbook.write();
+		std::cout << "Prodcedura terminata:" << _dbook.name() << std::endl;
 	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
@@ -201,18 +208,6 @@ bool photo_exec::run()
 	return true;
 }
 
-void photo_exec::set_vdp_name(const std::string& nome)
-{
-	_vdp_name = nome;
-}
-void photo_exec::set_dem_name(const std::string& nome)
-{
-	_dem_name = nome;
-}
-void photo_exec::set_cam_name(const std::string& nome)
-{
-	_cam_name = nome;
-}
 void photo_exec::set_proj_dir(const std::string& nome)
 {
 	_proj_dir = nome;
@@ -221,7 +216,17 @@ void photo_exec::set_checkType(Check_Type t)
 {
 	_type = t;
 }
-
+void photo_exec::set_ref_scale(const std::string& nome)
+{
+	if ( nome  == "1000" )
+		_refscale = "RefScale_1000";
+	else if ( nome  == "2000" )
+		_refscale = "RefScale_2000";
+	else if ( nome  == "5000" )
+		_refscale = "RefScale_5000";
+	else if ( nome  == "10000" )
+		_refscale = "RefScale_10000";
+}
 bool photo_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
@@ -230,18 +235,18 @@ bool photo_exec::_read_ref_val()
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
-		_GSD = pConf->getDouble(get_key("GSD"));
-		_MAX_GSD = pConf->getDouble(get_key("MAX_GSD"));
-		_MODEL_OVERLAP = pConf->getDouble(get_key("MODEL_OVERLAP"));
-		_MODEL_OVERLAP_RANGE = pConf->getDouble(get_key("MODEL_OVERLAP_RANGE"));
-		_MODEL_OVERLAP_T = pConf->getDouble(get_key("MODEL_OVERLAP_T"));
-		_STRIP_OVERLAP = pConf->getDouble(get_key("STRIP_OVERLAP"));
-		_STRIP_OVERLAP_RANGE = pConf->getDouble(get_key("STRIP_OVERLAP_RANGE"));
-		_MAX_STRIP_LENGTH = pConf->getDouble(get_key("MAX_STRIP_LENGTH"));
-		_MAX_HEADING_DIFF = pConf->getDouble(get_key("MAX_HEADING_DIFF"));
-		_MAX_ANG = pConf->getDouble(get_key("MAX_ANG"));
+		_GSD = pConf->getDouble(_get_key("GSD"));
+		_MAX_GSD = pConf->getDouble(_get_key("MAX_GSD"));
+		_MODEL_OVERLAP = pConf->getDouble(_get_key("MODEL_OVERLAP"));
+		_MODEL_OVERLAP_RANGE = pConf->getDouble(_get_key("MODEL_OVERLAP_RANGE"));
+		_MODEL_OVERLAP_T = pConf->getDouble(_get_key("MODEL_OVERLAP_T"));
+		_STRIP_OVERLAP = pConf->getDouble(_get_key("STRIP_OVERLAP"));
+		_STRIP_OVERLAP_RANGE = pConf->getDouble(_get_key("STRIP_OVERLAP_RANGE"));
+		_MAX_STRIP_LENGTH = pConf->getDouble(_get_key("MAX_STRIP_LENGTH"));
+		_MAX_HEADING_DIFF = pConf->getDouble(_get_key("MAX_HEADING_DIFF"));
+		_MAX_ANG = pConf->getDouble(_get_key("MAX_ANG"));
 	} catch (...) {
-		return false;
+		throw std::runtime_error("Errore nela lettura dei valori di riferimento");
 	}
 	return true;
 }
@@ -421,10 +426,14 @@ void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 	}
 }
 
-bool photo_exec::_process_photos()
+void photo_exec::_process_photos()
 {
+	std::cout << "Elaborazione dei fotogrammi" << std::endl;
+
 	std::string table = std::string(Z_FOTO) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
+
+	std::cout << "Layer:" << table << std::endl;
 
 	DSM* ds = _df->GetDsm();
 
@@ -514,13 +523,15 @@ bool photo_exec::_process_photos()
 		stm.reset();
 	}
 	cnn.commit_transaction();
-	return true;
 }
 // builds the models from adjacent Photos of the same strip
-bool photo_exec::_process_models()
+void photo_exec::_process_models()
 {
+	std::cout << "Elaborazione dei modelli" << std::endl;
+
 	std::string table = std::string(Z_MODEL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
+	std::cout << "Layer:" << table << std::endl;
 
 	// create the model table
 	std::stringstream sql;
@@ -621,13 +632,14 @@ bool photo_exec::_process_models()
 		rs.next(); // recordset on the strips
 	}
 	cnn.commit_transaction();
-	return true;
 }
 // costruisce le strisciate unendo tutte le foto di una stessa strip
-bool photo_exec::_process_strips()
+void photo_exec::_process_strips()
 {
+	std::cout << "Elaborazione delle strisciate" << std::endl;
 	std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
+	std::cout << "Layer:" << table << std::endl;
 
 	// create the strip table
 	std::stringstream sql;
@@ -709,7 +721,6 @@ bool photo_exec::_process_strips()
 		rs.next();
 	}
 	cnn.commit_transaction();
-	return true;
 }
 typedef struct mstrp {
 	std::string strip;
@@ -718,8 +729,10 @@ typedef struct mstrp {
 	OGRGeomPtr geo;
 	bool used;
 } mstrp;
-bool photo_exec::_process_block()
+void photo_exec::_process_block()
 {
+	std::cout << "Elaborazione del blocco" << std::endl;
+
 	std::stringstream sql2;
 	std::string tablef(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");
 	
@@ -766,6 +779,8 @@ bool photo_exec::_process_block()
 	}
 	std::string tableb = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(tableb);
+	std::cout << "Layer:" << tableb << std::endl;
+
 	std::stringstream sqla;
 	sqla << "CREATE TABLE " << tableb << 
 		"(Z_BLOCK_ID TEXT NOT NULL)";	// sigla del lavoro
@@ -794,6 +809,8 @@ bool photo_exec::_process_block()
 
 	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
+
+	std::cout << "Calcolo sovrapposizione tra strisciate" << std::endl;
 
 	// create the strip overlap table
 	std::stringstream sql;
@@ -841,7 +858,6 @@ bool photo_exec::_process_block()
 		}
 	}
 	cnn.commit_transaction();
-	return true;
 }
 bool photo_exec::_prj_report()
 {

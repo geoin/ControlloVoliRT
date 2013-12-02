@@ -45,7 +45,7 @@ public:
 		Prj_type = 0,
 		fli_type = 1
 	};
-	photo_exec(): _df(NULL) {}
+	photo_exec(): _df(NULL), _type(fli_type) {}
 	~photo_exec();
 	bool run(void);
 	void set_cam_name(const std::string& nome);
@@ -53,16 +53,18 @@ public:
 	void set_dem_name(const std::string& nome);
 	void set_proj_dir(const std::string& nome);
 	void set_checkType(Check_Type t);
+	void set_ref_scale(const std::string& nome);
 private:
 	bool _read_cam(void);
 	bool _read_vdp(void);
 	bool _read_dem(void);
+	std::string _get_key(const std::string& val);
 
-	bool _process_models(void);
-	bool _process_strips(void);
-	bool _process_photos(void);
-	bool _process_block(void);
-	void _final_report(void);
+	void _process_models(void);
+	void _process_strips(void);
+	void _process_photos(void);
+	void _process_block(void);
+
 	void _get_elong(CV::Util::Geometry::OGRGeomPtr fv, double ka, double* d1, double* d2);
 	bool _get_carto(std::vector<CV::Util::Geometry::OGRGeomPtr>& blocks);
 	CV::Util::Geometry::OGRGeomPtr _get_dif(const OGRGeometry* cart, std::vector<CV::Util::Geometry::OGRGeomPtr>& blocks);
@@ -70,6 +72,7 @@ private:
 	void _uncovered(std::vector<CV::Util::Geometry::OGRGeomPtr>& vs);
 
 	void _init_document(void);
+	void _final_report(void);
 	bool _foto_report(void);
 	bool _model_report(void);
 	bool _strip_report(void);
@@ -103,6 +106,8 @@ private:
 	double _MAX_STRIP_LENGTH;
 	double _MAX_HEADING_DIFF;
 	double _MAX_ANG;
+
+	std::string _refscale;
 };
 
 class check_photo: public Poco::Util::Application {
@@ -119,15 +124,11 @@ protected:
 	int main(const std::vector<std::string>& args);
 	void printProperties(const std::string& base);
 private:
-	void handleCam(const std::string & name, const std::string & value);
-	void handlePcent(const std::string & name, const std::string & value);
-	void handleDtm(const std::string & name, const std::string & value);
-	void handleCarto(const std::string & name, const std::string & value);
-	void handleFlight(const std::string & name, const std::string & value);
-	void handlePrj(const std::string & name, const std::string & value);
-	void handlePline(const std::string & name, const std::string & value);
-	void handleFline(const std::string & name, const std::string & value);
 	void handleHelp(const std::string& name, const std::string& value);
+	void handleFlight(const std::string& name, const std::string& value);
+	void handleProject(const std::string& name, const std::string & value);
+	void handlePrjDir(const std::string& name, const std::string & value);
+	void handleScale(const std::string& name, const std::string & value);
 	void handleDefine(const std::string& name, const std::string& value);
 	void handleConfig(const std::string& name, const std::string& value);
 	bool _helpRequested;

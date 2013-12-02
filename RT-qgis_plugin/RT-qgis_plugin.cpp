@@ -51,11 +51,30 @@
 #define QGISEXTERN extern "C"
 #endif
 
-dbox::dbox()
+dbox::dbox(QgisInterface* mi): _mi(mi)
 {
 }
-void dbox::_init(QVBoxLayout* qvb)
+void dbox::_init(QVBoxLayout* qv)
 {
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    // sezione iniziale comune a tutti
+    QLabel* l1 = new QLabel("Cartella progetto:");
+    _prj = new QLineEdit;
+    _prj->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    QPushButton* b1 = new QPushButton("...");
+    b1->setFixedWidth(20);
+    connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist(bool)));
+    QHBoxLayout* hl1 = new QHBoxLayout;
+    hl1->addWidget(l1);
+    hl1->addWidget(_prj);
+    hl1->addWidget(b1);
+    qvb->addLayout(hl1);
+
+    // parte specifica del comando
+    qvb->addLayout(qv);
+
+    // parte finale comune a tutti
     _out = new QTextEdit(this);
      _out->setFixedHeight(200);
      qvb->addWidget(_out);
@@ -72,8 +91,25 @@ void dbox::_init(QVBoxLayout* qvb)
     setLayout(qvb);
 
     connect(this, SIGNAL(finished(int)), this, SLOT(_chiudi(int)));
-}
+    connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
+    connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
 
+    QFileInfo qf(_executable);
+    if ( !qf.exists() )
+        _out->append(_executable + " non trovato");
+}
+bool dbox::_dirlist(bool)
+{
+    QFileDialog qf;
+    QString dirName = _prj->text();
+    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
+    if ( !dirName.isEmpty() ) {
+        _prj->setText(dirName);
+        _args[0] = QString("/d=") + dirName;
+    }
+    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    return true;
+}
 void dbox::_chiudi(int result)
 {
     deleteLater();
@@ -85,47 +121,98 @@ void dbox::_esci(bool b)
 void dbox::_received()
 {
     QByteArray qba = _qp.readAllStandardOutput();
-    QString qs(qba.data());
-    if ( !qs.isEmpty() )
+    QString qs = qba.data();
+    if ( !qs.isEmpty() ) {
+        qs = qs.remove('\n');
+        qs = qs.remove('\r');
         _out->append(qs);
+        if ( qs.contains("Layer:", Qt::CaseInsensitive) ) {
+            QStringList q =qs.split(':');
+            if ( q.size() > 1 ) {
+                _layers.push_back(q[1]);
+            }
+        }
+    }
 }
 void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
 {
-    _qm.done(0);
+    _qm->done(0);
+    delete _qm;
+    _qm = NULL;
     QMessageBox::information(0, tr("GEOIN PLUGIN"), tr("tool terminated "), QMessageBox::Ok);
+    _add_layers_to_legend();
 }
+void dbox::_add_layers_to_legend()
+{
+
+
+    QgsDataSourceURI uri;
+    QString dir = _prj->text();
+    QFileInfo qf(dir, "geo.sqlite");
+
+    _out->append("====>" + dir + "," +qf.path());
+    uri.setDatabase(qf.filePath());
+
+    _out->append(qf.path());
+
+    if ( _layers.size() ) {
+        for (int i = 0; i < _layers.size(); i++) {
+
+            uri.setDataSource("", _layers[i], "geom"); // schema, nome layer, nome colonna geografica
+            _mi->addVectorLayer(uri.uri(), _layers[i], "spatialite"); // uri, nome lnella legenda, nome provider
+        }
+    }
+}
+
 void dbox::_esegui(bool b)
 {
-    _qp.start(_executable);
-    connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
-    connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
+    _out->clear();
+    _layers.clear();
+    _out->append(_executable);
+    for (int i = 0; i < _args.size(); i++)
+        _out->append(_args[i]);
 
-    _qm.information(0, tr("GEOIN PLUGIN"), tr("tool running "), QMessageBox::Ok);
+    _qp.start(_executable, _args);
+
+    _qp.waitForStarted();
+    if ( _qp.state() != QProcess::Running ) {
+        _out->append("Impossibile avviare il processo");
+        return;
+    }
+
+    _qm = new QMessageBox;
+    _qm->setWindowTitle("GEOIN PLUGIN");
+    _qm->setText("tool running");
+    _qm->setWindowModality(Qt::ApplicationModal);
+    _qm->addButton("Interrompi", QMessageBox::AcceptRole);
+    _qm->exec();
+
+    //_qm.information(0, tr("GEOIN PLUGIN"), tr("tool running "), QMessageBox::Ok);
     _qp.kill();
 }
 /***************************************************/
-Check_photo::Check_photo()
+Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 {
-    setWindowTitle("Controllo progetto di volo");
-    _executable = "C:/OSGeo4W/apps/qgis/plugins/comunication.exe";
+    _args << QString("/d="); // + _prj->text() + QString("");
+    _args << "/p";
+    _args << "/s=1000";
+
+    if ( type == 0 ) {
+        setWindowTitle("Controllo progetto di volo");
+    } else {
+        setWindowTitle("Controllo del volo effettuato");
+        _args[1] = "/f";
+    }
+    _executable = "\"C:/OSGeo4W/apps/qgis/plugins/check_photo.exe\"";
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
-    QLabel* l1 = new QLabel("Cartella progetto:");
-    _e1 = new QLineEdit;
-    QPushButton* b1 = new QPushButton("...");
-    b1->setFixedWidth(20);
-    connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist(bool)));
-    QHBoxLayout* hl1 = new QHBoxLayout;
-    hl1->addWidget(l1);
-    hl1->addWidget(_e1);
-    hl1->addWidget(b1);
-    qvb->addLayout(hl1);
-
-    QLabel* l2 = new QLabel("tipo di verifica:");
+    QLabel* l2 = new QLabel("Scala di lavoro:");
     QComboBox* cmb = new QComboBox;
-    cmb->addItem("Progetto di volo");
-    cmb->addItem("Volo effettuato");
+    cmb->addItem("1:1000");
+    cmb->addItem("1:2000");
+    cmb->addItem("1:5000");
+    cmb->addItem("1:10000");
     cmb->setCurrentIndex(0);
     connect(cmb, SIGNAL(currentIndexChanged(int)), this, SLOT(_optype(int)));
     QHBoxLayout* hl2 = new QHBoxLayout;
@@ -137,18 +224,33 @@ Check_photo::Check_photo()
 }
 void Check_photo::_optype(int index)
 {
-    _index = index;
+    switch ( index ) {
+    case 0:
+        _args[2] = "/s=1000";
+        break;
+    case 1:
+        _args[2] = "/s=2000";
+        break;
+    case 2:
+        _args[2] = "/s=5000";
+        break;
+    case 3:
+        _args[2] = "/s=10000";
+        break;
+    }
 }
-
-bool Check_photo::_dirlist(bool)
+/*******************************************/
+Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 {
-    QFileDialog qf;
-    QString dirName = _e1->text();
-    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
-    if ( !dirName.isEmpty() )
-        _e1->setText(dirName);
-    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
-    return true;
+    _args << QString("/d=");
+    _args << "/p";
+    _args << "/s=1000";
+
+    setWindowTitle("Controllo dati gps");
+    _executable = "\"C:/OSGeo4W/apps/qgis/plugins/check_gps.exe\"";
+
+    QVBoxLayout* qvb = new QVBoxLayout;
+    _init(qvb);
 }
 
 /*******************************************/
@@ -236,21 +338,25 @@ void QgsRTtoolsPlugin::set_prj()
 }
 void QgsRTtoolsPlugin::ver_gps()
 {
-    Check_photo* db = new Check_photo;
+    Check_gps* db = new Check_gps(mIface);
     db->open();
 }
 void QgsRTtoolsPlugin::ver_proj_volo()
 {
-    QgsDataSourceURI uri;
-    uri.setDatabase("C:/Google_drive/Regione Toscana Tools/Dati_test/Cast_Pescaia/geo.sqlite");
-    uri.setDataSource("", "AVOLOV", "geom"); // schema, nome layer, nome colonna geografica
-    mIface->addVectorLayer(uri.uri(), "AVOLOV", "spatialite"); // uri, nome lnella legenda, nome provider
+    Check_photo* db = new Check_photo(mIface, 0);
+    db->open();
 }
 void QgsRTtoolsPlugin::ver_volo()
 {
+    Check_photo* db = new Check_photo(mIface, 1);
+    db->open();
 }
 void QgsRTtoolsPlugin::ver_tria()
 {
+    QgsDataSourceURI uri;
+    uri.setDatabase("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/geo.sqlite");
+    uri.setDataSource("", "AVOLOP", "geom"); // schema, nome layer, nome colonna geografica
+    mIface->addVectorLayer(uri.uri(), "AVOLOP", "spatialite"); // uri, nome lnella legenda, nome provider
 }
 void QgsRTtoolsPlugin::ver_ortho()
 {

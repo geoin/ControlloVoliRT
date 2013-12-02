@@ -73,98 +73,58 @@ void check_photo::defineOptions(OptionSet& options)
 		Option("flight", "f", "Specifica operazione di verifica del volo")
 			.required(false)
 			.repeatable(false)
-			//.argument("shape-file")
 			.callback(OptionCallback<check_photo>(this, &check_photo::handleFlight)));
 			
 	options.addOption(
-		Option("prj", "j", "Specifica il file di progetto")
+		Option("proj", "p", "Specifica operazione di verifica del progetto di volo")
 			.required(false)
 			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handlePrj)));
-	
-	options.addOption(
-		Option("pline", "p", "Specifica il file con le linee di volo proposte")
-			.required(false)
-			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handlePline)));
+			.callback(OptionCallback<check_photo>(this, &check_photo::handleProject)));
 
 	options.addOption(
-		Option("fline", "i", "Specifica il file con le linee di volo effettuate")
+		Option("dir", "d", "Specifica il file di progetto")
 			.required(false)
 			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handleFline)));
-
-	options.addOption(
-		Option("pcent", "e", "Specifica il file con i centri di presa")
-			.required(false)
-			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handlePcent)));
+			.argument("value")
+			.callback(OptionCallback<check_photo>(this, &check_photo::handlePrjDir)));
 	
 	options.addOption(
-		Option("carto", "c", "Specifica il file con le aree da cartografare")
+		Option("scale", "s", "Specifica la scala di lavoro")
 			.required(false)
 			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handleCarto)));
-	
-	options.addOption(
-		Option("cam", "m", "Specifica il file ascii con focale la focale della fotocamera")
-			.required(false)
-			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handleCam)));
-
-	options.addOption(
-		Option("dtm", "g", "Specifica il file con il modello numerico del terreno")
-			.required(false)
-			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handleDtm)));
+			.argument("value")
+			.callback(OptionCallback<check_photo>(this, &check_photo::handleScale)));
 }
-void check_photo::handleCam(const std::string & name, const std::string & value)
+void check_photo::handleHelp(const std::string& name, const std::string& value)
 {
-	int a = 1;
-}
-void check_photo::handlePcent(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_photo::handleDtm(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_photo::handleCarto(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_photo::handleFlight(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_photo::handlePrj(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_photo::handlePline(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_photo::handleFline(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_photo::handleHelp(const std::string& name, const std::string& value) {
 	_helpRequested = true;
 	displayHelp();
 	stopOptionsProcessing();
 }
-
-void check_photo::handleDefine(const std::string& name, const std::string& value)
+void check_photo::handleFlight(const std::string& name, const std::string& value)
 {
-	defineProperty(value);
+	_phe.set_checkType(photo_exec::fli_type);
 }
-
-void check_photo::handleConfig(const std::string& name, const std::string& value)
+void check_photo::handleProject(const std::string& name, const std::string& value)
 {
-	loadConfiguration(value);
+	_phe.set_checkType(photo_exec::Prj_type);
 }
+void check_photo::handlePrjDir(const std::string& name, const std::string& value) 
+{
+	_phe.set_proj_dir(value);
+}
+void check_photo::handleScale(const std::string& name, const std::string& value)
+{
+	_phe.set_ref_scale(value);
+}
+//void check_photo::handleDefine(const std::string& name, const std::string& value)
+//{
+//	defineProperty(value);
+//}
+//void check_photo::handleConfig(const std::string& name, const std::string& value)
+//{
+//	loadConfiguration(value);
+//}
 	
 void check_photo::displayHelp()
 {
@@ -175,27 +135,24 @@ void check_photo::displayHelp()
 	helpFormatter.format(std::cout);
 }
 	
-void check_photo::defineProperty(const std::string& def)
-{
-	std::string name;
-	std::string value;
-	std::string::size_type pos = def.find('=');
-	if (pos != std::string::npos) {
-		name.assign(def, 0, pos);
-		value.assign(def, pos + 1, def.length() - pos);
-	} else 
-		name = def;
-	config().setString(name, value);
-}
+//void check_photo::defineProperty(const std::string& def)
+//{
+//	std::string name;
+//	std::string value;
+//	std::string::size_type pos = def.find('=');
+//	if (pos != std::string::npos) {
+//		name.assign(def, 0, pos);
+//		value.assign(def, pos + 1, def.length() - pos);
+//	} else 
+//		name = def;
+//	config().setString(name, value);
+//}
 
 int check_photo::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
-		//_phe.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
-		//_phe.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
-		//_phe.set_dem_name("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino_50.asc");
-		_phe.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
-		_phe.set_checkType(photo_exec::Prj_type);
+		//_phe.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+		//_phe.set_checkType(photo_exec::Prj_type);
 
 		_phe.run();
 
@@ -209,27 +166,27 @@ int check_photo::main(const std::vector<std::string>& args)
 	return Application::EXIT_OK;
 }
 	
-void check_photo::printProperties(const std::string& base)
-{
-	AbstractConfiguration::Keys keys;
-	config().keys(base, keys);
-	if ( keys.empty() ) {
-		if ( config().hasProperty(base) ) {
-			std::string msg;
-			msg.append(base);
-			msg.append(" = ");
-			msg.append(config().getString(base));
-			logger().information(msg);
-		}
-	} else {
-		for ( AbstractConfiguration::Keys::const_iterator it = keys.begin(); it != keys.end(); ++it ) {
-			std::string fullKey = base;
-			if ( !fullKey.empty() )
-				fullKey += '.';
-			fullKey.append(*it);
-			printProperties(fullKey);
-		}
-	}
-}
+//void check_photo::printProperties(const std::string& base)
+//{
+//	AbstractConfiguration::Keys keys;
+//	config().keys(base, keys);
+//	if ( keys.empty() ) {
+//		if ( config().hasProperty(base) ) {
+//			std::string msg;
+//			msg.append(base);
+//			msg.append(" = ");
+//			msg.append(config().getString(base));
+//			logger().information(msg);
+//		}
+//	} else {
+//		for ( AbstractConfiguration::Keys::const_iterator it = keys.begin(); it != keys.end(); ++it ) {
+//			std::string fullKey = base;
+//			if ( !fullKey.empty() )
+//				fullKey += '.';
+//			fullKey.append(*it);
+//			printProperties(fullKey);
+//		}
+//	}
+//}
 
 POCO_APP_MAIN(check_photo)

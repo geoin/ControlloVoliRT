@@ -33,6 +33,7 @@
 #include <QDialog>
 #include <QProcess>
 #include <QMessageBox>
+#include <QVector>
 
 class QAction;
 class QgsGeometry;
@@ -51,8 +52,8 @@ public:
 	void initGui();
 	void unload();
 private:
-	QgisInterface* mIface;
-	QVector<QAction*> mAction;
+    QgisInterface* mIface;
+    QVector<QAction*> mAction;
 	QToolBar* qtb;
 	QMenu* qmb;
 private slots:
@@ -71,31 +72,43 @@ private slots:
 class dbox: public QDialog {
 	Q_OBJECT
 public:
-    dbox();
+    dbox(QgisInterface* mi);
 protected slots:
     void _esegui(bool);
     void _esci(bool);
     void _chiudi(int);
     void _terminated(int, QProcess::ExitStatus);
     void _received();
+    bool _dirlist(bool);
 protected:
     void _init(QVBoxLayout* qvb);
+    void _add_layers_to_legend(void);
+
     QTextEdit* _out;
-    QMessageBox _qm;
+    QMessageBox* _qm;
     QProcess _qp;
     QString _executable;
+    QStringList _args;
+    QLineEdit* _prj; // project directory
+    QVector<QString> _layers;
+    QgisInterface* _mi;
 };
 
 class Check_photo: public dbox {
     Q_OBJECT
 public:
-    Check_photo();
+    Check_photo(QgisInterface* mi, int type);
 protected slots:
-    bool _dirlist(bool);
     void _optype(int index);
 private:
-    QLineEdit* _e1;
-    int _index;
+};
+
+class Check_gps: public dbox {
+    Q_OBJECT
+public:
+    Check_gps(QgisInterface* mi);
+protected slots:
+private:
 };
 
 #endif
