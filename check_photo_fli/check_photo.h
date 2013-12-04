@@ -48,9 +48,6 @@ public:
 	photo_exec(): _df(NULL), _type(fli_type) {}
 	~photo_exec();
 	bool run(void);
-	void set_cam_name(const std::string& nome);
-	void set_vdp_name(const std::string& nome);
-	void set_dem_name(const std::string& nome);
 	void set_proj_dir(const std::string& nome);
 	void set_checkType(Check_Type t);
 	void set_ref_scale(const std::string& nome);
@@ -118,19 +115,14 @@ protected:
 	void initialize(Poco::Util::Application& self);
 	void uninitialize();
 	void reinitialize(Poco::Util::Application& self);
-	void defineOptions(Poco::Util::OptionSet& options);
 	void displayHelp();
-	void defineProperty(const std::string& def);
 	int main(const std::vector<std::string>& args);
-	void printProperties(const std::string& base);
 private:
 	void handleHelp(const std::string& name, const std::string& value);
 	void handleFlight(const std::string& name, const std::string& value);
 	void handleProject(const std::string& name, const std::string & value);
 	void handlePrjDir(const std::string& name, const std::string & value);
 	void handleScale(const std::string& name, const std::string & value);
-	void handleDefine(const std::string& name, const std::string& value);
-	void handleConfig(const std::string& name, const std::string& value);
 	bool _helpRequested;
 
 	photo_exec _phe;

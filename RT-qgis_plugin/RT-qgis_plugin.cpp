@@ -32,8 +32,8 @@
 #include "qgsvectorlayer.h"
 #include <qgsvectorfilewriter.h>
 #include <qgsdatasourceuri.h>
+#include <qgsmessagebar.h>
 #include <QFileDialog>
-//#include <QMessageBox>
 #include <QTextStream>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -53,6 +53,10 @@
 
 dbox::dbox(QgisInterface* mi): _mi(mi)
 {
+    // get plugin dir
+    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    _plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
+
 }
 void dbox::_init(QVBoxLayout* qv)
 {
@@ -76,7 +80,8 @@ void dbox::_init(QVBoxLayout* qv)
 
     // parte finale comune a tutti
     _out = new QTextEdit(this);
-     _out->setFixedHeight(200);
+     _out->setMinimumHeight(200);
+     _out->setMinimumWidth(400);
      qvb->addWidget(_out);
 
     QPushButton* bok = new QPushButton("Esegui");
@@ -95,8 +100,13 @@ void dbox::_init(QVBoxLayout* qv)
     connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
 
     QFileInfo qf(_executable);
-    if ( !qf.exists() )
+    if ( !qf.exists() ) {
+        // if executable does not exists disable the excute button
         _out->append(_executable + " non trovato");
+        bok->setEnabled(false);
+    }
+
+    _args[0] = QString("/d=") + _prj->text();
 }
 bool dbox::_dirlist(bool)
 {
@@ -121,17 +131,24 @@ void dbox::_esci(bool b)
 void dbox::_received()
 {
     QByteArray qba = _qp.readAllStandardOutput();
-    QString qs = qba.data();
+    QString qs(qba);
+
     if ( !qs.isEmpty() ) {
-        qs = qs.remove('\n');
-        qs = qs.remove('\r');
-        _out->append(qs);
         if ( qs.contains("Layer:", Qt::CaseInsensitive) ) {
-            QStringList q =qs.split(':');
+            QString q1 = qs;
+            q1.replace('\n', ':');
+            q1.replace('\r', ':');
+            QStringList q = q1.split(':');
             if ( q.size() > 1 ) {
-                _layers.push_back(q[1]);
+                for ( int i = 0; i < q.size(); i++) {
+                    if ( q[i].contains("Layer", Qt::CaseInsensitive) ) {
+                        _layers.push_front(q[i + 1]);
+                    }
+                }
             }
         }
+        qs = qs.remove('\r');
+        _out->append("qs");
     }
 }
 void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
@@ -150,27 +167,23 @@ void dbox::_add_layers_to_legend()
     QString dir = _prj->text();
     QFileInfo qf(dir, "geo.sqlite");
 
-    _out->append("====>" + dir + "," +qf.path());
     uri.setDatabase(qf.filePath());
-
-    _out->append(qf.path());
 
     if ( _layers.size() ) {
         for (int i = 0; i < _layers.size(); i++) {
-
             uri.setDataSource("", _layers[i], "geom"); // schema, nome layer, nome colonna geografica
             _mi->addVectorLayer(uri.uri(), _layers[i], "spatialite"); // uri, nome lnella legenda, nome provider
         }
     }
 }
-
 void dbox::_esegui(bool b)
 {
     _out->clear();
     _layers.clear();
-    _out->append(_executable);
+    QString qs(_executable);
     for (int i = 0; i < _args.size(); i++)
-        _out->append(_args[i]);
+        qs += QString(" ") + _args[i];
+    _out->append(qs);
 
     _qp.start(_executable, _args);
 
@@ -193,8 +206,9 @@ void dbox::_esegui(bool b)
 /***************************************************/
 Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 {
-    _args << QString("/d="); // + _prj->text() + QString("");
-    _args << "/p";
+    // prepare the parameters
+    _args << QString("/d="); // project dir
+    _args << "/p";  // type of check (p = project /f = flight
     _args << "/s=1000";
 
     if ( type == 0 ) {
@@ -203,7 +217,8 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
         setWindowTitle("Controllo del volo effettuato");
         _args[1] = "/f";
     }
-    _executable = "\"C:/OSGeo4W/apps/qgis/plugins/check_photo.exe\"";
+    QFileInfo qf(_plugin_dir, "check_photo.exe");
+    _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
@@ -242,17 +257,143 @@ void Check_photo::_optype(int index)
 /*******************************************/
 Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 {
-    _args << QString("/d=");
-    _args << "/p";
-    _args << "/s=1000";
+    _args << QString("/d="); // project folder
+    _args << "/p"; // check type /p = photogrammetry /l = lidar
 
     setWindowTitle("Controllo dati gps");
-    _executable = "\"C:/OSGeo4W/apps/qgis/plugins/check_gps.exe\"";
+    QFileInfo qf(_plugin_dir, "check_gps.exe");
+    _executable = qf.filePath();
+
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    QLabel* l2 = new QLabel("Tipo di progetto:");
+    QComboBox* cmb = new QComboBox;
+    cmb->addItem("Fotogrammetria");
+    cmb->addItem("Lidar");
+    cmb->setCurrentIndex(0);
+    connect(cmb, SIGNAL(currentIndexChanged(int)), this, SLOT(_optype(int)));
+    QHBoxLayout* hl2 = new QHBoxLayout;
+    hl2->addWidget(l2);
+    hl2->addWidget(cmb);
+    qvb->addLayout(hl2);
+
+    _init(qvb);
+}
+void Check_gps::_optype(int index)
+{
+    switch ( index ) {
+    case 0:
+        _args[1] = "/p";
+        break;
+    case 1:
+        _args[1] = "/l";
+        break;
+    }
+}
+Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
+{
+    _args << QString("/d="); // project dir
+    _args << "/f="; // first results file
+    _args << "/c="; // second results file
+    _args << "/o="; // observation file
+    _args << "/s=1000";
+
+    setWindowTitle("Controllo triangolazione aerea");
+
+    QFileInfo qf(_plugin_dir, "check_ta.exe");
+    _executable = qf.filePath();
+
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    QLabel* l1 = new QLabel("File di riferimento:");
+    _f1 = new QLineEdit;
+    _f1->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    QPushButton* b1 = new QPushButton("...");
+    b1->setFixedWidth(20);
+    connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist1(bool)));
+    QHBoxLayout* hl1 = new QHBoxLayout;
+    hl1->addWidget(l1);
+    hl1->addWidget(_f1);
+    hl1->addWidget(b1);
+    qvb->addLayout(hl1);
+
+    QLabel* l2 = new QLabel("File da confrontare:");
+    _f2 = new QLineEdit;
+    _f2->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    QPushButton* b2 = new QPushButton("...");
+    b2->setFixedWidth(20);
+    connect(b2, SIGNAL(clicked(bool)), this, SLOT(_dirlist2(bool)));
+    QHBoxLayout* hl2 = new QHBoxLayout;
+    hl2->addWidget(l2);
+    hl2->addWidget(_f2);
+    hl2->addWidget(b2);
+    qvb->addLayout(hl2);
+
+    QLabel* l3 = new QLabel("File Osservazioni:");
+    _f3 = new QLineEdit;
+    _f3->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    QPushButton* b3 = new QPushButton("...");
+    b3->setFixedWidth(20);
+    connect(b3, SIGNAL(clicked(bool)), this, SLOT(_dirlist3(bool)));
+    QHBoxLayout* hl3 = new QHBoxLayout;
+    hl2->addWidget(l3);
+    hl2->addWidget(_f3);
+    hl2->addWidget(b3);
+    qvb->addLayout(hl3);
+
+    _init(qvb);
+}
+
+bool Check_ta::_dirlist1(bool)
+{
+    QFileDialog qf;
+    QString dirName = _prj->text();
+    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
+    if ( !dirName.isEmpty() ) {
+        _prj->setText(dirName);
+        _args[0] = QString("/d=") + dirName;
+    }
+    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    return true;
+}
+bool Check_ta::_dirlist2(bool)
+{
+    QFileDialog qf;
+    QString dirName = _prj->text();
+    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
+    if ( !dirName.isEmpty() ) {
+        _prj->setText(dirName);
+        _args[0] = QString("/d=") + dirName;
+    }
+    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    return true;
+}
+bool Check_ta::_dirlist3(bool)
+{
+    QFileDialog qf;
+    QString dirName = _prj->text();
+    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
+    if ( !dirName.isEmpty() ) {
+        _prj->setText(dirName);
+        _args[0] = QString("/d=") + dirName;
+    }
+    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    return true;
+}
+Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
+{
+    _args << QString("/d="); // project dir
+    _args << "/i";  // image folder
+    _args << "/s=1000"; // refernce scale
+
+    setWindowTitle("Controllo orto immagini");
+
+    QFileInfo qf(_plugin_dir, "check_ortho.exe");
+    _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;
     _init(qvb);
 }
-
 /*******************************************/
 const QString icon_path("C:/Google_Drive/Regione Toscana Tools/icons");
 
@@ -266,7 +407,7 @@ QgsRTtoolsPlugin::~QgsRTtoolsPlugin()
 }
 void QgsRTtoolsPlugin::initGui()
 {
-	// prende il menu principale
+    // get the main menu of QGIS
 	QMenu* qm = (QMenu*) mIface->layerMenu()->parent();
 	// appende il menu di collaudo
 	qmb = (QMenu*) qm->addMenu("Collaudo");
@@ -353,16 +494,20 @@ void QgsRTtoolsPlugin::ver_volo()
 }
 void QgsRTtoolsPlugin::ver_tria()
 {
+    Check_ta* db = new Check_ta(mIface);
+    db->open();
+}
+void QgsRTtoolsPlugin::ver_ortho()
+{
+    Check_ortho* db = new Check_ortho(mIface);
+    db->open();
+}
+void QgsRTtoolsPlugin::ver_proj_lidar()
+{
     QgsDataSourceURI uri;
     uri.setDatabase("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/geo.sqlite");
     uri.setDataSource("", "AVOLOP", "geom"); // schema, nome layer, nome colonna geografica
     mIface->addVectorLayer(uri.uri(), "AVOLOP", "spatialite"); // uri, nome lnella legenda, nome provider
-}
-void QgsRTtoolsPlugin::ver_ortho()
-{
-}
-void QgsRTtoolsPlugin::ver_proj_lidar()
-{
 }
 void QgsRTtoolsPlugin::ver_lidar()
 {

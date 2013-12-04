@@ -43,10 +43,10 @@ public:
 	ta_exec() {}
 	~ta_exec();
 	bool run(void);
-	void set_cam_name(const std::string& nome);
-	void set_vdp_name(const std::string& nome);
-	void set_vdp_name2(const std::string& nome);
 	void set_proj_dir(const std::string& nome);
+	void set_obs_name(const std::string& nome);
+	void set_ref_scale(const std::string& nomevalue);
+
 private:
 	bool _read_cam(void);
 	bool _read_vdp(const std::string& nome, VDP_MAP& vdps);
@@ -81,6 +81,8 @@ private:
 	double _T_H;
 	double _TP_PA;
 	double _TA_PA;
+	std::string _refscale;
+
 	std::list<std::string> _cpt_out_tol;
 	std::list<std::string> _tria_out_tol;
 };
@@ -95,18 +97,14 @@ protected:
 	void reinitialize(Poco::Util::Application& self);
 	void defineOptions(Poco::Util::OptionSet& options);
 	void displayHelp();
-	void defineProperty(const std::string& def);
 	int main(const std::vector<std::string>& args);
-	void printProperties(const std::string& base);
 private:
-	void handleCam(const std::string & name, const std::string & value);
-	void handlePcent(const std::string & name, const std::string & value);
-	void handlePrj(const std::string & name, const std::string & value);
-	void handlePline(const std::string & name, const std::string & value);
-	void handleFline(const std::string & name, const std::string & value);
+	void handlePrjDir(const std::string & name, const std::string & value);
+	void handleRef(const std::string& name, const std::string& value);
+	void handleComp(const std::string& name, const std::string& value);
+	void handleObs(const std::string& name, const std::string& value);
+	void handleScale(const std::string& name, const std::string& value);
 	void handleHelp(const std::string& name, const std::string& value);
-	void handleDefine(const std::string& name, const std::string& value);
-	void handleConfig(const std::string& name, const std::string& value);
 	bool _helpRequested;
 
 	ta_exec _tae;

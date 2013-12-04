@@ -195,12 +195,12 @@ bool photo_exec::run()
 		_process_strips();
 		_process_block();
 
-		std::cout << "Produzione del report finale" << std::endl;
+		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
 		_final_report();
 
 		// write the result on the docbook report
 		_dbook.write();
-		std::cout << "Prodcedura terminata:" << _dbook.name() << std::endl;
+		std::cout << "Prodcedura terminata:" << std::endl;
 	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;

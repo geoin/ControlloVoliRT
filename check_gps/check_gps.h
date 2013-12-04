@@ -39,10 +39,16 @@ public:
 		rover_type = 0,
 		base_type = 1
 	};
+	enum Check_Type {
+		phot_type = 0,
+		lid_type = 1
+	};
 	gps_exec() {}
 	~gps_exec();
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
+	void set_checkType(Check_Type t);
+
 
 private:
 	std::string _getnome(const std::string& nome, gps_type type);
@@ -72,6 +78,7 @@ private:
 	GPS_OPT _gps_opt;
 
 	std::string _proj_dir;
+	Check_Type _type;
 
 	// spatial lite connection
 	CV::Util::Spatialite::Connection cnn;
@@ -101,8 +108,10 @@ protected:
 	void defineProperty(const std::string& def);
 	int main(const std::vector<std::string>& args);
 private:
-	void _handlePrj(const std::string & name, const std::string & value);
+	void _handlePrjDir(const std::string & name, const std::string & value);
 	void _handleHelp(const std::string& name, const std::string& value);
+	void _handlePhoto(const std::string& name, const std::string& value);
+	void _handleLidar(const std::string& name, const std::string& value);
 	bool _helpRequested;
 };
 #endif

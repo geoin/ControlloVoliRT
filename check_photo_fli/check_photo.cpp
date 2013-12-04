@@ -35,16 +35,15 @@ using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
 using Poco::Util::HelpFormatter;
-using Poco::Util::AbstractConfiguration;
+//using Poco::Util::AbstractConfiguration;
 using Poco::Util::OptionCallback;
-
 
 check_photo::check_photo(): _helpRequested(false) 
 {
 }
 void check_photo::initialize(Application& self) 
 {
-	loadConfiguration(); // load default configuration files, if present
+	//loadConfiguration(); // load default configuration files, if present
 	Application::initialize(self);
 	// add your own initialization code here
 }
@@ -82,7 +81,7 @@ void check_photo::defineOptions(OptionSet& options)
 			.callback(OptionCallback<check_photo>(this, &check_photo::handleProject)));
 
 	options.addOption(
-		Option("dir", "d", "Specifica il file di progetto")
+		Option("dir", "d", "Specifica la cartella del progetto")
 			.required(false)
 			.repeatable(false)
 			.argument("value")
@@ -101,6 +100,10 @@ void check_photo::handleHelp(const std::string& name, const std::string& value)
 	displayHelp();
 	stopOptionsProcessing();
 }
+void check_photo::handlePrjDir(const std::string& name, const std::string& value) 
+{
+	_phe.set_proj_dir(value);
+}
 void check_photo::handleFlight(const std::string& name, const std::string& value)
 {
 	_phe.set_checkType(photo_exec::fli_type);
@@ -109,23 +112,10 @@ void check_photo::handleProject(const std::string& name, const std::string& valu
 {
 	_phe.set_checkType(photo_exec::Prj_type);
 }
-void check_photo::handlePrjDir(const std::string& name, const std::string& value) 
-{
-	_phe.set_proj_dir(value);
-}
 void check_photo::handleScale(const std::string& name, const std::string& value)
 {
 	_phe.set_ref_scale(value);
 }
-//void check_photo::handleDefine(const std::string& name, const std::string& value)
-//{
-//	defineProperty(value);
-//}
-//void check_photo::handleConfig(const std::string& name, const std::string& value)
-//{
-//	loadConfiguration(value);
-//}
-	
 void check_photo::displayHelp()
 {
 	HelpFormatter helpFormatter(options());
@@ -135,19 +125,6 @@ void check_photo::displayHelp()
 	helpFormatter.format(std::cout);
 }
 	
-//void check_photo::defineProperty(const std::string& def)
-//{
-//	std::string name;
-//	std::string value;
-//	std::string::size_type pos = def.find('=');
-//	if (pos != std::string::npos) {
-//		name.assign(def, 0, pos);
-//		value.assign(def, pos + 1, def.length() - pos);
-//	} else 
-//		name = def;
-//	config().setString(name, value);
-//}
-
 int check_photo::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
@@ -165,28 +142,5 @@ int check_photo::main(const std::vector<std::string>& args)
 	}
 	return Application::EXIT_OK;
 }
-	
-//void check_photo::printProperties(const std::string& base)
-//{
-//	AbstractConfiguration::Keys keys;
-//	config().keys(base, keys);
-//	if ( keys.empty() ) {
-//		if ( config().hasProperty(base) ) {
-//			std::string msg;
-//			msg.append(base);
-//			msg.append(" = ");
-//			msg.append(config().getString(base));
-//			logger().information(msg);
-//		}
-//	} else {
-//		for ( AbstractConfiguration::Keys::const_iterator it = keys.begin(); it != keys.end(); ++it ) {
-//			std::string fullKey = base;
-//			if ( !fullKey.empty() )
-//				fullKey += '.';
-//			fullKey.append(*it);
-//			printProperties(fullKey);
-//		}
-//	}
-//}
 
 POCO_APP_MAIN(check_photo)

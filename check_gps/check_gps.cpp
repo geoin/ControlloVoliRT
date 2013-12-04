@@ -28,9 +28,6 @@
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Util/HelpFormatter.h"
-//#include "Poco/Util/AbstractConfiguration.h"
-//#include "Poco/AutoPtr.h"
-//#include "Poco/StringTokenizer.h"
 #include "Poco/String.h"
 #include <iostream>
 #include <set>
@@ -39,9 +36,7 @@ using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
 using Poco::Util::HelpFormatter;
-//using Poco::Util::AbstractConfiguration;
 using Poco::Util::OptionCallback;
-//using Poco::AutoPtr;
 
 check_gps::check_gps(): _helpRequested(false) 
 {
@@ -74,21 +69,22 @@ void check_gps::defineOptions(OptionSet& options)
 			.callback(OptionCallback<check_gps>(this, &check_gps::_handleHelp)));
 
 	options.addOption(
-        Option("prj", "p", "Specifica il file di progetto")
+		Option("dir", "d", "Specifica operazione di verifica del progetto di volo")
 			.required(false)
 			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_gps>(this, &check_gps::_handlePrj)));
-}
+			.argument("value")
+			.callback(OptionCallback<check_gps>(this, &check_gps::_handlePrjDir)));
 
-void check_gps::_handlePrj(const std::string & name, const std::string & value)
-{
-    // controllo esistenza directory
-
-    // esistenza db con lo stesso nome della directory
-
-    // impostare il valore del path al progetto
-    //_proj_dir = ....value
+	options.addOption(
+        Option("photo", "p", "Specifica progetto per acquisizione fotogrammetrica")
+			.required(false)
+			.repeatable(false)
+			.callback(OptionCallback<check_gps>(this, &check_gps::_handlePhoto)));
+	options.addOption(
+        Option("lidar", "l", "Specifica progetto per acquisizione lidar")
+			.required(false)
+			.repeatable(false)
+			.callback(OptionCallback<check_gps>(this, &check_gps::_handleLidar)));
 }
 void check_gps::_handleHelp(const std::string& name, const std::string& value)
 {
@@ -96,7 +92,18 @@ void check_gps::_handleHelp(const std::string& name, const std::string& value)
 	displayHelp();
 	stopOptionsProcessing();
 }
-
+void check_gps::_handlePrjDir(const std::string & name, const std::string & value)
+{
+	_gps.set_proj_dir(value);
+}
+void check_gps::_handlePhoto(const std::string& name, const std::string& value)
+{
+	_gps.set_checkType(gps_exec::phot_type);
+}
+void check_gps::_handleLidar(const std::string& name, const std::string& value)
+{
+	_gps.set_checkType(gps_exec::lid_type);
+}
 void check_gps::displayHelp() 
 {
 	HelpFormatter helpFormatter(options());
@@ -105,21 +112,6 @@ void check_gps::displayHelp()
 	helpFormatter.setHeader("Applicazione per la verifica dei dati GPS dell'aereo");
 	helpFormatter.format(std::cout);
 }
-	
-void check_gps::defineProperty(const std::string& def)
-{
-	std::string name;
-	std::string value;
-	std::string::size_type pos = def.find('=');
-	if ( pos != std::string::npos ) {
-		name.assign(def, 0, pos);
-		value.assign(def, pos + 1, def.length() - pos);
-	}
-	else 
-		name = def;
-	config().setString(name, value);
-}
-
 int check_gps::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
@@ -128,7 +120,6 @@ int check_gps::main(const std::vector<std::string>& args)
 		//	logger().information(*it);
 		//}
 		//logger().information("Application properties:");
-		_gps.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
 
 		_gps.run();
 	}

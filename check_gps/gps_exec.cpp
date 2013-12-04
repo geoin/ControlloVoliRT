@@ -104,6 +104,11 @@ void gps_exec::set_proj_dir(const std::string& nome)
 {
 	_proj_dir.assign(nome); 
 }
+void gps_exec::set_checkType(Check_Type t)
+{
+	_type = t;
+}
+
 bool gps_exec::run()
 {
 	try {
@@ -112,6 +117,7 @@ bool gps_exec::run()
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
+	std::cout << "Layer:" << ASSI_VOLO << std::endl;
 		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
 		//   ASSI_VOLO,
 		//   SHAPE_CHAR_SET,
@@ -132,10 +138,12 @@ bool gps_exec::run()
 		// initialize docbook xml file
 		_init_document();
 		
+		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
 		_final_report();
 		
 		// write the result on the docbook report
 		_dbook.write();
+		std::cout << "Prodcedura terminata:" << std::endl;
 	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
@@ -265,6 +273,8 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 }
 bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
 {
+	std::cout << "Layer:" << BASI << std::endl;
+
 	std::stringstream sql;
 	sql << "CREATE TABLE " << BASI << 
 		"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
@@ -392,6 +402,8 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	// create a layer for the basis
 	_record_base_file(basi, _vs_base);
 
+	std::cout << "Layer:" << GPS << std::endl;
+
 	// create the GPS table
 	std::stringstream sql;
 	sql << "CREATE TABLE " << GPS << 
@@ -500,6 +512,8 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 
 bool gps_exec::_create_gps_track()
 {
+	std::cout << "Creazione della traccia GPS" << std::endl;
+
 	// se the msx distance allowed for the base stations
 	_gps_opt.max_base_dst = _MAX_DIST;
 	// set the minimum angle for the satellite
@@ -515,6 +529,9 @@ bool gps_exec::_create_gps_track()
 	Poco::File dircnt(fn);
 	std::vector<std::string> files;
 	dircnt.list(files);
+
+	std::cout << "Elaborazione di " << (int) files.size() << " missioni" << std::endl;
+
 	for (size_t i = 0; i < files.size(); i++) {
 		Poco::Path fn(fn.toString(), files[i]);
 		Poco::File fl(fn);
@@ -534,6 +551,8 @@ bool gps_exec::_mission_process(const std::string& folder)
 	if ( rover.empty() )
 		return false;
 
+	std::cout << "Missione " << folder << std::endl;
+
 	// get the base list
 	std::vector<std::string> bfl;
 	Poco::File dircnt(folder);
@@ -548,6 +567,8 @@ bool gps_exec::_mission_process(const std::string& folder)
 	}
 
 	std::vector< Poco::SharedPtr<vGPS> > vvg;
+
+	std::cout << (int) bfl.size() << " stazioni da elaborare" << std::endl;
 
 	// for every base station calculate the gps track
 	for ( size_t i = 0; i < bfl.size(); i++ ) {
@@ -597,6 +618,8 @@ typedef struct feature {
 
 void gps_exec::_update_assi_volo()
 {
+	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
+
 	// add the columns for the gps data
 	_add_column("DATE TEXT");
 	_add_column("TIME_S TEXT");

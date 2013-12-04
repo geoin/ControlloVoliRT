@@ -83,6 +83,7 @@ protected slots:
 protected:
     void _init(QVBoxLayout* qvb);
     void _add_layers_to_legend(void);
+    QString _plugin_dir;
 
     QTextEdit* _out;
     QMessageBox* _qm;
@@ -93,7 +94,15 @@ protected:
     QVector<QString> _layers;
     QgisInterface* _mi;
 };
-
+/**************************************/
+class Check_gps: public dbox {
+    Q_OBJECT
+public:
+    Check_gps(QgisInterface* mi);
+protected slots:
+    void _optype(int index)    ;
+private:
+};
 class Check_photo: public dbox {
     Q_OBJECT
 public:
@@ -102,11 +111,24 @@ protected slots:
     void _optype(int index);
 private:
 };
-
-class Check_gps: public dbox {
+class Check_ta: public dbox {
     Q_OBJECT
 public:
-    Check_gps(QgisInterface* mi);
+    Check_ta(QgisInterface* mi);
+protected slots:
+    bool _dirlist1(bool);
+    bool _dirlist2(bool);
+    bool _dirlist3(bool);
+private:
+    QLineEdit* _f1;
+    QLineEdit* _f2;
+    QLineEdit* _f3;
+    QString _file1, _file2, _obs_file;
+};
+class Check_ortho: public dbox {
+    Q_OBJECT
+public:
+    Check_ortho(QgisInterface* mi);
 protected slots:
 private:
 };

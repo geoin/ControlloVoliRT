@@ -35,29 +35,23 @@ using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
 using Poco::Util::HelpFormatter;
-using Poco::Util::AbstractConfiguration;
 using Poco::Util::OptionCallback;
-
 
 check_ta::check_ta(): _helpRequested(false) 
 {
 }
 void check_ta::initialize(Application& self) 
 {
-	loadConfiguration(); // load default configuration files, if present
 	Application::initialize(self);
-	// add your own initialization code here
 }
 
 void check_ta::uninitialize() 
 {
-	// add your own uninitialization code here
 	Application::uninitialize();
 }
 void check_ta::reinitialize(Application& self)
 {
 	Application::reinitialize(self);
-	// add your own reinitialization code here
 }
 void check_ta::defineOptions(OptionSet& options)
 {
@@ -70,75 +64,66 @@ void check_ta::defineOptions(OptionSet& options)
 			.callback(OptionCallback<check_ta>(this, &check_ta::handleHelp)));
 
 	options.addOption(
-		Option("prj", "j", "Specifica il file di progetto")
+		Option("dir", "d", "Specifica la cartella del progetto")
 			.required(false)
 			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handlePrj)));
-	
-	//options.addOption(
-	//	Option("pline", "p", "Specifica il file con le linee di volo proposte")
-	//		.required(false)
-	//		.repeatable(false)
-	//		.argument("shape-file")
-	//		.callback(OptionCallback<check_ta>(this, &check_ta::handlePline)));
-
-	//options.addOption(
-	//	Option("fline", "i", "Specifica il file con le linee di volo effettuate")
-	//		.required(false)
-	//		.repeatable(false)
-	//		.argument("shape-file")
-	//		.callback(OptionCallback<check_ta>(this, &check_ta::handleFline)));
-
-	//options.addOption(
-	//	Option("pcent", "e", "Specifica il file con i centri di presa")
-	//		.required(false)
-	//		.repeatable(false)
-	//		.argument("file di testo")
-	//		.callback(OptionCallback<check_ta>(this, &check_ta::handlePcent)));
-	
-	/*options.addOption(
-		Option("carto", "c", "Specifica il file con le aree da cartografare")
-			.required(false)
-			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleCarto)));
+			.argument("value")
+			.callback(OptionCallback<check_ta>(this, &check_ta::handlePrjDir)));
 	
 	options.addOption(
-		Option("cam", "m", "Specifica il file ascii con focale la focale della fotocamera")
+		Option("ref", "f", "Specifica il file con gli assetti di riferimento")
 			.required(false)
 			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleCam)));
+			.argument("value")
+			.callback(OptionCallback<check_ta>(this, &check_ta::handleRef)));
 
 	options.addOption(
-		Option("dtm", "g", "Specifica il file con il modello numerico del terreno")
+		Option("comp", "c", "Specifica il file con gli assetti da confrontare")
 			.required(false)
 			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleDtm)));*/
+			.argument("value")
+			.callback(OptionCallback<check_ta>(this, &check_ta::handleComp)));
+	
+	options.addOption(
+		Option("obs", "o", "Specifica il file con le osservazioni")
+			.required(false)
+			.repeatable(false)
+			.argument("value")
+			.callback(OptionCallback<check_ta>(this, &check_ta::handleObs)));
+
+	options.addOption(
+		Option("scale", "s", "Specifica la scala di lavoro")
+			.required(false)
+			.repeatable(false)
+			.argument("value")
+			.callback(OptionCallback<check_ta>(this, &check_ta::handleScale)));
 }
-void check_ta::handleCam(const std::string & name, const std::string & value)
+void check_ta::handleHelp(const std::string& name, const std::string& value) 
 {
-	int a = 1;
-}
-void check_ta::handlePrj(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-void check_ta::handleHelp(const std::string& name, const std::string& value) {
 	_helpRequested = true;
 	displayHelp();
 	stopOptionsProcessing();
 }
-
-void check_ta::handleDefine(const std::string& name, const std::string& value)
+void check_ta::handlePrjDir(const std::string & name, const std::string & value)
 {
-	defineProperty(value);
+	_tae.set_proj_dir(value);
 }
 
-void check_ta::handleConfig(const std::string& name, const std::string& value)
+void check_ta::handleRef(const std::string& name, const std::string& value)
 {
-	loadConfiguration(value);
+	_tae.set_vdp_name(value);
+}
+void check_ta::handleComp(const std::string& name, const std::string& value)
+{
+	_tae.set_vdp_name2(value);
+}
+void check_ta::handleObs(const std::string& name, const std::string& value)
+{
+	_tae.set_obs_name(value);
+}
+void check_ta::handleScale(const std::string& name, const std::string& value)
+{
+	_tae.set_ref_scale(value);
 }
 	
 void check_ta::displayHelp()
@@ -150,53 +135,13 @@ void check_ta::displayHelp()
 	helpFormatter.format(std::cout);
 }
 	
-void check_ta::defineProperty(const std::string& def)
-{
-	std::string name;
-	std::string value;
-	std::string::size_type pos = def.find('=');
-	if (pos != std::string::npos) {
-		name.assign(def, 0, pos);
-		value.assign(def, pos + 1, def.length() - pos);
-	} else 
-		name = def;
-	config().setString(name, value);
-}
-
 int check_ta::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
-		_tae.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
-		_tae.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
-		_tae.set_vdp_name2("C:/Google_drive/Regione Toscana Tools/Dati_test/sol3_B.txt");
-		_tae.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
 
 		_tae.run();
 	}
 	return Application::EXIT_OK;
 }
 	
-void check_ta::printProperties(const std::string& base)
-{
-	AbstractConfiguration::Keys keys;
-	config().keys(base, keys);
-	if ( keys.empty() ) {
-		if ( config().hasProperty(base) ) {
-			std::string msg;
-			msg.append(base);
-			msg.append(" = ");
-			msg.append(config().getString(base));
-			logger().information(msg);
-		}
-	} else {
-		for ( AbstractConfiguration::Keys::const_iterator it = keys.begin(); it != keys.end(); ++it ) {
-			std::string fullKey = base;
-			if ( !fullKey.empty() )
-				fullKey += '.';
-			fullKey.append(*it);
-			printProperties(fullKey);
-		}
-	}
-}
-
 POCO_APP_MAIN(check_ta)
