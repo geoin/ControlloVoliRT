@@ -34,6 +34,7 @@
 #include <qgsdatasourceuri.h>
 #include <qgsmessagebar.h>
 #include <QFileDialog>
+#include <QProcessEnvironment>
 #include <QTextStream>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -44,6 +45,9 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QComboBox>
+#include <QSettings>
+#include <QDesktopServices>
+#include <QUrl>
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
@@ -53,19 +57,29 @@
 
 dbox::dbox(QgisInterface* mi): _mi(mi)
 {
-    // get plugin dir
+    // get plugin folder
     QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
     _plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
 
+    // get settings folder
+    p = qgetenv( "ALLUSERSPROFILE" );
+    _set_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "RT_tools");
+    QDir qd(_set_dir);
+    if ( !qd.exists() )
+        qd.mkdir(_set_dir);
 }
 void dbox::_init(QVBoxLayout* qv)
 {
+    QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+    QString last_prj = qs.value("PROJ_DIR", "").toString();
+
     QVBoxLayout* qvb = new QVBoxLayout;
 
     // sezione iniziale comune a tutti
     QLabel* l1 = new QLabel("Cartella progetto:");
     _prj = new QLineEdit;
-    _prj->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    _prj->setText(last_prj);
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
     connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist(bool)));
@@ -85,11 +99,14 @@ void dbox::_init(QVBoxLayout* qv)
      qvb->addWidget(_out);
 
     QPushButton* bok = new QPushButton("Esegui");
-    connect(bok, SIGNAL(clicked(bool)), this, SLOT(_esegui(bool)));
+    connect(bok, SIGNAL(clicked(bool)), this, SLOT(_exec(bool)));
+    QPushButton* brep = new QPushButton("Report");
+    connect(brep, SIGNAL(clicked(bool)), this, SLOT(_report(bool)));
     QPushButton* bcanc = new QPushButton("Esci");
     connect(bcanc, SIGNAL(clicked(bool)), this, SLOT(_esci(bool)));
     QHBoxLayout* hl2 = new QHBoxLayout;
     hl2->addWidget(bok);
+    hl2->addWidget(brep);
     hl2->addWidget(bcanc);
 
     qvb->addLayout(hl2);
@@ -122,6 +139,12 @@ bool dbox::_dirlist(bool)
 }
 void dbox::_chiudi(int result)
 {
+    QString last_prj = _prj->text();
+    if ( !last_prj.isEmpty() ) {
+        QFileInfo qfs(_set_dir, "rt_tools.cfg");
+        QSettings qs(qfs.filePath(), QSettings::IniFormat);
+        qs.setValue("PROJ_DIR", last_prj) ;
+    }
     deleteLater();
 }
 void dbox::_esci(bool b)
@@ -148,7 +171,7 @@ void dbox::_received()
             }
         }
         qs = qs.remove('\r');
-        _out->append("qs");
+        _out->append(qs);
     }
 }
 void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
@@ -159,10 +182,19 @@ void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
     QMessageBox::information(0, tr("GEOIN PLUGIN"), tr("tool terminated "), QMessageBox::Ok);
     _add_layers_to_legend();
 }
+void dbox::_terminated1(int exitCode, QProcess::ExitStatus a)
+{
+    _qm->done(0);
+    delete _qm;
+    _qm = NULL;
+    QString dir = _prj->text();
+    QString name = _check_name + ".pdf";
+    QFileInfo qf(dir, name);
+    QString qs = "file:" + qf.filePath();
+    QDesktopServices::openUrl(QUrl(qs));
+}
 void dbox::_add_layers_to_legend()
 {
-
-
     QgsDataSourceURI uri;
     QString dir = _prj->text();
     QFileInfo qf(dir, "geo.sqlite");
@@ -176,16 +208,38 @@ void dbox::_add_layers_to_legend()
         }
     }
 }
-void dbox::_esegui(bool b)
+void dbox::_report(bool b)
+{
+    _qp.disconnect( SIGNAL(finished(int, QProcess::ExitStatus)), this );
+    connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated1(int, QProcess::ExitStatus)));
+
+    QStringList args;
+    QString exe = "cmd.exe";
+    args << "/c";
+    QFileInfo qf(_plugin_dir, "run.bat");
+    args << qf.filePath();
+    args << _prj->text();
+    args << _check_name;
+
+    _esegui(exe, args);
+}
+void dbox::_exec(bool b)
+{
+    _qp.disconnect( SIGNAL(finished(int, QProcess::ExitStatus)), this );
+    connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
+    _esegui(_executable, _args);
+}
+
+void dbox::_esegui(const QString& exe, const QStringList& args)
 {
     _out->clear();
     _layers.clear();
-    QString qs(_executable);
-    for (int i = 0; i < _args.size(); i++)
-        qs += QString(" ") + _args[i];
+    QString qs(exe);
+    for (int i = 0; i < args.size(); i++)
+        qs += QString(" ") + args[i];
     _out->append(qs);
 
-    _qp.start(_executable, _args);
+    _qp.start(exe, args);
 
     _qp.waitForStarted();
     if ( _qp.state() != QProcess::Running ) {
@@ -200,24 +254,24 @@ void dbox::_esegui(bool b)
     _qm->addButton("Interrompi", QMessageBox::AcceptRole);
     _qm->exec();
 
-    //_qm.information(0, tr("GEOIN PLUGIN"), tr("tool running "), QMessageBox::Ok);
     _qp.kill();
 }
 /***************************************************/
 Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 {
+    setWindowTitle(type == 0 ? "Controllo progetto di volo" : "Controllo del volo effettuato");
+    _check_name = type == 0 ? "check_photoP" : "check_photoV";
+
     // prepare the parameters
     _args << QString("/d="); // project dir
     _args << "/p";  // type of check (p = project /f = flight
     _args << "/s=1000";
 
-    if ( type == 0 ) {
-        setWindowTitle("Controllo progetto di volo");
-    } else {
-        setWindowTitle("Controllo del volo effettuato");
+    if ( type == 1 )
         _args[1] = "/f";
-    }
-    QFileInfo qf(_plugin_dir, "check_photo.exe");
+
+    QString name = _check_name + ".exe";
+    QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;
@@ -257,11 +311,14 @@ void Check_photo::_optype(int index)
 /*******************************************/
 Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 {
+    setWindowTitle("Controllo dati gps");
+    _check_name = "check_gps";
+
     _args << QString("/d="); // project folder
     _args << "/p"; // check type /p = photogrammetry /l = lidar
 
-    setWindowTitle("Controllo dati gps");
-    QFileInfo qf(_plugin_dir, "check_gps.exe");
+    QString name = _check_name + ".exe";
+    QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;
@@ -292,15 +349,17 @@ void Check_gps::_optype(int index)
 }
 Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 {
+    setWindowTitle("Controllo triangolazione aerea");
+    _check_name = "check_ta";
+
     _args << QString("/d="); // project dir
     _args << "/f="; // first results file
     _args << "/c="; // second results file
     _args << "/o="; // observation file
     _args << "/s=1000";
 
-    setWindowTitle("Controllo triangolazione aerea");
-
-    QFileInfo qf(_plugin_dir, "check_ta.exe");
+    QString name = _check_name + ".exe";
+    QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;
@@ -347,13 +406,12 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 bool Check_ta::_dirlist1(bool)
 {
     QFileDialog qf;
-    QString dirName = _prj->text();
-    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
-    if ( !dirName.isEmpty() ) {
-        _prj->setText(dirName);
-        _args[0] = QString("/d=") + dirName;
+    QString fileName = _prj->text();
+    fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti di riferimento:", "*.txt", fileName);
+    if ( !fileName.isEmpty() ) {
+        _prj->setText(fileName);
+        _args[0] = QString("/d=") + fileName;
     }
-    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
     return true;
 }
 bool Check_ta::_dirlist2(bool)
@@ -382,13 +440,15 @@ bool Check_ta::_dirlist3(bool)
 }
 Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 {
+    setWindowTitle("Controllo orto immagini");
+    _check_name = "check_ortho";
+
     _args << QString("/d="); // project dir
     _args << "/i";  // image folder
-    _args << "/s=1000"; // refernce scale
+    _args << "/s=1000"; // reference scale
 
-    setWindowTitle("Controllo orto immagini");
-
-    QFileInfo qf(_plugin_dir, "check_ortho.exe");
+    QString name = _check_name + ".exe";
+    QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;

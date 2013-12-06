@@ -74,21 +74,26 @@ class dbox: public QDialog {
 public:
     dbox(QgisInterface* mi);
 protected slots:
-    void _esegui(bool);
-    void _esci(bool);
+    void _report(bool);
+    void _exec(bool);
     void _chiudi(int);
     void _terminated(int, QProcess::ExitStatus);
+    void _terminated1(int, QProcess::ExitStatus);
     void _received();
+    void _esci(bool);
     bool _dirlist(bool);
 protected:
+    void _esegui(const QString& exe, const QStringList& args);
     void _init(QVBoxLayout* qvb);
     void _add_layers_to_legend(void);
     QString _plugin_dir;
+    QString _set_dir;
+    QString _executable;
+    QString _check_name;
 
     QTextEdit* _out;
     QMessageBox* _qm;
     QProcess _qp;
-    QString _executable;
     QStringList _args;
     QLineEdit* _prj; // project directory
     QVector<QString> _layers;
