@@ -762,7 +762,7 @@ void gps_exec::_final_report()
 	sec->add_item("para")->append("Le seguenti strisciate presentano dei parametri che non rientrano nei range previsti");
 	
 	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("Strisciate acquisite con parametri GPS con parametri fuori range");
+	tab->add_item("title")->append("Strisciate acquisite con parametri GPS fuori range");
 
 	Poco::XML::AttributesImpl attr;
 	attr.addAttribute("", "", "cols", "", "5");

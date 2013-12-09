@@ -535,7 +535,14 @@ void QgsRTtoolsPlugin::unload()
 /*********************** SLOTS attivazione comandi ************/
 void QgsRTtoolsPlugin::set_prj()
 {
+    QString name = "CVloader_ui.exe";
+    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
 
+    QFileInfo qf(plugin_dir, name);
+
+    //QMessageBox::information(NULL, "starting...", qf.filePath(), QMessageBox::Ok);
+    QProcess::startDetached(qf.filePath());
 }
 void QgsRTtoolsPlugin::ver_gps()
 {
