@@ -1,7 +1,7 @@
 HEADERS = droparea.h \
-          dropsitewindow.h
+          dropwindow.h
 SOURCES = droparea.cpp \
-          dropsitewindow.cpp \
+          dropwindow.cpp \
           CVloader_ui.cpp
 
 # install

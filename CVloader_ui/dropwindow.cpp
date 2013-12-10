@@ -1,10 +1,34 @@
+/*
+    File: dropwindow.cpp
+    Author:  F.Flamigni
+    Date: 2013 December 6
+    Comment:
 
+    Disclaimer:
+        This file is part of RT_Controllo_Voli.
+
+        Tabula is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Lesser General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        Tabula is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+        Copyright (C) 2013 Geoin s.r.l.
+
+*/
 #include <QtGui>
 #include <QFileDialog>
 #include "droparea.h"
-#include "dropsitewindow.h"
+#include "dropwindow.h"
 
-//! [constructor part1]
 DropSiteWindow::DropSiteWindow()
 {
     _drop_area = new DropArea;
@@ -100,12 +124,23 @@ DropSiteWindow::DropSiteWindow()
     connect(quitButton, SIGNAL(pressed()), this, SLOT(close()));
     connect(clearButton, SIGNAL(pressed()), _drop_area, SLOT(clear()));
 
-    QHBoxLayout *hl = new QHBoxLayout;
-    hl->addWidget(_prj_tree);
-    hl->addWidget(_drop_area);
+	QSplitter* qs = new QSplitter;
+	qs->setOrientation(Qt::Horizontal);
+	qs->addWidget(_prj_tree);
+	qs->addWidget(_drop_area);
+	//QDockWidget* qd = new QDockWidget;
+	//qd->setWidget(_prj_tree);
+	//addDocWidget(Qt::TopDockWidgetArea, qd);
+	//qd = new QDockWidget;
+	//qd->setWidget(_drop_area);
+	//addDocWidget(Qt::TopDockWidgetArea, qd);
+
+    //QHBoxLayout *hl = new QHBoxLayout;
+    //hl->addWidget(_prj_tree);
+    //hl->addWidget(_drop_area);
 
     QVBoxLayout *vl = new QVBoxLayout;
-	vl->addLayout(hl);
+	vl->addWidget(qs);
 	vl->addWidget(buttonBox);
     setLayout(vl);
 
@@ -170,7 +205,6 @@ void DropSiteWindow::keyPressEvent( QKeyEvent* event )
 			// rimuove una missione
 			delete wi;
 		} else if ( io.type() == item_obj::ty_base ) {
-			//_prj_tree->removeItemWidget(_prj_tree->currentItem(), 0);
 			delete wi;
 		} else if ( !io.dropped().isEmpty() ) {
 			io.dropped("");
