@@ -115,6 +115,7 @@ protected:
 	void initialize(Poco::Util::Application& self);
 	void uninitialize();
 	void reinitialize(Poco::Util::Application& self);
+	void defineOptions(Poco::Util::OptionSet& options);
 	void displayHelp();
 	int main(const std::vector<std::string>& args);
 private:

@@ -31,7 +31,7 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    DropSiteWindow window;
+    DropWindow window;
     window.show();
     return app.exec();
 }

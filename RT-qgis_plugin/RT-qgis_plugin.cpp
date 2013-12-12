@@ -260,7 +260,7 @@ void dbox::_esegui(const QString& exe, const QStringList& args)
 Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 {
     setWindowTitle(type == 0 ? "Controllo progetto di volo" : "Controllo del volo effettuato");
-    _check_name = type == 0 ? "check_photoP" : "check_photoV";
+    _check_name = "check_photo";
 
     // prepare the parameters
     _args << QString("/d="); // project dir
@@ -271,8 +271,11 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
         _args[1] = "/f";
 
     QString name = _check_name + ".exe";
+
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
+
+    _check_name.append( type == 0 ? "P" : "V");
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
@@ -347,13 +350,14 @@ void Check_gps::_optype(int index)
         break;
     }
 }
+/**********************************************************************************/
 Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 {
     setWindowTitle("Controllo triangolazione aerea");
     _check_name = "check_ta";
 
     _args << QString("/d="); // project dir
-    _args << "/f="; // first results file
+    _args << "/r="; // first results file
     _args << "/c="; // second results file
     _args << "/o="; // observation file
     _args << "/s=1000";
@@ -366,7 +370,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l1 = new QLabel("File di riferimento:");
     _f1 = new QLineEdit;
-    _f1->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    //_f1->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
     connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist1(bool)));
@@ -378,7 +382,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l2 = new QLabel("File da confrontare:");
     _f2 = new QLineEdit;
-    _f2->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    //_f2->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
     QPushButton* b2 = new QPushButton("...");
     b2->setFixedWidth(20);
     connect(b2, SIGNAL(clicked(bool)), this, SLOT(_dirlist2(bool)));
@@ -390,7 +394,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l3 = new QLabel("File Osservazioni:");
     _f3 = new QLineEdit;
-    _f3->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
+    //_f3->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
     QPushButton* b3 = new QPushButton("...");
     b3->setFixedWidth(20);
     connect(b3, SIGNAL(clicked(bool)), this, SLOT(_dirlist3(bool)));
@@ -400,43 +404,92 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     hl2->addWidget(b3);
     qvb->addLayout(hl3);
 
-    _init(qvb);
+    QLabel* l4 = new QLabel("Scala di lavoro:");
+    QComboBox* cmb = new QComboBox;
+    cmb->addItem("1:1000");
+    cmb->addItem("1:2000");
+    cmb->addItem("1:5000");
+    cmb->addItem("1:10000");
+    cmb->setCurrentIndex(0);
+    connect(cmb, SIGNAL(currentIndexChanged(int)), this, SLOT(_optype(int)));
+    QHBoxLayout* hl4 = new QHBoxLayout;
+     hl4->addWidget(l4);
+     hl4->addWidget(cmb);
+     qvb->addLayout(hl4);
+
+     _init(qvb);
 }
 
 bool Check_ta::_dirlist1(bool)
 {
     QFileDialog qf;
-    QString fileName = _prj->text();
-    fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti di riferimento:", "*.txt", fileName);
+    QString fileName = _f1->text();
+    if ( fileName.isEmpty() ) {
+        QFileInfo qfs(_set_dir, "rt_tools.cfg");
+        QSettings qs(qfs.filePath(), QSettings::IniFormat);
+        fileName = qs.value("TA_REF", "").toString();
+        if ( fileName.isEmpty() )
+            fileName = _prj->text();
+    }
+    fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti di riferimento:", fileName, "*.txt");
     if ( !fileName.isEmpty() ) {
-        _prj->setText(fileName);
-        _args[0] = QString("/d=") + fileName;
+        _f1->setText(fileName);
+        _args[1] = QString("/r=") + fileName;
     }
     return true;
 }
 bool Check_ta::_dirlist2(bool)
 {
     QFileDialog qf;
-    QString dirName = _prj->text();
-    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
-    if ( !dirName.isEmpty() ) {
-        _prj->setText(dirName);
-        _args[0] = QString("/d=") + dirName;
+    QString fileName = _f2->text();
+    if ( fileName.isEmpty() ) {
+        QFileInfo qfs(_set_dir, "rt_tools.cfg");
+        QSettings qs(qfs.filePath(), QSettings::IniFormat);
+        fileName = qs.value("TA_REF", "").toString();
+        if ( fileName.isEmpty() )
+            fileName = _prj->text();
     }
-    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti da confrontare:", fileName);
+    if ( !fileName.isEmpty() ) {
+        _f2->setText(fileName);
+        _args[2] = QString("/c=") + fileName;
+    }
     return true;
 }
 bool Check_ta::_dirlist3(bool)
 {
     QFileDialog qf;
-    QString dirName = _prj->text();
-    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
-    if ( !dirName.isEmpty() ) {
-        _prj->setText(dirName);
-        _args[0] = QString("/d=") + dirName;
+    QString fileName = _f3->text();
+    if ( fileName.isEmpty() ) {
+        QFileInfo qfs(_set_dir, "rt_tools.cfg");
+        QSettings qs(qfs.filePath(), QSettings::IniFormat);
+        fileName = qs.value("TA_REF", "").toString();
+        if ( fileName.isEmpty() )
+            fileName = _prj->text();
     }
-    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    fileName = qf.getOpenFileName(this, "Selezionare il file con le osservazioni:", fileName);
+    if ( !fileName.isEmpty() ) {
+        _f3->setText(fileName);
+        _args[3] = QString("/o=") + fileName;
+    }
     return true;
+}
+void Check_ta::_optype(int index)
+{
+    switch ( index ) {
+    case 0:
+        _args[4] = "/s=1000";
+        break;
+    case 1:
+        _args[4] = "/s=2000";
+        break;
+    case 2:
+        _args[4] = "/s=5000";
+        break;
+    case 3:
+        _args[4] = "/s=10000";
+        break;
+    }
 }
 Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 {

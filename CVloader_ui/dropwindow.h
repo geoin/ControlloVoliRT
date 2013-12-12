@@ -37,8 +37,10 @@ class QLabel;
 class QMimeData;
 class QPushButton;
 class QTreeWidget;
+class QTreeWidgetItem;
 QT_END_NAMESPACE
 class DropArea;
+class loader;
 
 class item_obj {
 public:
@@ -84,21 +86,29 @@ private:
 };
 Q_DECLARE_METATYPE(item_obj)
 
-class DropSiteWindow : public QWidget {
+class DropWindow : public QWidget {
     Q_OBJECT
 public:
-    DropSiteWindow();
+    DropWindow();
+	~DropWindow();
 	void keyPressEvent( QKeyEvent* event );
 private slots:
     void _assign_dropped(const QString&);
+    void exec();
 
 private:
+	void _child_manager(QTreeWidgetItem * wi);
+	void _item_manager(const item_obj& io);
+
+
     DropArea*	_drop_area;
     QTreeWidget* _prj_tree;
 
-    QPushButton *clearButton;
+    QPushButton* execButton;
     QPushButton *quitButton;
     QDialogButtonBox *buttonBox;
+	loader* _ld;
+
 };
 
 

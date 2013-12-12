@@ -28,9 +28,11 @@
 #include <QFileDialog>
 #include "droparea.h"
 #include "dropwindow.h"
+#include "cvloader.h"
 
-DropSiteWindow::DropSiteWindow()
+DropWindow::DropWindow()
 {
+	_ld = new loader;
     _drop_area = new DropArea;
     connect(_drop_area, SIGNAL(changed(const QString&)), this, SLOT(_assign_dropped(const QString&)));
 
@@ -40,7 +42,7 @@ DropSiteWindow::DropSiteWindow()
 	_prj_tree->setHeaderLabel("RT");
 
 	QTreeWidgetItem* qt = new QTreeWidgetItem;
-	io = item_obj("Progetto", "Premere ins per definire la cartella del progetto", "", item_obj::ty_project, true, false);
+	io = item_obj("Progetto", "folder", "Trascinare\nla cartella del progetto", item_obj::ty_project, true, true);
 	qt->setText(0, io.name());
 	qt->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	_prj_tree->addTopLevelItem(qt);
@@ -52,43 +54,43 @@ DropSiteWindow::DropSiteWindow()
 
 	QList<QTreeWidgetItem*> qcl;
 	QTreeWidgetItem* q2 = new QTreeWidgetItem;
-	io = item_obj("Assi di volo progettati", "Shape file", "Trascinare\nil file degli assi di volo progettati", item_obj::ty_assi_p);
+	io = item_obj("Assi di volo progettati", "Shp", "Trascinare\nil file degli assi di volo progettati", item_obj::ty_assi_p);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Assi di volo", "Shape file", "Trascinare\nil file degli assi di volo", item_obj::ty_assi);
+	io = item_obj("Assi di volo", "Shp", "Trascinare\nil file degli assi di volo", item_obj::ty_assi);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Aree da cartografare", "Shape file", "Trascinare\nil file delle aree da cartografare", item_obj::ty_carto);
+	io = item_obj("Aree da cartografare", "Shp", "Trascinare\nil file delle aree da cartografare", item_obj::ty_carto);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Assetti progettati", "txt file", "Trascinare\nil file degli assetti progettati", item_obj::ty_assetti_p);
+	io = item_obj("Assetti progettati", "txt", "Trascinare\nil file degli assetti progettati", item_obj::ty_assetti_p);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Assetti effettivi", "txt file", "Trascinare\nil file degli assetti effettivi", item_obj::ty_assetti);
+	io = item_obj("Assetti effettivi", "txt", "Trascinare\nil file degli assetti effettivi", item_obj::ty_assetti);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Dati Fotocamera", "xml file", "Trascinare\nil file descrittivo della fotocamera", item_obj::ty_camera);
+	io = item_obj("Dati Fotocamera", "xml", "Trascinare\nil file descrittivo della fotocamera", item_obj::ty_camera);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Modelo numerico del terreno", "asc grid", "Trascinare\nil file del modello numerico del terreno", item_obj::ty_dem);
+	io = item_obj("Modelo numerico del terreno", "asc", "Trascinare\nil file del modello numerico del terreno", item_obj::ty_dem);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
@@ -100,7 +102,7 @@ DropSiteWindow::DropSiteWindow()
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Quadro unione ortofoto", "Shape file", "Trascinare\nil file del quadro d'unione\n", item_obj::ty_quadro);
+	io = item_obj("Quadro unione ortofoto", "Shp", "Trascinare\nil file del quadro d'unione\n", item_obj::ty_quadro);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
@@ -114,30 +116,22 @@ DropSiteWindow::DropSiteWindow()
 	qt->addChild(q1);
 	connect(_prj_tree, SIGNAL(itemClicked (QTreeWidgetItem *, int)), _drop_area, SLOT(item_changed(QTreeWidgetItem *, int)));
 
-    clearButton = new QPushButton(tr("Clear"));
-    quitButton = new QPushButton(tr("Quit"));
+    execButton = new QPushButton(tr("Esegui"));
+    quitButton = new QPushButton(tr("Esci"));
+	QCheckBox* replaceButton = new QCheckBox("Sostituisci");
 
     buttonBox = new QDialogButtonBox;
-    buttonBox->addButton(clearButton, QDialogButtonBox::ActionRole);
+    buttonBox->addButton(execButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
+	buttonBox->addButton(replaceButton, QDialogButtonBox::AcceptRole);
 
     connect(quitButton, SIGNAL(pressed()), this, SLOT(close()));
-    connect(clearButton, SIGNAL(pressed()), _drop_area, SLOT(clear()));
+    connect(execButton, SIGNAL(pressed()), this, SLOT(exec()));
 
 	QSplitter* qs = new QSplitter;
 	qs->setOrientation(Qt::Horizontal);
 	qs->addWidget(_prj_tree);
 	qs->addWidget(_drop_area);
-	//QDockWidget* qd = new QDockWidget;
-	//qd->setWidget(_prj_tree);
-	//addDocWidget(Qt::TopDockWidgetArea, qd);
-	//qd = new QDockWidget;
-	//qd->setWidget(_drop_area);
-	//addDocWidget(Qt::TopDockWidgetArea, qd);
-
-    //QHBoxLayout *hl = new QHBoxLayout;
-    //hl->addWidget(_prj_tree);
-    //hl->addWidget(_drop_area);
 
     QVBoxLayout *vl = new QVBoxLayout;
 	vl->addWidget(qs);
@@ -147,19 +141,38 @@ DropSiteWindow::DropSiteWindow()
     setWindowTitle(tr("Gestione Progetto"));
     setMinimumSize(350, 500);
 }
-
-void DropSiteWindow::_assign_dropped(const QString& path)
+DropWindow::~DropWindow()
+{
+	if ( _ld != NULL )
+		delete _ld;
+	_ld = NULL;
+}
+void DropWindow::_assign_dropped(const QString& path)
 {
 	QTreeWidgetItem * wi = _prj_tree->currentItem();
 	QVariant v = wi->data(0, Qt::UserRole);
 	item_obj io = v.value<item_obj>();
 	if ( io.acceptdrop() ) {
+		if ( io.data_type().compare("folder", Qt::CaseInsensitive) == 0 ) {
+			QFileInfo qd(path);
+			if ( qd.exists() && !qd.isDir() ) {
+				QMessageBox::information(NULL, "Errore", "Oggetto non valido per la categoria selezionata");
+				return;
+			}
+
+		} else if ( !io.data_type().isEmpty() ) {
+			QFileInfo qd(path);
+			if ( io.data_type().compare(qd.suffix(), Qt::CaseInsensitive) != 0 ) { 
+				QMessageBox::information(NULL, "Errore", "Oggetto non valido per la categoria selezionata");
+				return;
+			}
+		}
 		io.dropped(path);
 		wi->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 		_drop_area->item_changed(wi, 0);
 	}
 }
-void DropSiteWindow::keyPressEvent( QKeyEvent* event ) 
+void DropWindow::keyPressEvent( QKeyEvent* event ) 
 {
 	QTreeWidgetItem * wi = _prj_tree->currentItem();
 	QVariant v = wi->data(0, Qt::UserRole);
@@ -171,19 +184,8 @@ void DropSiteWindow::keyPressEvent( QKeyEvent* event )
 
 	switch ( event->key() ) {
     case Qt::Key_Insert:
-		if ( io.type() == item_obj::ty_project ) {
-		    QFileDialog qf;
-			QString dirName;
-			dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
-			if ( !dirName.isEmpty() ) {
-				QFileInfo qf(dirName);
-				QString qs = qf.fileName();
-				_prj_tree->setHeaderLabel(qs);
-				_assign_dropped(dirName);
-			}
-            return;
-        } else if ( io.type() == item_obj::ty_gps ) {
-			item_obj io1("Missione", "Premere Ins per aggiungere una base", "", item_obj::ty_missione, true);
+        if ( io.type() == item_obj::ty_gps ) {
+			item_obj io1("Missione", "Premere Ins per aggiungere una base opure trascinare i file rinex del rover", "", item_obj::ty_missione, true);
             QTreeWidgetItem * qi = new QTreeWidgetItem;
             qi->setText(0, io1.name());
             qi->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io1));
@@ -216,4 +218,78 @@ void DropSiteWindow::keyPressEvent( QKeyEvent* event )
         event->ignore();
         break;
     }
+}
+void DropWindow::_item_manager(const item_obj& io)
+{
+	if ( io.dropped().isEmpty() )
+		return;
+	switch ( io.type() ) {
+		case item_obj::ty_project:
+			_ld->prj_folder(io.dropped());
+			_ld->create_project();
+			break;
+		case item_obj::ty_fotogra:
+			break;
+		case item_obj::ty_lidar:
+			break;
+		case item_obj::ty_assi_p:
+			break;
+		case item_obj::ty_assi:
+			_ld->load_flight_lines(io.dropped());
+			break;
+		case item_obj::ty_carto:
+			_ld->load_carto(io.dropped());
+			break;
+		case item_obj::ty_assetti_p:
+			break;
+		case item_obj::ty_assetti:
+			_ld->load_assetti(io.dropped());
+			break;
+		case item_obj::ty_camera:
+			_ld->load_camera(io.dropped());
+			break;
+		case item_obj::ty_dem:
+			_ld->load_dem(io.dropped());
+			break;
+		case item_obj::ty_quadro:
+			break;
+		case item_obj::ty_gps:
+			break;
+		case item_obj::ty_missione:
+			_ld->load_gps(io.dropped());
+			break;
+		case item_obj::ty_base:
+			break;
+	}
+}
+void DropWindow::_child_manager(QTreeWidgetItem * w0)
+{
+	// gestisce se stesso
+	QVariant v = w0->data(0, Qt::UserRole);
+	item_obj io = v.value<item_obj>();
+	_item_manager(io);
+
+	int nc = w0->childCount();
+	// gestisci i chil node
+	for ( int i = 0; i < nc; i++) {
+		QTreeWidgetItem * wi = w0->child(i);
+		_child_manager(wi);
+	}
+}
+void DropWindow::exec()
+{
+	QTreeWidgetItem * w0 =_prj_tree->topLevelItem(0);
+	if ( w0 == NULL )
+		return;
+
+	// gestisce se stesso
+	QVariant v = w0->data(0, Qt::UserRole);
+	item_obj io = v.value<item_obj>();
+	_item_manager(io);
+
+	int nc = w0->childCount();
+	for ( int i = 0; i < nc; i++) {
+		QTreeWidgetItem * wi = w0->child(i);
+		_child_manager(wi);
+	}
 }

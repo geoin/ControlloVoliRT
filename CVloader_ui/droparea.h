@@ -40,7 +40,6 @@ public:
     DropArea(QWidget *parent = 0);
 
 public slots:
-    void clear();
 	void item_changed(QTreeWidgetItem *, int);
 signals:
     void changed(const QString& file);

@@ -71,6 +71,7 @@ private:
 	// check with the limit parameters
 	void _final_report(void);
 	void _init_document(void);
+	std::string _get_key(const std::string& val);
 
 	std::string _rover_name;
 	std::string _sigla_base;

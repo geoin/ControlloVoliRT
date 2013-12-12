@@ -90,12 +90,12 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 		row->add_item("entry", attr)->append(val);
 	return rv;
 }
-std::string get_key(const std::string& val)
+typedef std::vector<unsigned char> Blob;
+/****************************************************************/
+std::string gps_exec::_get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
-typedef std::vector<unsigned char> Blob;
-/****************************************************************/
 
 gps_exec::~gps_exec()
 {
@@ -117,7 +117,6 @@ bool gps_exec::run()
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
-	std::cout << "Layer:" << ASSI_VOLO << std::endl;
 		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
 		//   ASSI_VOLO,
 		//   SHAPE_CHAR_SET,
@@ -129,6 +128,8 @@ bool gps_exec::run()
 
 		_read_ref_val();
 
+		std::cout << "Layer:" << ASSI_VOLO << std::endl;
+		
 		// create the gps track
 		_create_gps_track();
 
@@ -168,14 +169,14 @@ bool gps_exec::_read_ref_val()
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
-		_MAX_PDOP = pConf->getDouble(get_key("MAX_PDOP"));
-		_MIN_SAT = pConf->getInt(get_key("MIN_SAT"));
-		_MAX_DIST = pConf->getInt(get_key("MAX_DIST")) * 1000;
-		_MIN_SAT_ANG = pConf->getDouble(get_key("MIN_SAT_ANG"));
-		_NBASI = pConf->getInt(get_key("NBASI"));
-		_MIN_ANG_SOL = pConf->getDouble(get_key("MIN_ANG_SOL"));
+		_MAX_PDOP = pConf->getDouble(_get_key("MAX_PDOP"));
+		_MIN_SAT = pConf->getInt(_get_key("MIN_SAT"));
+		_MAX_DIST = pConf->getInt(_get_key("MAX_DIST")) * 1000;
+		_MIN_SAT_ANG = pConf->getDouble(_get_key("MIN_SAT_ANG"));
+		_NBASI = pConf->getInt(_get_key("NBASI"));
+		_MIN_ANG_SOL = pConf->getDouble(_get_key("MIN_ANG_SOL"));
 	} catch (...) {
-		return false;
+		throw std::runtime_error("Errore nela lettura dei valori di riferimento");
 	}
 	return true;
 }
@@ -530,7 +531,15 @@ bool gps_exec::_create_gps_track()
 	std::vector<std::string> files;
 	dircnt.list(files);
 
-	std::cout << "Elaborazione di " << (int) files.size() << " missioni" << std::endl;
+	int count = 0;
+	for (size_t i = 0; i < files.size(); i++) {
+		Poco::Path fn(fn.toString(), files[i]);
+		Poco::File fl(fn);
+		if ( fl.isDirectory() )
+			count++;
+	}
+
+	std::cout << "Elaborazione di " << (int) count << " missioni" << std::endl;
 
 	for (size_t i = 0; i < files.size(); i++) {
 		Poco::Path fn(fn.toString(), files[i]);
@@ -551,7 +560,8 @@ bool gps_exec::_mission_process(const std::string& folder)
 	if ( rover.empty() )
 		return false;
 
-	std::cout << "Missione " << folder << std::endl;
+	Poco::Path pth(folder);
+	std::cout << "Missione " << pth.getFileName() << std::endl;
 
 	// get the base list
 	std::vector<std::string> bfl;

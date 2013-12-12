@@ -71,7 +71,7 @@ void check_ta::defineOptions(OptionSet& options)
 			.callback(OptionCallback<check_ta>(this, &check_ta::handlePrjDir)));
 	
 	options.addOption(
-		Option("ref", "f", "Specifica il file con gli assetti di riferimento")
+		Option("ref", "r", "Specifica il file con gli assetti di riferimento")
 			.required(false)
 			.repeatable(false)
 			.argument("value")

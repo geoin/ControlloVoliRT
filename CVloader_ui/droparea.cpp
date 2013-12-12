@@ -66,9 +66,12 @@ void DropArea::dropEvent(QDropEvent *event)
 	QString pth;
 	for (int i = 0; i < ql.size(); i++) {
 		QUrl q = ql[i];
+		QString qs = q.path();
+		if ( qs.at(0) == '/' )
+			qs.remove(0, 1);
 		if ( i ) 
 			pth +=";";
-		pth += q.path();
+		pth += qs;
 	}
 	emit changed(pth);
 
@@ -108,7 +111,4 @@ void DropArea::dragLeaveEvent(QDragLeaveEvent *event)
     event->accept();
 }
 
-void DropArea::clear()
-{
-}
 

@@ -124,6 +124,7 @@ protected slots:
     bool _dirlist1(bool);
     bool _dirlist2(bool);
     bool _dirlist3(bool);
+    void _optype(int index);
 private:
     QLineEdit* _f1;
     QLineEdit* _f2;

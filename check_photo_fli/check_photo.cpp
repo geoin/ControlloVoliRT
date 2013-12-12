@@ -69,6 +69,13 @@ void check_photo::defineOptions(OptionSet& options)
 			.callback(OptionCallback<check_photo>(this, &check_photo::handleHelp)));
 
 	options.addOption(
+		Option("dir", "d", "Specifica la cartella del progetto")
+			.required(false)
+			.repeatable(false)
+			.argument("value")
+			.callback(OptionCallback<check_photo>(this, &check_photo::handlePrjDir)));
+
+	options.addOption(
 		Option("flight", "f", "Specifica operazione di verifica del volo")
 			.required(false)
 			.repeatable(false)
@@ -80,13 +87,6 @@ void check_photo::defineOptions(OptionSet& options)
 			.repeatable(false)
 			.callback(OptionCallback<check_photo>(this, &check_photo::handleProject)));
 
-	options.addOption(
-		Option("dir", "d", "Specifica la cartella del progetto")
-			.required(false)
-			.repeatable(false)
-			.argument("value")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handlePrjDir)));
-	
 	options.addOption(
 		Option("scale", "s", "Specifica la scala di lavoro")
 			.required(false)

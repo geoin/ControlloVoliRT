@@ -40,7 +40,6 @@
 #define CARTO "CARTO"
 #define UNCOVER "Z_UNCOVER"
 #define SHAPE_CHAR_SET "CP1252"
-//#define REFSCALE "RefScale_2000"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOCV "check_photoV.xml"
 #define OUT_DOCP "check_photoP.xml"

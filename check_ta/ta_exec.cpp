@@ -32,10 +32,13 @@
 #include "Poco/sharedPtr.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
-#define REFSCALE "RefScale_2000"
+#define CAMERA "camera.xml"
+#define OUT_DOC "check_ta.xml"
+#define REF_FILE "Regione_Toscana_RefVal.xml"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -73,34 +76,50 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 		row->add_item("entry", attr)->append(val);
 	return rv;
 }
-std::string get_key(const std::string& val)
-{
-	return std::string(REFSCALE) + "." + val;
-}
 /***************************************************************************************/
+std::string ta_exec::_get_key(const std::string& val)
+{
+	return _refscale + "." + val;
+}
 ta_exec::~ta_exec() 
 {
 }
 bool ta_exec::run()
 {
+	if ( _refscale.empty() )
+		throw std::runtime_error("scala di lavoro non impostata");
+	if ( _vdp_name.empty() )
+		throw std::runtime_error("File degli assetti non impostato nessuna operazione può essere fatta");
+
 	// Read the reference values
 	_read_ref_val();
 
 	// initialize docbook xml file
 	_init_document();
+	std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+
 
 	// che on control points
-	if ( !_check_cpt() )
-		return false;
+	_check_cpt();
 
 	// check the differences on two results
-	if ( !_check_differences() )
-		return false;
+	_check_differences();
 
 	// write the result on the docbook report
 	_dbook.write();
 
 	return true;
+}
+void ta_exec::set_ref_scale(const std::string& nome)
+{
+	if ( nome  == "1000" )
+		_refscale = "RefScale_1000";
+	else if ( nome  == "2000" )
+		_refscale = "RefScale_2000";
+	else if ( nome  == "5000" )
+		_refscale = "RefScale_5000";
+	else if ( nome  == "10000" )
+		_refscale = "RefScale_10000";
 }
 void ta_exec::_resume()
 {
@@ -115,9 +134,10 @@ void ta_exec::set_vdp_name2(const std::string& nome)
 	// second results file used for comparison
 	_vdp_name_2 = nome;
 }
-void ta_exec::set_cam_name(const std::string& nome)
+void ta_exec::set_obs_name(const std::string& nome)
 {
-	_cam_name = nome;
+	// observation file
+	_obs_name = nome;
 }
 void ta_exec::set_proj_dir(const std::string& nome)
 {
@@ -127,33 +147,33 @@ bool ta_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
 	ref_file.popDirectory();
-	ref_file.setFileName("Regione_Toscana_RefVal.xml");
+	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
 		// toll of projection center
-		_T_CP = pConf->getDouble(get_key("T_CP"));
+		_T_CP = pConf->getDouble(_get_key("T_CP"));
 		// toll for pitch and roll
-		_T_PR = pConf->getDouble(get_key("T_PR"));
+		_T_PR = pConf->getDouble(_get_key("T_PR"));
 		//toll for headin angle
-		_T_H = pConf->getDouble(get_key("T_H"));
+		_T_H = pConf->getDouble(_get_key("T_H"));
 		// toll of planimetric control points
-		_TP_PA = pConf->getDouble(get_key("TP_PA"));
+		_TP_PA = pConf->getDouble(_get_key("TP_PA"));
 		// toll of altimetric control points
-		_TA_PA = pConf->getDouble(get_key("TA_PA"));
+		_TA_PA = pConf->getDouble(_get_key("TA_PA"));
 
 		_T_CP *= 3 * sqrt(2.);
 		_T_PR *= 3 * sqrt(2.);
 		_T_H *=  3 * sqrt(2.);
 	} catch (...) {
-		return false;
+		throw std::runtime_error("Errore nela lettura dei valori di riferimento");
 	}
 	return true;
 }
 void ta_exec::_init_document()
 {
 	Path doc_file(_proj_dir, "*");
-	doc_file.setFileName("check_ta.xml");
+	doc_file.setFileName(OUT_DOC);
 	_dbook.set_name(doc_file.toString());
 	
 	_article = _dbook.add_item("article");
@@ -301,8 +321,11 @@ bool ta_exec::_read_cam()
 bool ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
 {
 	std::ifstream fvdp(nome.c_str(), std::ifstream::in);
-	if ( !fvdp.is_open() )
-		return false;
+	if ( !fvdp.is_open() ) {
+		std::string mes("Impossibile aprire il file: ");
+		mes += nome;
+		throw std::runtime_error(mes);
+	}
 
 	vdps.clear();
 
@@ -322,17 +345,31 @@ bool ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
 }
 bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts) 
 {
-	Poco::Path gf(_vdp_name);
+	Poco::Path gf(_obs_name);
 	std::string nome = gf.getBaseName();
-	nome.append("_image");
-	gf.setBaseName(nome);
-	gf.setExtension("pat");
+	std::string dir = gf.parent().toString();
+	std::string ext = gf.getExtension();
+	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	int n = tok.count();
+	if ( n > 1 ) {
+		int k = n - 1;
+		if ( tok[k] != "image" )
+			throw std::runtime_error("nome del file delle osservazioni non valido");
+	} else
+		throw std::runtime_error("nome del file delle osservazioni non valido");
+
+	//nome.append("_image");
+	//gf.setBaseName(nome);
+	//gf.setExtension("pat");
 
 	pts.clear();
 	
 	std::ifstream fvdp(gf.toString().c_str(), std::ifstream::in);
-	if ( !fvdp.is_open() )
-		return false;
+	if ( !fvdp.is_open() ) {
+		std::string mes("Impossibile aprire il file: ");
+		mes += gf.toString();
+		throw std::runtime_error(mes);
+	}
 
 	char buf[256];
 
@@ -430,16 +467,35 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 }
 bool ta_exec::_read_cont_pat(CPT_MAP& pm) 
 {
-	// build the control point file name
-	Poco::Path gf(_vdp_name);
+	Poco::Path gf(_obs_name);
 	std::string nome = gf.getBaseName();
+	std::string dir = gf.parent().toString();
+	std::string ext = gf.getExtension();
+
+	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	int n = tok.count();
+	if ( n > 1 ) {
+		int k = n - 1;
+		if ( tok[k] != "image" )
+			throw std::runtime_error("nome del file dei punti noti non valido");
+	} else
+		throw std::runtime_error("nome del file dei punti noti non valido");
+
+	nome.clear();
+	for (int i = 0; i < n - 1; i++) {
+		if ( i )
+			nome.append("_");
+		nome.append(tok[i]);
+	}
 	nome.append("_cont");
-	gf.setBaseName(nome);
-	gf.setExtension("pat");
-	
+	gf = Poco::Path(dir, nome);
+	gf.setExtension(ext);
+
 	std::ifstream fvdp(gf.toString().c_str(), std::ifstream::in);
-	if ( !fvdp.is_open() )
-		return false;
+	if ( !fvdp.is_open() ) {
+		std::string mes("Impossibile aprire il file: ");
+		mes += gf.toString();
+		throw std::runtime_error(mes);	}
 
 	pm.clear();
 
@@ -473,58 +529,76 @@ bool ta_exec::_read_cont_pat(CPT_MAP& pm)
 }
 bool ta_exec::_check_cpt()
 {
-	VDP_MAP vdps; // mappa nome fotogramma, parametri assetto
-	CPT_MAP pm; // mappa nome punto, coordinate
-	CPT_VDP pts; // mappa nome punto fotogrammi in cui è stato osservato
+	if ( _obs_name.empty() )
+		return true;
+	std::cout << "Controllo sui punti noti" << std::endl;
 
-	_read_cam();
-	_read_vdp(_vdp_name, vdps);
-	_read_cont_pat(pm);
-	_read_image_pat(vdps, pm, pts);
-	_calc_pts(vdps, pm, pts);
+	try {
+		VDP_MAP vdps; // mappa nome fotogramma, parametri assetto
+		CPT_MAP pm; // mappa nome punto, coordinate
+		CPT_VDP pts; // mappa nome punto fotogrammi in cui è stato osservato
 
+		_cam_name = Path(_proj_dir, CAMERA).toString();
+
+		_read_cam();
+		_read_vdp(_vdp_name, vdps);
+		_read_cont_pat(pm);
+		_read_image_pat(vdps, pm, pts);
+		_calc_pts(vdps, pm, pts);
+	} catch(std::exception &e) {
+		throw std::runtime_error(std::string("Controllo sui punti noti ") + std::string(e.what()));
+    }
 	return true;
 }
 bool ta_exec::_check_differences()
 {
 	if ( _vdp_name_2.empty() )
-		return false; /// no comparison is required
-	Doc_Item row = _initpg2();
+		return true;
+		
+	std::cout << "Confronto tra i risultati di due calcoli" << std::endl;
 
-	_read_cam();
-	VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
-	VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
-	_read_vdp(_vdp_name, vdps1);
-	_read_vdp(_vdp_name_2, vdps2);
-	VDP_MAP::iterator it;
-	for (it = vdps1.begin(); it != vdps1.end(); it++) {
-		std::string nome = it->first;
-		if ( vdps2.find(nome) != vdps2.end() ) {
-			VDP& vdp1 = vdps1[nome];
-			VDP& vdp2 = vdps2[nome];
-			VecOri pc = vdp1.Pc - vdp2.Pc;
-			VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
+	try {
+		Doc_Item row = _initpg2();
 
-			if ( !_add_point_to_table(row, nome, pc, at) )
-				_tria_out_tol.push_back(nome);
+		_read_cam();
+		VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
+		VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
+		_read_vdp(_vdp_name, vdps1);
+		_read_vdp(_vdp_name_2, vdps2);
+		VDP_MAP::iterator it;
+		for (it = vdps1.begin(); it != vdps1.end(); it++) {
+			std::string nome = it->first;
+			if ( vdps2.find(nome) != vdps2.end() ) {
+				VDP& vdp1 = vdps1[nome];
+				VDP& vdp2 = vdps2[nome];
+				VecOri pc = vdp1.Pc - vdp2.Pc;
+				VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
+
+				if ( !_add_point_to_table(row, nome, pc, at) )
+					_tria_out_tol.push_back(nome);
+			}
 		}
-	}
-	Doc_Item sec = _article->get_item("section");
-	if ( sec.get() == NULL )
-		return false;
-	if ( _tria_out_tol.empty() ) {
-		std::stringstream ss;
-		ss << "I due risultati sono compatibili";
-		sec->add_item("para")->append(ss.str());
-	} else {
-		std::stringstream ss;
-		ss << "I due risultati sono diversi nei seguenti fotogrammi";
-		sec->add_item("para")->append(ss.str());
-		Doc_Item itl = sec->add_item("itemizedlist");
-		std::list<std::string>::iterator it;
-		for (it = _tria_out_tol.begin(); it != _tria_out_tol.end(); it++) {
-			itl->add_item("listitem")->append(*it);
+		Doc_Item sec = _article->get_item("section");
+		if ( sec.get() == NULL )
+			return false;
+		if ( _tria_out_tol.empty() ) {
+			std::stringstream ss;
+			ss << "I due risultati sono compatibili";
+			sec->add_item("para")->append(ss.str());
+		} else {
+			std::stringstream ss;
+			ss << "I due risultati sono diversi nei seguenti fotogrammi";
+			sec->add_item("para")->append(ss.str());
+			Doc_Item itl = sec->add_item("itemizedlist");
+			std::list<std::string>::iterator it;
+			for (it = _tria_out_tol.begin(); it != _tria_out_tol.end(); it++) {
+				itl->add_item("listitem")->append(*it);
+			}
 		}
+	} catch(std::exception &e) {
+		std::string mes("Confronto tra due calcoli ");
+		mes.append(e.what());
+		throw std::runtime_error(mes);
 	}
 	return true;
 }

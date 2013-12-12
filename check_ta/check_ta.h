@@ -44,6 +44,8 @@ public:
 	~ta_exec();
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
+	void set_vdp_name(const std::string& nome);
+	void set_vdp_name2(const std::string& nome);
 	void set_obs_name(const std::string& nome);
 	void set_ref_scale(const std::string& nomevalue);
 
@@ -61,6 +63,7 @@ private:
 	Doc_Item _initpg1(void);
 	Doc_Item _initpg2(void);
 	void _resume(void);
+	std::string _get_key(const std::string& val);
 
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
@@ -69,7 +72,7 @@ private:
 	std::string _cam_name;
 	std::string _vdp_name;
 	std::string _vdp_name_2;
-	std::string _out_folder;
+	std::string _obs_name;
 	std::string _proj_dir;
 
 	Camera	_cam;
