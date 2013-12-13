@@ -12,7 +12,7 @@
 #endif
 
 #define DEG_RAD(x) M_PI * (x) / 180
-#define RAD_DEG(x) 180 * (x) / M_PI
+#define RAD_DEG(x) 180 * (x) / M_PI  
 
 class DPOINT;
 class VecOri;
