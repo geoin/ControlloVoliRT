@@ -1,4 +1,3 @@
-/*******/
 #ifndef GEOM_H
 #define GEOM_H
 
@@ -13,7 +12,7 @@
 #endif
 
 #define DEG_RAD(x) M_PI * (x) / 180
-#define RAD_DEG(x) 180 * (x) / M_PI  
+#define RAD_DEG(x) 180 * (x) / M_PI
 
 class DPOINT;
 class VecOri;
@@ -72,6 +71,36 @@ public:
 	}
 	void operator=(const DPOINT& p) {
 		x = p.x; y = p.y; z = p.z;
+	}
+	DPOINT operator+(const DPOINT& p) const {
+		DPOINT p1(x + p.x, y + p.y, z + p.z);
+		return p1;
+	}
+	DPOINT operator-(const DPOINT& p) const {
+		DPOINT p1(p.x - x, p.y - y, p.z - z);
+		return p1;
+	}
+	DPOINT operator*(double d) const {
+		DPOINT p1(x * d, y * d, z * d);
+		return p1;
+	}
+	void operator/=(double d) {
+		x /= d;
+		y /= d;
+		z /= d;
+	}
+	void operator+=(const DPOINT& p) {
+		x += p.x;
+		y += p.y;
+		z += p.z;
+	}
+	const double& operator[](int i) const {
+		const double* v = &x;
+		return v[i];
+	}
+	double& operator[](int i)  {
+		double* v = &x;
+		return v[i];
 	}
 	// assegna le coord alle variabili x, y, z
 	void assign(double *X, double* Y, double* Z = NULL) {
@@ -165,7 +194,10 @@ public:
 	VecOri operator+(const VecOri& v) {
 		return VecOri(p[0] + v.p[0], p[1] + v.p[1], p[2] + v.p[2]);
 	}
-	const double operator[](int i) {
+	const double& operator[](int i) const {
+		return p[i];
+	}
+	double& operator[](int i) {
 		return p[i];
 	}
 	bool operator==(const VecOri& v) {
@@ -192,15 +224,18 @@ public:
 		return w;
 	}
 	void Normalize() {
-		double len = sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+		double len = module();
 		if ( len == 0. ) return;
 		p[0] /= len;
 		p[1] /= len;
 		p[2] /= len;
 	}
-	double GetX(void) { return p[0]; }
-	double GetY(void) { return p[1]; }
-	double GetZ(void) { return p[2]; }
+	double module(void) const {
+		return sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+	}
+    double GetX(void) const { return p[0]; }
+    double GetY(void) const { return p[1]; }
+    double GetZ(void) const { return p[2]; }
 	void Set(double x, double y, double z) {
 		p[0] = x;
 		p[1] = y;
@@ -257,9 +292,6 @@ public:
 	void operator=(double m[3][3]) {
 		mtmat(m);
 	}
-	const double* operator[](int i) {
-		return &_mat[i][0];
-	}
 	// somma di matrici
 	void operator+=(const MatOri& m) {
 		for (int i = 0; i < 3; i++)
@@ -282,6 +314,16 @@ public:
 				w.p[i] += _mat[i][j] * v.p[j];
 		}
 		return w;
+
+	}
+	DPOINT operator*(const DPOINT& p) const {
+		DPOINT p1;
+		for (int i =0; i < 3; i++) {
+			p1[i] = 0;
+			for (int j = 0; j < 3; j++)
+				p1[i] += _mat[i][j] * p[j];
+		}
+		return p1;
 
 	}
 	// ritorna la riga i come vettore
@@ -311,6 +353,12 @@ public:
 		SetRow(v0, 0);
 		SetRow(v1, 1);
 		SetRow(v2, 2);
+	}
+	const double* operator[](int i) const {
+		return &_mat[i][0];
+	}
+	double* operator[](int i) {
+		return &_mat[i][0];
 	}
 	// imposta la matrice con vettori colonna
 	void SetCols(VecOri v0, VecOri v1, VecOri v2) {
@@ -363,7 +411,7 @@ public:
 	//			 MINDIF(_mat[1][0], m._mat[1][0]) && MINDIF(_mat[1][1], m._mat[1][1]) && MINDIF(_mat[1][2], m._mat[1][2]) &&
 	//			 MINDIF(_mat[2][0], m._mat[2][0]) && MINDIF(_mat[2][1], m._mat[2][1]) && MINDIF(_mat[2][2], m._mat[2][2]) );
 	//}
-	MatOri Transpose(void) {
+    MatOri Transpose(void) const {
 		MatOri mt;
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 3; j++)
@@ -371,7 +419,7 @@ public:
 		}
 		return mt;
 	}
-	MatOri Invert(void) {
+	MatOri Invert(void) const {
 		MatOri mt;
 		VecOri v0 = GetCol(0);
 		VecOri v1 = GetCol(1);
