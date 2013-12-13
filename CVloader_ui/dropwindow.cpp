@@ -118,12 +118,12 @@ DropWindow::DropWindow()
 
     execButton = new QPushButton(tr("Esegui"));
     quitButton = new QPushButton(tr("Esci"));
-	QCheckBox* replaceButton = new QCheckBox("Sostituisci");
+    //QCheckBox* replaceButton = new QCheckBox("Sostituisci");
 
     buttonBox = new QDialogButtonBox;
     buttonBox->addButton(execButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
-	buttonBox->addButton(replaceButton, QDialogButtonBox::AcceptRole);
+    //buttonBox->addButton(replaceButton, QDialogButtonBox::AcceptRole);
 
     connect(quitButton, SIGNAL(pressed()), this, SLOT(close()));
     connect(execButton, SIGNAL(pressed()), this, SLOT(exec()));
@@ -185,7 +185,7 @@ void DropWindow::keyPressEvent( QKeyEvent* event )
 	switch ( event->key() ) {
     case Qt::Key_Insert:
         if ( io.type() == item_obj::ty_gps ) {
-			item_obj io1("Missione", "Premere Ins per aggiungere una base opure trascinare i file rinex del rover", "", item_obj::ty_missione, true);
+			item_obj io1("Missione", "", "Premere Ins per aggiungere una base oppure trascinare i file rinex del rover", item_obj::ty_missione, true);
             QTreeWidgetItem * qi = new QTreeWidgetItem;
             qi->setText(0, io1.name());
             qi->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io1));
@@ -193,7 +193,7 @@ void DropWindow::keyPressEvent( QKeyEvent* event )
             wi->addChild(qi);
 			_prj_tree->editItem(qi, 0);
         } else if ( io.type() == item_obj::ty_missione ) {
-			item_obj io1("base", "rinex", "Trascinare\ni file con i dati delle basi\n", item_obj::ty_base, true);
+			item_obj io1("base", "", "Trascinare\ni file con i dati delle basi\n", item_obj::ty_base, true);
             QTreeWidgetItem * qi = new QTreeWidgetItem;
             qi->setText(0, io1.name());
             qi->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io1));
@@ -219,55 +219,65 @@ void DropWindow::keyPressEvent( QKeyEvent* event )
         break;
     }
 }
-void DropWindow::_item_manager(const item_obj& io)
+void DropWindow::_item_manager(const item_obj& io, QTreeWidgetItem* w0)
 {
 	if ( io.dropped().isEmpty() )
 		return;
 	switch ( io.type() ) {
-		case item_obj::ty_project:
+		case item_obj::ty_project: // load the project folder
 			_ld->prj_folder(io.dropped());
 			_ld->create_project();
 			break;
-		case item_obj::ty_fotogra:
+		case item_obj::ty_fotogra: // no action
 			break;
-		case item_obj::ty_lidar:
+		case item_obj::ty_lidar: // no action
 			break;
-		case item_obj::ty_assi_p:
+		case item_obj::ty_assi_p: // load planned flight  lines
+			_ld->load_planned_flight_lines(io.dropped());
 			break;
-		case item_obj::ty_assi:
+		case item_obj::ty_assi: // load flight lines
 			_ld->load_flight_lines(io.dropped());
 			break;
-		case item_obj::ty_carto:
+		case item_obj::ty_carto: // load areas to collect
 			_ld->load_carto(io.dropped());
 			break;
-		case item_obj::ty_assetti_p:
+		case item_obj::ty_assetti_p: // load planned photo parameters
+			_ld->load_planned_assetti(io.dropped());
 			break;
-		case item_obj::ty_assetti:
+		case item_obj::ty_assetti: // load real photo parameters
 			_ld->load_assetti(io.dropped());
 			break;
-		case item_obj::ty_camera:
+		case item_obj::ty_camera: // load camera file
 			_ld->load_camera(io.dropped());
 			break;
-		case item_obj::ty_dem:
+		case item_obj::ty_dem: // load digital terrain model
 			_ld->load_dem(io.dropped());
 			break;
-		case item_obj::ty_quadro:
+		case item_obj::ty_quadro: // load union table for orthos
+			_ld->load_quadro(io.dropped());
 			break;
-		case item_obj::ty_gps:
+		case item_obj::ty_gps: // no action
 			break;
-		case item_obj::ty_missione:
-			_ld->load_gps(io.dropped());
+		case item_obj::ty_missione: { // load mission data
+			QString qs = w0->text(0); // nome della missione
+			_ld->load_mission(io.dropped(), qs);
 			break;
-		case item_obj::ty_base:
+		}
+		case item_obj::ty_base: { // load base data refferred to a mission
+			QString base_name = w0->text(0); // nome della base
+			QString mis_name = w0->parent()->text(0); // nome della missione
+			_ld->load_base(io.dropped(), mis_name, base_name);
 			break;
+		}
 	}
 }
 void DropWindow::_child_manager(QTreeWidgetItem * w0)
 {
 	// gestisce se stesso
 	QVariant v = w0->data(0, Qt::UserRole);
+	//QString qs = w0->text(0);
 	item_obj io = v.value<item_obj>();
-	_item_manager(io);
+	_item_manager(io, w0);
 
 	int nc = w0->childCount();
 	// gestisci i chil node
@@ -284,8 +294,9 @@ void DropWindow::exec()
 
 	// gestisce se stesso
 	QVariant v = w0->data(0, Qt::UserRole);
+	//QString qs = w0->text(0);
 	item_obj io = v.value<item_obj>();
-	_item_manager(io);
+	_item_manager(io, w0);
 
 	int nc = w0->childCount();
 	for ( int i = 0; i < nc; i++) {

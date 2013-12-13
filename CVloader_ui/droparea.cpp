@@ -83,7 +83,7 @@ void DropArea::item_changed(QTreeWidgetItem * qtw, int col)
 	item_obj o = v.value<item_obj>();
 	QString qs;
 	if ( !o.dropped().isEmpty() ) {
-		setStyleSheet("* { background-color: rgb(0, 250, 50); }");
+		setStyleSheet("* { background-color: rgb(0, 190, 50); }");
 	    //setBackgroundRole(QPalette::Link);
 		QStringList ql = o.dropped().split(";");
 		for (int i = 0; i < ql.size(); i++) {

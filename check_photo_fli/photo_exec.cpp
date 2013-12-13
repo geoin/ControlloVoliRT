@@ -38,6 +38,7 @@
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
+#define ASSI_VOLO "AVOLO"
 #define UNCOVER "Z_UNCOVER"
 #define SHAPE_CHAR_SET "CP1252"
 #define DB_NAME "geo.sqlite"
@@ -149,27 +150,29 @@ bool photo_exec::run()
 		_vdp_name = Path(_proj_dir, assetti).toString();
 		_dem_name = Path(_proj_dir, DEM).toString();
 
-		int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/Carto/zona2castpescaia-argent-scarlin",
-		   CARTO,
-		   SHAPE_CHAR_SET,
-		   SRID,
-		   "geom",
-		   true,
-		   false,
-		   false);
+		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/Carto/zona2castpescaia-argent-scarlin",
+		//   CARTO,
+		//   SHAPE_CHAR_SET,
+		//   SRID,
+		//   "geom",
+		//   true,
+		//   false,
+		//   false);
 	
 		std::cout << "Layer:" << CARTO << std::endl;
 		
-		nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/assi_volo/avolop",
-		   "AVOLOP",
-		   SHAPE_CHAR_SET,
-		   SRID,
-		   "geom",
-		   true,
-		   false,
-		   false);
+		//nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/assi_volo/avolop",
+		//   "AVOLOP",
+		//   SHAPE_CHAR_SET,
+		//   SRID,
+		//   "geom",
+		//   true,
+		//   false,
+		//   false);
 
-		std::cout << "Layer:" << "AVOLOP" << std::endl;
+		std::string assi(ASSI_VOLO);
+		assi += _type == fli_type ? "V" : "P";
+		std::cout << "Layer:" << assi << std::endl;
 
 		// Read reference values
 		_read_ref_val();

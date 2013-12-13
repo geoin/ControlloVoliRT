@@ -98,7 +98,7 @@ private slots:
 
 private:
 	void _child_manager(QTreeWidgetItem * wi);
-	void _item_manager(const item_obj& io);
+	void _item_manager(const item_obj& io, QTreeWidgetItem* wi = NULL);
 
 
     DropArea*	_drop_area;
