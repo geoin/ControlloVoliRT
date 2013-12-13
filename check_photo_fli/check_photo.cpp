@@ -38,7 +38,7 @@ using Poco::Util::HelpFormatter;
 //using Poco::Util::AbstractConfiguration;
 using Poco::Util::OptionCallback;
 
-check_photo::check_photo(): _helpRequested(false) 
+check_photo::check_photo():_helpRequested(false) 
 {
 }
 void check_photo::initialize(Application& self) 

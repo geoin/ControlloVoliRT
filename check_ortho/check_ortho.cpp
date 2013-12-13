@@ -44,9 +44,8 @@ check_ortho::check_ortho(): _helpRequested(false)
 }
 void check_ortho::initialize(Application& self) 
 {
-	loadConfiguration(); // load default configuration files, if present
+	//loadConfiguration();
 	Application::initialize(self);
-	// add your own initialization code here
 }
 
 void check_ortho::uninitialize() 
@@ -57,7 +56,6 @@ void check_ortho::uninitialize()
 void check_ortho::reinitialize(Application& self)
 {
 	Application::reinitialize(self);
-	// add your own reinitialization code here
 }
 void check_ortho::defineOptions(OptionSet& options)
 {
@@ -71,49 +69,46 @@ void check_ortho::defineOptions(OptionSet& options)
 
 		
 	options.addOption(
-		Option("prj", "j", "Specifica il file di progetto")
+		Option("dir", "d", "Specifica la cartella del progetto")
 			.required(false)
 			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_ortho>(this, &check_ortho::handlePrj)));
+			.argument("value")
+			.callback(OptionCallback<check_ortho>(this, &check_ortho::handlePrjDir)));
 	
-	//options.addOption(
-	//	Option("dtm", "g", "Specifica il file con il modello numerico del terreno")
-	//		.required(false)
-	//		.repeatable(false)
-	//		.argument("file di testo")
-	//		.callback(OptionCallback<check_photo>(this, &check_ortho::handleDtm)));
+	options.addOption(
+		Option("img", "i", "Specifica la cartella delle ortho immagini")
+			.required(false)
+			.repeatable(false)
+			.argument("value")
+			.callback(OptionCallback<check_ortho>(this, &check_ortho::handleImgDir)));
+	
+	options.addOption(
+		Option("scale", "s", "Specifica la scala di lavoro")
+			.required(false)
+			.repeatable(false)
+			.argument("value")
+			.callback(OptionCallback<check_ortho>(this, &check_ortho::handleScale)));
 }
-void check_ortho::handleCam(const std::string & name, const std::string & value)
+void check_ortho::handleImgDir(const std::string& name, const std::string & value)
 {
-	int a = 1;
+	_otx.set_img_dir(value);
 }
-void check_ortho::handlePcent(const std::string & name, const std::string & value) {
-	int a = 1;
+void check_ortho::handlePrjDir(const std::string& name, const std::string& value) 
+{
+	_otx.set_proj_dir(value);
+}
+void check_ortho::handleScale(const std::string& name, const std::string& value)
+{
+	_otx.set_ref_scale(value);
 }
 
-
-void check_ortho::handlePrj(const std::string & name, const std::string & value) {
-	int a = 1;
-}
-
-
-void check_ortho::handleHelp(const std::string& name, const std::string& value) {
+void check_ortho::handleHelp(const std::string& name, const std::string& value)
+{
 	_helpRequested = true;
 	displayHelp();
 	stopOptionsProcessing();
 }
 
-void check_ortho::handleDefine(const std::string& name, const std::string& value)
-{
-	defineProperty(value);
-}
-
-void check_ortho::handleConfig(const std::string& name, const std::string& value)
-{
-	loadConfiguration(value);
-}
-	
 void check_ortho::displayHelp()
 {
 	HelpFormatter helpFormatter(options());
@@ -123,57 +118,12 @@ void check_ortho::displayHelp()
 	helpFormatter.format(std::cout);
 }
 	
-void check_ortho::defineProperty(const std::string& def)
-{
-	std::string name;
-	std::string value;
-	std::string::size_type pos = def.find('=');
-	if (pos != std::string::npos) {
-		name.assign(def, 0, pos);
-		value.assign(def, pos + 1, def.length() - pos);
-	} else 
-		name = def;
-	config().setString(name, value);
-}
-
 int check_ortho::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
-		_otx.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
-		_otx.set_img_dir("H:/Regione-Toscana/VOLO2010SCARLIO-CASTPESCAIA-ARGENTARIO/6-Ortofoto/Cast_Pescaia");
 		_otx.run();
-
-		//logger().information("Arguments to main():");
-		//for (std::vector<std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
-		//	logger().information(*it);
-		//}
-		//logger().information("Application properties:");
-		////printProperties("");
 	}
 	return Application::EXIT_OK;
 }
 	
-void check_ortho::printProperties(const std::string& base)
-{
-	AbstractConfiguration::Keys keys;
-	config().keys(base, keys);
-	if ( keys.empty() ) {
-		if ( config().hasProperty(base) ) {
-			std::string msg;
-			msg.append(base);
-			msg.append(" = ");
-			msg.append(config().getString(base));
-			logger().information(msg);
-		}
-	} else {
-		for ( AbstractConfiguration::Keys::const_iterator it = keys.begin(); it != keys.end(); ++it ) {
-			std::string fullKey = base;
-			if ( !fullKey.empty() )
-				fullKey += '.';
-			fullKey.append(*it);
-			printProperties(fullKey);
-		}
-	}
-}
-
 POCO_APP_MAIN(check_ortho)

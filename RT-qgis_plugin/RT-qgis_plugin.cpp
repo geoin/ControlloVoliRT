@@ -68,11 +68,17 @@ dbox::dbox(QgisInterface* mi): _mi(mi)
     if ( !qd.exists() )
         qd.mkdir(_set_dir);
 }
-void dbox::_init(QVBoxLayout* qv)
+QString dbox::get_last_prj()
 {
     QFileInfo qfs(_set_dir, "rt_tools.cfg");
     QSettings qs(qfs.filePath(), QSettings::IniFormat);
     QString last_prj = qs.value("PROJ_DIR", "").toString();
+    return last_prj;
+}
+
+void dbox::_init(QVBoxLayout* qv)
+{
+    QString last_prj = get_last_prj();
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
@@ -370,7 +376,6 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l1 = new QLabel("File di riferimento:");
     _f1 = new QLineEdit;
-    //_f1->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
     connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist1(bool)));
@@ -382,7 +387,6 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l2 = new QLabel("File da confrontare:");
     _f2 = new QLineEdit;
-    //_f2->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
     QPushButton* b2 = new QPushButton("...");
     b2->setFixedWidth(20);
     connect(b2, SIGNAL(clicked(bool)), this, SLOT(_dirlist2(bool)));
@@ -394,7 +398,6 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l3 = new QLabel("File Osservazioni:");
     _f3 = new QLineEdit;
-    //_f3->setText("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
     QPushButton* b3 = new QPushButton("...");
     b3->setFixedWidth(20);
     connect(b3, SIGNAL(clicked(bool)), this, SLOT(_dirlist3(bool)));
@@ -505,10 +508,37 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
     _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;
+
+    // cartella delle immagini
+    QLabel* l1 = new QLabel("Cartella Ortho immagini:");
+    _idir = new QLineEdit;
+    QString last_prj = get_last_prj();
+    _idir->setText(last_prj);
+    QPushButton* b1 = new QPushButton("...");
+    b1->setFixedWidth(20);
+    connect(b1, SIGNAL(clicked(bool)), this, SLOT(_img_dir(bool)));
+    QHBoxLayout* hl1 = new QHBoxLayout;
+    hl1->addWidget(l1);
+    hl1->addWidget(_idir);
+    hl1->addWidget(b1);
+
+    qvb->addLayout(hl1);
+
     _init(qvb);
 }
+bool Check_ortho::_img_dir(bool)
+{
+    QFileDialog qf;
+    QString dirName = _prj->text();
+    dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
+    if ( !dirName.isEmpty() ) {
+        _prj->setText(dirName);
+        _args[0] = QString("/i=") + dirName;
+    }
+    return true;
+}
 /*******************************************/
-const QString icon_path("C:/Google_Drive/Regione Toscana Tools/icons");
+const QString icon_path("C:/Google Drive/Regione Toscana Tools/icons");
 
 /*******************************************/
 QgsRTtoolsPlugin::QgsRTtoolsPlugin(QgisInterface* iface): mIface(iface)
@@ -624,10 +654,10 @@ void QgsRTtoolsPlugin::ver_ortho()
 }
 void QgsRTtoolsPlugin::ver_proj_lidar()
 {
-    QgsDataSourceURI uri;
-    uri.setDatabase("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/geo.sqlite");
-    uri.setDataSource("", "AVOLOP", "geom"); // schema, nome layer, nome colonna geografica
-    mIface->addVectorLayer(uri.uri(), "AVOLOP", "spatialite"); // uri, nome lnella legenda, nome provider
+   // QgsDataSourceURI uri;
+    //uri.setDatabase("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/geo.sqlite");
+    //uri.setDataSource("", "AVOLOP", "geom"); // schema, nome layer, nome colonna geografica
+    //mIface->addVectorLayer(uri.uri(), "AVOLOP", "spatialite"); // uri, nome lnella legenda, nome provider
 }
 void QgsRTtoolsPlugin::ver_lidar()
 {

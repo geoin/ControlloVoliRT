@@ -27,7 +27,7 @@
 #ifndef CHECK_ORTHO_H
 #define CHECK_ORTHO_H
 
-#include "dem_interpolate/geom.h"
+//#include "dem_interpolate/geom.h"
 #include "Poco/Util/Application.h"
 #include "CVUtil/cvspatialite.h"
 #include "CVUtil/ogrgeomptr.h"
@@ -42,6 +42,7 @@ public:
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
 	void set_img_dir(const std::string& nome);
+	void set_ref_scale(const std::string& nome);
 private:
 	bool _process_imgs(void);
 	bool _process_borders(void);
@@ -76,17 +77,12 @@ protected:
 	void displayHelp();
 	void defineProperty(const std::string& def);
 	int main(const std::vector<std::string>& args);
-	void printProperties(const std::string& base);
 private:
-	void handleCam(const std::string & name, const std::string & value);
-	void handlePcent(const std::string & name, const std::string & value);
-	void handleDtm(const std::string & name, const std::string & value);
-	void handleCarto(const std::string & name, const std::string & value);
-	void handleFlight(const std::string & name, const std::string & value);
-	void handlePrj(const std::string & name, const std::string & value);
-	void handlePline(const std::string & name, const std::string & value);
-	void handleFline(const std::string & name, const std::string & value);
 	void handleHelp(const std::string& name, const std::string& value);
+	void handlePrjDir(const std::string& name, const std::string & value);
+	void handleScale(const std::string& name, const std::string & value);
+	void handleImgDir(const std::string& name, const std::string & value);
+
 	void handleDefine(const std::string& name, const std::string& value);
 	void handleConfig(const std::string& name, const std::string& value);
 	bool _helpRequested;

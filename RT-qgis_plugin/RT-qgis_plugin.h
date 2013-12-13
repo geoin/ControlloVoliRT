@@ -86,6 +86,7 @@ protected:
     void _esegui(const QString& exe, const QStringList& args);
     void _init(QVBoxLayout* qvb);
     void _add_layers_to_legend(void);
+    QString get_last_prj(void);
     QString _plugin_dir;
     QString _set_dir;
     QString _executable;
@@ -136,7 +137,9 @@ class Check_ortho: public dbox {
 public:
     Check_ortho(QgisInterface* mi);
 protected slots:
+    bool _img_dir(bool);
 private:
+     QLineEdit* _idir;
 };
 
 #endif
