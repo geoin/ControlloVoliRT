@@ -11,19 +11,19 @@ TARGET = check_ortho
 
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib"
+        LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib" -L"C:/OSGeo4W/lib/"
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
 }
 
-LIBS += -lspatialite_i
+#LIBS += -lspatialite_i
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -lsqlite3_i -ldem_interpolated
+        LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite4 -lCVutild -lgdald_i -llibtiff_i
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoFoundation -lPocoUtil -lrtklib -lziplib -lphoto_utild
+        LIBS += -lPocoFoundation -lPocoUtil -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite4 -lCVutil -lgdal_i -llibtiff_i
 }
 
 win32 {
@@ -37,9 +37,11 @@ DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
 
 SOURCES += \
     check_ortho.cpp \
+    tiff_util.cpp \
     ortho_exec.cpp
 
 HEADERS +=\
-    check_ortho.h
+    check_ortho.h \
+    tiff_util.h
 
-DESTDIR = ../bin
+DESTDIR = C:\OSGeo4W\apps\qgis\plugins

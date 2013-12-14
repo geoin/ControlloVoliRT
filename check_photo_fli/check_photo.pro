@@ -23,7 +23,7 @@ CONFIG(debug, debug|release) {
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoUtil -lphoto_utild -ldem_interpolate -lspatialite4 -lsqlite3_i -lCVutil -lgdal_i
+        LIBS += -lPocoUtil -lphoto_util -ldem_interpolate -lspatialite4 -lsqlite3_i -lCVutil -lgdal_i
 }
 
 win32 {
@@ -42,4 +42,4 @@ SOURCES += \
 HEADERS +=\
     check_photo.h
 
-DESTDIR = ../bin
+DESTDIR = C:\OSGeo4W\apps\qgis\plugins

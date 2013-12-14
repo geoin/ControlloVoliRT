@@ -372,10 +372,19 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
+    QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+
+
     QVBoxLayout* qvb = new QVBoxLayout;
 
     QLabel* l1 = new QLabel("File di riferimento:");
     _f1 = new QLineEdit;
+    QString q1 = qs.value("TA_REF", "").toString();
+    _f1->setText(q1);
+    if ( !q1.isEmpty() )
+         _args[1] = QString("/r=") + q1;
+
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
     connect(b1, SIGNAL(clicked(bool)), this, SLOT(_dirlist1(bool)));
@@ -387,6 +396,11 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l2 = new QLabel("File da confrontare:");
     _f2 = new QLineEdit;
+    QString q2 = qs.value("TA_CFG", "").toString();
+    _f2->setText(q2);
+    if ( !q2.isEmpty() )
+        _args[2] = QString("/c=") + q2;
+
     QPushButton* b2 = new QPushButton("...");
     b2->setFixedWidth(20);
     connect(b2, SIGNAL(clicked(bool)), this, SLOT(_dirlist2(bool)));
@@ -398,6 +412,12 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l3 = new QLabel("File Osservazioni:");
     _f3 = new QLineEdit;
+    QString q3 = qs.value("TA_OBS", "").toString();
+    _f3->setText(q3);
+    if ( !q3.isEmpty() )
+        _args[3] = QString("/o=") + q3;
+
+
     QPushButton* b3 = new QPushButton("...");
     b3->setFixedWidth(20);
     connect(b3, SIGNAL(clicked(bool)), this, SLOT(_dirlist3(bool)));
@@ -425,55 +445,55 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
 bool Check_ta::_dirlist1(bool)
 {
+    QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+
     QFileDialog qf;
     QString fileName = _f1->text();
     if ( fileName.isEmpty() ) {
-        QFileInfo qfs(_set_dir, "rt_tools.cfg");
-        QSettings qs(qfs.filePath(), QSettings::IniFormat);
-        fileName = qs.value("TA_REF", "").toString();
-        if ( fileName.isEmpty() )
             fileName = _prj->text();
     }
     fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti di riferimento:", fileName, "*.txt");
     if ( !fileName.isEmpty() ) {
         _f1->setText(fileName);
         _args[1] = QString("/r=") + fileName;
+        qs.setValue("TA_REF", fileName) ;
     }
     return true;
 }
 bool Check_ta::_dirlist2(bool)
 {
+    QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+
     QFileDialog qf;
     QString fileName = _f2->text();
     if ( fileName.isEmpty() ) {
-        QFileInfo qfs(_set_dir, "rt_tools.cfg");
-        QSettings qs(qfs.filePath(), QSettings::IniFormat);
-        fileName = qs.value("TA_REF", "").toString();
-        if ( fileName.isEmpty() )
             fileName = _prj->text();
     }
     fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti da confrontare:", fileName);
     if ( !fileName.isEmpty() ) {
         _f2->setText(fileName);
         _args[2] = QString("/c=") + fileName;
+        qs.setValue("TA_CFG", fileName) ;
     }
     return true;
 }
 bool Check_ta::_dirlist3(bool)
 {
+    QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+
     QFileDialog qf;
     QString fileName = _f3->text();
     if ( fileName.isEmpty() ) {
-        QFileInfo qfs(_set_dir, "rt_tools.cfg");
-        QSettings qs(qfs.filePath(), QSettings::IniFormat);
-        fileName = qs.value("TA_REF", "").toString();
-        if ( fileName.isEmpty() )
-            fileName = _prj->text();
+           fileName = _prj->text();
     }
     fileName = qf.getOpenFileName(this, "Selezionare il file con le osservazioni:", fileName);
     if ( !fileName.isEmpty() ) {
         _f3->setText(fileName);
         _args[3] = QString("/o=") + fileName;
+        qs.setValue("TA_OBS", fileName) ;
     }
     return true;
 }
@@ -509,11 +529,16 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
+    QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+
     // cartella delle immagini
     QLabel* l1 = new QLabel("Cartella Ortho immagini:");
     _idir = new QLineEdit;
-    QString last_prj = get_last_prj();
-    _idir->setText(last_prj);
+    QString q1 = qs.value("ORTHO_IDIR", "").toString();
+    _idir->setText(q1);
+    if ( !q1.isEmpty() )
+         _args[1] = QString("/i=") + q1;
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
     connect(b1, SIGNAL(clicked(bool)), this, SLOT(_img_dir(bool)));
@@ -528,12 +553,19 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 }
 bool Check_ortho::_img_dir(bool)
 {
+    QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+
     QFileDialog qf;
-    QString dirName = _prj->text();
+    QString dirName = _idir->text();
+    if ( dirName.isEmpty() ) {
+         dirName = _prj->text();
+    }
     dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
     if ( !dirName.isEmpty() ) {
-        _prj->setText(dirName);
-        _args[0] = QString("/i=") + dirName;
+        _idir->setText(dirName);
+        _args[1] = QString("/i=") + dirName;
+        qs.setValue("ORTHO_IDIR", dirName) ;
     }
     return true;
 }

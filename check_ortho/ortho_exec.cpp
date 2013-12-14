@@ -24,6 +24,7 @@
         Copyright (C) 2013 Geoin s.r.l.
 
 */
+#include "tiff_util.h"
 #include "check_ortho.h"
 #include "Poco/Util/XMLConfiguration.h"
 #include "Poco/stringtokenizer.h"
@@ -34,8 +35,9 @@
 #include "Poco/string.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include "ogr_geometry.h"
-#include "tiff_util.h"
+
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
@@ -43,6 +45,8 @@
 #define REFSCALE "RefScale_2000"
 #define QUADRO_RT "Quadro_RT"
 #define QUADRO "Z_Quadro"
+#define BLOCCO "Z_blockv"
+#define BORDERS "BORDERS_O"
 #define CONTORNO_RT "CONTORNO_RT"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOC "check_ortho.xml"
@@ -131,25 +135,26 @@ bool ortho_exec::run()
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
 
+		int nrows;
 		// loads the reference union table
-		int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Quadro/qu-ofc-cast_pescaia-scarlino-etrf89",
-		   QUADRO_RT,
-		   SHAPE_CHAR_SET,
-		   SRID,
-		   "geom",
-		   true,
-		   false,
-		   false);
+		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Quadro/qu-ofc-cast_pescaia-scarlino-etrf89",
+		//   QUADRO_RT,
+		//   SHAPE_CHAR_SET,
+		//   SRID,
+		//   "geom",
+		//   true,
+		//   false,
+		//   false);
 		
 		// loads the region borders
-		nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Contorno regione/ContornoRT",
-		   CONTORNO_RT,
-		   SHAPE_CHAR_SET,
-		   SRID,
-		   "geom",
-		   true,
-		   false,
-		   false);
+		//nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Contorno regione/ContornoRT",
+		//   CONTORNO_RT,
+		//   SHAPE_CHAR_SET,
+		//   SRID,
+		//   "geom",
+		//   true,
+		//   false,
+		//   false);
 
 		// Read reference values
 		_read_ref_val();
@@ -159,8 +164,12 @@ bool ortho_exec::run()
 			return false;
 
 		// create the polygons of the used surface of each table
+		
+		
+		
 		if ( !_process_borders() )
 			return false;
+
 
 		// initialize docbook xml file
 		_init_document();
@@ -170,6 +179,7 @@ bool ortho_exec::run()
 
 		// write the result on the docbook report
 		_dbook.write();
+		std::cout << "Procedura terminata regolarmente" << std::endl;
 	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
@@ -184,7 +194,17 @@ void ortho_exec::set_img_dir(const std::string& nome)
 {
 	_img_dir = nome;
 }
-
+void ortho_exec::set_ref_scale(const std::string& nome)
+{
+	if ( nome  == "1000" )
+		_refscale = "RefScale_1000";
+	else if ( nome  == "2000" )
+		_refscale = "RefScale_2000";
+	else if ( nome  == "5000" )
+		_refscale = "RefScale_5000";
+	else if ( nome  == "10000" )
+		_refscale = "RefScale_10000";
+}
 bool ortho_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
@@ -211,6 +231,7 @@ bool ortho_exec::_process_img_border(const std::string& foglio, OGRGeomPtr& pol)
 	Poco::Path img_name(_img_dir, foglio);
 	img_name.setExtension("tif");
 	BorderLine bl;
+	std::cout << "Elaborazione bordo di " << foglio << std::endl;
 	bl.Evaluate(img_name.toString(), pt);
 
 	OGRGeometryFactory gf;
@@ -225,9 +246,16 @@ bool ortho_exec::_process_img_border(const std::string& foglio, OGRGeomPtr& pol)
 
 		img_name.setExtension("tfw");
 		TFW tf(img_name.toString());
+		DPOINT p0;
 		for ( size_t i = 0; i < pt.size(); i++) {
 			pt[i] = tf.img_ter(pt[i]);
-			gp->addPoint(pt[i].x, pt[i].y);
+			if ( i > 0 ) {
+				double d = pt[i].dist2D(p0);
+				if ( d > 1 )
+					gp->addPoint(pt[i].x, pt[i].y);
+			} else 
+				gp->addPoint(pt[i].x, pt[i].y);
+			p0 = pt[i];
 		}
 		gp->closeRings();
 		OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) pol);
@@ -240,7 +268,10 @@ bool ortho_exec::_process_img_border(const std::string& foglio, OGRGeomPtr& pol)
 }
 bool ortho_exec::_process_borders()
 {
-	std::string table("BORDERS_O");
+	std::string table(BORDERS);
+	std::cout << "Layer:" << table << std::endl;
+	//return true;
+
 	cnn.remove_layer(table);
 
 	std::stringstream sql;
@@ -268,8 +299,8 @@ bool ortho_exec::_process_borders()
 	for ( size_t i = 0; i < _fogli.size(); i++) {
 		
 		std::string foglio(_fogli[i]);
-		//if ( foglio != "07I34" )
-		//	continue;
+		if ( foglio != "07I28" )
+			continue;
 
 		OGRGeomPtr pol;
 		if ( _process_img_border(foglio, pol) ) {
@@ -322,6 +353,7 @@ bool ortho_exec::_process_imgs()
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());	
+	std::cout << "Layer:" << table << std::endl;
 
 	// create the insertion query
 	std::stringstream sql2;
@@ -376,14 +408,15 @@ bool ortho_exec::_final_report()
 	std::string table_rt(QUADRO_RT);
 	std::string table(QUADRO);
 
+	std::cout << "Verifica presenza di tutte le tavole previste" << std::endl;
+
 	std::stringstream sql;
 	sql << "select * from " << table_rt << " a left join " << table << " b on a.foglio=b.foglio where b.foglio is null";
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
 	if ( rs.fields_count() == 0 ) {
-		sec->add_item("para")->append("Tutti i fogli previsti sono state realizzati");
-		return true;
+		sec->add_item("para")->append("Tutti i fogli previsti sono stati realizzati");
 	} else {
 		sec->add_item("para")->append("I seguenti fogli non sono stati realizzati");
 		Doc_Item itl = sec->add_item("itemizedlist");
@@ -394,13 +427,12 @@ bool ortho_exec::_final_report()
 
 	// check if there are additional tables
 	std::stringstream sql1;
-	sql << "select * from " << table << " a left join " << table_rt << " b on a.foglio=b.foglio where b.foglio is null";
+	sql1 << "select * from " << table << " a left join " << table_rt << " b on a.foglio=b.foglio where b.foglio is null";
 	Statement stm1(cnn);
-	stm.prepare(sql1.str());
+	stm1.prepare(sql1.str());
 	rs = stm1.recordset();
 	if ( rs.fields_count() == 0 ) {
 		sec->add_item("para")->append("Non sono state realizzate tavole extra");
-		return true;
 	} else {
 		sec->add_item("para")->append("Sono stati realizzati i seguenti fogli non richiesti");
 		Doc_Item itl = sec->add_item("itemizedlist");
@@ -408,7 +440,90 @@ bool ortho_exec::_final_report()
 			itl->add_item("listitem")->append(rs["FOGLIO"].toString());
 		}
 	}
+	std::cout << "Layer:" << BLOCCO << std::endl;
 
+	std::stringstream sql2;
+	sql2 << "select AsBinary(geom) from " << BLOCCO ;
+	Statement stm2(cnn);
+	stm2.prepare(sql2.str());
+	rs = stm2.recordset();
+
+	std::vector<OGRGeomPtr> vp;
+	while ( !rs.eof() ) {
+		// Get the first photo geometry
+		OGRGeomPtr pol = (Blob) rs[0];
+		vp.push_back(pol);
+		rs.next();
+	}
+	std::stringstream sql3;
+	sql3 << "select Foglio, AsBinary(geom) from " << BORDERS;
+	Statement stm3(cnn);
+	stm3.prepare(sql3.str());
+	rs = stm3.recordset();
+	bool ok = true;
+	std::vector<std::string> v1, v2;
+	while ( !rs.eof() ) {
+		// Get the first photo geometry
+		OGRGeomPtr pol = (Blob) rs[1];
+		std::string foglio = rs[0];
+
+		for ( size_t i = 0; i < vp.size(); i++) {
+			if ( vp[i]->Intersect(pol) ) {
+				OGRPolygon* p1 = (OGRPolygon*) ((OGRGeometry*) vp[i]);
+				double a1 = p1->get_Area();
+				OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) pol);
+				double a2 = p2->get_Area();
+				OGRGeomPtr dif = p2->Difference(p1);
+				OGRPolygon* p3 = (OGRPolygon*) ((OGRGeometry*) dif);
+				if ( p3 != NULL ) {
+					//double a3 = p3->get_Area();
+				
+					if ( !dif->IsEmpty() ) {
+						//std::cout << "Il foglio " << foglio <<  " è stato realizzato usando materiale extra" << std::endl;
+						v1.push_back(foglio);
+						ok = false;
+					}
+				} else {
+					int a = 1;
+				}
+				OGRGeomPtr inter = p1->Intersection(p2);
+				OGRPolygon* p4 = (OGRPolygon*) ((OGRGeometry*) inter);
+				if ( p4 != NULL ) {
+					double a4 = p4->get_Area();
+					if ( fabs(a2 - a4) > 0.1 * a2 ) {
+						//std::cout << "Il foglio " << foglio <<  " non è stato realizzato completamente" << std::endl;
+						v1.push_back(foglio);
+						ok = false;
+					}
+				} else {
+					int a = 1;
+				}
+			}
+		}
+		rs.next();
+	}
+	if ( ok ) {
+		std::stringstream ss;
+		ss << "Tutti i fogli sono stati realizzati regolarmente";
+				sec->add_item("para")->append(ss.str());
+
+		std::cout << ss.str() << std::endl;
+	} else {
+		if ( ! v1.empty() ) {
+			sec->add_item("para")->append("I seguenti fogli sono stati realizzati usando materiale extra");
+			Doc_Item itl = sec->add_item("itemizedlist");
+			for (size_t i = 0; i < v1.size(); i++)  {
+				itl->add_item("listitem")->append(v1[i]);
+			}
+		}
+		if ( ! v2.empty() ) {
+			sec->add_item("para")->append("I seguenti fogli non sono stati realizzati completamente");
+			Doc_Item itl = sec->add_item("itemizedlist");
+			for (size_t i = 0; i < v2.size(); i++) {
+				itl->add_item("listitem")->append(v2[i]);
+			}
+		}
+	}
 
 	return true;
 }

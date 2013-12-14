@@ -147,7 +147,9 @@ bool photo_exec::run()
 
 		_cam_name = Path(_proj_dir, CAMERA).toString();
 		std::string assetti = std::string(ASSETTI) + (_type == Prj_type ? "P" : "V") + ".txt";
+		std::string assettip = std::string(ASSETTI) + "P" + ".txt";
 		_vdp_name = Path(_proj_dir, assetti).toString();
+		_vdp_name_proj = Path(_proj_dir, assettip).toString();
 		_dem_name = Path(_proj_dir, DEM).toString();
 
 		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/Carto/zona2castpescaia-argent-scarlin",
@@ -180,9 +182,20 @@ bool photo_exec::run()
 		// read camera data
 		if ( !_read_cam() )
 			throw std::runtime_error("Fotocamera non trovata");
+		
 		// read photo position and attitude
-		if ( !_read_vdp() )
+		if ( !_read_vdp(_vdp_name, _vdps) )
 			throw std::runtime_error("File assetti non trovato");
+		
+		// read planned photo position and attitude
+		bool check_proj = false;
+		if ( _type == fli_type ) {
+			if ( !_read_vdp(_vdp_name_proj, _vdps_plan) )
+				std::cout << "file degli assetti progettati non trovato" << std::endl;
+			else
+				check_proj = true;
+		}
+		
 		// read digital terrain model
 		if ( !_read_dem() )
 			throw std::runtime_error("Modello numerico non trovato");
@@ -191,7 +204,6 @@ bool photo_exec::run()
 		_init_document();
 
 		// produce photos feature
-
 		_process_photos();
 		_process_models();
 		_process_strips();
@@ -369,9 +381,9 @@ bool photo_exec::_read_cam()
 	}
 	return true;
 }
-bool photo_exec::_read_vdp()
+bool photo_exec::_read_vdp(const std::string& nome, std::map<std::string, VDP>& vdps)
 {
-	std::ifstream fvdp(_vdp_name.c_str(), std::ifstream::in);
+	std::ifstream fvdp(nome.c_str(), std::ifstream::in);
 	if ( !fvdp.is_open() )
 		return false;
 
@@ -384,7 +396,7 @@ bool photo_exec::_read_vdp()
 			continue;
 		VDP vdp(_cam, tok[0]);
 		vdp.Init(DPOINT(atof(tok[1].c_str()), atof(tok[2].c_str()), atof(tok[3].c_str())), atof(tok[4].c_str()), atof(tok[5].c_str()), atof(tok[6].c_str()));
-		_vdps[tok[0]] = vdp;
+		vdps[tok[0]] = vdp;
 	}
 	return true;
 
@@ -526,6 +538,144 @@ void photo_exec::_process_photos()
 	}
 	cnn.commit_transaction();
 }
+class strip_desc {
+public:
+	void clear() {
+		id.clear();
+		n_fot = 0;
+		len = 0;
+	}
+	std::string id;
+	int n_fot;
+	DPOINT p1, p2;
+	double len;
+};
+bool photo_exec::_prj_report()
+{
+	std::cout << "Confronto del volo col progetto di volo" << std::endl;
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Confronto del volo col progetto di volo");
+
+	std::vector<strip_desc> real, plan;
+
+	strip_desc stp;
+	bool start = true;
+
+	std::map<std::string, VDP>::iterator it1;
+	for ( it1 = _vdps.begin(); it1 != _vdps.end(); it1++) {
+		VDP& vdp = it1->second;
+		std::string nn = vdp.nome;
+		std::string strip = get_strip(nn);
+		if ( strip == stp.id ) {
+			stp.n_fot++;
+			stp.p2 = vdp.Pc;
+			stp.len = stp.p1.dist2D(stp.p2);
+		} else {
+			if ( !start ) {
+				stp.p2 = vdp.Pc;
+				stp.len = stp.p1.dist2D(stp.p2);
+				real.push_back(stp);
+				
+			}
+			start = false;
+			stp.clear();
+			stp.id = strip;
+			stp.n_fot = 1;
+			stp.p1 = vdp.Pc;
+		}
+	}
+	real.push_back(stp);
+
+	stp.clear();
+	start = true;
+	for ( it1 = _vdps_plan.begin(); it1 != _vdps_plan.end(); it1++) {
+		VDP& vdp = it1->second;
+		std::string nn = vdp.nome;
+		std::string strip = get_strip(nn);
+		if ( strip == stp.id ) {
+			stp.n_fot++;
+			stp.p2 = vdp.Pc;
+			stp.len = stp.p1.dist2D(stp.p2);
+		} else {
+			if ( !start ) {
+				stp.p2 = vdp.Pc;
+				stp.len = stp.p1.dist2D(stp.p2);
+				plan.push_back(stp);
+				
+			}
+			start = false;
+			stp.clear();
+			stp.id = strip;
+			stp.n_fot = 1;
+			stp.p1 = vdp.Pc;
+		}
+	}
+	plan.push_back(stp);
+
+	if ( real.size() != plan.size() ) {
+		std ::stringstream ss;
+		ss << " Numero di strisciate pianificate: " << plan.size() 
+			<< " Numero di strisciate volate: " << real.size();
+		sec->add_item("para")->append(ss.str());
+		std::cout << ss.str() << std::endl;
+	} else {
+		std ::stringstream ss;
+		ss << "Il numero di strisciate pianificate coincide con quelle volate" << std::endl;
+		sec->add_item("para")->append(ss.str());
+		std::cout << ss.str() << std::endl;
+	}
+	
+	std::map<int, int> mp;
+	for ( size_t i = 0; i < plan.size(); i++) {
+		double dmin = 1e10;
+		for ( size_t j = 0; j < real.size(); j++) {
+			double d = plan[i].p1.dist2D(real[j].p1);
+			if ( d < dmin) {
+				dmin = d;
+				mp[i] = j;
+			}
+		}
+	}
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("Accoppiamento tra strisciate progettate e volate");
+
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "6");
+	tab = tab->add_item("tgroup", attr);
+
+	attr.clear();
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Strisciata pianificata");
+	row->add_item("entry", attr)->append("N. foto");
+	row->add_item("entry", attr)->append("lung.");
+	row->add_item("entry", attr)->append("Strisciata volata");
+	row->add_item("entry", attr)->append("N. foto");
+	row->add_item("entry", attr)->append("lung.");
+
+	Doc_Item tbody = tab->add_item("tbody");
+		
+	std::map<int, int>::iterator itt;
+	for ( itt = mp.begin(); itt != mp.end(); itt++) {
+		row = tbody->add_item("row");
+		int i = itt->first;
+		int j = itt->second;
+		row->add_item("entry", attr)->append(plan[i].id);
+		std::stringstream s1; s1 << plan[i].n_fot;
+		row->add_item("entry", attr)->append(s1.str());
+		std::stringstream s2; s2 << plan[i].len;
+		row->add_item("entry", attr)->append(s2.str());
+
+		row->add_item("entry", attr)->append(real[i].id);
+		std::stringstream s3; s3 << real[i].n_fot;
+		row->add_item("entry", attr)->append(s3.str());
+		std::stringstream s4; s4 << real[i].len;
+		row->add_item("entry", attr)->append(s4.str());
+	}
+	return true;
+}
+
 // builds the models from adjacent Photos of the same strip
 void photo_exec::_process_models()
 {
@@ -860,13 +1010,6 @@ void photo_exec::_process_block()
 		}
 	}
 	cnn.commit_transaction();
-}
-bool photo_exec::_prj_report()
-{
-	// se si tratta di controllo del volo va verificata la congruenza col progetto
-	// 1 numero e lunghezza delle strisciate
-	// 2 per ogni strisciata numero di fotogrammi
-	return false;
 }
 bool photo_exec::_foto_report()
 {

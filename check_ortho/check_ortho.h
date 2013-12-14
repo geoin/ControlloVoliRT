@@ -63,6 +63,7 @@ private:
 	
 	docbook _dbook;
 	Doc_Item _article;
+	std::string _refscale;
 };
 
 class check_ortho: public Poco::Util::Application {

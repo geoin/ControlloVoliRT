@@ -53,7 +53,7 @@ public:
 	void set_ref_scale(const std::string& nome);
 private:
 	bool _read_cam(void);
-	bool _read_vdp(void);
+	bool _read_vdp(const std::string& nome, std::map<std::string, VDP>& vdps);
 	bool _read_dem(void);
 	std::string _get_key(const std::string& val);
 
@@ -80,6 +80,7 @@ private:
 	bool _get_photo(void);
 	std::string _cam_name;
 	std::string _vdp_name;
+	std::string _vdp_name_proj;
 	std::string _dem_name;
 
 	Check_Type _type;
@@ -94,6 +95,7 @@ private:
 	Doc_Item _article;
 
 	std::map<std::string, VDP> _vdps;
+	std::map<std::string, VDP> _vdps_plan;
 	Camera	_cam;
 	DSM_Factory* _df;
 
