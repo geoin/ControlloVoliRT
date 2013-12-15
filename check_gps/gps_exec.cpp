@@ -144,7 +144,7 @@ bool gps_exec::run()
 		
 		// write the result on the docbook report
 		_dbook.write();
-		std::cout << "Prodcedura terminata:" << std::endl;
+        std::cout << "Prodcedura terminata corretamente" << std::endl;
 	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;

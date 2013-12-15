@@ -42,4 +42,4 @@ SOURCES += \
 HEADERS +=\
     check_ta.h
 
-DESTDIR = ../bin
+DESTDIR = C:/OSGeo4W/apps/qgis/plugins

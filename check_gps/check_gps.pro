@@ -17,13 +17,12 @@ macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
 }
 
-LIBS += -lspatialite
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtild -lphoto_utild -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
+        LIBS += -lPocoUtild -l PocoZipd -lphoto_utild -l ZipLibd -lrtklibd -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoUtil -lphoto_util -lspatialite4 -lsqlite3_i -lCVUtil -lgdal_i
+        LIBS += -lPocoUtil -lPocoZip -lrtklib -lphoto_util -lziplib -lspatialite4 -lsqlite3_i -lCVUtil -lgdal_i
 }
 
 win32 {
@@ -44,4 +43,4 @@ HEADERS +=\
     check_gps.h \
     gps.h
 
-DESTDIR = ../bin
+DESTDIR = C:/OSGeo4W/apps/qgis/plugins

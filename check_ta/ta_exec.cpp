@@ -107,6 +107,7 @@ bool ta_exec::run()
 
 	// write the result on the docbook report
 	_dbook.write();
+    std::cout << "Procedura terminata correttamente" << std::endl;
 
 	return true;
 }
