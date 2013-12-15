@@ -104,6 +104,10 @@ void DropArea::item_changed(QTreeWidgetItem * qtw, int col)
 	}
 	setText(qs);
 }
+void DropArea::append(const QString& ms)
+{
+	_mes += QString(" ") + ms;
+}
 
 void DropArea::dragLeaveEvent(QDragLeaveEvent *event)
 {

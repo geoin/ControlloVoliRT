@@ -56,6 +56,7 @@ public:
 		ty_camera,
 		ty_dem,
 		ty_quadro,
+		ty_contorno,
 		ty_gps,
 		ty_missione,
 		ty_base

@@ -40,6 +40,7 @@ DropWindow::DropWindow()
 
     _prj_tree = new QTreeWidget;
 	_prj_tree->setHeaderLabel("RT");
+	_prj_tree->setMouseTracking(true);
 
 	QTreeWidgetItem* qt = new QTreeWidgetItem;
 	io = item_obj("Progetto", "folder", "Trascinare\nla cartella del progetto", item_obj::ty_project, true, true);
@@ -102,7 +103,13 @@ DropWindow::DropWindow()
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Quadro unione ortofoto", "Shp", "Trascinare\nil file del quadro d'unione\n", item_obj::ty_quadro);
+	io = item_obj("Quadro unione ortofoto", "Shp", "Trascinare\nil file del quadro d'unione", item_obj::ty_quadro);
+	q2->setText(0, io.name());
+	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
+	qcl.push_back(q2);
+	
+	q2 = new QTreeWidgetItem;
+	io = item_obj("Contorno regione", "Shp", "Trascinare\nil file del contorno della regione", item_obj::ty_contorno);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
@@ -223,53 +230,83 @@ void DropWindow::_item_manager(const item_obj& io, QTreeWidgetItem* w0)
 {
 	if ( io.dropped().isEmpty() )
 		return;
+	QString qs;
+	QFileInfo qf(io.dropped());
+
 	switch ( io.type() ) {
 		case item_obj::ty_project: // load the project folder
 			_ld->prj_folder(io.dropped());
 			_ld->create_project();
+			qs = QString("Creato GEO DB ") + GEO_DB_NAME + QString(" in \n") + io.dropped() + "\n";
 			break;
 		case item_obj::ty_fotogra: // no action
 			break;
 		case item_obj::ty_lidar: // no action
 			break;
-		case item_obj::ty_assi_p: // load planned flight  lines
+		case item_obj::ty_assi_p: {// load planned flight  lines
+			qs = QString("Caricato ") + qf.baseName() + QString(" come layer ") + PLANNED_FLIGHT_LAYER_NAME + "\n";
 			_ld->load_planned_flight_lines(io.dropped());
 			break;
-		case item_obj::ty_assi: // load flight lines
+		}
+		case item_obj::ty_assi: {// load flight lines
+			qs = QString("Caricato ") + qf.baseName() + QString(" come layer ") + FLIGHT_LAYER_NAME + "\n";
 			_ld->load_flight_lines(io.dropped());
 			break;
-		case item_obj::ty_carto: // load areas to collect
+		}
+		case item_obj::ty_carto: {// load areas to collect
+			qs = QString("Caricato ") + qf.baseName() + QString(" come layer ") + CARTO_LAYER_NAME + "\n";
 			_ld->load_carto(io.dropped());
 			break;
-		case item_obj::ty_assetti_p: // load planned photo parameters
+		}
+		case item_obj::ty_assetti_p: {// load planned photo parameters
+			qs = QString("Copiato ") + qf.baseName() + QString(" come ") + PLANNED_ASSETTI_FILE + "\n";
 			_ld->load_planned_assetti(io.dropped());
 			break;
-		case item_obj::ty_assetti: // load real photo parameters
+		case item_obj::ty_assetti: { // load real photo parameters
+			qs = QString("Copiato ") + io.dropped() + QString(" come ") + ASSETTI_FILE + "\n";
 			_ld->load_assetti(io.dropped());
 			break;
+		}
 		case item_obj::ty_camera: // load camera file
+			qs = QString("Copiato ") + io.dropped() + QString(" come ") + CAMERA_FILE + "\n";
 			_ld->load_camera(io.dropped());
 			break;
-		case item_obj::ty_dem: // load digital terrain model
+		}
+		case item_obj::ty_dem: { // load digital terrain model
+			qs = QString("Copiato ") + qf.baseName() + QString(" come ") + DEM_FILE + "\n";
 			_ld->load_dem(io.dropped());
 			break;
-		case item_obj::ty_quadro: // load union table for orthos
+		}
+		case item_obj::ty_quadro: { // load union table for orthos
+			qs = QString("Caricato ") + qf.baseName() + QString(" come layer ") + QUADRO_LAYER_NAME + "\n";
 			_ld->load_quadro(io.dropped());
 			break;
+		}
+		case item_obj::ty_contorno: { // load region border for orthos
+			qs = QString("Caricato ") + qf.baseName() + QString(" come layer ") + CONTORNO_RT + "\n";
+			_ld->load_contorno(io.dropped());
+			break;
+		}
 		case item_obj::ty_gps: // no action
 			break;
 		case item_obj::ty_missione: { // load mission data
-			QString qs = w0->text(0); // nome della missione
-			_ld->load_mission(io.dropped(), qs);
+			QString mis_name = w0->text(0); // nome della missione
+			_ld->load_mission(io.dropped(), mis_name);
+			qs = QString("Copiato ") + io.dropped() + QString(" in ") + mis_name + "\n";
+
 			break;
 		}
 		case item_obj::ty_base: { // load base data refferred to a mission
 			QString base_name = w0->text(0); // nome della base
 			QString mis_name = w0->parent()->text(0); // nome della missione
 			_ld->load_base(io.dropped(), mis_name, base_name);
+			qs = QString("Copiati dati base ") + base_name + QString(" in ") + mis_name + "\n";
 			break;
 		}
 	}
+	if ( !qs.isEmpty() )
+		_drop_area->append(qs);
+
 }
 void DropWindow::_child_manager(QTreeWidgetItem * w0)
 {
@@ -292,6 +329,8 @@ void DropWindow::exec()
 	if ( w0 == NULL )
 		return;
 
+	_drop_area->clean();
+
 	// gestisce se stesso
 	QVariant v = w0->data(0, Qt::UserRole);
 	//QString qs = w0->text(0);
@@ -303,4 +342,5 @@ void DropWindow::exec()
 		QTreeWidgetItem * wi = w0->child(i);
 		_child_manager(wi);
 	}
+	_drop_area->print();
 }

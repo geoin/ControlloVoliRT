@@ -165,8 +165,6 @@ bool ortho_exec::run()
 
 		// create the polygons of the used surface of each table
 		
-		
-		
 		if ( !_process_borders() )
 			return false;
 
@@ -231,7 +229,7 @@ bool ortho_exec::_process_img_border(const std::string& foglio, OGRGeomPtr& pol)
 	Poco::Path img_name(_img_dir, foglio);
 	img_name.setExtension("tif");
 	BorderLine bl;
-	std::cout << "Elaborazione bordo di " << foglio << std::endl;
+	//std::cout << "Elaborazione bordo di " << foglio << std::endl;
 	bl.Evaluate(img_name.toString(), pt);
 
 	OGRGeometryFactory gf;
@@ -299,8 +297,10 @@ bool ortho_exec::_process_borders()
 	for ( size_t i = 0; i < _fogli.size(); i++) {
 		
 		std::string foglio(_fogli[i]);
-		if ( foglio != "07I28" )
-			continue;
+		std::cout << "Elaborazione bordo di " << foglio << " " << 
+			i + 1 << " di " << (int) _fogli.size() << std::endl;
+		//if ( foglio != "07I28" )
+		//	continue;
 
 		OGRGeomPtr pol;
 		if ( _process_img_border(foglio, pol) ) {

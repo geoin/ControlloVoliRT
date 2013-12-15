@@ -38,6 +38,9 @@ class DropArea : public QLabel {
     Q_OBJECT
 public:
     DropArea(QWidget *parent = 0);
+	void append(const QString& ms);
+	void clean(void) { _mes.clear(); }
+	void print(void) { setText(_mes); }
 
 public slots:
 	void item_changed(QTreeWidgetItem *, int);
@@ -49,6 +52,7 @@ protected:
     void dragLeaveEvent(QDragLeaveEvent *event);
     void dropEvent(QDropEvent *event);
 private:
+	QString _mes;
     QLabel *label;
 };
 

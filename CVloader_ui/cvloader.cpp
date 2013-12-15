@@ -30,24 +30,10 @@
 #include <iostream>
 #include <sqlite3.h>
 #include "spatialite.h"
-#include "cvloader.h"
 #include "CVUtil/cvspatialite.h"
 #include <QDir>
 #include <QMessageBox>
-
-#define PLANNED_FLIGHT_LAYER_NAME "AVOLOP"
-#define FLIGHT_LAYER_NAME "AVOLOV"
-#define QUADRO_LAYER_NAME "Quadro_RT"
-#define CARTO_LAYER_NAME "carto"
-#define CAMERA_FILE "camera.xml"
-#define DEM_FILE "dem.asc"
-#define ASSETTI_FILE "assettiv.txt"
-#define PLANNED_ASSETTI_FILE "assettip.txt"
-#define SHAPE_CHAR_SET "CP1252"
-#define UTM32_SRID  32632
-#define GEOM_COL_NAME "geom"
-#define MAX_MSG_LEN 250
-#define GEO_DB_NAME "geo.sqlite"
+#include "cvloader.h"
 
 bool _check_file(const QString& nome, bool verbose = true)
 {
@@ -165,7 +151,10 @@ bool loader::load_quadro(const QString& nome)
 {
 	return _load_layer(nome, QUADRO_LAYER_NAME);
 }
-
+bool loader::load_contorno(const QString& nome)
+{
+	return _load_layer(nome, CONTORNO_RT);
+}
 bool loader::load_planned_assetti(const QString& nome)
 {
 	QFileInfo qdest(_prj_folder, PLANNED_ASSETTI_FILE);

@@ -32,6 +32,21 @@
 
 #include <QString>
 
+#define PLANNED_FLIGHT_LAYER_NAME "AVOLOP"
+#define FLIGHT_LAYER_NAME "AVOLOV"
+#define QUADRO_LAYER_NAME "Quadro_RT"
+#define CARTO_LAYER_NAME "carto"
+#define CAMERA_FILE "camera.xml"
+#define DEM_FILE "dem.asc"
+#define ASSETTI_FILE "assettiv.txt"
+#define PLANNED_ASSETTI_FILE "assettip.txt"
+#define SHAPE_CHAR_SET "CP1252"
+#define UTM32_SRID  32632
+#define GEOM_COL_NAME "geom"
+#define MAX_MSG_LEN 250
+#define GEO_DB_NAME "geo.sqlite"
+#define CONTORNO_RT "CONTORNO_RT"
+
 class loader {
 public:
 	loader(): _replace(true){}
@@ -44,6 +59,7 @@ public:
 	bool create_project(void);
 	bool load_dem(const QString& nome);
 	bool load_quadro(const QString& nome);
+	bool load_contorno(const QString& nome);
 
 	bool load_mission(const QString& nome, const QString& mis_name);
 	bool load_base(const QString& nome, const QString& mis_name, const QString& base_name);

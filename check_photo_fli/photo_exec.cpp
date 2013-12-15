@@ -39,7 +39,7 @@
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
 #define ASSI_VOLO "AVOLO"
-#define UNCOVER "Z_UNCOVER"
+//#define UNCOVER "Z_UNCOVER"
 #define SHAPE_CHAR_SET "CP1252"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOCV "check_photoV.xml"
@@ -274,10 +274,13 @@ OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>
 			dif =  cart->Difference(blocks[i]);
 			OGRPolygon* p1 = (OGRPolygon*) cart;
 			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
+			double a1 = p1->get_Area();
+			double a2 = p2->get_Area();
 			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
 				break;
 			}
-		}
+		} else 
+			dif = cart->Intersection(cart);
 	}
 	return dif;
 }
@@ -313,7 +316,7 @@ bool photo_exec::_get_carto(std::vector<OGRGeomPtr>& blocks)
 		for (int i = 0; i < np; i++ ) {
 			OGRGeometry* pol = oc->getGeometryRef(i);
 			OGRGeomPtr dif = _get_dif(pol, blocks);
-			if ( !dif->IsEmpty() ) {
+			if ( dif != NULL && !dif->IsEmpty() ) {
 				vs.push_back(dif);
 			}
 		}
@@ -328,7 +331,7 @@ bool photo_exec::_get_carto(std::vector<OGRGeomPtr>& blocks)
 }
 void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
 {
-	std::string table = std::string(UNCOVER) + (_type == Prj_type ? "P" : "V");
+	std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 	if ( vs.empty() )
 		return;
@@ -347,6 +350,7 @@ void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
+	std::cout << "Layer:" << table << std::endl;
 
 	// create the insertion query
 	std::stringstream sql2;
