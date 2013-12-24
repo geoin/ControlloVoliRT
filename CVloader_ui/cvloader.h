@@ -31,6 +31,8 @@
 #define CVLOADER_H
 
 #include <QString>
+#include "photo_util/vdp.h"
+#include <vector>
 
 #define PLANNED_FLIGHT_LAYER_NAME "AVOLOP"
 #define FLIGHT_LAYER_NAME "AVOLOV"
@@ -39,6 +41,7 @@
 #define CAMERA_FILE "camera.xml"
 #define DEM_FILE "dem.asc"
 #define ASSETTI_FILE "assettiv.txt"
+#define ASSETTIV "assettiv"
 #define PLANNED_ASSETTI_FILE "assettip.txt"
 #define SHAPE_CHAR_SET "CP1252"
 #define UTM32_SRID  32632
@@ -68,6 +71,7 @@ public:
 private:
 	bool _copy_file(const QString& source, const QString& dest) ;
 	bool _load_layer(const QString& file_name, const QString& layer_name);
+	bool _read_vdp(const std::string& nome, std::vector<VDP>& vdps);
 
 	QString _prj_folder;
 	bool _replace;

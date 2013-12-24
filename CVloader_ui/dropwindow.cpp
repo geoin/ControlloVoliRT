@@ -72,11 +72,11 @@ DropWindow::DropWindow()
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
 
-	q2 = new QTreeWidgetItem;
-	io = item_obj("Assetti progettati", "txt", "Trascinare\nil file degli assetti progettati", item_obj::ty_assetti_p);
-	q2->setText(0, io.name());
-	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
-	qcl.push_back(q2);
+	//q2 = new QTreeWidgetItem;
+	//io = item_obj("Assetti progettati", "txt", "Trascinare\nil file degli assetti progettati", item_obj::ty_assetti_p);
+	//q2->setText(0, io.name());
+	//q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
+	//qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
 	io = item_obj("Assetti effettivi", "txt", "Trascinare\nil file degli assetti effettivi", item_obj::ty_assetti);
@@ -91,7 +91,7 @@ DropWindow::DropWindow()
 	qcl.push_back(q2);
 
 	q2 = new QTreeWidgetItem;
-	io = item_obj("Modelo numerico del terreno", "asc", "Trascinare\nil file del modello numerico del terreno", item_obj::ty_dem);
+	io = item_obj("Modello numerico del terreno", "asc", "Trascinare\nil file del modello numerico del terreno", item_obj::ty_dem);
 	q2->setText(0, io.name());
 	q2->setData(0, Qt::UserRole, QVariant::fromValue<item_obj>(io));
 	qcl.push_back(q2);
@@ -258,16 +258,16 @@ void DropWindow::_item_manager(const item_obj& io, QTreeWidgetItem* w0)
 			_ld->load_carto(io.dropped());
 			break;
 		}
-		case item_obj::ty_assetti_p: {// load planned photo parameters
-			qs = QString("Copiato ") + qf.baseName() + QString(" come ") + PLANNED_ASSETTI_FILE + "\n";
-			_ld->load_planned_assetti(io.dropped());
-			break;
+		//case item_obj::ty_assetti_p: {// load planned photo parameters
+		//	qs = QString("Copiato ") + qf.baseName() + QString(" come ") + PLANNED_ASSETTI_FILE + "\n";
+		//	_ld->load_planned_assetti(io.dropped());
+		//	break;
 		case item_obj::ty_assetti: { // load real photo parameters
 			qs = QString("Copiato ") + io.dropped() + QString(" come ") + ASSETTI_FILE + "\n";
 			_ld->load_assetti(io.dropped());
 			break;
 		}
-		case item_obj::ty_camera: // load camera file
+		case item_obj::ty_camera: { // load camera file
 			qs = QString("Copiato ") + io.dropped() + QString(" come ") + CAMERA_FILE + "\n";
 			_ld->load_camera(io.dropped());
 			break;

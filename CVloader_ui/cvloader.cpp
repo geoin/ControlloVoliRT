@@ -34,6 +34,12 @@
 #include <QDir>
 #include <QMessageBox>
 #include "cvloader.h"
+#include <fstream>
+#include <sstream>
+#include "CVUtil/ogrgeomptr.h"
+
+using namespace CV::Util::Spatialite;
+using namespace CV::Util::Geometry;
 
 bool _check_file(const QString& nome, bool verbose = true)
 {
@@ -160,11 +166,6 @@ bool loader::load_planned_assetti(const QString& nome)
 	QFileInfo qdest(_prj_folder, PLANNED_ASSETTI_FILE);
 	return _copy_file(nome, qdest.filePath());
 }
-bool loader::load_assetti(const QString& nome)
-{
-	QFileInfo qdest(_prj_folder, ASSETTI_FILE);
-	return _copy_file(nome, qdest.filePath());
-}
 bool loader::load_camera(const QString& nome)
 {
 	QFileInfo qdest(_prj_folder, CAMERA_FILE);
@@ -243,5 +244,102 @@ bool loader::create_project()
 	} catch (std::exception const& e) {
 		QMessageBox::information(NULL, "Errore", e.what());
 	}
+	return true;
+}
+
+bool loader::_read_vdp(const std::string& nome, std::vector<VDP>& vdps)
+{
+	std::ifstream fvdp(nome.c_str(), std::ifstream::in);
+	if ( !fvdp.is_open() )
+		return false;
+	Camera cam;
+
+
+	char buf[256];
+	while ( fvdp.getline(buf, 256) ) {
+		QString qs(buf);
+		QStringList qsl = QString(buf).split(QRegExp("\\s+"), QString::SkipEmptyParts);
+		if ( qsl.size() != 7 )
+			continue;
+		if ( qsl[1].toDouble() == 0. ) 
+			continue;
+		VDP vdp(cam, qsl[0].toStdString());
+		vdp.Init(DPOINT(qsl[1].toDouble(), qsl[2].toDouble(), qsl[3].toDouble()), qsl[4].toDouble(), qsl[5].toDouble(), qsl[6].toDouble());
+		vdps.push_back(vdp);
+	}
+	return true;
+
+}
+bool loader::load_assetti(const QString& nome)
+{
+	std::vector<VDP> vdps;
+	if ( !_read_vdp(nome.toStdString(), vdps) )
+		return false;
+
+	try {
+		QFileInfo qf(_prj_folder, GEO_DB_NAME);
+		CV::Util::Spatialite::Connection cnn;
+		cnn.open( qf.absoluteFilePath().toStdString() ); // Create or open spatialite db
+		cnn.remove_layer(ASSETTIV);
+
+		std::stringstream sql;
+		sql << "CREATE TABLE " << ASSETTIV << 
+			" (foto TEXT NOT NULL PRIMARY KEY, " << //id della stazione
+			"Xc FLOAT NOT NULL, " <<
+			"Yc FLOAT NOT NULL, " <<
+			"Zc FLOAT NOT NULL, " <<
+			"omega FLOAT NOT NULL, " <<
+			"fi FLOAT NOT NULL, " <<
+			"kappa FLOAT NOT NULL)";			// base name
+		cnn.execute_immediate(sql.str());
+		std::stringstream sql1;
+		sql1 << "SELECT AddGeometryColumn('" << ASSETTIV << "'," <<
+			"'geom'," <<
+			UTM32_SRID << "," <<
+			"'POINT'," <<
+			"'XY')";
+		cnn.execute_immediate(sql1.str());
+
+		std::stringstream sql2;
+		sql2 << "INSERT INTO " << ASSETTIV << " (foto, Xc, Yc, Zc, omega, fi, kappa, geom) \
+			VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ST_GeomFromWKB(:geom, " << UTM32_SRID << ") )";
+		
+		CV::Util::Spatialite::Statement stm(cnn);
+		cnn.begin_transaction();
+		stm.prepare(sql2.str());	
+
+		OGRSpatialReference sr;
+		sr.importFromEPSG(UTM32_SRID);
+		
+		for ( size_t i = 0; i < vdps.size(); i++) {
+
+			OGRGeometryFactory gf;
+			OGRGeomPtr gp_ = gf.createGeometry(wkbPoint);
+			gp_->setCoordinateDimension(2);
+			gp_->assignSpatialReference(&sr);
+			OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
+			gp->setX(vdps[i].Pc.x); gp->setY(vdps[i].Pc.y);
+
+			stm[1] = vdps[i].nome;
+			stm[2] = vdps[i].Pc.x;
+			stm[3] = vdps[i].Pc.y;
+			stm[4] = vdps[i].Pc.z;
+			stm[5] = RAD_DEG(vdps[i].om);
+			stm[6] = RAD_DEG(-vdps[i].fi);
+			stm[7] = RAD_DEG(-vdps[i].ka);
+			
+			stm[8].fromBlob(gp_); 
+			stm.execute();
+			stm.reset();
+		}
+		cnn.commit_transaction();
+	} 
+    catch(std::exception &e) {
+		std::string ss = e.what();
+        std::cout << std::string(e.what()) << std::endl;
+		return false;
+    }
+
+
 	return true;
 }

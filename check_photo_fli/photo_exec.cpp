@@ -45,6 +45,7 @@
 #define OUT_DOCV "check_photoV.xml"
 #define OUT_DOCP "check_photoP.xml"
 #define REF_FILE "Regione_Toscana_RefVal.xml"
+#define FOTOGRAMMETRIA "Fotogrammetria"
 
 #define CAMERA "camera.xml"
 #define ASSETTI "assetti"
@@ -129,7 +130,7 @@ void photo_exec::_init_document()
 }
 std::string photo_exec::_get_key(const std::string& val)
 {
-	return _refscale + "." + val;
+	return std::string(FOTOGRAMMETRIA) + "." + _refscale + "." + val;
 }
 
 bool photo_exec::run()
@@ -152,29 +153,11 @@ bool photo_exec::run()
 		_vdp_name_proj = Path(_proj_dir, assettip).toString();
 		_dem_name = Path(_proj_dir, DEM).toString();
 
-		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/Carto/zona2castpescaia-argent-scarlin",
-		//   CARTO,
-		//   SHAPE_CHAR_SET,
-		//   SRID,
-		//   "geom",
-		//   true,
-		//   false,
-		//   false);
-	
 		std::cout << "Layer:" << CARTO << std::endl;
 		
-		//nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/assi_volo/avolop",
-		//   "AVOLOP",
-		//   SHAPE_CHAR_SET,
-		//   SRID,
-		//   "geom",
-		//   true,
-		//   false,
-		//   false);
-
-		std::string assi(ASSI_VOLO);
+		/*std::string assi(ASSI_VOLO);
 		assi += _type == fli_type ? "V" : "P";
-		std::cout << "Layer:" << assi << std::endl;
+		std::cout << "Layer:" << assi << std::endl;*/
 
 		// Read reference values
 		_read_ref_val();
@@ -184,16 +167,22 @@ bool photo_exec::run()
 			throw std::runtime_error("Fotocamera non trovata");
 		
 		// read photo position and attitude
-		if ( !_read_vdp(_vdp_name, _vdps) )
-			throw std::runtime_error("File assetti non trovato");
+		//if ( !_read_vdp(_vdps) )
+		//	throw std::runtime_error("File assetti non trovato");
 		
 		// read planned photo position and attitude
-		bool check_proj = false;
+		//bool check_proj = false;
 		if ( _type == fli_type ) {
-			if ( !_read_vdp(_vdp_name_proj, _vdps_plan) )
-				std::cout << "file degli assetti progettati non trovato" << std::endl;
-			else
-				check_proj = true;
+			// read photo position and attitude
+			if ( !_read_vdp(_vdps) )
+				throw std::runtime_error("File assetti non trovato");
+			std::string assi = std::string(ASSI_VOLO) + "V";
+			std::cout << "Layer:" << assi << std::endl;
+			if ( !_calc_vdp(_vdps_plan) )
+				std::cout << "Tema degli assi di volo progettati non trovato" << std::endl;
+		} else {
+			if ( !_calc_vdp(_vdps) )
+				throw std::runtime_error("Tema degli assi di volo progettati non trovato");
 		}
 		
 		// read digital terrain model
@@ -274,8 +263,8 @@ OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>
 			dif =  cart->Difference(blocks[i]);
 			OGRPolygon* p1 = (OGRPolygon*) cart;
 			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
-			double a1 = p1->get_Area();
-			double a2 = p2->get_Area();
+			//double a1 = p1->get_Area();
+			//double a2 = p2->get_Area();
 			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
 				break;
 			}
@@ -385,23 +374,69 @@ bool photo_exec::_read_cam()
 	}
 	return true;
 }
-bool photo_exec::_read_vdp(const std::string& nome, std::map<std::string, VDP>& vdps)
+bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 {
-	std::ifstream fvdp(nome.c_str(), std::ifstream::in);
-	if ( !fvdp.is_open() )
-		return false;
-
-	char buf[256];
-	while ( fvdp.getline(buf, 256) ) {
-		Poco::StringTokenizer tok(buf, " \t", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-		if ( tok.count() != 7 )
-			continue;
-		if ( atof(tok[1].c_str()) == 0. )
-			continue;
-		VDP vdp(_cam, tok[0]);
-		vdp.Init(DPOINT(atof(tok[1].c_str()), atof(tok[2].c_str()), atof(tok[3].c_str())), atof(tok[4].c_str()), atof(tok[5].c_str()), atof(tok[6].c_str()));
-		vdps[tok[0]] = vdp;
+	std::string table = std::string(ASSETTI) + "V";
+	std::cout << "Layer:" << table << std::endl;
+	std::stringstream sql;
+	sql << "SELECT * from " << table;
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	while ( !rs.eof() ) {
+		VDP vdp(_cam, rs[0]);
+		vdp.Init(DPOINT(rs[1], rs[2], rs[3]), (double) rs[4], (double) rs[5], (double) rs[6]);
+		vdps[vdp.nome] = vdp;
+		rs.next();
 	}
+	return true;
+}
+
+bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
+{
+	std::string table = std::string(ASSI_VOLO) + "P";
+	std::stringstream sql;
+	sql << "SELECT A_VOL_QT, A_VOL_CS, A_VOL_NFI, A_VOL_NFF, AsBinary(geom) geom from " << table;
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+
+	std::cout << "Layer:" << table << std::endl;
+
+	while ( !rs.eof() ) {
+		OGRGeomPtr pol = (Blob) rs["geom"];
+		OGRPoint* p0 = NULL;
+		OGRPoint* p1 = NULL;
+
+		OGRGeometry* og = (OGRGeometry*) pol;
+		OGRLineString* ls = (OGRLineString*)og;
+		int n = ls->getNumPoints();
+		if ( n != 2 )
+			throw std::runtime_error("asse di volo non valido");
+
+		double z = rs[0];
+		DPOINT pt0(ls->getX(0), ls->getY(0), z);
+		DPOINT pt1(ls->getX(1), ls->getY(1), z);
+
+		std::string strip = rs[1];
+		int first = rs[2];
+		int last = rs[3];
+		double alfa = pt1.angdir2(pt0);
+		double len = pt1.dist2D(pt0);
+		double step = len / (last - first);
+
+		for (int i = first; i <= last; i++) {
+			int k = i;
+			char nomef[256];
+			sprintf(nomef, "%s_%04d", strip.c_str(), k);
+			VDP vdp(_cam, nomef);
+			DPOINT pt(pt0.x - (i - first) * step * cos(alfa), pt0.y + (i - first) * step * sin(alfa), z);
+			vdp.Init(pt, 0, 0, RAD_DEG(alfa));
+			vdps[vdp.nome] = vdp;
+		}
+		rs.next();
+	}
+
 	return true;
 
 }
@@ -502,7 +537,9 @@ void photo_exec::_process_photos()
 			vdp.GetRay(ci, &pd);
 			if ( !ds->RayIntersect(Pc, pd, pt) ) {
 				if ( !ds->IsInside(pt.z) ) {
-					break;
+					std::stringstream ss;
+					ss << "Il fotogramma " << it->first << " cade al di fuori del dem";
+					throw std::runtime_error(ss.str());
 				}
 			}
 			dt += vdp.Pc.z - pt.z;
@@ -664,7 +701,7 @@ bool photo_exec::_prj_report()
 	for ( itt = mp.begin(); itt != mp.end(); itt++) {
 		row = tbody->add_item("row");
 		int i = itt->first;
-		int j = itt->second;
+		//int j = itt->second;
 		row->add_item("entry", attr)->append(plan[i].id);
 		std::stringstream s1; s1 << plan[i].n_fot;
 		row->add_item("entry", attr)->append(s1.str());

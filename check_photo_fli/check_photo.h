@@ -53,7 +53,9 @@ public:
 	void set_ref_scale(const std::string& nome);
 private:
 	bool _read_cam(void);
-	bool _read_vdp(const std::string& nome, std::map<std::string, VDP>& vdps);
+	bool _read_vdp(std::map<std::string, VDP>& vdps);
+	bool _calc_vdp(std::map<std::string, VDP>& vdps);
+
 	bool _read_dem(void);
 	std::string _get_key(const std::string& val);
 

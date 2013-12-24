@@ -34,7 +34,7 @@ VDP::VDP(): exec(0), om(0.), fi(0.), ka(0.)
 VDP::VDP(const Camera& cam, const std::string& Nome): _ior(cam), nome(Nome), exec(0), om(0.), fi(0.), ka(0.)
 {
 }
-VDP::VDP(const VDP& v): _ior(v._ior), nome(v.nome), exec(0), om(0.), fi(0.), ka(0.)
+VDP::VDP(const VDP& v): _ior(v._ior), nome(v.nome), exec(v.exec), om(v.om), fi(v.fi), ka(v.ka), Pc(v.Pc), mat(v.mat)
 {
 }
 VDP::~VDP()
