@@ -6,16 +6,15 @@
 namespace CV {
 namespace GUI {
 
+class CVTreeNode;
+
 class CVTreeWidget : public QTreeWidget {
     Q_OBJECT
 public:
     explicit CVTreeWidget(QWidget *parent = 0);
 
-signals:
-
-public slots:
-    void createProjectTree(const QString&);
-
+    CVTreeNode* insertProjectTree(const QString&);
+    CVTreeNode* insertNode(CVTreeNode* parent, const QString&);
 };
 
 }

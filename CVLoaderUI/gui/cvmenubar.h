@@ -11,9 +11,7 @@ class CVMenuBar : public QMenuBar {
 public:
     explicit CVMenuBar(QWidget *parent = 0);
 
-signals:
-
-public slots:
+    QMenu* add(QString);
 
 };
 

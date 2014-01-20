@@ -6,7 +6,8 @@ namespace GUI {
 CVToolBar::CVToolBar(QWidget *parent) : QToolBar(parent) {
     setMovable(false);
     setFloatable(false);
-    setMinimumHeight(28);
+    setMinimumHeight(26);
+    setToolButtonStyle(Qt::ToolButtonIconOnly);
 }
 
 }

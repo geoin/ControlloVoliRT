@@ -1,17 +1,22 @@
 #include "gui/cvmainwindow.h"
-#include "gui/cvmenubar.h"
-#include "gui/cvtoolbar.h"
 #include "gui/cvappcontainer.h"
+
+#include <QPalette>
 
 namespace CV {
 namespace GUI {
 
 CVMainWindow::CVMainWindow(QWidget *parent) : QMainWindow(parent) {
-    setMinimumSize(QSize(500, 400));
+    setMinimumSize(QSize(800, 600));
 
-    addToolBar(new CVToolBar(this));
-    setMenuBar(new CVMenuBar(this));
-    setCentralWidget(new CVAppContainer(this));
+    CVAppContainer* app = new CVAppContainer(this);
+    addToolBar(app->toolbar());
+    setMenuBar(app->menu());
+    setStatusBar(app->statusbar());
+    setCentralWidget(app);
+
+    setStyleSheet("QToolTip { color: #111; background-repeat:no-repeat; background-position:center; background-color: #eee; padding: 2px;}");
+    app->link();
 }
 
 CVMainWindow::~CVMainWindow() {

@@ -1,7 +1,10 @@
 #ifndef CV_GUI_CVNODEDETAILS_H
 #define CV_GUI_CVNODEDETAILS_H
 
+#include <gui/status/cvnodeinfo.h>
+
 #include <QWidget>
+#include <QMap>
 
 class QStackedWidget;
 class QTreeWidgetItem;
@@ -20,9 +23,11 @@ signals:
 
 public slots:
     void onProjectItemActivated(QTreeWidgetItem* item, int col);
+    void onControlAdded(CV::GUI::Status::CVNodeInfo::Type);
 
 private:
     QStackedWidget* _stack;
+    QMap<Status::CVNodeInfo::Type, QWidget*> _details;
 };
 
 } // namespace GUI
