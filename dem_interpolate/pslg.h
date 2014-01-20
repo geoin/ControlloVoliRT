@@ -27,6 +27,20 @@
 static void fn_lst(char* mes) {
 }
 
+class LASreader;
+
+class _declspec(dllexport) MyLas {
+public:
+	MyLas(): _lasreader(NULL) {}
+	~MyLas() ;
+	unsigned int open(const std::string& nome);
+	bool get_next_point(DPOINT& p);
+	void get_min(double& _xmin, double& _ymin, double& _zmin) const;
+	void get_max(double& _xmax, double& _ymax, double& _zmax) const;
+private:
+	LASreader* _lasreader;
+};
+
 // TIN CLASS
 template <typename ND, typename NT>
 class TOOLS_EXPORTS tPSLG: public DSM {

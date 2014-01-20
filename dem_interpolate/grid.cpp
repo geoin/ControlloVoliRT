@@ -9,14 +9,55 @@
 !=================================================================================*/
 #include "dsm.h"
 #include "pslg.h"
-//#include "txtfile.h"
 #include <fstream>
 #include "Poco/StringTokenizer.h"
 #include "Poco/String.h"
 #include "Poco/Buffer.h"
 #include <algorithm>
 
+#include "laslib/lasreader.hpp"
 
+MyLas::~MyLas() 
+{
+	if ( _lasreader != NULL )
+		_lasreader->close();
+	delete _lasreader;
+
+}
+unsigned int MyLas::open(const std::string& nome)
+{
+	LASreadOpener lasreadopener;
+	lasreadopener.set_file_name(nome.c_str());
+	if ( !lasreadopener.active() )
+		return 0;
+	_lasreader = lasreadopener.open();
+	if ( _lasreader == NULL )
+		return 0;
+	return (unsigned int) _lasreader->npoints;
+}
+bool MyLas::get_next_point(DPOINT& p)
+{
+	if ( _lasreader->read_point() ) {
+		p.x = _lasreader->get_x();
+		p.y = _lasreader->get_y();
+		p.z = _lasreader->get_z();
+		return true;
+	}
+	return false;
+}
+void MyLas::get_min(double& _xmin, double& _ymin, double& _zmin) const
+{
+	_xmin = _lasreader->get_min_x();
+	_ymin = _lasreader->get_min_y();
+	_zmin = _lasreader->get_min_z();
+
+}
+void MyLas::get_max(double& _xmax, double& _ymax, double& _zmax) const
+{
+	_xmax = _lasreader->get_max_x();
+	_ymax = _lasreader->get_max_y();
+	_zmax = _lasreader->get_max_z();
+}
 //double TRIANGLE::Surface(const DSM* dsm, int type) const 
 //{
 //	double	len[3];
