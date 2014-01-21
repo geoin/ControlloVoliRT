@@ -1,6 +1,8 @@
 #ifndef CV_GUI_DETAILS_CVCAMERADETAIL_H
 #define CV_GUI_DETAILS_CVCAMERADETAIL_H
 
+#include "core/categories/cvcamera.h"
+
 #include <QWidget>
 #include <QMap>
 #include <QFileInfo>
@@ -16,9 +18,12 @@ namespace Details {
 class CVCameraDetail : public QWidget {
     Q_OBJECT
 public:
-    explicit CVCameraDetail(QWidget *parent = 0);
+    explicit CVCameraDetail(QWidget *parent = 0, Core::CVCamera* = 0);
 
     QLineEdit* lineEdit(QWidget* p, const QPalette&);
+
+	void save();
+	void view();
 
 signals:
     void cameraInput(const QString& uri);
@@ -43,6 +48,8 @@ private:
     QString _uri;
 
     QPlainTextEdit* _note;
+
+	Core::CVCamera* _cam;
 };
 
 } // namespace Details

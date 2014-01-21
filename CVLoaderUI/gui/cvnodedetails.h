@@ -1,7 +1,8 @@
 #ifndef CV_GUI_CVNODEDETAILS_H
 #define CV_GUI_CVNODEDETAILS_H
 
-#include <gui/status/cvnodeinfo.h>
+#include "gui/status/cvnodeinfo.h"
+#include "core/categories/cvcategory.h"
 
 #include <QWidget>
 #include <QMap>
@@ -19,11 +20,13 @@ public:
 
     explicit CVNodeDetails(QWidget *parent = 0);
 
+	QWidget* getDetail(Status::CVNodeInfo::Type t) const { _details.contains(t) ? _details.value(t) : NULL; }
+
 signals:
 
 public slots:
     void onProjectItemActivated(QTreeWidgetItem* item, int col);
-    void onControlAdded(CV::GUI::Status::CVNodeInfo::Type);
+    void onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory* = NULL);
 
 private:
     QStackedWidget* _stack;

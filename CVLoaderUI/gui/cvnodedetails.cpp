@@ -23,12 +23,12 @@ CVNodeDetails::CVNodeDetails(QWidget* p) : QWidget(p) {
     setLayout(box);
 }
 
-void CVNodeDetails::onControlAdded(CVNodeInfo::Type t) {
+void CVNodeDetails::onControlAdded(CVNodeInfo::Type t, Core::CVCategory* controller) {
     if (_details.contains(t)) {
         return;
     }
 
-    QWidget* detail = Helper::CVDetailsFactory::build(_stack, t);
+    QWidget* detail = Helper::CVDetailsFactory::build(_stack, t, controller);
 
     _details.insert(t, detail);
     _stack->addWidget(detail);

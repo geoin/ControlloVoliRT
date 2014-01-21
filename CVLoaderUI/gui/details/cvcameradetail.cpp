@@ -1,5 +1,7 @@
 #include "cvcameradetail.h"
 
+#include "gui/helper/cvactionslinker.h"
+
 #include <QLabel>
 #include <QLineEdit>
 #include <QPlainTextEdit>
@@ -23,8 +25,9 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVCameraDetail::CVCameraDetail(QWidget* p) : QWidget(p) {
+CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : QWidget(p) {
     _file.reset(NULL);
+	_cam = cam;
 
     setAcceptDrops(true);
 
@@ -82,8 +85,12 @@ CVCameraDetail::CVCameraDetail(QWidget* p) : QWidget(p) {
     //TODO: move to controller
     connect(this, SIGNAL(cameraInput(QString)), SLOT(onCameraInput(QString)));
     connect(newCam, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
-    connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
+    //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
     connect(clearCam, SIGNAL(triggered()), this, SLOT(onClearCamParameters()));
+
+	if (_cam->isValid()) {
+		view();
+	}
 }
 
 QLineEdit* CVCameraDetail::lineEdit(QWidget* p, const QPalette& pal) {
@@ -129,6 +136,7 @@ void CVCameraDetail::dropEvent(QDropEvent* ev) {
     _file.reset(NULL);
 }
 
+//TODO: move validation in control class
 void CVCameraDetail::onCameraInput(const QString& uri) {
     QFile file(uri);
     bool open = file.open(QIODevice::ReadOnly | QIODevice::Text);
@@ -159,6 +167,29 @@ void CVCameraDetail::onCameraInput(const QString& uri) {
     if(xml.hasError()) {
 
     }
+
+	save();
+}
+
+void CVCameraDetail::save() {
+	Camera& c = _cam->data();
+	c.foc = _params.value("FOC")->text().toDouble();
+	c.dimx = _params.value("DIMX")->text().toDouble();
+	c.dimy = _params.value("DIMY")->text().toDouble();
+	c.dpix = _params.value("DPIX")->text().toDouble();
+	c.xp = _params.value("XP")->text().toDouble();
+	c.yp = _params.value("YP")->text().toDouble();
+	_cam->persist();
+}
+
+void CVCameraDetail::view() {
+	Camera& c = _cam->data();
+	_params.value("FOC")->setText(QString::number(c.foc, 'f', 4));
+	_params.value("DIMX")->setText(QString::number(c.dimx, 'f', 4));
+	_params.value("DIMY")->setText(QString::number(c.dimy, 'f', 4));
+	_params.value("DPIX")->setText(QString::number(c.dpix, 'f', 4));
+	_params.value("XP")->setText(QString::number(c.xp, 'f', 4));
+	_params.value("YP")->setText(QString::number(c.yp, 'f', 4));
 }
 
 void CVCameraDetail::onLoadCamParameters() {

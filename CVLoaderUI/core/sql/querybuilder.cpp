@@ -4,6 +4,7 @@
 #include <QDateTime>
 
 #include <assert.h>
+#include <algorithm>
 
 namespace CV {
 namespace Core {
@@ -43,16 +44,76 @@ namespace SQL {
 
 		return true;
 	}
+
+	bool Query::update(const QString& tab, const QStringList& values, const QStringList& where, const QVariantList& binds) {
+		QString query("UPDATE %1 SET %2 WHERE %3");
+		query = query.arg(tab, values.join(", "), where.join(" AND "));
+		
+		try {
+			_stm.prepare(query.toStdString()); 
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			return false;
+		}
+
+		assert(where.length() + values.size() >= binds.length());
+		QRegExp reg("\\?([0-9]{1,2})");
+
+		try {
+			int i = 0;
+			int len = min(binds.size(), values.size());
+			for (; i < len; ++i) {
+				int pos = reg.indexIn(values.at(i));
+				if (pos < 0) {
+					continue;
+				}
+
+				int val = reg.cap(1).toInt();
+				QVariant b = binds.at(val - 1);
+				bindValue(val, b);
+			}
+
+			len = min(where.length(), binds.length());
+			for (int i = 0; i < len; ++i) {
+				int pos = reg.indexIn(where.at(i));
+				if (pos < 0) {
+					continue;
+				}
+
+				int val = reg.cap(1).toInt();
+				QVariant b = binds.at(val - 1);
+				bindValue(val, b);
+			}
+
+			_stm.execute();
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			return false;
+		}
+
+		return true;
+	}
 	
 	//TODO: too basic - needs order by 
-	CV::Util::Spatialite::Recordset Query::select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds) {
+	CV::Util::Spatialite::Recordset Query::select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QMap<QString, QString>& order) {
 		//catch outside
-
 		QString query("SELECT %1 FROM %2");
 		if (where.length()) {
 			query.append(" WHERE %3");
 		}
-		query = query.arg(what.join(", "), from.join(", "), where.join(" AND "));
+		
+		QStringList orderValues;
+		if (order.size()) {
+			query.append(" ORDER BY %4");
+
+			QMap<QString, QString>::const_iterator iter = order.constBegin();
+			while (iter != order.constEnd()) {
+				orderValues << iter.key() + " " + iter.value();
+				++iter;
+			}
+		}
+
+		query = query.arg(what.join(", "), from.join(", "), where.join(" AND "), orderValues.join(", "));
 
 		_stm.prepare(query.toStdString()); 
 		
@@ -73,6 +134,7 @@ namespace SQL {
 		return _stm.recordset();
 	}
 
+	//let me bind from Qt types
 	void Query::bindValue(const int& index, const QVariant& val) {
 		QVariant::Type t = val.type();
 		switch (t) {

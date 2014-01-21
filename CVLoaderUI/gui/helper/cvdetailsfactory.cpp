@@ -9,11 +9,11 @@ namespace Helper {
 
 using namespace Status;
 
-QWidget* CVDetailsFactory::build(QWidget* p, CVNodeInfo::Type t) {
+QWidget* CVDetailsFactory::build(QWidget* p, CVNodeInfo::Type t, CV::Core::CVCategory* category) {
     QWidget* detail = NULL;
     switch (t) {
         case CVNodeInfo::FLY_PLAN:
-            detail = new Details::CVPlanDetail(p);
+            detail = new Details::CVPlanDetail(p, category);
             break;
         case CVNodeInfo::GPS_DATA:
             detail = new Details::CVMissionListDetails(p);

@@ -1,9 +1,15 @@
 #ifndef CV_CORE_CVPROJECT_H
 #define CV_CORE_CVPROJECT_H
 
-#include <QObject>
+#include "core/categories/cvcategory.h"
 
-class QDir;
+#include <QMap>
+#include <QDir>
+#include <QFileDialog>
+#include <QResource>
+#include <QTextStream>
+#include <QDateTime>
+#include <QUuid>
 
 namespace CV {
 namespace Core {
@@ -15,11 +21,21 @@ public:
 
     explicit CVProject(QObject* p = 0);
 
-	void loadFrom(const QDir&, const QString&);
+	void uri(const QString& uri) { _uri = uri; }
+
+	void loadFrom(const QDir&, const QString&); //TODO: change this sign
+	bool create(const QString& db);
+
+	void insert(CVCategory*);
+	CVCategory* get(CVCategory::Type);
 
     QString id, name, path, notes;
 	long long timestamp;
     Type type;
+
+private:
+	QString _uri;
+	QMap<CVCategory::Type, CVCategory*> _categories;
 };
 
 } // namespace Core

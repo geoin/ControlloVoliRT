@@ -13,7 +13,6 @@ class CVProjectManager : public QObject {
     Q_OBJECT
 public:
     explicit CVProjectManager(QObject *parent = 0);
-	bool create(Core::CVProject*);
 
 signals:
     void addProject(Core::CVProject*);

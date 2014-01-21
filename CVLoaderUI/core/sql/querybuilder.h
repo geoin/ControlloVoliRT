@@ -20,8 +20,9 @@ public:
 
 	Query(CV::Util::Spatialite::Connection& cnn) : _connection(cnn), _stm(_connection) {}
 
+	bool update(const QString& tab, const QStringList& values, const QStringList& where, const QVariantList& binds);
 	bool insert(const QString& tab, const QStringList& fields, const QStringList& values, const QVariantList& binds);
-	CV::Util::Spatialite::Recordset select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds);
+	CV::Util::Spatialite::Recordset select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QMap<QString, QString>& order = QMap<QString, QString>());
 	
 	void bindValue(const int& index, const QVariant& val);
 

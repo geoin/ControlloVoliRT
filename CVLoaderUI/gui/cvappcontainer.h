@@ -2,6 +2,7 @@
 #define CV_GUI_CVAPPCONTAINER_H
 
 #include <QWidget>
+#include <QApplication>
 
 #include "core/cvprojectmanager.h"
 
@@ -34,7 +35,7 @@ public:
     QStatusBar* statusbar() const;
 
 signals:
-    void controlAdded(CV::GUI::Status::CVNodeInfo::Type);
+    void controlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory* = NULL);
 
 public slots:
 	void insertPhotogrammetry(Core::CVProject*);

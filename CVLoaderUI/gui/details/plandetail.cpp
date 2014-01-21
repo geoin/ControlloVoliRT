@@ -7,8 +7,8 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVPlanDetail::CVPlanDetail(QWidget* p, TabPosition pos) : CVBaseTabWidget(p, pos) {
-    CVCameraDetail* container = new CVCameraDetail(p);
+CVPlanDetail::CVPlanDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
+	CVCameraDetail* container = new CVCameraDetail(p, static_cast<Core::CVCamera*>(c->at(0)));
     addTab(container, "");
     setTabToolTip(0, "Fotocamera");
     addTab(new QLabel(p), "");
@@ -17,6 +17,8 @@ CVPlanDetail::CVPlanDetail(QWidget* p, TabPosition pos) : CVBaseTabWidget(p, pos
     setTabToolTip(2, "DEM");
     addTab(new QLabel(p), "");
     setTabToolTip(3, "Aree da cartografare");
+
+	_category = c;
 }
 
 } // namespace Details

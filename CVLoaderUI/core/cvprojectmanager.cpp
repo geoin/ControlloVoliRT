@@ -2,17 +2,13 @@
 
 #include "gui/dialogs/cvprojectdialog.h"
 #include "gui/helper/cvactionslinker.h"
+#include "gui/cvgui_utils.h"
 
 #include "core/sql/querybuilder.h"
 
-#include "CVUtil/cvspatialite.h"
+#include "core/categories/cvcamera.h"
 
-#include <QDir>
-#include <QFileDialog>
-#include <QResource>
-#include <QTextStream>
-#include <QDateTime>
-#include <QUuid>
+#include "CVUtil/cvspatialite.h"
 
 namespace CV {
 namespace Core {
@@ -29,11 +25,25 @@ void CVProjectManager::onNewProject() {
         return;
     }
 
+	GUI::CVScopedCursor c;
+
     Core::CVProject* proj = new Core::CVProject(this);
     dialog.getInput(*proj);
 
-	bool ret = create(proj);
+	bool ret = proj->create(_db);
 	if (ret) {
+		CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
+
+		CVCamera* cam = new CVCamera(cat);
+		cam->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
+		
+		cat->insert(cam);
+
+		proj->insert(cat);
+
+		proj->insert(new CVCategory(CVCategory::GPS_DATA, proj));
+		proj->insert(new CVCategory(CVCategory::FLY, proj));
+
 		emit addProject(proj);
 		_projects.append(proj);
 	}
@@ -41,10 +51,26 @@ void CVProjectManager::onNewProject() {
 
 void CVProjectManager::onLoadProject() {
 	QString proj = QFileDialog::getExistingDirectory(NULL, tr("Seleziona cartella progetto"));
+
+	GUI::CVScopedCursor c;
 	QDir dir(proj);
 	if (dir.exists(_db)) {
 		CVProject* proj = new CVProject(this);
 		proj->loadFrom(dir.absolutePath(), _db);
+		// Init category
+		CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
+
+		// Init camera
+		CVCamera* cam = new CVCamera(cat);
+		cam->uri(proj->path + QDir::separator() + _db);
+		cam->load();
+		
+		cat->insert(cam);
+
+		proj->insert(cat);
+
+		proj->insert(new CVCategory(CVCategory::GPS_DATA, proj));
+		proj->insert(new CVCategory(CVCategory::FLY, proj));
 		
 		emit addProject(proj);
 		_projects.append(proj);
@@ -65,66 +91,6 @@ void CVProjectManager::onCloseProject() {
 	//TODO
 }
 
-bool CVProjectManager::create(Core::CVProject* proj) {
-	QDir dir;
-	dir.cd(proj->path);
-	bool ret = dir.mkdir(proj->name);
-	if (!ret) {
-		return false;
-	}
-
-	dir.cd(proj->name);
-
-	QString db = dir.absolutePath() + dir.separator() + _db;
-
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.create(db.toStdString()); 
-		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
-			cnn.initialize_metdata(); 
-		}
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
-
-	bool isValid = cnn.is_valid();
-	if (!isValid) {
-		return false;
-	}
-
-	QResource sql(":/sql/db.sql");
-	QFile res(sql.absoluteFilePath());
-	if (!res.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		return false;
-	}
-	QTextStream str(&res);
-	QString query = str.readAll();
-	
-
-	QStringList tables = query.split(";", QString::SkipEmptyParts);
-	cnn.begin_transaction();
-	foreach(QString t, tables) {
-		try {
-			cnn.execute_immediate(t.simplified().toStdString());
-		} catch (CV::Util::Spatialite::spatialite_error& err) {
-			Q_UNUSED(err)
-			cnn.rollback_transaction();
-			return false;
-		}
-	}
-	cnn.commit_transaction();
-
-	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	q->insert(
-		"JOURNAL", 
-		QStringList() << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL",
-		QStringList() << "?1" << "?2" << "?3" << "?4" << "?5",
-		QVariantList() << QUuid::createUuid().toString() << QDateTime::currentMSecsSinceEpoch() << proj->path << proj->notes << proj->type
-	);
-
-	return true;
-}
 
 } // namespace Core
 } // namespace CV

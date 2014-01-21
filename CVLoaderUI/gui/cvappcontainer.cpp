@@ -44,9 +44,14 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
     split->setStretchFactor(0, 0);
     split->setStretchFactor(1, 1);
 
-    connect(_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
-    connect(this, SIGNAL(controlAdded(CV::GUI::Status::CVNodeInfo::Type)), _details, SLOT(onControlAdded(CV::GUI::Status::CVNodeInfo::Type)));
+    //connect(_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
+	connect(this, SIGNAL(controlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)), _details, SLOT(onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)));
     connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertPhotogrammetry(Core::CVProject*)));
+
+	Helper::CVSignalHandle::create(parentWidget());
+	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
+	linker->add(Helper::ITEM_SELECTED, _tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)));
+	linker->on(Helper::ITEM_SELECTED, _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
 }
 
 void CVAppContainer::insertPhotogrammetry(Core::CVProject* proj) {
@@ -56,26 +61,27 @@ void CVAppContainer::insertPhotogrammetry(Core::CVProject* proj) {
 	type = proj->type == Core::CVProject::PHOTOGRAMMETRY ? tr("Fotogrammetria") : tr("Lidar");
 		
     // TODO: remove logic from here
+	// TODO: use core enums
 	CVTreeNode* root = _tree->insertProjectTree(type + ": " + proj->name);
     info = root->info();
     info->type(CVNodeInfo::PHOTOGRAMMETRY);
-    emit controlAdded(info->type());
+	emit controlAdded(info->type());
 
     CVTreeNode* node = NULL;
     node = _tree->insertNode(root, tr("Progetto di volo"));
     info = node->info();
     info->type(CVNodeInfo::FLY_PLAN);
-    emit controlAdded(info->type());
+    emit controlAdded(info->type(), proj->get(Core::CVCategory::PLAN));
 
     node = _tree->insertNode(root, tr("Dati GPS"));
     info = node->info();
     info->type(CVNodeInfo::GPS_DATA);
-    emit controlAdded(info->type());
+    emit controlAdded(info->type(), proj->get(Core::CVCategory::GPS_DATA));
 
     node = _tree->insertNode(root, tr("Volo effettuato"));
     info = node->info();
     info->type(CVNodeInfo::FLY);
-    emit controlAdded(info->type());
+    emit controlAdded(info->type(), proj->get(Core::CVCategory::FLY));
 }
 
 void CVAppContainer::link() {
