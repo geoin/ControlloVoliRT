@@ -1,5 +1,8 @@
 #include "plandetail.h"
 #include "cvcameradetail.h"
+#include "cvflyaxis_p.h"
+#include "cvdemdetail.h"
+#include "cvareadetail.h"
 
 #include <QLabel>
 
@@ -11,12 +14,18 @@ CVPlanDetail::CVPlanDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : C
 	CVCameraDetail* container = new CVCameraDetail(p, static_cast<Core::CVCamera*>(c->at(0)));
     addTab(container, "");
     setTabToolTip(0, "Fotocamera");
-    addTab(new QLabel(p), "");
+
+	CVFlyAxis_p* axis = new CVFlyAxis_p(p, static_cast<Core::CVShapeLayer*>(c->at(1)));//, static_cast<Core::CVShape*>(c->at(0)));
+    addTab(axis, "");
     setTabToolTip(1, "Assi di volo");
-    addTab(new QLabel(p), "");
-    setTabToolTip(2, "DEM");
-    addTab(new QLabel(p), "");
-    setTabToolTip(3, "Aree da cartografare");
+
+	CVAreaDetail* area = new CVAreaDetail(p, static_cast<Core::CVShapeLayer*>(c->at(2)));//, static_cast<Core::CVShape*>(c->at(0)));
+    addTab(area, "");
+    setTabToolTip(2, "Aree da cartografare");
+    
+	CVDemDetail* dem = new CVDemDetail(p, static_cast<Core::CVFileInput*>(c->at(3)));//, static_cast<Core::CVShape*>(c->at(0)));
+	addTab(dem, "");
+    setTabToolTip(3, "DEM");
 
 	_category = c;
 }

@@ -7,6 +7,8 @@
 #include "core/sql/querybuilder.h"
 
 #include "core/categories/cvcamera.h"
+#include "core/categories/cvshapelayer.h"
+#include "core/categories/cvfileinput.h"
 
 #include "CVUtil/cvspatialite.h"
 
@@ -15,9 +17,12 @@ namespace Core {
 
 const QString CVProjectManager::_db = "geo.db";
 
+
 CVProjectManager::CVProjectManager(QObject* p) : QObject(p) {
     
 }
+
+//TODO: load and creation must share code!
 
 void CVProjectManager::onNewProject() {
     GUI::Dialogs::CVProjectDialog dialog;
@@ -35,9 +40,25 @@ void CVProjectManager::onNewProject() {
 		CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
 
 		CVCamera* cam = new CVCamera(cat);
+		cam->isPlanning(true);
 		cam->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
-		
 		cat->insert(cam);
+
+		CVShapeLayer* layer = new CVShapeLayer(cat);
+		layer->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
+		layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+		layer->table("AVOLOP");
+		cat->insert(layer);
+
+		layer = new CVShapeLayer(cat);
+		layer->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
+		layer->columns(QStringList() << "count(*)");
+		layer->table("CARTO");
+		cat->insert(layer);
+
+		CVFileInput* file = new CVFileInput(cat);
+		file->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
+		cat->insert(file);
 
 		proj->insert(cat);
 
@@ -64,8 +85,26 @@ void CVProjectManager::onLoadProject() {
 		CVCamera* cam = new CVCamera(cat);
 		cam->uri(proj->path + QDir::separator() + _db);
 		cam->load();
-		
 		cat->insert(cam);
+		
+		CVShapeLayer* layer = new CVShapeLayer(cat);
+		layer->uri(proj->path + QDir::separator() + _db); //TODO: change path in project
+		layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+		layer->table("AVOLOP");
+		layer->load();
+		cat->insert(layer);
+
+		layer = new CVShapeLayer(cat);
+		layer->uri(proj->path + QDir::separator() + _db); //TODO: change path in project
+		layer->columns(QStringList() << "count(*)");
+		layer->table("CARTO");
+		layer->load();
+		cat->insert(layer);
+
+		CVFileInput* file = new CVFileInput(cat);
+		file->uri(proj->path + QDir::separator() + _db); //TODO: change path in project
+		file->load();
+		cat->insert(file);
 
 		proj->insert(cat);
 

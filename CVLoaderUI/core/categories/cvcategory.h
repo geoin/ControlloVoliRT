@@ -22,6 +22,9 @@ public:
 	virtual bool persist() = 0;
 	virtual bool load() = 0;
 
+protected:
+	bool _isValid;
+
 private:
 	QString _uri;
 };

@@ -26,9 +26,6 @@ namespace GUI {
 namespace Details {
 
 CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : QWidget(p) {
-    _file.reset(NULL);
-	_cam = cam;
-
     setAcceptDrops(true);
 
     QHBoxLayout* hLayout = new QHBoxLayout;
@@ -49,6 +46,15 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : QWidget(p) {
     QWidget* header = new QWidget(this);
     header->setLayout(hLayout);
 
+    //TODO: move to controller
+    connect(this, SIGNAL(cameraInput(QString)), SLOT(onCameraInput(QString)));
+    connect(newCam, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
+    //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
+    connect(clearCam, SIGNAL(triggered()), this, SLOT(onClearCamParameters()));
+
+	
+    _file.reset(NULL);
+
     QLabel* s = new QLabel(tr("Dati di progetto"), this);
     s->setIndent(10);
     s->setMaximumHeight(36);
@@ -68,6 +74,8 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : QWidget(p) {
 
     foreach (QLineEdit* i, _params) {
         form->addRow(_params.key(i), i);
+		i->setMinimumHeight(26);
+		i->setMaximumHeight(26);
     }
 
     QLabel* descr = new QLabel("Descrizione:", this);
@@ -82,14 +90,12 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : QWidget(p) {
     box->addWidget(body, 2);
     setLayout(box);
 
-    //TODO: move to controller
-    connect(this, SIGNAL(cameraInput(QString)), SLOT(onCameraInput(QString)));
-    connect(newCam, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
-    //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
-    connect(clearCam, SIGNAL(triggered()), this, SLOT(onClearCamParameters()));
-
-	if (_cam->isValid()) {
-		view();
+	if (cam) {
+		_cam = cam;
+		_cam->data().planning = _cam->isPlanning();
+		if (_cam->isValid()) {
+			view();
+		}
 	}
 }
 
@@ -100,7 +106,7 @@ QLineEdit* CVCameraDetail::lineEdit(QWidget* p, const QPalette& pal) {
     line->setContextMenuPolicy(Qt::NoContextMenu);
     line->setAlignment(Qt::AlignRight);
     line->setReadOnly(true);
-    line->setStyleSheet(QString("background-color: rgba(%1, %2, %3, %3)").arg(QString::number(color.red() + 2), QString::number(color.green() + 2), QString::number(color.blue() + 2)));
+    line->setStyleSheet(QString("background-color: rgba(%1, %2, %3, %3)").arg(QString::number(color.red() + 6), QString::number(color.green() + 6), QString::number(color.blue() + 6)));
     return line;
 }
 
@@ -179,6 +185,9 @@ void CVCameraDetail::save() {
 	c.dpix = _params.value("DPIX")->text().toDouble();
 	c.xp = _params.value("XP")->text().toDouble();
 	c.yp = _params.value("YP")->text().toDouble();
+	
+	c.descr = _note->toPlainText().toStdString();
+
 	_cam->persist();
 }
 
@@ -190,6 +199,8 @@ void CVCameraDetail::view() {
 	_params.value("DPIX")->setText(QString::number(c.dpix, 'f', 4));
 	_params.value("XP")->setText(QString::number(c.xp, 'f', 4));
 	_params.value("YP")->setText(QString::number(c.yp, 'f', 4));
+
+	 _note->setPlainText(c.descr.c_str());
 }
 
 void CVCameraDetail::onLoadCamParameters() {

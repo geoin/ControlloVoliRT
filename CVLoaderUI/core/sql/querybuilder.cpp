@@ -95,12 +95,13 @@ namespace SQL {
 	}
 	
 	//TODO: too basic - needs order by 
-	CV::Util::Spatialite::Recordset Query::select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QMap<QString, QString>& order) {
+	CV::Util::Spatialite::Recordset Query::select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QMap<QString, QString>& order, int limit) {
 		//catch outside
 		QString query("SELECT %1 FROM %2");
 		if (where.length()) {
 			query.append(" WHERE %3");
 		}
+
 		
 		QStringList orderValues;
 		if (order.size()) {
@@ -111,6 +112,10 @@ namespace SQL {
 				orderValues << iter.key() + " " + iter.value();
 				++iter;
 			}
+		}
+
+		if (limit) {
+			query.append(" LIMIT " + QString::number(limit));
 		}
 
 		query = query.arg(what.join(", "), from.join(", "), where.join(" AND "), orderValues.join(", "));

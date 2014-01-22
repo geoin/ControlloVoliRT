@@ -19,16 +19,13 @@ CVCamera::~CVCamera() {
 }
 
 bool CVCamera::isValid() const { 
-	return true; 
+	return _isValid; 
 }
 
 bool CVCamera::persist() { 
 	CV::Util::Spatialite::Connection cnn;
 	try {
-		cnn.create(uri().toStdString()); 
-		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
-			cnn.initialize_metdata(); 
-		}
+		cnn.open(uri().toStdString()); 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
 		return false;
@@ -43,17 +40,18 @@ bool CVCamera::persist() {
 	if (isValid()) {
 		ret = q->update( //TODO: real id
 			"CAMERA", 
-			QStringList() << "FOC=?1" << "DIMX=?2" << "DIMY=?3" << "DPIX=?4" << "XP=?5" << "YP=?6",
-			QStringList() << "ID=?7",
-			QVariantList() << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp << "{3584ed05-2166-4029-9189-a4b142599bf0}"//QUuid::createUuid().toString() 
+			QStringList() << "FOC=?1" << "DIMX=?2" << "DIMY=?3" << "DPIX=?4" << "XP=?5" << "YP=?6"  << "SERIAL_NUMBER=?7" << "MODEL=?8" << "DESCR=?9" << "PLANNING=?10",
+			QStringList() << "ID=?11",
+			QVariantList()  << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp << QString(_cam.serial.c_str()) << QString(_cam.model.c_str()) << QString(_cam.descr.c_str()) << _cam.planning
+							<< QString(_cam.id.c_str())
 		);
 		
 	} else {	
 		ret = q->insert(
 			"CAMERA", 
-			QStringList() << "ID" << "FOC" << "DIMX" << "DIMY" << "DPIX" << "XP" << "YP",
-			QStringList() << "?1" << "?2" << "?3" << "?4" << "?5" << "?6" << "?7",
-			QVariantList() << QUuid::createUuid().toString() << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp
+			QStringList() << "ID" << "FOC" << "DIMX" << "DIMY" << "DPIX" << "XP" << "YP" << "SERIAL_NUMBER" << "MODEL" << "DESCR" << "PLANNING",
+			QStringList() << "?1" << "?2" << "?3" << "?4" << "?5" << "?6" << "?7" << "?8" << "?9" << "?10" << "?11",
+			QVariantList() << QUuid::createUuid().toString() << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp << QString(_cam.serial.c_str()) << QString(_cam.model.c_str()) << QString(_cam.descr.c_str()) << _cam.planning
 		);
 	}
 	if (!ret) {
@@ -74,10 +72,7 @@ bool CVCamera::persist() {
 bool CVCamera::load() { 
 	CV::Util::Spatialite::Connection cnn;
 	try {
-		cnn.create(uri().toStdString()); 
-		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
-			cnn.initialize_metdata(); 
-		}
+		cnn.open(uri().toStdString()); 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
 		return false;
@@ -92,7 +87,7 @@ bool CVCamera::load() {
 
 	try {
 		CV::Util::Spatialite::Recordset set = q->select(
-			QStringList() << "ID" << "FOC" << "DIMX" << "DIMY" << "DPIX" << "XP" << "YP",
+			QStringList() << "ID" << "FOC" << "DIMX" << "DIMY" << "DPIX" << "XP" << "YP" << "SERIAL_NUMBER" << "MODEL" << "DESCR" << "PLANNING",
 			QStringList() << "CAMERA", 
 			QStringList(),// << "CONTROL = ?1",
 			QVariantList()// << 1
@@ -100,12 +95,17 @@ bool CVCamera::load() {
 
 		if (!set.eof()) {
 			int i = 0;
+			_cam.id = set[i].toString();
 			_cam.foc = set[++i].toDouble();
 			_cam.dimx = set[++i].toDouble();
 			_cam.dimy = set[++i].toDouble();
 			_cam.dpix = set[++i].toDouble();
 			_cam.xp = set[++i].toDouble();
 			_cam.yp = set[++i].toDouble();
+			_cam.serial = set[++i].toString();
+			_cam.model = set[++i].toString();
+			_cam.descr = set[++i].toString();
+			_cam.planning = set[++i].toInt() ? true : false;
 			
 			_isValid = true;
 		} 

@@ -15,7 +15,7 @@ CVMainWindow::CVMainWindow(QWidget *parent) : QMainWindow(parent) {
     setStatusBar(app->statusbar());
     setCentralWidget(app);
 
-    setStyleSheet("QToolTip { color: #111; background-repeat:no-repeat; background-position:center; background-color: #eee; padding: 2px;}");
+    //setStyleSheet("QToolTip { color: #111; background-repeat:no-repeat; background-position:center; background-color: #eee; padding: 2px;}");
     app->link();
 }
 

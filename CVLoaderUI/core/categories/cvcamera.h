@@ -2,7 +2,7 @@
 #define CVCAMERA_H
 
 #include "core/categories/cvcategory.h"
-#include "core/cvbaseinputverifier.h"
+//#include "core/cvbaseinputverifier.h"
 
 #include <photo_util/vdp.h>
 
@@ -22,9 +22,12 @@ public:
 
 	inline Camera& data() { return _cam; }
 
+	inline bool isPlanning() const { return _isPlanning; }
+	inline void isPlanning(bool b) { _isPlanning = b; }
+
 private:
 	Camera _cam;
-	bool _isValid;
+	bool _isPlanning;
 
 	//Validator
 };

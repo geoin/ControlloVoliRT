@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
 
     QApplication::setStyle(QStyleFactory::create("fusion"));
     QApplication app(argc, argv);
-    QApplication::setLibraryPaths(QStringList());
 
     CVMainWindow w;
     w.show();
