@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     CVMainWindow w;
+	w.setWindowTitle("Controllo Voli");
     w.show();
 
     int ret = app.exec();
