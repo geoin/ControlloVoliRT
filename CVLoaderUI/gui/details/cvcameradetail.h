@@ -3,6 +3,8 @@
 
 #include "core/categories/cvcamera.h"
 
+#include "cvbasedetail.h"
+
 #include <QWidget>
 #include <QMap>
 #include <QFileInfo>
@@ -15,7 +17,7 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-class CVCameraDetail : public QWidget {
+class CVCameraDetail : public CVBaseDetail {
     Q_OBJECT
 public:
     explicit CVCameraDetail(QWidget *parent = 0, Core::CVCamera* = 0);

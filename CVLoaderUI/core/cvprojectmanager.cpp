@@ -47,6 +47,9 @@ void CVProjectManager::onNewProject() {
 
 void CVProjectManager::onLoadProject() {
 	QString proj = QFileDialog::getExistingDirectory(NULL, tr("Seleziona cartella progetto"));
+	if (proj.isEmpty()) {
+		return;
+	}
 
 	GUI::CVScopedCursor c;
 	QDir dir(proj);

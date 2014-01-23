@@ -23,6 +23,7 @@ public:
 	inline QString description() const { return _descr->text(); }
 
 	inline void body(QLayout* l) { _body->setLayout(l); }
+	inline QMenu* detailMenu() const { return _menu; }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

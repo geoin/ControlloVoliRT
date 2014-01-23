@@ -3,6 +3,8 @@
 
 #include "core/categories/cvshapelayer.h"
 
+#include "cvbasedetail.h"
+
 #include <QWidget>
 #include <QScopedPointer>
 #include <QFileInfo>
@@ -14,7 +16,7 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-class CVAreaDetail : public QWidget {
+class CVAreaDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:

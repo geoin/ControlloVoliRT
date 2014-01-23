@@ -25,46 +25,23 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : QWidget(p) {
+CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : CVBaseDetail(p) {
     setAcceptDrops(true);
 
-    QHBoxLayout* hLayout = new QHBoxLayout;
-    QLabel* h = new QLabel(tr("Fotocamera"), this);
-    h->setMaximumHeight(36);
-    h->setStyleSheet("padding: 4px; font: bold;");
-
-    QPushButton* menuBtn = new QPushButton(tr(""), this);
-
-    menuBtn->setMaximumSize(20, 26);
-    QMenu* menu = new QMenu(this);
+    QMenu* menu = detailMenu();
     QAction* newCam = menu->addAction(QIcon(""), "Carica");
     QAction* editCam = menu->addAction(QIcon(""), "Modifica");
     QAction* clearCam = menu->addAction(QIcon(""), "Cancella");
-    menuBtn->setMenu(menu);
-    hLayout->addWidget(menuBtn);
-    hLayout->addWidget(h);
-    QWidget* header = new QWidget(this);
-    header->setLayout(hLayout);
-
     //TODO: move to controller
     connect(this, SIGNAL(cameraInput(QString)), SLOT(onCameraInput(QString)));
     connect(newCam, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
     //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
     connect(clearCam, SIGNAL(triggered()), this, SLOT(onClearCamParameters()));
 
-	
-    _file.reset(NULL);
-
-    QLabel* s = new QLabel(tr("Dati di progetto"), this);
-    s->setIndent(10);
-    s->setMaximumHeight(36);
-    s->setStyleSheet("padding: 4px;");
 
     QFormLayout* form = new QFormLayout(this);
-    QWidget* body = new QWidget(this);
 
     QPalette pal = palette();
-
     _params.insert("FOC", lineEdit(this, pal));
     _params.insert("DIMX", lineEdit(this, pal));
     _params.insert("DIMY", lineEdit(this, pal));
@@ -78,17 +55,15 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : QWidget(p) {
 		i->setMaximumHeight(26);
     }
 
-    QLabel* descr = new QLabel("Descrizione:", this);
+	title(tr("Fotocamera"));
+	description(tr("Fotocamera di progetto"));
+
+	QLabel* descr = new QLabel(tr("Descrizione:"), this);
     _note = new QPlainTextEdit(this);
     _note->setReadOnly(true);
     form->addRow(descr, _note);
-    body->setLayout(form);
-
-    QVBoxLayout* box = new QVBoxLayout;
-    box->addWidget(header);
-    box->addWidget(s);
-    box->addWidget(body, 2);
-    setLayout(box);
+    body(form);
+    body(form);
 
 	if (cam) {
 		_cam = cam;

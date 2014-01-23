@@ -31,7 +31,7 @@ CVMissionListToolbar::CVMissionListToolbar(QWidget* p) : QWidget(p) {
    _menu->setMaximumSize(20, 26);
    _menu->setMenu(menu);
 
-   _title = new QLabel("Nessuna missione attiva", this);
+   _title = new QLabel(tr("Nessuna missione attiva"), this);
 
    QHBoxLayout* box = new QHBoxLayout;
    box->setContentsMargins(0, 0, 0, 0);
@@ -92,6 +92,8 @@ CVMissionListDetails::CVMissionListDetails(QWidget* p) : QWidget(p) {
    connect(_bar, SIGNAL(viewPrevious()), this, SLOT(onPreviousMission()));
    connect(_bar, SIGNAL(viewNext()), this, SLOT(onNextMission()));
 
+
+   //TODO Action 
    QMenu* menu = _bar->menu();
    QAction* create = menu->addAction(QIcon(""), tr("Crea missione"));
    connect(create, SIGNAL(triggered()), this, SLOT(onAddMission()));

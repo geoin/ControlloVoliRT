@@ -28,5 +28,10 @@ CVTreeNode* CVTreeWidget::insertNode(CVTreeNode* parent, const QString& text) {
     return new CVTreeNode(parent, QStringList() << text);
 }
 
+void CVTreeWidget::onCloseProject() {
+	QTreeWidgetItem* inv = invisibleRootItem();
+	if (inv->childCount()) {}
+}
+
 }
 }

@@ -15,6 +15,9 @@ public:
 
     CVTreeNode* insertProjectTree(const QString&);
     CVTreeNode* insertNode(CVTreeNode* parent, const QString&);
+
+public slots:
+	void onCloseProject();
 };
 
 }

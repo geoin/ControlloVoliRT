@@ -102,11 +102,12 @@ void CVAppContainer::link() {
 
 	QAction* closeProj = linker->add(Helper::CLOSE_PROJECT);
     linker->on(Helper::CLOSE_PROJECT, &_prjManager, SLOT(onCloseProject()));
+    linker->on(Helper::CLOSE_PROJECT, _tree, SLOT(onCloseProject()));
 	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(""), tr("Chiudi"));
 
-	QAction* removeProj = linker->add(Helper::REMOVE_PROJECT);
+	/*QAction* removeProj = linker->add(Helper::REMOVE_PROJECT);
     linker->on(Helper::REMOVE_PROJECT, &_prjManager, SLOT(onDeleteProject()));
-	_addToMenuAndToolbar(removeProj, projects, _toolbar, QIcon(""), tr("Rimuovi"));
+	_addToMenuAndToolbar(removeProj, projects, _toolbar, QIcon(""), tr("Rimuovi"));*/
 }
 
 void CVAppContainer::_addToMenuAndToolbar(QAction* a, QMenu* m, QToolBar* t, QIcon icon, QString name) {
@@ -116,7 +117,7 @@ void CVAppContainer::_addToMenuAndToolbar(QAction* a, QMenu* m, QToolBar* t, QIc
     m->insertAction(NULL, a);
     t->insertAction(NULL, a);
 
-    QWidget* w = t->widgetForAction(a); //WORK_AROUND: icon only in toolbar
+    QWidget* w = t->widgetForAction(a); //WORK_AROUND(TO FIX): icon only in toolbar
     static_cast<QPushButton*>(w)->setText("");
 }
 

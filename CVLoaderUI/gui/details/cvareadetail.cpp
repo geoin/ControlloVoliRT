@@ -20,31 +20,17 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : QWidget(p) {
+CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
 	setAcceptDrops(true);
 
-    QHBoxLayout* hLayout = new QHBoxLayout;
-    QLabel* h = new QLabel(tr("Aree da cartografare"), this);
-    h->setMaximumHeight(36);
-    h->setStyleSheet("padding: 4px; font: bold;");
+	title(tr("Aree da cartografare"));
+	description(tr("File shape"));
 
-    QPushButton* menuBtn = new QPushButton(tr(""), this);
-
-    menuBtn->setMaximumSize(20, 26);
-    QMenu* menu = new QMenu(this);
+    /*QMenu* menu = new QMenu(this);
     QAction* add = menu->addAction(QIcon(""), "Carica");
-    QAction* edit = menu->addAction(QIcon(""), "Modifica");
-    menuBtn->setMenu(menu);
-    hLayout->addWidget(menuBtn);
-    hLayout->addWidget(h);
-    QWidget* header = new QWidget(this);
-    header->setLayout(hLayout);
-
-	QVBoxLayout* box = new QVBoxLayout;
-    box->addWidget(header);
+    QAction* edit = menu->addAction(QIcon(""), "Modifica");*/
 	
     QFormLayout* form = new QFormLayout(this);
-    QWidget* body = new QWidget(this);
 
 	QLabel* lab = new QLabel("", this);
 	lab->setMinimumHeight(26);
@@ -59,12 +45,8 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : QWidget(p) {
 
 	form->addRow(n, lab);
 
-	body->setLayout(form);
+	body(form);
 
-    box->addWidget(body, 2);
-    setLayout(box);
-    
-	_file.reset();
 	_layer = l;
 
 	if (_layer->isValid()) {
