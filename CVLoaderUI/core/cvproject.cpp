@@ -10,8 +10,8 @@ CVProject::CVProject(QObject *parent) : QObject(parent) {
 
 }
 
-void CVProject::loadFrom(const QDir& dir, const QString& d) {
-	QString db = dir.absolutePath() + dir.separator() + d;
+void CVProject::loadFrom(const QDir& dir) {
+	QString db = dir.absolutePath() + dir.separator() + SQL::database;
 	CV::Util::Spatialite::Connection cnn;
 	try {
 		cnn.open(db.toStdString()); 
@@ -94,12 +94,14 @@ bool CVProject::create(const QString& d) {
 	}
 	cnn.commit_transaction();
 
+	id = QUuid::createUuid().toString();
+
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	q->insert(
 		"JOURNAL", 
 		QStringList() << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL",
 		QStringList() << "?1" << "?2" << "?3" << "?4" << "?5",
-		QVariantList() << QUuid::createUuid().toString() << QDateTime::currentMSecsSinceEpoch() << path << notes << type
+		QVariantList() << id << QDateTime::currentMSecsSinceEpoch() << path << notes << type
 	);
 
 	return true;

@@ -23,13 +23,13 @@ public:
 
 	void uri(const QString& uri) { _uri = uri; }
 
-	void loadFrom(const QDir&, const QString&); //TODO: change this sign
+	void loadFrom(const QDir&); 
 	bool create(const QString& db);
 
 	void insert(CVCategory*);
 	CVCategory* get(CVCategory::Type);
 
-    QString id, name, path, notes;
+    QString id, name, path, notes; //TODO, to be private
 	long long timestamp;
     Type type;
 

@@ -24,8 +24,9 @@ public slots:
     void onDeleteProject();
 
 private:
+	CVCategory* _plan(CVProject*, bool load);
+
     QList<CVProject*> _projects;
-	static const QString _db;
 };
 
 } // namespace Core

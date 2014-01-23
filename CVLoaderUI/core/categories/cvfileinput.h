@@ -19,7 +19,17 @@ public:
 	virtual bool persist();
 	virtual bool load();
 
+	inline void origin(const QString& file) { _origin = file; }
+	inline const QString& origin() const { return _origin; }
+
+	inline void target(const QString& file) { _target = file; }
+	inline const QString& target() const { return _target; }
+
+	QStringList& data() { return _data; }
+
 private:
+	QString _origin, _target;
+	QStringList _data;
 };
 
 } // namespace Core

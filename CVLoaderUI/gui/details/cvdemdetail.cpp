@@ -14,6 +14,8 @@
 #include <QUrl>
 #include <QDir>
 
+#include <assert.h>
+
 namespace CV {
 namespace GUI {
 namespace Details {
@@ -52,7 +54,7 @@ CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : QWidget(p) {
 	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 	_labels << lab;
 
-	QLabel* n = new QLabel("Ente", this);
+	QLabel* n = new QLabel(tr("Colonne"), this);
 	n->setMinimumHeight(26);
 	n->setMaximumHeight(26);
 	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
@@ -65,7 +67,7 @@ CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : QWidget(p) {
 	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 	_labels << lab;
 
-	n = new QLabel("DT", this);
+	n = new QLabel(tr("Righe"), this);
 	n->setMinimumHeight(26);
 	n->setMaximumHeight(26);
 	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
@@ -77,7 +79,31 @@ CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : QWidget(p) {
 	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 	_labels << lab;
 
-	n = new QLabel("RID", this);
+	n = new QLabel("X", this);
+	n->setMinimumHeight(26);
+	n->setMaximumHeight(26);
+	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
+	form->addRow(n, lab);
+
+	lab = new QLabel("", this);
+	lab->setMinimumHeight(26);
+	lab->setMaximumHeight(26);
+	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
+	_labels << lab;
+
+	n = new QLabel("Y", this);
+	n->setMinimumHeight(26);
+	n->setMaximumHeight(26);
+	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
+	form->addRow(n, lab);
+
+	lab = new QLabel("", this);
+	lab->setMinimumHeight(26);
+	lab->setMaximumHeight(26);
+	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
+	_labels << lab;
+
+	n = new QLabel(tr("Misura celle"), this);
 	n->setMinimumHeight(26);
 	n->setMaximumHeight(26);
 	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
@@ -92,7 +118,11 @@ CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : QWidget(p) {
 	_layer = l;
 
 	if (_layer->isValid()) {
-		
+		QStringList& data = _layer->data();
+		assert(data.size() == _labels.size());
+		for (int i = 0; i < data.size(); ++i) {
+			_labels.at(i)->setText(data.at(i));
+		}
 	}
 }
 
@@ -128,8 +158,13 @@ void CVDemDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVDemDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
+	_layer->origin(_file->absoluteFilePath());
 	if (_layer->persist()) {
-		
+		QStringList& data = _layer->data();
+		assert(data.size() == _labels.size());
+		for (int i = 0; i < data.size(); ++i) {
+			_labels.at(i)->setText(data.at(i));
+		}
 	}
     _file.reset(NULL);
 }

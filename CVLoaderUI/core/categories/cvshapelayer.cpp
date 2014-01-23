@@ -59,7 +59,7 @@ bool CVShapeLayer::load() {
 			QStringList() << _table, 
 			QStringList(),
 			QVariantList(),
-			QMap<QString, QString>(),
+			QStringList(),
 			1
 		);
 

@@ -15,9 +15,6 @@
 namespace CV {
 namespace Core {
 
-const QString CVProjectManager::_db = "geo.db";
-
-
 CVProjectManager::CVProjectManager(QObject* p) : QObject(p) {
     
 }
@@ -35,31 +32,9 @@ void CVProjectManager::onNewProject() {
     Core::CVProject* proj = new Core::CVProject(this);
     dialog.getInput(*proj);
 
-	bool ret = proj->create(_db);
+	bool ret = proj->create(SQL::database);
 	if (ret) {
-		CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
-
-		CVCamera* cam = new CVCamera(cat);
-		cam->isPlanning(true);
-		cam->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
-		cat->insert(cam);
-
-		CVShapeLayer* layer = new CVShapeLayer(cat);
-		layer->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
-		layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
-		layer->table("AVOLOP");
-		cat->insert(layer);
-
-		layer = new CVShapeLayer(cat);
-		layer->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
-		layer->columns(QStringList() << "count(*)");
-		layer->table("CARTO");
-		cat->insert(layer);
-
-		CVFileInput* file = new CVFileInput(cat);
-		file->uri(proj->path + QDir::separator() + proj->name + QDir::separator() + _db); //TODO: change path in project
-		cat->insert(file);
-
+		CVCategory* cat = _plan(proj, false);
 		proj->insert(cat);
 
 		proj->insert(new CVCategory(CVCategory::GPS_DATA, proj));
@@ -75,37 +50,12 @@ void CVProjectManager::onLoadProject() {
 
 	GUI::CVScopedCursor c;
 	QDir dir(proj);
-	if (dir.exists(_db)) {
+	if (dir.exists(SQL::database)) {
 		CVProject* proj = new CVProject(this);
-		proj->loadFrom(dir.absolutePath(), _db);
-		// Init category
-		CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
+		proj->loadFrom(dir.absolutePath());
 
-		// Init camera
-		CVCamera* cam = new CVCamera(cat);
-		cam->uri(proj->path + QDir::separator() + _db);
-		cam->load();
-		cat->insert(cam);
-		
-		CVShapeLayer* layer = new CVShapeLayer(cat);
-		layer->uri(proj->path + QDir::separator() + _db); //TODO: change path in project
-		layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
-		layer->table("AVOLOP");
-		layer->load();
-		cat->insert(layer);
-
-		layer = new CVShapeLayer(cat);
-		layer->uri(proj->path + QDir::separator() + _db); //TODO: change path in project
-		layer->columns(QStringList() << "count(*)");
-		layer->table("CARTO");
-		layer->load();
-		cat->insert(layer);
-
-		CVFileInput* file = new CVFileInput(cat);
-		file->uri(proj->path + QDir::separator() + _db); //TODO: change path in project
-		file->load();
-		cat->insert(file);
-
+		// Init categories
+		CVCategory* cat = _plan(proj, true);
 		proj->insert(cat);
 
 		proj->insert(new CVCategory(CVCategory::GPS_DATA, proj));
@@ -115,12 +65,51 @@ void CVProjectManager::onLoadProject() {
 		_projects.append(proj);
 	}
 }   
+
+CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
+	CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
+
+	// Init camera
+	CVCamera* cam = new CVCamera(cat);
+	cam->uri(proj->path + QDir::separator() + SQL::database);
+	if (b) {
+		cam->load();
+	}
+	cat->insert(cam);
+	
+	CVShapeLayer* layer = new CVShapeLayer(cat);
+	layer->uri(proj->path + QDir::separator() + SQL::database); //TODO: change path in project
+	layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	layer->table("AVOLOP");
+	if (b) {
+		layer->load();
+	}
+	cat->insert(layer);
+
+	layer = new CVShapeLayer(cat);
+	layer->uri(proj->path + QDir::separator() + SQL::database); //TODO: change path in project
+	layer->columns(QStringList() << "count(*)");
+	layer->table("CARTO");
+	if (b) {
+		layer->load();
+	}
+	cat->insert(layer);
+
+	CVFileInput* file = new CVFileInput(cat);
+	file->uri(proj->path); //TODO: change path in project
+	if (b) {
+		file->load();
+	}
+	cat->insert(file);
+
+	return cat;
+}
     
 void CVProjectManager::onDeleteProject() {
 	//TODO
 	QString proj = QFileDialog::getExistingDirectory(NULL, tr("Seleziona cartella progetto"));
 	QDir dir(proj);
-	if (dir.exists(_db)) {
+	if (dir.exists(SQL::database)) {
 		dir.cdUp();
 		dir.remove(proj);
 	}

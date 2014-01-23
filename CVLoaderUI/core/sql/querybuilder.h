@@ -13,6 +13,8 @@ namespace CV {
 namespace Core {
 namespace SQL {
 
+static const QString database = "geo.db";
+
 class Query {
 public:
 	typedef QSharedPointer<Query> Ptr;
@@ -22,7 +24,7 @@ public:
 
 	bool update(const QString& tab, const QStringList& values, const QStringList& where, const QVariantList& binds);
 	bool insert(const QString& tab, const QStringList& fields, const QStringList& values, const QVariantList& binds);
-	CV::Util::Spatialite::Recordset select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QMap<QString, QString>& order = QMap<QString, QString>(), int = 0);
+	CV::Util::Spatialite::Recordset select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QStringList& order = QStringList(), int = 0);
 	
 	void bindValue(const int& index, const QVariant& val);
 
