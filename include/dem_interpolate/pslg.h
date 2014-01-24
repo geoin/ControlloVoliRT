@@ -12,33 +12,34 @@
 
 #include "exports.h"
 #include <set>
-#include "triangle.h"
-#include "dsm.h"
+#include "dem_interpolate/triangle.h"
+#include "dem_interpolate/dsm.h"
 #include <limits>
-
-//#include <share.h>
+#include <Poco/String.h>
+#include <Poco/Path.h>
+#include <Poco/File.h>
+#include "fastparser.h"
 
 #ifndef INF
 #define INF	1.e30
 #endif
 
-#define TR_EPS 1.e-3
+#define TR_EPS 1.e-10
 
 static void fn_lst(char* mes) {
 }
 
-class LASreader;
-
-class _declspec(dllexport) MyLas {
+class TOOLS_EXPORTS Bbox {
 public:
-	MyLas(): _lasreader(NULL) {}
-	~MyLas() ;
-	unsigned int open(const std::string& nome);
-	bool get_next_point(DPOINT& p);
-	void get_min(double& _xmin, double& _ymin, double& _zmin) const;
-	void get_max(double& _xmax, double& _ymax, double& _zmax) const;
+	Bbox() {}
+	//box(double x0, double y0, double dx, double dy): _xo(x0 - dx), _y0(y0 - dy), _x1(x0 + dx), _y1(y0 + dy) {}
+	Bbox(double x0, double y0, double x1, double y1): _x0(x0), _y0(y0), _x1(x1), _y1(y1) {}
+	bool is_inside(double x, double y) const {
+		return x >= _x0 && x <= _x1 && y >= _y0 && y <= _y1;
+	}
 private:
-	LASreader* _lasreader;
+	double _x0, _x1;
+	double _y0, _y1;
 };
 
 // TIN CLASS
@@ -46,11 +47,11 @@ template <typename ND, typename NT>
 class TOOLS_EXPORTS tPSLG: public DSM {
 public:
 	unsigned int			Org_Nod;	// original num. of nodes
-	tPSLG(void): _open(false),
+	tPSLG(double eps = TR_EPS): _open(false),
 		_npt(0), _ntriangle(0), _nseg(0),
-		_nPrev(-5), _lastTri(-1), _nprev(-1), _nSize(0) {
-		_trEps = TR_EPS;
-	}
+		_nPrev(-5), _lastTri(-1), _nprev(-1),
+		_nSize(0), _p_off(), _p_scale(1., 1., 1.),
+		_echo(0), _trEps(TR_EPS) {}
 	~tPSLG() {
 		Release();
 	}
@@ -63,18 +64,71 @@ public:
 	unsigned int Nseg(void) const {
 		return _nseg;
 	}
-	const ND& Node(unsigned int i) const {
-		return node[i];
+	const ND Node(unsigned int i) const {
+		return _denormalize(node[i]);
+	}
+	void Node(const DPOINT& p, unsigned int i) {
+		node[i].x = p.x;
+		node[i].y = p.y;
+		node[i].z = p.z;
+		_normalize(i);
 	}
 	const NT& Triangle(unsigned int i) const {
 		return triangle[i];
 	}
-	SEGMENT& Segment(unsigned int i) {
+	const SEGMENT& Segment(unsigned int i) const {
 		return seg[i];
+	}
+	void _set_off_scale(void) {
+		_p_off = DPOINT(_xmin, _ymin, 0);
+		double dx = _xmax - _xmin;
+		double dy = _ymax - _ymin;
+		dx = std::max(dx, dy);
+		_p_scale = DPOINT(dx, dx, 1);
+	}
+	void _normalize(const ND& nd, int k) {
+		node[k] = nd;
+		_normalize(k);
+	}
+	void _normalize(int k) {
+		node[k] -= _p_off;
+		node[k] /= _p_scale;
+	}
+	ND _denormalize(const ND& nd) const {
+		ND nd1 = nd;
+		nd1 *= _p_scale;
+		nd1 += _p_off;
+		return nd1;
+	}
+	double GetZ(int i) const {
+		return node[i].z * _p_scale.z + _p_off.z;
+	}
+	void SetZ(int i, double z) { 
+		node[i].z = (z - _p_off.z) / _p_scale.z;
+	}
+	double GetX(int i) const {
+		return node[i].x * _p_scale.x + _p_off.x;
+	}
+	void SetX(int i, double x) {
+		node[i].x = (x - _p_off.x) / _p_scale.x;
+	}
+	double GetY(int i) const {
+		return node[i].y * _p_scale.y + _p_off.y;
+	}
+	void SetY(int i, double y) {
+		node[i].y = (y - _p_off.y) / _p_scale.y;
 	}
 	DSM_Type GetType(void) const { return DSM_TIN; }
 	void SetEps(double eps) {
 		_trEps = eps;
+	}
+	void SetEcho(int echo) {
+		_echo = echo;
+		if ( _echo == 3 )
+			_echo = 4; // per gli echi intermedi
+	}
+	void SetMask(const File_Mask& fm) {
+		_fm = fm;
 	}
 	void Init() {
 		_lastTri = -1;
@@ -102,7 +156,7 @@ public:
 					return _npt;
 			}
 		}
-		node[_npt] = nd;
+		_normalize(nd, _npt);
 		setMin(nd.x, nd.y, nd.z);
 		setMax(nd.x, nd.y, nd.z);
 
@@ -134,12 +188,18 @@ public:
 	}
 	void SetOpen(void) { _open = true; }
 
-	double GetX(int i) { return node[i].x; }
-	double GetY(int i) { return node[i].y; }
-	double GetZ(int i) { return node[i].z; }
-	double GetTrX(int nTri, int i) const { int p = triangle[nTri].p[i]; return node[p].x; }
-	double GetTrY(int nTri, int i) const {  int p = triangle[nTri].p[i]; return node[p].y; }
-	double GetTrZ(int nTri, int i) const { int p = triangle[nTri].p[i]; return node[p].z; }
+	double GetX(int i) { return node[i].x * _p_scale.x + _p_off.x; }
+	double GetY(int i) { return node[i].y * _p_scale.y + _p_off.y; }
+	double GetZ(int i) { return node[i].z * _p_scale.z + _p_off.z; }
+	double GetTrX(int nTri, int i) const {
+		return GetX(triangle[nTri].p[i]);
+	}
+	double GetTrY(int nTri, int i) const {
+		return GetY(triangle[nTri].p[i]);
+	}
+	double GetTrZ(int nTri, int i) const {
+		return GetZ(triangle[nTri].p[i]);
+	}
 	unsigned int GetTrNode(int nTri, int i) { return triangle[nTri].p[i]; }
 	void setMin(double x, double y, double z) {
 		if ( _xmin > x ) _xmin = x;
@@ -166,12 +226,14 @@ public:
 	bool	TriCalc(void) { return _triCalc(); }
 	bool	VoroCalc(void) { return _voroCalc(); }
 
-	int FindNearerTriangle(double X, double Y, int trIdx) {
+	int FindNearerTriangle(double X, double Y, int trIdx) const {
 		int tr = FindTriangle(X, Y, trIdx);
 		if ( tr < 0 ) tr = _ltri;
 		return tr;
 	}
-	int FindTriangle(double X, double Y, int trIdx = -1) {
+	int FindTriangle(double X, double Y, int trIdx = -1) const {
+		X = (X -_p_off.x) / _p_scale.x; 
+		Y = (Y -_p_off.y) / _p_scale.y; 
 		//const long _maxiter = 2500L;
 		long _maxiter = (long) (0.01 * _ntriangle);
 		if ( _maxiter < 1000 )
@@ -197,13 +259,53 @@ public:
 		_ltri = _newTri;
 		return _newTri;
 	}
-	double GetQuota(double x, double y, double z = Z_NOVAL, double zo = Z_OUT) {
+	double GetQuota(double x, double y, double z = Z_NOVAL, double zo = Z_OUT) const {
 		if ( !_open )
 			return z;
 		_lastTri = FindTriangle(x, y, _lastTri);
 		return ( _lastTri < 0 ) ? z : HeightInterpolation(_lastTri, x, y);
 	}
-	double HeightInterpolation(int n, double X, double Y) {
+	void _trIn(std::set<unsigned int>& tr, std::set<unsigned int>& nd, long k, const Bbox& b) const {
+		tr.insert(k);
+		bool ins = false;
+		for ( int i = 0; i < 3; i++) {
+			ND n = node[triangle[k].p[i]];
+			if ( b.is_inside(n.x, n.y) ) {
+				nd.insert(triangle[k].p[i]);
+				ins = true;
+			}
+		}
+		if ( ins ) {
+			for ( int i = 0; i < 3; i++) {
+				if ( tr.find(k) == tr.end()  && triangle[k].n[i] > 0 )
+					_trIn(tr, nd, triangle[k].n[i], b);
+			}
+
+		}
+	}
+
+	double GetQm(double x, double y, double dx, double dy, double z = Z_NOVAL, double zo = Z_OUT) const {
+		if ( !_open )
+			return z;
+		_lastTri = FindTriangle(x, y, _lastTri);
+		if ( _lastTri < 0 ) 
+			return z;
+		Bbox b((x - _p_off.x - dx) / _p_scale.x, (y - _p_off.y - dy) / _p_scale.y, (x - _p_off.x + dx) / _p_scale.x, (y - _p_off.y + dy) / _p_scale.y);
+
+		std::set<unsigned int> tr;
+		std::set<unsigned int> nd;
+		_trIn(tr, nd, _lastTri, b);
+		if ( nd.empty() )
+			return GetQuota(x, y, z, zo);
+		std::set<unsigned int>::const_iterator it;
+		double qt = 0.;
+		for (it = nd.begin(); it != nd.end(); it++) {
+			qt += node[*it].z;
+		}
+		return qt / nd.size();
+	}
+
+	double HeightInterpolation(int n, double X, double Y) const {
 		if ( n != _nprev ) {
 			Plane(_pln, n); // three points plane
 			_nprev = n;
@@ -213,11 +315,8 @@ public:
 
 	bool ReadFileNod(const std::string& DemName, Progress* Prg = NULL) {
         FILE* fptr = fopen(DemName.c_str(), "r" );
-        //FILE* fptr = _fsopen(DemName.c_str(), "r", _SH_DENYWR );
 		if ( fptr == NULL )
 			return false;
-
-		//Progress* prg = ( Prg == NULL ) ? new Progress : Prg;
 
         char	val[FILENAME_MAX];
 		fgets(val, 80, fptr);
@@ -227,18 +326,18 @@ public:
 			fclose(fptr);
 			return false;
 		}
-		_npt = Org_Nod;
+		//_npt = Org_Nod;
 		
 		_xmin = _ymin = _zmin = INF;
 		_xmax = _ymax = _zmax = -INF;
 		
-		int _bar = _npt / 100;
-		if ( _bar <= 0 )
-			_bar = 1;
+		//int _bar = _npt / 100;
+		//if ( _bar <= 0 )
+		//	_bar = 1;
 		
 		//prg->Start(_npt);
 		bool ko = false;
-		for (unsigned int i = 0; i < _npt; i++) {
+		for (unsigned int i = 0; i < Org_Nod; i++) {
 			//if ( !(i % _bar) )
 			//	prg->Set(i);
 			if ( fgets(val, 80, fptr) == NULL ) {
@@ -255,9 +354,10 @@ public:
 			setMin(node[i].x, node[i].y, node[i].z);
 			setMax(node[i].x, node[i].y, node[i].z);
 		}
-		//prg->Quit();
-		//if ( Prg == NULL )
-		//	delete prg;
+		_set_off_scale();
+		for (unsigned int i = 0; i < Org_Nod; i++) {
+			_normalize(i);
+		}
 
 		// Read the break lines
 		_nseg = 0;
@@ -301,8 +401,8 @@ public:
 		//prg->Start(Org_Nod);
 		// writes nodes nodi
 		for (unsigned int i = 0; i < (unsigned int) Org_Nod; i++) {
-			//prg->Set(i);
-			fprintf(fptr, "%d %.3lf %.3lf %.3lf\n", i, node[i].x, node[i].y, node[i].z);
+			ND nd = _denormalize(node[i]);
+			fprintf(fptr, "%d %.3lf %.3lf %.3lf\n", i, nd.x, nd.y, nd.z);
 
 		}
 		//prg->Quit();
@@ -321,38 +421,137 @@ public:
 	bool Open(const std::string& nome, bool verbose, Progress* prb) {
 		_lastTri = -1;
 		_nprev = -1;
-		return GetDemFromNod(nome.c_str(), verbose, prb);
-	}
+		std::string ext = Poco::Path(nome).getExtension();
+		if ( !Poco::icompare(ext, "las") )
+			return GetDemFromLas(nome, verbose, prb);
+		if ( !Poco::icompare(ext, "nod") )
+			return GetDemFromNod(nome, verbose, prb);
 
-	bool GetDemFromNod(const char *path, bool verbose, Progress* prg = NULL) {
+		return GetDemFromASCII(nome, verbose, prb);
+	}
+	bool GetDemFromASCII(const std::string& nome, bool verbose, Progress* Prg) {
+	
 		if ( _open ) {
 			Release();
 			Init();
 		}
-		if ( !ReadFileNod(path, prg) )
+		_xmin = _ymin = _zmin = INF;
+		_xmax = _ymax = _zmax = -INF;
+
+		FILE* fptr = fopen(nome.c_str(), "r" );
+		if ( fptr == NULL )
 			return false;
+		std::vector<char> buffer;
+		buffer.resize(65535);
+		setbuf(fptr, &buffer[0]);
 
-		Org_Nod = _npt;
-		//if ( verbose ) {
-		//	_cnl.Init(Fname(path).GetNome().c_str());
-		//}
-		//Timer t0;
-		//t0.StartTime();
+        // search for the first record to find the average record size
+		FastParser tok;
+		char	mes[FILENAME_MAX];
+		bool found = false;
+		while ( !found ) {
+			if ( fgets(mes, 80, fptr) == NULL ) {
+				fclose(fptr);
+				return false;
+			}
+			if ( tok.Parse(mes) == _fm.nf )
+			found = true;
+		}
+		fseek(fptr, 0, 0);
+
+		Poco::File f(nome);
+		unsigned long sz = f.getSize();
+		size_t szr = strlen(mes);
+		long nrec = (long) (sz / szr); // average record count
+
+		node.clear();
+		node.reserve(nrec);
+		
+		int nprec = -1;
+		while ( fgets(mes, 80, fptr) ) {
+			if ( tok.Parse(mes) != _fm.nf )
+				continue;
+			if ( _echo != 0 ) {
+				// selezionagli impulsi
+				int echo = MyLas::all_pulses;
+				int ne = tok.GetInt(_fm.ne - 1); // echo attuale
+				int nt = tok.GetInt(_fm.ni - 1); // numero complessivo di echi
+				if ( ne == 1 || ne == nprec )
+					echo |= MyLas::first_pulse;
+				if ( ne == nt )
+					echo |= MyLas::last_pulse;
+				if ( echo == MyLas::all_pulses )
+					echo = MyLas::intermediate_pulse;
+				nprec = ne;
+				if ( !(_echo & echo) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
+					continue;
+			}
+
+			ND n;
+			n.x = tok.GetFloat(_fm.x-1);
+			n.y = tok.GetFloat(_fm.y-1);
+			n.z = tok.GetFloat(_fm.z-1);
+			setMin(n.x, n.y, n.z);
+			setMax(n.x, n.y, n.z);
+			node.push_back(n);
+		}
+		if (  node.empty() )
+			return false;
+		Org_Nod = (unsigned int) node.size();
+		_nSize = Org_Nod;
+		
+		_set_off_scale();
+		for (unsigned int i = 0; i < Org_Nod; i++)
+			_normalize(i);
+
+		_npt = Org_Nod;
 		bool retval = _triCalc();
-		//std::string elapsed = t0.FormatTime();
-
 		if ( retval ) {
 			_open = true;
-			//if ( verbose ) {
-			//	_cnl.printf("\n");
-			//	_cnl.printf("Number of nodes: %ld\n", _npt);
-			//	_cnl.printf("Number of Triangles: %ld\n", _ntriangle);
-			//	_cnl.printf("Number of segments: %ld\n", _nseg);
-			//	_cnl.printf("MinX: %.2lf\tMaxX: %.2lf\n", _xmin, _xmax);
-			//	_cnl.printf("MinY: %.2lf\tMaxY: %.2lf\n", _ymin, _ymax);
-			//	_cnl.printf("MinZ: %.2lf\tMaxZ: %.2lf\n", _zmin, _zmax);
-			//	_cnl.printf("Elapsed time: %s\n", elapsed.c_str());
-			//}
+			return true;
+		} else {
+			Release();
+			return false;
+		}
+	}
+	bool GetDemFromLas(const std::string& nome, bool verbose, Progress* Prg) {
+		if ( _open ) {
+			Release();
+			Init();
+		}
+		MyLas ml;
+		if ( ( Org_Nod = ml.open(nome)) == 0 )
+			return false;
+		if ( !InitNode(Org_Nod) )
+			return false;
+
+		//bool ret = true;
+		Org_Nod = 0;
+
+		ml.get_min(_xmin, _ymin, _zmin);
+		ml.get_max(_xmax, _ymax, _zmax);
+		_set_off_scale();
+
+		DPOINT pt;
+		while ( ml.get_next_point(pt) ) {
+			if ( _echo != 0 && !( _echo & ml.get_echo()) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
+				continue;
+
+			node[Org_Nod].x = pt.x;
+			node[Org_Nod].y = pt.y;
+			node[Org_Nod].z = pt.z;
+
+			_normalize(Org_Nod++);
+		}
+
+		if ( Org_Nod == 0 )
+			return false;
+		node.resize(Org_Nod);
+		_npt = Org_Nod;
+
+		bool retval = _triCalc();
+		if ( retval ) {
+			_open = true;
 			return true;
 		} else {
 			Release();
@@ -360,15 +559,25 @@ public:
 		}
 	}
 
-	//double Surface(int nTri, int type = 1) const {
-	//	double surface = triangle[nTri].Surface(this, type);
-	//	if ( surface < _trEps )
-	//		surface = 0.;
-	//	return surface;
-	//}
-	//double Volume(int nTri, double qrif) const {
-	//	return triangle[nTri].Volume(this, qrif);
-	//}
+	bool GetDemFromNod(const std::string& path, bool verbose, Progress* prg = NULL) {
+		if ( _open ) {
+			Release();
+			Init();
+		}
+		if ( !ReadFileNod(path, prg) )
+			return false;
+
+		_npt = Org_Nod;
+		bool retval = _triCalc();
+
+		if ( retval ) {
+			_open = true;
+			return true;
+		} else {
+			Release();
+			return false;
+		}
+	}
 	int GetOppositeNode(unsigned int tri, unsigned int nd0, unsigned int nd1) {
 		int i0 = _getTriNodeIndex(tri, nd0);
 		int i1 = _getTriNodeIndex(tri, nd1);
@@ -428,68 +637,68 @@ public:
 	//	GetNormal(n, &norm);
 	//	return angdir(norm.x, norm.y);
 	//}
-	size_t GetBorder(std::vector<DPOINT>& vec) {
-		vec.clear();
-		std::vector<SEGMENT> st;
+	//size_t GetBorder(std::vector<DPOINT>& vec) {
+	//	vec.clear();
+	//	std::vector<SEGMENT> st;
 
-		for (unsigned int i = 0; i < _ntriangle; i++) {
-			int nb = 0;
-			for (int j = 0; j < 3; j++) {
-				nb += ( triangle[i].n[j] == -1 );
-			}
-			if ( nb == 0 || nb == 3 )
-				continue;
-			SEGMENT sm;
-			for (int j = 0; j < 3; j++) {
-				if ( nb == 1 && triangle[i].n[j] == -1 ) {
-					int ind = ( j - 1 >= 0 ) ? j - 1 : 2;
-					sm.p[0] = triangle[i].p[ind];
-					ind = ( j + 1 < 3 ) ? j + 1 : 0;
-					sm.p[1] = triangle[i].p[ind];
-					st.push_back(sm);
-					break;
-				}
-				if ( (nb == 2 && triangle[i].n[j] != -1) ) {
-					sm.p[0] = triangle[i].p[j];
-					int ind = ( j - 1 >= 0 ) ? j - 1 : 2;
-					sm.p[1] = triangle[i].p[ind];
-					st.push_back(sm);
-					ind = ( j + 1 < 3 ) ? j + 1 : 0;
-					sm.p[1] = triangle[i].p[ind];
-					st.push_back(sm);
-					break;
-				}
-			}
-		}
-		if ( st.size() == 0 )
-			return 0;
-		std::vector<unsigned int> vc;
-		vc.reserve(st.size());
-		vc.push_back(st[0].p[0]);
-		vc.push_back(st[0].p[1]);
-		st.erase(st.begin());
-		while ( st.size() ) {
-			unsigned int k = vc[vc.size() - 1];
-			for (unsigned int i = 0; i < st.size(); i++) {
-				if ( st[i].p[0] == k ) {
-					vc.push_back(st[i].p[1]);
-					st.erase(st.begin() + i);
-					break;
-				} else if ( st[i].p[1] == k ) {
-					vc.push_back(st[i].p[0]);
-					st.erase(st.begin() + i);
-					break;
-				}
-			}
-		}
-		for (unsigned int i = 0; i < vc.size(); i++) {
-			DPOINT p1 = node[vc[i]];
-			vec.push_back(p1);
-		}
-		return vec.size();
-	}
+	//	for (unsigned int i = 0; i < _ntriangle; i++) {
+	//		int nb = 0;
+	//		for (int j = 0; j < 3; j++) {
+	//			nb += ( triangle[i].n[j] == -1 );
+	//		}
+	//		if ( nb == 0 || nb == 3 ) // internal or isolated triangle
+	//			continue;
+	//		SEGMENT sm;
+	//		for (int j = 0; j < 3; j++) {
+	//			if ( nb == 1 && triangle[i].n[j] == -1 ) {
+	//				int ind = ( j - 1 >= 0 ) ? j - 1 : 2;
+	//				sm.p[0] = triangle[i].p[ind];
+	//				ind = ( j + 1 < 3 ) ? j + 1 : 0;
+	//				sm.p[1] = triangle[i].p[ind];
+	//				st.push_back(sm); // single border segment
+	//				break;
+	//			}
+	//			if ( (nb == 2 && triangle[i].n[j] != -1) ) {
+	//				sm.p[0] = triangle[i].p[j];
+	//				int ind = ( j - 1 >= 0 ) ? j - 1 : 2;
+	//				sm.p[1] = triangle[i].p[ind];
+	//				st.push_back(sm);
+	//				ind = ( j + 1 < 3 ) ? j + 1 : 0;
+	//				sm.p[1] = triangle[i].p[ind];
+	//				st.push_back(sm); // double border segment
+	//				break;
+	//			}
+	//		}
+	//	}
+	//	if ( st.size() == 0 )
+	//		return 0;
+	//	std::vector<unsigned int> vc;
+	//	vc.reserve(st.size());
+	//	vc.push_back(st[0].p[0]);
+	//	vc.push_back(st[0].p[1]);
+	//	st.erase(st.begin());
+	//	while ( st.size() ) { // build ordered list of vertexes
+	//		unsigned int k = vc[vc.size() - 1];
+	//		for (unsigned int i = 0; i < st.size(); i++) {
+	//			if ( st[i].p[0] == k ) {
+	//				vc.push_back(st[i].p[1]);
+	//				st.erase(st.begin() + i);
+	//				break;
+	//			} else if ( st[i].p[1] == k ) {
+	//				vc.push_back(st[i].p[0]);
+	//				st.erase(st.begin() + i);
+	//				break;
+	//			}
+	//		}
+	//	}
+	//	for (unsigned int i = 0; i < vc.size(); i++) {
+	//		DPOINT p1 = node[vc[i]];
+	//		vec.push_back(p1);
+	//	}
+	//	return vec.size();
+	//}
 private:
-	void	Plane(double* equ, int n) {
+	void	Plane(double* equ, int n) const {
 		equ[0] = (GetTrY(n, 1) - GetTrY(n, 0)) * (GetTrZ(n, 2) - GetTrZ(n, 0)) - (GetTrZ(n, 1) - GetTrZ(n, 0)) * (GetTrY(n, 2) - GetTrY(n, 0));
 		equ[1] = (GetTrZ(n, 1) - GetTrZ(n, 0)) * (GetTrX(n, 2) - GetTrX(n, 0)) - (GetTrX(n, 1) - GetTrX(n, 0)) * (GetTrZ(n, 2) - GetTrZ(n, 0));
 		equ[2] = (GetTrX(n, 1) - GetTrX(n, 0)) * (GetTrY(n, 2) - GetTrY(n, 0)) - (GetTrY(n, 1) - GetTrY(n, 0)) * (GetTrX(n, 2) - GetTrX(n, 0));
@@ -636,13 +845,13 @@ private:
 		return ret;
 	}
 
-	int		_trSign(double val) {
+	int		_trSign(double val) const {
 		const double thr = _trEps;
 		if ( fabs(val) < thr )
 			return 0;
 		return ( val < 0. ) ? -1 : 1;
 	}
-	int		_trTry(int* iTri, double xa, double ya) {
+	int		_trTry(int* iTri, double xa, double ya) const {
 		if ( _nPrev != *iTri ) {
 			// different from previous
 			for (int i = 0; i < 3; i++) {
@@ -694,7 +903,7 @@ private:
 		return *iTri;
 	}
 	bool _bufferEnlarge(int np, int ns = 0) {
-		void* _hg;
+		//void* _hg;
 		if ( np ) {
 			if ( _nSize == 0 ) {
 				return InitNode(100);
@@ -719,15 +928,20 @@ private:
 	unsigned int	_npt;		// num. of nodes after triangulation
 	unsigned int	_ntriangle;	// number of triangles
 	unsigned int	_nseg;		// number of break lines
-	long	_lastTri;
-	int		_ltri;
-	double	_pln[4];
-	int		_nprev;
-	int		_nPrev, _sgn; // use by _trTry
-	RETTA	_rt[3];
+	mutable long	_lastTri;
+	mutable int		_ltri;
+	mutable double	_pln[4];
+	mutable int		_nprev;
+	mutable int		_nPrev, _sgn; // use by _trTry
+	mutable RETTA	_rt[3];
 	double	_trEps;
+	int		_echo;
+	File_Mask _fm;
 	long	_nSize;
 	bool	_open;
+	DPOINT	_p_scale;
+	DPOINT	_p_off;
+	mutable ND		_nd;
 
 	std::vector<ND>			node;
 	std::vector<NT>			triangle;

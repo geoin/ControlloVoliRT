@@ -1,5 +1,5 @@
 #include "exports.h"
-#include "dsm.h"
+#include "dem_interpolate/dsm.h"
 
 RETTA::RETTA(const DPOINT& p1, const DPOINT& p2) 
 {

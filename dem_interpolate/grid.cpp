@@ -7,8 +7,8 @@
 !			26/11/2011	created
 !			20/06/2013	updated
 !=================================================================================*/
-#include "dsm.h"
-#include "pslg.h"
+#include "dem_interpolate/dsm.h"
+#include "dem_interpolate/pslg.h"
 #include <fstream>
 #include "Poco/StringTokenizer.h"
 #include "Poco/String.h"
@@ -41,6 +41,13 @@ bool MyLas::get_next_point(DPOINT& p)
 		p.x = _lasreader->get_x();
 		p.y = _lasreader->get_y();
 		p.z = _lasreader->get_z();
+		_echo = 0;
+		if ( _lasreader->point.return_number == 1 )
+			_echo |= 1; // first echo
+		if ( _lasreader->point.return_number ==  _lasreader->point.number_of_returns_of_given_pulse )
+			_echo |= 2; // last echo
+		if ( _echo == 0 )
+			_echo = 4; // intermediate echo
 		return true;
 	}
 	return false;
@@ -58,69 +65,9 @@ void MyLas::get_max(double& _xmax, double& _ymax, double& _zmax) const
 	_ymax = _lasreader->get_max_y();
 	_zmax = _lasreader->get_max_z();
 }
-//double TRIANGLE::Surface(const DSM* dsm, int type) const 
-//{
-//	double	len[3];
-//
-//	double sperim = 0.;	// perimeter
-//	for (int i = 0; i < 3; i++) {
-//		int i1 = (i + 1) % 3;
-//		NODE nd1 =dsm->Node(p[i]);
-//		NODE nd2 =dsm->Node(p[i1]);
-//		if ( nd1.z == dsm->z_noVal() || nd2.z == dsm->z_noVal() )
-//			return 0.;
-//		double dx = nd1.x - nd2.x;
-//		double dy = nd1.y - nd2.y;
-//		double dz = nd1.z - nd2.z;
-//		if ( type == DSM::Surface_3D )
-//			len[i] = sqrt(dx * dx + dy * dy + dz * dz);	// 3d length of side i
-//		else
-//			len[i] = sqrt(dx * dx + dy * dy);	// 2D length of side i
-//		sperim += len[i];
-//	}
-//	sperim /= 2.;
-//
-//	double surface = 1.;
-//	for (int i = 0; i < 3; i++)
-//		surface *= (sperim - len[i]);
-//	surface = sqrt(sperim * surface);
-//	return surface;
-//}
-//double TRIANGLE::Volume(const DSM* dsm, double qrif) const 
-//{
-//	double Ab = Surface(dsm, DSM::Surface_2D);
-//	if ( Ab == 0. )
-//		return 0.;
-//	double z[3];
-//	for (int i = 0; i < 3; i++) {
-//		double zt = dsm->Node(p[i]).z;
-//		if ( zt == dsm->z_noVal() )
-//			return 0.;
-//		z[i] = zt - qrif;
-//	}
-//
-//	return Ab * (z[0] + z[1] + z[2]) / 3.;
-//}
-void TRIANGLE::GetNormal(const DSM* dsm, VecOri* norm) const 
-{
-	NODE n0 = dsm->Node(p[0]);
-	NODE n1 = dsm->Node(p[1]);
-	NODE n2 = dsm->Node(p[2]);
-	VecOri v1(VecOri(n0) - VecOri(n2));
-	VecOri v2(VecOri(n1) - VecOri(n2));
-	*norm = v1 * v2;
-	norm->Normalize();
-}	
-//double TRIANGLE::GetSlope(const DSM* dsm) const {
-//	VecOri norm;
-//	GetNormal(dsm, &norm);
-//	if ( norm.GetZ() == 0. ) return 3.14 / 2;
-//	double ta = sqrt(1 - norm.GetZ() * norm.GetZ()) / norm.GetZ();
-//	return 100. * ta;
-//}
 
 /**************************************************************/
-double DSM_Grid::GetQuota(double X, double Y, double Z, double zo)
+double DSM_Grid::GetQuota(double X, double Y, double Z, double zo) const
 {
 	double znv = Z == Z_NOVAL ? _z_noVal : Z;
 	double zout = zo == Z_OUT ? Z_OUT : zo;
@@ -160,7 +107,7 @@ double DSM_Grid::GetQuota(double X, double Y, double Z, double zo)
 	}
 
 	long ind = _index(X, Y);
-	long count = _nx * _ny;
+	//long count = _nx * _ny;
 
 	double x = X - _getX(ind);
 	double y = Y - _getY(ind);
@@ -190,12 +137,21 @@ double DSM_Grid::GetQuota(double X, double Y, double Z, double zo)
 	Z = q01 + (q02 - q01) * (y / _sty);
 	return Z;
 }
-const NODE& DSM_Grid::Node(unsigned int i) const
+double DSM_Grid::GetQm(double x, double y, double dx, double dy, double z, double zo) const
+{
+	return GetQuota(x, y, zo);
+}
+
+const NODE DSM_Grid::Node(unsigned int i) const
 {
 	_nd.x = _getX(i);
 	_nd.y = _getY(i);
 	_nd.z = quote[i];
 	return _nd;
+}
+void DSM_Grid::Node(const DPOINT& p, unsigned int i)
+{
+	 quote[i] = (float) p.z;
 }
 unsigned int DSM_Grid::Ntriangle(void) const
 {
@@ -240,7 +196,7 @@ const TRIANGLE& DSM_Grid::Triangle(unsigned int i) const
 	}
 	return _tr;
 }
-SEGMENT& DSM_Grid::Segment(unsigned int i)
+const SEGMENT& DSM_Grid::Segment(unsigned int i) const
 {
 	return _sg;
 }
@@ -275,7 +231,7 @@ double DSM_Grid::_getY(long i) const
 	return _y0 + _sty * (_ny - 1 - iy);
 }
 
-int DSM_Grid::FindTriangle(double X, double Y, int trIdx)
+int DSM_Grid::FindTriangle(double X, double Y, int trIdx) const
 {
 	if ( X < _xmin || X > _xmax || Y < _ymin || Y > _ymax )
 		return -1;
@@ -296,14 +252,6 @@ void DSM_Grid::AddQuote(float z)
 	quote.push_back(z);
 }
 
-//double DSM_Grid::Surface(int nTri, int type) const
-//{
-//	return Triangle(nTri).Surface(this, type);
-//}
-//double DSM_Grid::Volume(int nTri, double qrif) const
-//{
-//	return Triangle(nTri).Volume(this, qrif);
-//}
 bool DSM_Grid::_check_tri(int tri) 
 {
 	return ( tri >= 0 && tri < (int) Ntriangle() );
@@ -325,7 +273,7 @@ void DSM_Grid::_inc_tri(int ix, int iy, int icx, int icy, std::set<unsigned int>
 int DSM_Grid::GetAdiacent(unsigned int tri, int nod, std::set<unsigned int>& lst)
 {
 	lst.clear();
-	int val = -1;
+	//int val = -1;
 	int b = 2 * (_nx - 1);
 	int ix = tri % b;
 	int iy = tri / b;
@@ -374,66 +322,12 @@ int DSM_Grid::GetAdiacent(unsigned int tri, int nod, std::set<unsigned int>& lst
 	}
 	return (int) lst.size();
 }
-//void DSM_Grid::GetNormal(int nTri, VecOri* norm) const
+
+//size_t DSM_Grid::GetBorder(std::vector<DPOINT>& vec)
 //{
-//	Triangle(nTri).GetNormal(this, norm);
+//	return 0;
 //}
-size_t DSM_Grid::GetBorder(std::vector<DPOINT>& vec)
-{
-	return 0;
-}
-bool DSM::RayIntersect(const DPOINT& p0, const DPOINT& p1, DPOINT& pt)
-{
-	// p1 centro proiezione, p2 vettore;
 
-	VecOri P0(p0); // il centro di proiezione
-	VecOri u(p1); // il vettore della direzione della retta
-	VecOri n(0, 0, 1); // la normale al piano
-
-	double z = pt.z;
-	double x = pt.x;
-	double y = pt.y;
-	if ( z == _z_noVal )
-		z = (_zmax + _zmin) / 2;
-	double dz0 = 0;
-	int nit = 15;
-	double dz = 0., dx = 0, dy = 0;
-	while ( --nit ) {
-		VecOri V0(0, 0, z); // un punto del piano
-		double s = n % (V0 - P0) /  (n % u);
-		VecOri v = P0 + (u * s);
-		double zt = GetQuota(v.GetX(), v.GetY(), z);
-		if ( zt == Z_OUT ) {
-			pt.z = zt;
-			return false;
-		}
-		dz = fabs(zt - z);
-		dx = fabs(v.GetX() - x);
-		dy = fabs(v.GetY() - y);
-		if ( dz < 0.1 ) {
-			pt.x = v.GetX();
-			pt.y = v.GetY();
-			pt.z = z;
-			break;
-		}
-		if ( nit == 1 && dz < dz0 )
-			nit++;
-		z = zt;
-		x = v.GetX();
-		y = v.GetY();
-		dz0 = dz;
-	}
-	if ( nit == 0 ) {
-		//if ( dx < _stpx / 5 && dy < _stpy / 5 ) {
-			pt.x = x;
-			pt.y = y;
-			pt.z = z;
-
-		//} else
-			return false;
-	}
-	return true;
-}
 bool DSM_Grid::Save(const std::string& nome, Progress* prb)
 {
     std::fstream txf;
@@ -447,13 +341,6 @@ bool DSM_Grid::Save(const std::string& nome, Progress* prb)
     txf << "yllcorner\t" << _y0 << std::endl;
     txf << "cellsize\t" << _stx << std::endl;
     txf << "NODATA_value\t" << _z0 << std::endl;
-
-    //txf.PrintNextRecord("ncols\t%d", _nx);
-    //txf.PrintNextRecord("nrows\t%d", _ny);
-    //txf.PrintNextRecord("xllcorner\t%.18lf", _x0);
-    //txf.PrintNextRecord("yllcorner\t%.18lf", _y0);
-    //txf.PrintNextRecord("cellsize\t%.18lf", _stx);
-    //txf.PrintNextRecord("NODATA_value\t%lf", _z0);
 
     txf << std::endl;
     txf.precision(3);
@@ -514,72 +401,18 @@ bool DSM_Grid::GetProperties(const std::string& nome)
 	_ymin = _y0;
 	return true;
 }
-#ifdef STREAM
+
 bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 {
-	//Logger lg("c:\\temp\\grid.log");
-	// acquisisce i parametri del grid
-	if ( !GetProperties(nome) )
-		return false;
-	std::fstream fs;
-	fs.open(nome);
-	if ( !fs.is_open() )
-		return false;
-	fs.seekg(_pos, std::ios_base::beg);
-
-	HourCur hS;
-	Progress* prg = ( prb == NULL ) ? new Progress : prb;
-
-	long count = 0, mcount = _nx * _ny;
-	prg->Start(_nx * _ny);
-	double zmin = INF, zmax = -INF;
-	while ( !fs.eof() && ++count <= mcount ) {
-		//count++;
-		if ( !prg->Set((double) quote.size()) )
-			break; // abortito dall'operatore
-		double z;
-		fs >> z;
-		if ( !fs.eof() ) {
-			quote.push_back( (float) z);
-			if ( z != _z0 ) {
-				zmin = min(zmin, z);
-				zmax = max(zmax, z);
-			}
-		}
-	}
-
-	prg->Quit();
-	//lg << "size" << _nx * _ny << " " << (long) quote.size() << "\n";
-	if ( _nx * _ny != quote.size() ) {
-		Close();
-		return false;
-	}
-	_xmin = _x0;
-	_ymin = _y0;
-	_z_noVal = _z0;
-	_zmin = zmin;
-	_xmax = _x0 + _stx * (_nx - 1);
-	_ymax = _y0 + _sty * (_ny - 1);
-	_zmax = zmax;
-
-	return true;
-}
-#else
-bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
-{
-	//Logger lg("c:\\temp\\grid.log");
 	// acquisisce i parametri del grid
 	if ( !GetProperties(nome) )
 		return false;
 	FILE* fp = fopen(nome.c_str(), "r");
 	if ( fp == NULL )
 		return false;
-    fseek(fp, _pos, SEEK_SET);
+    fseek(fp, (long) _pos, SEEK_SET);
 
-	//Progress* prg = ( prb == NULL ) ? new Progress : prb;
-
-	long count = 0, mcount = _nx * _ny;
-	//prg->Start(_nx * _ny);
+	long count = 0/*, mcount = _nx * _ny*/;
 	double zmin = INF, zmax = -INF;
 
 	const int bfsz = 65536;
@@ -587,8 +420,6 @@ bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 	long nr;
 	int of = 0;
 	while ( (nr = fread(bf1.begin() + of, 1, bfsz - of, fp)) ) {
-		//if ( !prg->Set((double) quote.size()) )
-		//	break; // abortito dall'operatore
 		char* c1 = bf1.begin();
 		char* cl = bf1.begin() + nr + of;
 		char* cp = c1;
@@ -619,11 +450,6 @@ bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 
 	fclose(fp);
 
-	//prg->Quit();
-	//if ( prb == NULL )
-	//	delete prg;
-
-	//lg << "size" << _nx * _ny << " " << (long) quote.size() << "\n";
 	if ( _nx * _ny != quote.size() ) {
 		Close();
 		return false;
@@ -638,7 +464,6 @@ bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 
 	return true;
 }
-#endif
 void DSM_Grid::Close()
 {
 	quote.clear();
@@ -656,8 +481,6 @@ bool DSM_Grid::Merge(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome, Progres
 	_stx = dsm1.stx();
 	_sty = dsm1.sty();
 	_z0 = dsm1.z_noVal();
-	//Progress* prg = ( prb == NULL ) ? new Progress : prb;
-	//prg->Start(_nx * _ny);
 
 	bool error = false;
 
@@ -752,11 +575,14 @@ bool DSM_Factory::Open(const std::string nome, bool verbose, Progress* prb)
 	if ( ty == DSM::DSM_TIN ) {
 		// file di tipo tin;
 		_dsm = new PSLG;
+		_dsm->SetEcho(_lidar_echo);
+		_dsm->SetMask(fm);
+
 		return _dsm->Open(nome, verbose, prb);
 	}
 	return false; // formato non riconosciuto
 }
-DSM::DSM_Type DSM_Factory::GetType(const std::string nome)
+DSM::DSM_Type DSM_Factory::GetType(const std::string& nome)
 {
     std::fstream tf;
     tf.open(nome.c_str(), std::fstream::in);
@@ -768,7 +594,9 @@ DSM::DSM_Type DSM_Factory::GetType(const std::string nome)
         if ( !strlen(mes) )
 			return DSM::DSM_UNKN;
 		Poco::StringTokenizer tok(Poco::trim(std::string(mes)), ", \t", Poco::StringTokenizer::TOK_TRIM);
-		if ( tok.count() > 1 ) {
+		if ( tok.count() > 1 &&
+			( !Poco::icompare(tok[0], "NCOLS") || !Poco::icompare(tok[0], "NROWS") || !Poco::icompare(tok[0], "CELLSIZE") || 
+			!Poco::icompare(tok[0], "XLLCENTER") || !Poco::icompare(tok[0], "YLLCENTER") || !Poco::icompare(tok[0], "NODATA_VALUE") ) ) {
 			// file di tipo grid;
 			return DSM::DSM_GRID;
 		} else
