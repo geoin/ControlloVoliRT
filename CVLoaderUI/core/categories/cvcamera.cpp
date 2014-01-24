@@ -42,7 +42,7 @@ bool CVCamera::persist() {
 			"CAMERA", 
 			QStringList() << "FOC=?1" << "DIMX=?2" << "DIMY=?3" << "DPIX=?4" << "XP=?5" << "YP=?6"  << "SERIAL_NUMBER=?7" << "MODEL=?8" << "DESCR=?9" << "PLANNING=?10",
 			QStringList() << "ID=?11",
-			QVariantList()  << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp << QString(_cam.serial.c_str()) << QString(_cam.model.c_str()) << QString(_cam.descr.c_str()) << _cam.planning
+			QVariantList()  << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp << QString(_cam.serial.c_str()) << QString(_cam.model.c_str()) << QString(_cam.descr.c_str()) << (_cam.planning ? 1 : 0)
 							<< QString(_cam.id.c_str())
 		);
 		

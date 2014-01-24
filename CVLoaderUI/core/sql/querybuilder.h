@@ -13,7 +13,7 @@ namespace CV {
 namespace Core {
 namespace SQL {
 
-static const QString database = "geo.db";
+static const QString database = "geo.sqlite";
 
 class Query {
 public:

@@ -11,7 +11,9 @@ namespace GUI {
 namespace Details {
 
 CVPlanDetail::CVPlanDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
-	CVCameraDetail* container = new CVCameraDetail(p, static_cast<Core::CVCamera*>(c->at(0)));
+	Core::CVCamera* cam = static_cast<Core::CVCamera*>(c->at(0));
+	cam->isPlanning(true);
+	CVCameraDetail* container = new CVCameraDetail(p, cam);
     addTab(container, "");
     setTabToolTip(0, "Fotocamera");
 
