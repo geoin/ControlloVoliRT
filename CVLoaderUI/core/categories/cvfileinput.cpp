@@ -17,7 +17,7 @@ namespace CV {
 namespace Core {
 
 CVFileInput::CVFileInput(QObject* p) : CVObject(p) {
-
+	_isValid = false;
 }
 
 CVFileInput::~CVFileInput() {

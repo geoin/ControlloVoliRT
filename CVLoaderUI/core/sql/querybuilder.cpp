@@ -61,7 +61,7 @@ namespace SQL {
 
 		try {
 			int i = 0;
-			int len = min(binds.size(), values.size());
+			int len = std::min(binds.size(), values.size());
 			for (; i < len; ++i) {
 				int pos = reg.indexIn(values.at(i));
 				if (pos < 0) {
@@ -73,7 +73,7 @@ namespace SQL {
 				bindValue(val, b);
 			}
 
-			len = min(where.length(), binds.length());
+			len = std::min(where.length(), binds.length());
 			for (int i = 0; i < len; ++i) {
 				int pos = reg.indexIn(where.at(i));
 				if (pos < 0) {
