@@ -2,6 +2,7 @@
 #define CV_GUI_DETAILS_MISSIONSDETAILS_H
 
 #include "gui/cvbasetabwidget.h"
+#include "core/categories/cvcategory.h"
 
 #include <QWidget>
 
@@ -53,17 +54,21 @@ private:
 class CVMissionListDetails : public QWidget {
     Q_OBJECT
 public:
-    explicit CVMissionListDetails(QWidget* p = 0);
+    explicit CVMissionListDetails(QWidget* p = 0, CV::Core::CVCategory* category = 0);
 
 public slots:
     void onAddMission();
     void onRemoveMission();
+
+	void onMissionChange();
     void onPreviousMission();
     void onNextMission();
 
 private:
     CVMissionListToolbar* _bar;
     CVMissionListBody* _body;
+
+	CV::Core::CVCategory* _category;
 };
 
 } // namespace Details

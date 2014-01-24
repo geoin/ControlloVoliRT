@@ -29,14 +29,15 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : CVBaseDetail(p
     setAcceptDrops(true);
 
     QMenu* menu = detailMenu();
-    QAction* newCam = menu->addAction(QIcon(""), "Carica");
-    QAction* editCam = menu->addAction(QIcon(""), "Modifica");
-    QAction* clearCam = menu->addAction(QIcon(""), "Cancella");
+    QAction* open = menu->addAction(QIcon(""), tr("Apri"));
+    QAction* editCam = menu->addAction(QIcon(""), tr("Modifica"));
+    QAction* clearCam = menu->addAction(QIcon(""), tr("Cancella"));
     //TODO: move to controller
     connect(this, SIGNAL(cameraInput(QString)), SLOT(onCameraInput(QString)));
-    connect(newCam, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
+
+    connect(open, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
     //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
-    connect(clearCam, SIGNAL(triggered()), this, SLOT(onClearCamParameters()));
+    //connect(clearCam, SIGNAL(triggered()), this, SLOT(onClearCamParameters()));
 
 
     QFormLayout* form = new QFormLayout(this);
@@ -56,18 +57,20 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : CVBaseDetail(p
     }
 
 	title(tr("Fotocamera"));
-	description(tr("Fotocamera di progetto"));
 
 	QLabel* descr = new QLabel(tr("Descrizione:"), this);
     _note = new QPlainTextEdit(this);
     _note->setReadOnly(true);
     form->addRow(descr, _note);
     body(form);
-    body(form);
 
 	if (cam) {
 		_cam = cam;
-		_cam->data().planning = _cam->isPlanning();
+		bool plan = _cam->isPlanning(); 
+		_cam->data().planning = plan;
+		
+		description(tr(plan ? "Fotocamera di progetto" : "Fotocamera di missione"));
+		
 		if (_cam->isValid()) {
 			view();
 		}
@@ -113,7 +116,7 @@ void CVCameraDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVCameraDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-    emit cameraInput(_file->absoluteFilePath());
+    onCameraInput(_file->absoluteFilePath());
     _file.reset(NULL);
 }
 
@@ -185,7 +188,7 @@ void CVCameraDetail::onLoadCamParameters() {
         "",//QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).at(0),
         "(*.xml)"
     );
-    emit cameraInput(uri);
+    onCameraInput(uri);
 }
 
 void CVCameraDetail::onEditCamParameters() {

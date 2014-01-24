@@ -24,6 +24,10 @@ QAction* CVActionsLinker::add(Action_t a) {
     return action;
 }
 
+QAction* CVActionsLinker::get(Action_t ev) {
+	return _actions.value(ev);
+}
+
 bool CVActionsLinker::on(Action_t ev, const QObject* target, const char* slot) {
     bool ok = _actions.contains(ev);
     if (ok == true) {

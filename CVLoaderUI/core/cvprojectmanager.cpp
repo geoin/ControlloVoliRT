@@ -45,6 +45,10 @@ void CVProjectManager::onNewProject() {
 	}
 }
 
+void CVProjectManager::onNewMission() {
+
+}
+
 void CVProjectManager::onLoadProject() {
 	QString proj = QFileDialog::getExistingDirectory(NULL, tr("Seleziona cartella progetto"));
 	if (proj.isEmpty()) {
@@ -81,7 +85,7 @@ CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
 	cat->insert(cam);
 	
 	CVShapeLayer* layer = new CVShapeLayer(cat);
-	layer->uri(proj->path + QDir::separator() + SQL::database); //TODO: change path in project
+	layer->uri(proj->path + QDir::separator() + SQL::database); 
 	layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
 	if (b) {
@@ -90,7 +94,7 @@ CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
 	cat->insert(layer);
 
 	layer = new CVShapeLayer(cat);
-	layer->uri(proj->path + QDir::separator() + SQL::database); //TODO: change path in project
+	layer->uri(proj->path + QDir::separator() + SQL::database); 
 	layer->columns(QStringList() << "count(*)");
 	layer->table("CARTO");
 	if (b) {
@@ -99,23 +103,13 @@ CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
 	cat->insert(layer);
 
 	CVFileInput* file = new CVFileInput(cat);
-	file->uri(proj->path); //TODO: change path in project
+	file->uri(proj->path); 
 	if (b) {
 		file->load();
 	}
 	cat->insert(file);
 
 	return cat;
-}
-    
-void CVProjectManager::onDeleteProject() {
-	//TODO
-	QString proj = QFileDialog::getExistingDirectory(NULL, tr("Seleziona cartella progetto"));
-	QDir dir(proj);
-	if (dir.exists(SQL::database)) {
-		dir.cdUp();
-		dir.remove(proj);
-	}
 }
    
 void CVProjectManager::onCloseProject() {

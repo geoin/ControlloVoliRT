@@ -12,7 +12,7 @@ class CVObject : public QObject {
 public:
 	enum Type { UNKNOWN_OBJECT = 0, CAMERA, FLY_AXIS };
 
-	explicit CVObject(QObject* p = 0) {}
+	explicit CVObject(QObject* p) : QObject(p) {}
 	virtual ~CVObject() {}
 
 	inline void uri(const QString& t) { _uri = t; }
@@ -29,12 +29,24 @@ private:
 	QString _uri;
 };
 
+class CVMissionObject : public CVObject {
+	Q_OBJECT
+public:
+	virtual bool persist() {}
+	virtual bool isValid() const  {}
+	virtual bool load()  {}
+
+private:
+	QList<CVObject*> _objects;
+	QString _id;
+};
+
 class CVCategory : public QObject {
     Q_OBJECT
 public:
 	enum Type { UNKNOWN_CATEGORY = 0, PLAN, GPS_DATA, FLY };
 
-	explicit CVCategory(Type t, QObject* p = 0) : _type(t) {}
+	explicit CVCategory(Type t, QObject* p) : QObject(p), _type(t) {}
 
 	Type type() const { return _type; }
 

@@ -16,7 +16,7 @@ QWidget* CVDetailsFactory::build(QWidget* p, CVNodeInfo::Type t, CV::Core::CVCat
             detail = new Details::CVPlanDetail(p, category);
             break;
         case CVNodeInfo::GPS_DATA:
-            detail = new Details::CVMissionListDetails(p);
+            detail = new Details::CVMissionListDetails(p, category);
             break;
         case CVNodeInfo::FLY:
            detail = new QWidget(p);

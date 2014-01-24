@@ -21,7 +21,8 @@ public slots:
     void onNewProject();
     void onLoadProject();
     void onCloseProject();
-    void onDeleteProject();
+	
+    void onNewMission();
 
 private:
 	CVCategory* _plan(CVProject*, bool load);

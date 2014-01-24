@@ -89,8 +89,8 @@ bool CVCamera::load() {
 		CV::Util::Spatialite::Recordset set = q->select(
 			QStringList() << "ID" << "FOC" << "DIMX" << "DIMY" << "DPIX" << "XP" << "YP" << "SERIAL_NUMBER" << "MODEL" << "DESCR" << "PLANNING",
 			QStringList() << "CAMERA", 
-			QStringList(),// << "CONTROL = ?1",
-			QVariantList()// << 1
+			QStringList() << "PLANNING = ?1",
+			QVariantList() << 1
 		);
 
 		if (!set.eof()) {

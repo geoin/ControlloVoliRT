@@ -11,24 +11,26 @@
 #include <QPushButton>
 #include <QTabWidget>
 
+#include <assert.h>
+
 namespace CV {
 namespace GUI {
 namespace Details {
 
 CVMissionListToolbar::CVMissionListToolbar(QWidget* p) : QWidget(p) {
    _back = new QPushButton("<", this);
-   _back->setMaximumSize(26, 26);
+   _back->setMaximumSize(28, 28);
    _back->setDisabled(true);
    connect(_back, SIGNAL(pressed()), this, SIGNAL(viewPrevious()));
 
    _next = new QPushButton(">", this);
-   _next->setMaximumSize(26, 26);
+   _next->setMaximumSize(28, 28);
    _next->setDisabled(true);
    connect(_next, SIGNAL(pressed()), this, SIGNAL(viewNext()));
 
    QMenu* menu = new QMenu(this);
    _menu = new QPushButton(tr(""), this);
-   _menu->setMaximumSize(20, 26);
+   _menu->setMaximumSize(20, 28);
    _menu->setMenu(menu);
 
    _title = new QLabel(tr("Nessuna missione attiva"), this);
@@ -84,14 +86,15 @@ void CVMissionListDetails::onNextMission() {
     _bar->title(mission->name());
 }
 
-CVMissionListDetails::CVMissionListDetails(QWidget* p) : QWidget(p) {
+CVMissionListDetails::CVMissionListDetails(QWidget* p, CV::Core::CVCategory* cat) : QWidget(p) {
+	assert(cat != NULL);
+	_category = cat;
+
    _bar = new CVMissionListToolbar(this);
    _body = new CVMissionListBody(this);
 
-   //TODO: change to this
    connect(_bar, SIGNAL(viewPrevious()), this, SLOT(onPreviousMission()));
    connect(_bar, SIGNAL(viewNext()), this, SLOT(onNextMission()));
-
 
    //TODO Action 
    QMenu* menu = _bar->menu();
@@ -110,29 +113,47 @@ CVMissionListDetails::CVMissionListDetails(QWidget* p) : QWidget(p) {
 }
 
 void CVMissionListDetails::onAddMission() {
-    QStackedLayout* stack = static_cast<QStackedLayout*>(_body->layout());
-    CVMissionDetail* item = new CVMissionDetail(this);
-
     Dialogs::CVMissionDialog dialog(_body);
     int ret = dialog.exec();
     if (ret != QDialog::Accepted) {
         return;
     }
-
+	
     QString name, note;
     dialog.getInput(name, note);
+	//TODO note;
+
+    CVMissionDetail* item = new CVMissionDetail(this);
     item->name(name);
 
+    QStackedLayout* stack = static_cast<QStackedLayout*>(_body->layout());
     stack->addWidget(item);
     stack->setCurrentIndex(stack->count() - 1);
 
     QMenu* menu = _bar->menu();
     QAction* mission = menu->addAction(QIcon(""), item->name());
     mission->setData(item->key());
-    _bar->title(item->name());
 
+	connect(mission, SIGNAL(triggered()), this, SLOT(onMissionChange()));
+
+    _bar->title(item->name());
     _bar->previous()->setEnabled(stack->count() > 1);
     _bar->next()->setEnabled(stack->count() > 1);
+}
+
+void CVMissionListDetails::onMissionChange() {
+	QAction* origin = static_cast<QAction*>(sender());
+	QString key = origin->data().toString();
+	
+    QStackedLayout* stack = static_cast<QStackedLayout*>(_body->layout());
+	for (int i = 0; i < stack->count(); ++i) {
+		CVMissionDetail* m = static_cast<CVMissionDetail*>(stack->widget(i));
+		if (m->key() == key) {
+			stack->setCurrentWidget(m);
+			_bar->title(m->name());
+			return;
+		}
+	}
 }
 
 void CVMissionListDetails::onRemoveMission() {

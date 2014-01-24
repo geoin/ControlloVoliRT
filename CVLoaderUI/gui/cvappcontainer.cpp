@@ -19,6 +19,9 @@ namespace GUI {
 using namespace Status;
 
 CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
+	Helper::CVSignalHandle::create(parentWidget());
+	Helper::CVActionHandle::create(parentWidget());
+
     _menu = new CVMenuBar(this);
     _toolbar = new CVToolBar(this);
     _status = new CVStatusBar(this);
@@ -48,7 +51,6 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
 	connect(this, SIGNAL(controlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)), _details, SLOT(onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)));
     connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertPhotogrammetry(Core::CVProject*)));
 
-	Helper::CVSignalHandle::create(parentWidget());
 	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
 	linker->add(Helper::ITEM_SELECTED, _tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)));
 	linker->on(Helper::ITEM_SELECTED, _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
@@ -87,7 +89,6 @@ void CVAppContainer::insertPhotogrammetry(Core::CVProject* proj) {
 void CVAppContainer::link() {
     QMenu* projects = _menu->add(tr("Progetti"));
 
-	Helper::CVActionHandle::create(parentWidget());
 	Helper::CVActionsLinker* linker = Helper::CVActionHandle::get();
 
 	QAction* newProj = linker->add(Helper::NEW_PROJECT);
@@ -105,9 +106,8 @@ void CVAppContainer::link() {
     linker->on(Helper::CLOSE_PROJECT, _tree, SLOT(onCloseProject()));
 	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(""), tr("Chiudi"));
 
-	/*QAction* removeProj = linker->add(Helper::REMOVE_PROJECT);
-    linker->on(Helper::REMOVE_PROJECT, &_prjManager, SLOT(onDeleteProject()));
-	_addToMenuAndToolbar(removeProj, projects, _toolbar, QIcon(""), tr("Rimuovi"));*/
+	QAction* newMission = linker->add(Helper::NEW_MISSION);
+    linker->on(Helper::NEW_MISSION, &_prjManager, SLOT(onCreateMission()));
 }
 
 void CVAppContainer::_addToMenuAndToolbar(QAction* a, QMenu* m, QToolBar* t, QIcon icon, QString name) {

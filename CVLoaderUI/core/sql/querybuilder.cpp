@@ -145,6 +145,8 @@ namespace SQL {
 			case QVariant::String:	
 				_stm[index] = val.toString().toStdString();
 				break;
+			case QVariant::Bool:
+				_stm[index] = val.toBool();
 			case QVariant::Int:
 			case QVariant::LongLong:
 				_stm[index] = val.toLongLong();

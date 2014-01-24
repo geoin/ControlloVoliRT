@@ -57,12 +57,12 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
 }
 
 void CVProjectDialog::selectProjectFolder() {
-       QString dir = QFileDialog::getExistingDirectory(
-           NULL,
-           tr("Selezionare cartella"),
-           ""
-       );
-       _path->setText(dir);
+	QString dir = QFileDialog::getExistingDirectory(
+		NULL,
+		tr("Selezionare cartella"),
+		""
+	);
+	_path->setText(dir);
 }
 
 void CVProjectDialog::getInput(Core::CVProject& proj) {
