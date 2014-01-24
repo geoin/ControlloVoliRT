@@ -5,7 +5,12 @@ namespace GUI {
 
 CVMenuBar::CVMenuBar(QWidget *parent) : QMenuBar(parent) {
     setMinimumHeight(24);
-    addMenu(new QMenu(tr("File"), this));
+}
+
+QMenu* CVMenuBar::add(QString menu) {
+    QMenu* m = new QMenu(menu, this);
+    addMenu(m);
+    return m;
 }
 
 }

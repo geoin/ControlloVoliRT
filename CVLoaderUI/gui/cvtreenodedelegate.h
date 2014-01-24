@@ -9,7 +9,8 @@ namespace GUI {
 class CVTreeNodeDelegate : public QWidget {
     Q_OBJECT
 public:
-    explicit CVTreeNodeDelegate(QWidget *parent = 0, const QStringList& = QStringList());
+    explicit CVTreeNodeDelegate(QWidget* p, const QStringList& = QStringList());
+    explicit CVTreeNodeDelegate(QWidget* p, QWidget* view);
 
 signals:
 
@@ -20,6 +21,9 @@ protected:
     virtual void dragMoveEvent(QDragMoveEvent*);
     virtual void dragLeaveEvent(QDragLeaveEvent*);
     virtual void dropEvent(QDropEvent*);
+
+private:
+    void _addWidget(QWidget*);
 
 };
 

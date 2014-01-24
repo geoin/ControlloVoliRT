@@ -11,24 +11,22 @@ namespace CV {
 namespace GUI {
 
 CVTreeNodeDelegate::CVTreeNodeDelegate(QWidget* p, const QStringList& s) : QWidget(p) {
-    auto box = new QHBoxLayout;
-    box->setContentsMargins(0, 0, 0, 0);
-
     QString labelTxt;
     if (s.length()) {
         labelTxt = s.at(0);
     }
-    auto label = new QLabel(labelTxt, this);
-    label->setMinimumHeight(22);
+    QLabel* label = new QLabel(labelTxt, this);
     label->setIndent(4);
-    box->addWidget(label);
-    setLayout(box);
 
-    setAcceptDrops(true);
+   _addWidget(label);
+}
+
+CVTreeNodeDelegate::CVTreeNodeDelegate(QWidget* p, QWidget* view) : QWidget(p) {
+    _addWidget(view);
 }
 
 void CVTreeNodeDelegate::dragEnterEvent(QDragEnterEvent* ev) {
-    ev->accept();
+    ev->ignore();
 }
 
 void CVTreeNodeDelegate::dragMoveEvent(QDragMoveEvent* ev) {
@@ -41,6 +39,14 @@ void CVTreeNodeDelegate::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVTreeNodeDelegate::dropEvent(QDropEvent* ev) {
     ev->accept();
+}
+
+void CVTreeNodeDelegate::_addWidget(QWidget* v) {
+    QHBoxLayout* box = new QHBoxLayout;
+    box->setContentsMargins(0, 0, 0, 0);
+    box->addWidget(v);
+    setLayout(box);
+    setAcceptDrops(true);
 }
 
 } // namespace GUI
