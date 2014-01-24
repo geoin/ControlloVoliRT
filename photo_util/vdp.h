@@ -27,12 +27,12 @@ public:
 // classe definizione fotocamera
 class TOOLS_EXPORTS Camera {
 public:
-	Camera(): foc(100.), xp(0.), yp(0.), dimx(0), dimy(0), dpix(0.) {}
-	Camera(double Foc, double dp, double dx, double dy): foc(Foc), dpix(dp), dimx(dx), dimy(dy) {
+	Camera(): foc(100.), xp(0.), yp(0.), dimx(0), dimy(0), dpix(0.), planning(true) {}
+	Camera(double Foc, double dp, double dx, double dy): foc(Foc), dpix(dp), dimx(dx), dimy(dy), planning(true) {
 		xp = dimx / 2.;
 		yp = dimy / 2.;
 	}
-	Camera(double Foc, double dp, double dx, double dy, double Xp, double Yp): foc(Foc), dpix(dp), dimx(dx), dimy(dy) {
+	Camera(double Foc, double dp, double dx, double dy, double Xp, double Yp): foc(Foc), dpix(dp), dimx(dx), dimy(dy), planning(true) {
 		xp = dimx / 2. + Xp;
 		yp = dimy / 2. + Yp;
 	}
@@ -41,6 +41,8 @@ public:
 	double	xp, yp;		// digital principal point offset respect center (mm)
 	double	dpix;		// digital camera pixel size (mm)
 	double	dimx, dimy;	// digital camera sensor size (mm)
+	std::string id, serial, model, descr;
+	bool planning;
 private:
 };		
 

@@ -10,9 +10,11 @@ CVMissionDetail::CVMissionDetail(QWidget* p, TabPosition pos) : CVBaseTabWidget(
 
     addTab(new CVCameraDetail(this), "");
     setTabToolTip(0, tr("Fotocamera"));
-    addTab(new QWidget(this), "");
+
+    addTab(new CVBaseDetail(this), "");
     setTabToolTip(1, tr("Rinex"));
-    addTab(new QWidget(this), "");
+
+    addTab(new CVBaseDetail(this), "");
     setTabToolTip(2, tr("Stazioni permanenti"));
 }
 

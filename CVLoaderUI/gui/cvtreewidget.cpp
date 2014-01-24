@@ -1,5 +1,6 @@
 #include "gui/cvtreewidget.h"
 #include "gui/cvtreenode.h"
+#include "gui/cvtreenodedelegate.h"
 
 #include <QLabel>
 
@@ -17,20 +18,24 @@ CVTreeWidget::CVTreeWidget(QWidget* parent) : QTreeWidget(parent) {
 }
 
 CVTreeNode* CVTreeWidget::insertProjectTree(const QString& title) {
+	onCloseProject();
+
     CVTreeNode* root = new CVTreeNode(this, QStringList() << title);
     addTopLevelItem(root);
-    root->setExpanded(true);
     setCurrentItem(root);
     return root;
 }
 
 CVTreeNode* CVTreeWidget::insertNode(CVTreeNode* parent, const QString& text) {
-    return new CVTreeNode(parent, QStringList() << text);
+	CVTreeNode* node = new CVTreeNode(parent, QStringList() << text);
+    return node;
 }
 
 void CVTreeWidget::onCloseProject() {
 	QTreeWidgetItem* inv = invisibleRootItem();
-	if (inv->childCount()) {}
+	if (inv->childCount()) {
+		QScopedPointer<QTreeWidgetItem>(takeTopLevelItem(0));
+	}
 }
 
 }

@@ -9,7 +9,7 @@ TARGET = photo_util
 TEMPLATE = lib
 
 win32 {
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
         DEFINES += DLL_EXPORTS
         CONFIG += wd4996
 }
