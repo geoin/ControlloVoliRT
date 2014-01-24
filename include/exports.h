@@ -34,7 +34,7 @@
 #ifdef DLL_EXPORTS
 	#define TOOLS_EXPORTS __declspec( dllexport )
 #else
-	#define TOOLS_EXPORTS __declspec( dllimport )
+	#define TOOLS_EXPORTS //__declspec( dllimport )
 #endif
 
 #endif // #ifndef WIN32

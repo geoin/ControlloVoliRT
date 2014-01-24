@@ -676,13 +676,11 @@ void* grInit(const char* igmgrids)
 	char log[256];
 	strcpy(log, igm);
 	char* ch = strrchr(log, '.');
-	if ( ch != NULL )
-	{
+	if ( ch != NULL ) {
 		*ch = '\0';
 	}
 	strcat(log, ".log");
 	ig->lg = fopen(log, "w");
-	//ig->lg.open(fn.toString().c_str(), std::fstream::out | std::fstream::trunc);
 	if ( ig->GetDatum() == iGrid::ty_ED50 ) {
 		if ( ig->lg != NULL )
 		   fprintf(ig->lg,  "Datum ED50\n");
@@ -692,17 +690,33 @@ void* grInit(const char* igmgrids)
 	}
 
 	ch = strrchr(igm, '.');
-	if ( ch == NULL ) return NULL;
+	if ( ch == NULL ) {
+		delete [] igm;
+		delete ig;
+		return NULL;
+	}
 	if ( !strcmp(ch + 1, "gr1") || !strcmp(ch + 1, "gr2")) {
 		if ( ig->lg != NULL )
 			fprintf(ig->lg, " grigliato in formato gr1 - gr2\n");
 		// grigliato di tipo gr1 o gr2
-		ig->Init(igm, iGrid::ty_GR);
+		if ( !ig->Init(igm, iGrid::ty_GR) ) {
+			if ( ig->lg != NULL )
+				fprintf(ig->lg, " errore lettura file\n");
+			delete [] igm;
+			delete ig;
+			return NULL;
+		}
 	} else if ( !strcmp(ch + 1, "gk1") || !strcmp(ch + 1, "gk2")) {
 		if ( ig->lg != NULL )
 			fprintf(ig->lg, " grigliato in formato gk1 - gk2\n");
 		// grigliato di tipo gk1 o gk2
-		ig->Init(igm, iGrid::ty_GK);
+		if ( !ig->Init(igm, iGrid::ty_GK) ) {
+			if ( ig->lg != NULL )
+				fprintf(ig->lg, " errore lettura file\n");
+			delete [] igm;
+			delete ig;
+			return NULL;
+		}
 	} else {
 		// grigliato di tipo non riconosciuto
         FILE* tf = fopen(igm, "r");
@@ -710,6 +724,7 @@ void* grInit(const char* igmgrids)
 			if ( ig->lg != NULL )
 				fprintf(ig->lg, " impossibile aprire %s\n", igm);
 			delete [] igm;
+			delete ig;
 			return NULL;
 		}
         char mes[256];
@@ -752,6 +767,7 @@ void* grInit(const char* igmgrids)
 			if ( ig->lg != NULL )
 				fprintf(ig->lg, " nessun grigliato trovato %s\n", igm);
 			delete [] igm;
+			delete ig;
 			return NULL;
 		}
 		fclose(tf);
