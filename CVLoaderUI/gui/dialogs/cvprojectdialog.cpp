@@ -67,7 +67,7 @@ void CVProjectDialog::selectProjectFolder() {
 
 void CVProjectDialog::getInput(Core::CVProject& proj) {
     proj.name = _name->text();
-    proj.path = _path->text();
+	proj.path = _path->text() + QDir::separator() + proj.name;
     proj.notes = _note->toPlainText().simplified();
     proj.type = _type->currentIndex() == 0 ? Core::CVProject::PHOTOGRAMMETRY : Core::CVProject::LIDAR;
 

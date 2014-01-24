@@ -47,13 +47,11 @@ void CVProject::loadFrom(const QDir& dir) {
 
 bool CVProject::create(const QString& d) {
 	QDir dir;
-	dir.cd(path);
-	bool ret = dir.mkdir(name);
+	bool ret = dir.mkdir(path);
 	if (!ret) {
 		return false;
 	}
-
-	dir.cd(name);
+	dir.cd(path);
 
 	QString db = dir.absolutePath() + dir.separator() + d;
 

@@ -74,14 +74,14 @@ CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
 
 	// Init camera
 	CVCamera* cam = new CVCamera(cat);
-	cam->uri(proj->path + (b ? "" : (QDir::separator() + proj->name)) + QDir::separator() + SQL::database);
+	cam->uri(proj->path + QDir::separator() + SQL::database);
 	if (b) {
 		cam->load();
 	}
 	cat->insert(cam);
 	
 	CVShapeLayer* layer = new CVShapeLayer(cat);
-	layer->uri(proj->path + (b ? "" : (QDir::separator() + proj->name)) + QDir::separator() + SQL::database); //TODO: change path in project
+	layer->uri(proj->path + QDir::separator() + SQL::database); //TODO: change path in project
 	layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
 	if (b) {
@@ -90,7 +90,7 @@ CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
 	cat->insert(layer);
 
 	layer = new CVShapeLayer(cat);
-	layer->uri(proj->path + (b ? "" : (QDir::separator() + proj->name)) + QDir::separator() + SQL::database); //TODO: change path in project
+	layer->uri(proj->path + QDir::separator() + SQL::database); //TODO: change path in project
 	layer->columns(QStringList() << "count(*)");
 	layer->table("CARTO");
 	if (b) {
