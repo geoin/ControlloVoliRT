@@ -7,6 +7,8 @@
 #include <QUuid>
 #include <QdateTime>
 
+#include <assert.h>
+
 namespace CV {
 namespace Core {
 
@@ -47,11 +49,12 @@ bool CVCamera::persist() {
 		);
 		
 	} else {	
+		_cam.id = QUuid::createUuid().toString().toStdString();
 		ret = q->insert(
 			"CAMERA", 
 			QStringList() << "ID" << "FOC" << "DIMX" << "DIMY" << "DPIX" << "XP" << "YP" << "SERIAL_NUMBER" << "MODEL" << "DESCR" << "PLANNING",
 			QStringList() << "?1" << "?2" << "?3" << "?4" << "?5" << "?6" << "?7" << "?8" << "?9" << "?10" << "?11",
-			QVariantList() << QUuid::createUuid().toString() << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp << QString(_cam.serial.c_str()) << QString(_cam.model.c_str()) << QString(_cam.descr.c_str()) << _cam.planning
+			QVariantList() << _cam.id.c_str() << _cam.foc << _cam.dimx << _cam.dimy << _cam.dpix << _cam.xp << _cam.yp << QString(_cam.serial.c_str()) << QString(_cam.model.c_str()) << QString(_cam.descr.c_str()) << _cam.planning
 		);
 	}
 	if (!ret) {
@@ -66,6 +69,66 @@ bool CVCamera::persist() {
 		QStringList() << "?1" << "?2" << "?3" << "?4" << "?5" << "?6",
 		QVariantList() << QUuid::createUuid().toString() << QDateTime::currentMSecsSinceEpoch() << "" << "" << 1 << 0
 	);
+
+	if (!isPlanning()) {
+		assert(!_mission.isEmpty());
+		ret = q->update( //TODO: real id
+			"MISSION", 
+			QStringList() << "ID_CAMERA=?1",
+			QStringList() << "ID=?2",
+			QVariantList()  << QString(_cam.id.c_str()) << _mission
+		);
+	}
+
+	return ret; 
+}
+
+bool CVCamera::load(const QString& mId) {
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString()); 
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
+	bool ret = cnn.is_valid();
+	if (!ret) {
+		return false;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+
+	try {
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList() << "ID" << "FOC" << "DIMX" << "DIMY" << "DPIX" << "XP" << "YP" << "SERIAL_NUMBER" << "MODEL" << "DESCR" << "PLANNING",
+			QStringList() << "CAMERA", 
+			QStringList() << "ID = ?1",
+			QVariantList() << mId
+		);
+
+		if (!set.eof()) {
+			int i = 0;
+			_cam.id = set[i].toString();
+			_cam.foc = set[++i].toDouble();
+			_cam.dimx = set[++i].toDouble();
+			_cam.dimy = set[++i].toDouble();
+			_cam.dpix = set[++i].toDouble();
+			_cam.xp = set[++i].toDouble();
+			_cam.yp = set[++i].toDouble();
+			_cam.serial = set[++i].toString();
+			_cam.model = set[++i].toString();
+			_cam.descr = set[++i].toString();
+			_cam.planning = set[++i].toInt() ? true : false;
+			
+			_isValid = true;
+		} 
+
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
 	return ret; 
 }
 

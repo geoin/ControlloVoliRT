@@ -130,7 +130,7 @@ void CVCameraDetail::onCameraInput(const QString& uri) {
     QXmlStreamReader xml(&file);
     while(!xml.atEnd()) {
         QXmlStreamReader::TokenType token = xml.readNext();
-        if(token == QXmlStreamReader::StartDocument) { //TODO: Rivedere
+        if(token == QXmlStreamReader::StartDocument) { //TODO: check
             continue;
         }
 
@@ -185,7 +185,7 @@ void CVCameraDetail::onLoadCamParameters() {
     QString uri = QFileDialog::getOpenFileName(
         this,
         tr("Importa parametri fotocamera"),
-        "",//QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).at(0),
+        "",//QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).at(0), //QT5 only
         "(*.xml)"
     );
     onCameraInput(uri);

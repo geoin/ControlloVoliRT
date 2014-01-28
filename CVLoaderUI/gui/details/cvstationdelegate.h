@@ -1,6 +1,8 @@
 #ifndef CV_GUI_CVSTATIONDELEGATE_H
 #define CV_GUI_CVSTATIONDELEGATE_H
 
+#include "core/categories/cvrinex.h"
+
 #include <QWidget>
 #include <QContextMenuEvent>
 #include <QLabel>

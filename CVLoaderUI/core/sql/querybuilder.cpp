@@ -158,6 +158,11 @@ namespace SQL {
 			case QVariant::DateTime:
 				_stm[index] = val.toDateTime().toMSecsSinceEpoch();
 				break;
+			case QVariant::ByteArray:
+				QByteArray b = val.toByteArray();
+				std::vector<unsigned char> blob(b.constData(), b.constData() + b.size());
+				_stm[index].fromBlob(blob);
+				break;
 		}
 	}
 

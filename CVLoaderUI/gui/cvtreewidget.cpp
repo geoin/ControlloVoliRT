@@ -34,7 +34,9 @@ CVTreeNode* CVTreeWidget::insertNode(CVTreeNode* parent, const QString& text) {
 void CVTreeWidget::onCloseProject() {
 	QTreeWidgetItem* inv = invisibleRootItem();
 	if (inv->childCount()) {
-		QScopedPointer<QTreeWidgetItem>(takeTopLevelItem(0));
+		QTreeWidgetItem* root = takeTopLevelItem(0);
+		setCurrentItem(root);
+		delete root;
 	}
 }
 

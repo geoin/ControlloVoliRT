@@ -49,14 +49,14 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
 
     //connect(_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
 	connect(this, SIGNAL(controlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)), _details, SLOT(onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)));
-    connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertPhotogrammetry(Core::CVProject*)));
+    connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertProject(Core::CVProject*)));
 
 	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
 	linker->add(Helper::ITEM_SELECTED, _tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)));
 	linker->on(Helper::ITEM_SELECTED, _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
 }
 
-void CVAppContainer::insertPhotogrammetry(Core::CVProject* proj) {
+void CVAppContainer::insertProject(Core::CVProject* proj) {
     CVNodeInfo* info = NULL;
 
 	QString type;

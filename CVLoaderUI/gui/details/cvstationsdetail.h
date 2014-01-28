@@ -3,6 +3,7 @@
 
 #include "cvbasedetail.h"
 #include "cvstationdelegate.h"
+#include "core/categories/cvstations.h"
 
 #include <QListWidget>
 #include <QScopedPointer>
@@ -30,7 +31,8 @@ public:
 public slots:
 	void onRemove() {
 		QListWidget* list = listWidget();
-		QScopedPointer<QListWidgetItem>(list->takeItem(list->row(this)));
+		int row = list->row(this);
+		QScopedPointer<QListWidgetItem>(list->takeItem(row));
 
 		//TODO: remove from db;
 	}
@@ -43,7 +45,7 @@ class CVStationsDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVStationsDetail(QWidget *parent);
+	CVStationsDetail(QWidget *parent, Core::CVStations*);
 	~CVStationsDetail();
 
 	CVStationDelegate* addItem(const QString&);
@@ -55,10 +57,13 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
-    QSet<QString> _files;
+	QString _base, _station;
+    QList<QString> _files;
 	QList<QLabel*> _labels;
 
 	QListWidget* _stations;
+	Core::CVStations* _handler;
+	QSet<QString> _items;
 };
 
 } // namespace Details

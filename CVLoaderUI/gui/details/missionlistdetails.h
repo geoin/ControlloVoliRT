@@ -3,6 +3,7 @@
 
 #include "gui/cvbasetabwidget.h"
 #include "core/categories/cvcategory.h"
+#include "core/categories/cvmissionobject.h"
 
 #include <QWidget>
 
@@ -13,6 +14,7 @@ class QLabel;
 namespace CV {
 namespace GUI {
 namespace Details {
+
 
 // Toolbar contentente titolo e controlli
 
@@ -55,6 +57,8 @@ class CVMissionListDetails : public QWidget {
     Q_OBJECT
 public:
     explicit CVMissionListDetails(QWidget* p = 0, CV::Core::CVCategory* category = 0);
+
+	void add(Core::CVMissionObject*);
 
 public slots:
     void onAddMission();

@@ -38,7 +38,7 @@ signals:
     void controlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory* = NULL);
 
 public slots:
-	void insertPhotogrammetry(Core::CVProject*);
+	void insertProject(Core::CVProject*);
 
 private:
 	void _addToMenuAndToolbar(QAction*, QMenu*, QToolBar*, QIcon icon, QString name = QString());
