@@ -66,7 +66,7 @@ bool CVStation::persist() {
 			"STATION",
 			QStringList() << "RINEX=?1",
 			QStringList() << "ID=?2",
-			QVariantList() << file.readAll() << info.baseName()
+			QVariantList() << file.readAll() << id()
 		);
 	}
 	return ret; //EMPTY
