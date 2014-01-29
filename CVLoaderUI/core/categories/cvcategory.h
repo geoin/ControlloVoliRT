@@ -22,6 +22,7 @@ public:
 	virtual bool isValid() const = 0;
 	virtual bool persist() = 0;
 	virtual bool load() = 0;
+	virtual bool remove() = 0;
 	
 	virtual void init() {}
 

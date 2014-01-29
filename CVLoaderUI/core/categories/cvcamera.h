@@ -20,6 +20,8 @@ public:
 	virtual bool persist();
 	virtual bool load();
 
+	virtual bool remove() { return true; }
+
 	bool load(const QString& mId);
 
 	inline Camera& data() { return _cam; }

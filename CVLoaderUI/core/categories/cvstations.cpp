@@ -11,6 +11,10 @@
 #include <QUuid>
 #include <QRegExp>
 
+#include <sstream>
+
+#include "core/cvcore_utils.h"
+
 namespace CV {
 namespace Core {
 
@@ -32,6 +36,37 @@ CVStation::~CVStation() {
 
 bool CVStation::isValid() const {
 	return _isValid;
+}
+
+void CVStation::list(QStringList& list) {
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		QString db(uri());
+		cnn.open(db.toStdString());
+	
+		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList() << "RINEX",
+			QStringList() << "STATION", 
+			QStringList() << "ID = ?1",
+			QVariantList() << id()
+		);
+		if (!set.eof()) {
+			const std::vector<unsigned char>& blob = set[0].toBlob();
+			const char* ptr = reinterpret_cast<const char*>(&blob[0]);
+			
+			std::stringstream str;
+			str.write(ptr, blob.size());
+			Poco::Zip::ZipArchive arch(str);
+			Poco::Zip::ZipArchive::FileInfos::const_iterator it = arch.fileInfoBegin();
+			for (; it != arch.fileInfoEnd(); it++) {
+				list.append(it->first.c_str());
+			}
+		}
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return;
+	}
 }
 
 bool CVStation::persist() {

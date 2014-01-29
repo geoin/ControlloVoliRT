@@ -19,6 +19,8 @@ public:
 	virtual bool persist();
 	virtual bool isValid() const;
 	virtual bool load();
+	
+	virtual bool remove() { return true; }
 
 	virtual void init();
 

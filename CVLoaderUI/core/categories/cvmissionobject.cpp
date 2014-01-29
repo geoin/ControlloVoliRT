@@ -73,9 +73,8 @@ bool CVMissionObject::load() {
 		name(set[0].toString().c_str());
 		idCam = QString(set[1].toString().c_str());
 		const std::vector<unsigned char>& b = set[2];
-		for (std::vector<unsigned char>::const_iterator it = b.begin(); it < b.end(); ++it) {
-			ba.append(*it);
-		}
+		const char* ptr = reinterpret_cast<const char*>(&b[0]);
+		ba.append(ptr, b.size());
 		ret = true;
 	}
 
@@ -85,9 +84,10 @@ bool CVMissionObject::load() {
 		cam->load(idCam);
 	}
 
-	if (ba.length() > 1) {
+	if (ba.length() > 2) {
 		CVRinex* r = static_cast<CVRinex*>(at(1));
 		r->mission(id());
+		r->load();
 	}
 
 	set = q->select(
@@ -101,6 +101,7 @@ bool CVMissionObject::load() {
 	while (!set.eof()) {
 		CVStation* s = new CVStation(stations, QString(set[0].toString().c_str()));
 		s->mission(id());
+		s->uri(uri());
 		s->name(QString(set[1].toString().c_str()));
 		stations->add(s);
 		set.next();

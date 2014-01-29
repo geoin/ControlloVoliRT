@@ -1,5 +1,8 @@
 #include "cvstationsdetail.h"
 
+#include "gui/cvgui_utils.h"
+#include "core/cvcore_utils.h"
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -27,7 +30,16 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 	QVBoxLayout* l = new QVBoxLayout;
 	_stations = new QListWidget(this);
 	_stations->setFrameStyle(QFrame::NoFrame);
+
+	_details = new QListWidget(this);
+	_details->setMaximumHeight(100);
+	_details->setVisible(false);
+	_details->setSelectionMode(QAbstractItemView::NoSelection);
+
+	connect(_stations, SIGNAL(currentRowChanged(int)), this, SLOT(onStationSelected(int)));
+
 	l->addWidget(_stations);
+	l->addWidget(_details);
 
 	body(l);
 
@@ -39,6 +51,22 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 CVStationsDetail::~CVStationsDetail() {
 }
 
+void CVStationsDetail::onStationSelected(int item) {
+	CV::GUI::CVScopedCursor cur;
+
+	_details->clear();
+	Core::CVStation* i = _handler->at(item);
+	QStringList data;
+	i->list(data);
+	foreach (const QString& f, data) {
+		QListWidgetItem* it = new QListWidgetItem(_details);
+		it->setSizeHint(QSize(0, 26));
+		it->setText(f);
+		_details->insertItem(0, it);
+	}
+	_details->setVisible(true);
+}
+
 CVStationDelegate* CVStationsDetail::addItem(const QString& name) {
 	CVStationDelegate* d = new CVStationDelegate(this); 
 	d->title(name);
@@ -47,7 +75,7 @@ CVStationDelegate* CVStationsDetail::addItem(const QString& name) {
 	item->setSizeHint(QSize(0, 72));
 	_stations->insertItem(0, item);
 	_stations->scrollToItem(item);
-
+	//_stations->setCurrentItem(item);
 	return d;
 }
 
@@ -105,24 +133,22 @@ void CVStationsDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 void CVStationsDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 
+	CV::GUI::CVScopedCursor cur;
+
+	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(_handler->uri()).absolutePath());
+
 	//need a tmp dir
-	QFileInfo db(_handler->uri());
-	QString tmp = db.absolutePath() + QDir::separator() + "tmp";
-	QDir d;
-	d.mkpath(tmp);
-	bool cd = d.cd(tmp);
-	if (!cd) {
+	const QString& tmp = tmpDir.toString();
+	if (tmp.isEmpty()) {
 		return;
 	}
-	
-	//station name
 	
 	//check if this station is already in for actual mission, if so get the zip and decompress
 	QString id;
 	QString zipToUpdate = _handler->getZipFromStation(_station, tmp, id);
 	if (!zipToUpdate.isEmpty()) {
 		Core::CVZip::unzip(zipToUpdate.toStdString(), tmp.toStdString());
-		d.remove(zipToUpdate);
+		tmpDir.dir().remove(zipToUpdate);
 	}
 
 	//if a zip is dragged, decompress it in tmp
@@ -130,13 +156,18 @@ void CVStationsDetail::dropEvent(QDropEvent* ev) {
 		foreach (const QString& f, _files) {
 			Core::CVZip::unzip(f.toStdString(), tmp.toStdString());
 		}
-		QStringList tmpFiles = d.entryList(QDir::Files);
+		QStringList tmpFiles = tmpDir.dir().entryList(QDir::Files);
 
 		_files.clear();
 		foreach (const QString& n, tmpFiles) {
 			_files.append(tmp + QDir::separator() + n);
 		}
-	} //else { copy .n .o in tmp }
+	} else { 
+		foreach (const QString& f, _files) {
+			QFileInfo info(f);
+			QFile::copy(f, tmp + QDir::separator() + info.fileName());// .n .o in tmp 
+		}
+	}
 
 	std::vector<std::string> files;
 	foreach (const QString& f, _files) {
@@ -152,36 +183,31 @@ void CVStationsDetail::dropEvent(QDropEvent* ev) {
 	QString rinex = info.baseName();
 	
 	//TODO (FIX): needs to handle station id inside controller
-	Core::CVStation* r = id.isEmpty() ? new Core::CVStation(this) : new Core::CVStation(this, id);
+	Core::CVStation::Ptr r(id.isEmpty() ? new Core::CVStation(this) : new Core::CVStation(this, id));
 	r->mission(_handler->mission());
 	r->origin(info.absoluteFilePath());
 	r->uri(_handler->uri());
 	if (!r->persist()) {
-		r->deleteLater();
 		return;
 	}
 
 	if (!_items.contains(rinex) && id.isEmpty()) {
 		_items << rinex;
-		/*CVStationDelegate* del = */addItem(rinex);
+		CVStationDelegate* del = addItem(rinex);
 		//TODO: other info
 		_handler->add(r);
-	} else {
-		r->deleteLater();
-	}
+	} 
 
 	//clean up
-	d.setNameFilters(QStringList() << "*.*");
-	d.setFilter(QDir::Files);
-	foreach (const QString& dirFile, d.entryList()) {
-		d.remove(dirFile);
-	}
-	d.cdUp();
-	d.rmdir(tmp);
-
+	
     _files.clear();
 	_base = QString();
 	_station = QString();
+
+	if (_details->isVisible()) {
+		int index = _stations->currentRow();
+		onStationSelected(index);
+	}
 }
 
 } // namespace Details

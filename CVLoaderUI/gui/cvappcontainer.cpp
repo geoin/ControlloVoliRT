@@ -38,6 +38,7 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
     box->addWidget(split, 1);
     QTableWidget* table = new QTableWidget(this);
     //table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //TODO: QT5
+    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch); //TODO: QT5
     box->addWidget(table);
     setLayout(box);
 

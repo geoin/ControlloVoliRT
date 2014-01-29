@@ -18,6 +18,8 @@ public:
 	virtual bool isValid() const;
 	virtual bool persist();
 	virtual bool load();
+	
+	virtual bool remove() { return true; }
 
 	inline void shape(const QString& shp) { _shp = shp; }
 	inline QString shape() { return _shp; }

@@ -12,6 +12,8 @@
 #include <QRegExp>
 
 //TODO: this must be the base class, move all specialized logic in derived
+#include "core/cvcore_utils.h"
+#include <sstream>
 
 namespace CV {
 namespace Core {
@@ -48,9 +50,9 @@ bool CVRinex::persist() {
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	bool ret = q->update(
 		"MISSION", 
-		QStringList() << "RINEX=?1",
-		QStringList() << "ID=?2",
-		QVariantList() << file.readAll() << mission()
+		QStringList() << "RINEX=?1" << "RINEX_NAME=?2",
+		QStringList() << "ID=?3",
+		QVariantList() << file.readAll() << info.baseName() << mission()
 	);
 	if (!ret) {
 		return false;
@@ -62,54 +64,59 @@ bool CVRinex::persist() {
 bool CVRinex::load() {
 	_isValid = false;
 	
-	/*if (_target.isEmpty()) {
-		CV::Util::Spatialite::Connection cnn;
-		try {
-			cnn.open(QString(uri() + QDir::separator() + SQL::database).toStdString());
-		} catch (CV::Util::Spatialite::spatialite_error& err) {
-			Q_UNUSED(err)
-			return false;
-		}
-
-		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-		CV::Util::Spatialite::Recordset set = q->select(
-			QStringList() << "ID" << "URI",
-			QStringList() << "DEM", 
-			QStringList(),
-			QVariantList(),
-			QStringList(),
-			1
-		);
-		if (!set.eof()) {
-			target(set[1].toString().c_str());
-		} else {
-			return false;
-		}
-	}
-
-	QFile file(_target);
-    bool open = file.open(QIODevice::ReadOnly | QIODevice::Text);
-	if (!open) {
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(QString(uri()).toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
 		return false;
 	}
 
-	QTextStream str(&file);
-	str.setCodec("UTF-8");
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	CV::Util::Spatialite::Recordset set = q->select(
+		QStringList() << "RINEX_NAME",
+		QStringList() << "MISSION", 
+		QStringList() << "ID=?1",
+		QVariantList() << mission()
+	);
+	if (!set.eof()) {
+		_rin = QString(set[0].toString().c_str());
+	} 
 
-	int i = 0;
-	int rows = 5; // TODO: handle this the right way
-	while (i < rows) { 
-		QString line = str.readLine();
-		QStringList l = line.split(QRegExp("[\\t*\\s*]"), QString::SkipEmptyParts);
-		if (l.size() < 2) {
-			data() << "";
-		} else {
-			data() << l.at(1);
-		}
-		i++;
-	}
-	_isValid = data().size() == rows;*/
+	_isValid = !_rin.isEmpty();
+
 	return _isValid;
+}
+
+void CVRinex::list(QStringList& list) {
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		QString db(uri());
+		cnn.open(db.toStdString());
+	
+		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList() << "RINEX",
+			QStringList() << "MISSION", 
+			QStringList() << "ID = ?1",
+			QVariantList() << mission()
+		);
+		if (!set.eof()) {
+			const std::vector<unsigned char>& blob = set[0].toBlob();
+			const char* ptr = reinterpret_cast<const char*>(&blob[0]);
+			
+			std::stringstream str;
+			str.write(ptr, blob.size());
+			Poco::Zip::ZipArchive arch(str);
+			Poco::Zip::ZipArchive::FileInfos::const_iterator it = arch.fileInfoBegin();
+			for (; it != arch.fileInfoEnd(); it++) {
+				list.append(it->first.c_str());
+			}
+		}
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return;
+	}
 }
 
 } // namespace Core

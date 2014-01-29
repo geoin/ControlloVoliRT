@@ -4,6 +4,9 @@
 #include "cvbasedetail.h"
 #include "core/categories/cvrinex.h"
 
+class QListWidget;
+class QLabel;
+
 namespace CV {
 namespace GUI {
 namespace Details {
@@ -20,7 +23,12 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
-    QScopedPointer<QFileInfo> _file;
+	QLabel* _name;
+	QListWidget* _details;
+	
+	QString _base, _station;
+    QList<QString> _files;
+	
 	Core::CVRinex* _rinex;
 };
 

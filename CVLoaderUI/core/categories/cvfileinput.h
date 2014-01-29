@@ -18,6 +18,8 @@ public:
 	virtual bool isValid() const;
 	virtual bool persist();
 	virtual bool load();
+	
+	virtual bool remove() { return true; }
 
 	inline void origin(const QString& file) { _origin = file; }
 	inline const QString& origin() const { return _origin; }

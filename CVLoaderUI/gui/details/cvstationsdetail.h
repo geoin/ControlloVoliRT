@@ -50,6 +50,9 @@ public:
 
 	CVStationDelegate* addItem(const QString&);
 
+public slots:
+	void onStationSelected(int);
+
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
     virtual void dragMoveEvent(QDragMoveEvent*);
@@ -59,9 +62,8 @@ protected:
 private:
 	QString _base, _station;
     QList<QString> _files;
-	QList<QLabel*> _labels;
 
-	QListWidget* _stations;
+	QListWidget* _stations, * _details;
 	Core::CVStations* _handler;
 	QSet<QString> _items;
 };

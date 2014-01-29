@@ -5,41 +5,17 @@
 #include "core/categories/cvrinex.h"
 
 #include <QStringList>
-
-#include <Poco/Zip/Compress.h>
-#include <Poco/Zip/Decompress.h>
-#include <fstream>
+#include <QSharedPointer>
 
 namespace CV {
 namespace Core {
-
-class CVZip {
-public:
-	static int zip(const std::vector<std::string> files, const std::string& outZip) {
-		int tot = 0;
-		std::ofstream out(outZip.c_str(), std::ios::binary);
-		Poco::Zip::Compress c(out, true);
-		foreach (const std::string& file, files) {
-			Poco::Path p(file);
-			c.addFile(p, p.getFileName());
-		}
-		c.close();
-		return tot;
-	}
-
-	static int unzip(const std::string& origin, const std::string& folder) {
-		int tot = 0;
-		std::ifstream in(origin.c_str(), std::ios::binary);
-		Poco::Zip::Decompress dec(in, Poco::Path(folder)); 
-		dec.decompressAllFiles();
-		return tot;
-	}
-};
 
 class CVStation : public CVObject{
 	Q_OBJECT
 
 public:
+	typedef QSharedPointer<Core::CVStation> Ptr;
+
 	CVStation(QObject *parent);
 	CVStation(QObject* parent, const QString& id);
 	~CVStation();
@@ -47,6 +23,7 @@ public:
 	virtual bool isValid() const;
 	virtual bool persist();
 	virtual bool load();
+	virtual bool remove() { return true; }
 
 	inline void id(const QString& id) { _id = id; }
 	inline const QString& id() const { return _id; }
@@ -63,6 +40,8 @@ public:
 	inline const QString& path() const { return _path; }
 	inline void path(const QString& m) { _path = m; }
 
+	void list(QStringList& list);
+
 private:
 	QString _id, _origin, _mission, _name, _path;
 	bool _toUpdate;
@@ -78,20 +57,22 @@ public:
 	virtual bool isValid() const { return true; }
 	virtual bool persist() { return true; }
 	virtual bool load() { return true; }
+	virtual bool remove() { return true; }
 
 	inline const QString& mission() const { return _mission; }
 	inline void mission(const QString& m) { _mission = m; }
 
-	inline void add(Core::CVStation* r) { _ps.append(r); }
+	inline void add(CVStation* r) { _ps.append(CVStation::Ptr(r)); }
+	inline void add(CVStation::Ptr r) { _ps.append(r); }
 
 	inline int count() const { return _ps.length(); }
-	inline Core::CVStation* at(int i) const { return _ps.at(i); }
+	inline Core::CVStation* at(int i) const { return _ps.at(i).data(); }
 
 	QString getZipFromStation(const QString& name, const QString& outPath, QString& id); //change sign
 
 private:
 	QString _mission;
-	QList<Core::CVStation*> _ps;
+	QList<CVStation::Ptr> _ps;
 };
 
 } // namespace Core
