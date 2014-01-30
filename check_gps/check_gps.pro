@@ -11,14 +11,14 @@ TARGET = check_gps
 
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib"
+        LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
 }
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtild -l PocoZipd -lphoto_utild -l ZipLibd -lrtklibd -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
+        LIBS += -lPocoUtild -lPocoZipd -lphoto_utild -lZipLibd -lrtklibd -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
         TARGET = $$join(TARGET,,,d)
 }
 else {
@@ -26,7 +26,7 @@ else {
 }
 
 win32 {
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
 }
 macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
@@ -43,4 +43,4 @@ HEADERS +=\
     check_gps.h \
     gps.h
 
-DESTDIR = C:/OSGeo4W/apps/qgis/plugins
+#DESTDIR = C:/OSGeo4W/apps/qgis/plugins
