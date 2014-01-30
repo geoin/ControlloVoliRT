@@ -27,6 +27,7 @@ signals:
 public slots:
     void onProjectItemActivated(QTreeWidgetItem* item, int col);
     void onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory* = NULL);
+	void onClear();
 
 private:
     QStackedWidget* _stack;

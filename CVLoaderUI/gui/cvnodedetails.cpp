@@ -45,5 +45,17 @@ void CVNodeDetails::onProjectItemActivated(QTreeWidgetItem* item, int col) {
     }
 }
 
+void CVNodeDetails::onClear() {
+	for (int i = 0; i < _stack->count(); ++i) {
+		QWidget* w = _stack->widget(i);
+		_stack->removeWidget(w);
+	}
+
+	foreach (QWidget* w, _details) {
+		delete w;
+	}
+	_details.clear();
+}
+
 } // namespace GUI
 } // namespace CV

@@ -2,6 +2,7 @@
 #include "cvcameradetail.h"
 #include "cvstationsdetail.h"
 #include "cvrinexdetail.h"
+#include "cvflyaxis_p.h"
 
 namespace CV {
 namespace GUI {
@@ -19,6 +20,9 @@ CVMissionDetail::CVMissionDetail(QWidget* p, Core::CVMissionObject* mission, Tab
 
     addTab(new CVStationsDetail(this, static_cast<Core::CVStations*>(_mission->at(2))), "");
     setTabToolTip(2, tr("Stazioni permanenti"));
+	
+	addTab(new CVFlyAxis_p(this, static_cast<Core::CVShapeLayer*>(_mission->at(3))), "");
+    setTabToolTip(3, tr("Assi di volo"));
 }
 
 } // namespace Details

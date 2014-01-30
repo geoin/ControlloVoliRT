@@ -21,7 +21,7 @@ namespace Details {
 //TODO: needs cleanup, field generation
 
 CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
-	title(tr("Assi di volo progettati"));
+	title(tr("Assi di volo"));
 	description(tr("File shape"));
 
     QFormLayout* form = new QFormLayout(this);

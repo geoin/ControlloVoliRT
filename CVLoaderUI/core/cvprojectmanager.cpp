@@ -40,7 +40,8 @@ void CVProjectManager::onNewProject() {
 		cat->uri(proj->path + QDir::separator() + SQL::database);
 		proj->insert(cat);
 
-		proj->insert(new CVCategory(CVCategory::FLY, proj));
+		cat = _fly(proj, false);
+		proj->insert(cat);
 
 		emit addProject(proj);
 		_projects.append(proj);
@@ -78,12 +79,28 @@ void CVProjectManager::onLoadProject() {
 		}
 		cat->load();
 
-		proj->insert(new CVCategory(CVCategory::FLY, proj));
+		
+		cat = _fly(proj, true);
+		proj->insert(cat);
 		
 		emit addProject(proj);
 		_projects.append(proj);
 	}
 }   
+
+//Take most data from other categories
+CVCategory* CVProjectManager::_fly(CVProject* proj, bool b) {
+	CVCategory* plan = proj->get(CVCategory::PLAN);
+	CVCategory* gps = proj->get(CVCategory::GPS_DATA);
+
+	CVCategory* cat = new CVCategory(CVCategory::FLY, proj);
+	cat->uri(proj->db());
+
+	cat->insert(plan->at(1));
+	cat->insert(plan->at(2));
+	cat->insert(plan->at(3));
+	return cat;
+}
 
 CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
 	CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
@@ -116,6 +133,7 @@ CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
    
 void CVProjectManager::onCloseProject() {
 	//TODO
+	_projects.clear();
 }
 
 

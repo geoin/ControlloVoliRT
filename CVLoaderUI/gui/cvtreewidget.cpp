@@ -18,8 +18,6 @@ CVTreeWidget::CVTreeWidget(QWidget* parent) : QTreeWidget(parent) {
 }
 
 CVTreeNode* CVTreeWidget::insertProjectTree(const QString& title) {
-	onCloseProject();
-
     CVTreeNode* root = new CVTreeNode(this, QStringList() << title);
     addTopLevelItem(root);
     setCurrentItem(root);

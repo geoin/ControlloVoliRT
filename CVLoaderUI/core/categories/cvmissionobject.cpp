@@ -4,6 +4,7 @@
 #include "cvproject.h"
 #include "cvrinex.h"
 #include "cvstations.h"
+#include "cvshapelayer.h"
 
 #include "core/sql/querybuilder.h"
 
@@ -107,6 +108,8 @@ bool CVMissionObject::load() {
 		set.next();
 	}
 
+	static_cast<CVShapeLayer*>(at(3))->load();
+
 	_isValid = ret;
 	return ret; 
 }
@@ -126,6 +129,12 @@ void CVMissionObject::init() {
 	CVStations* stations = new CVStations(this);
 	stations->mission(id());
 	insert(stations);
+
+	CVShapeLayer* axis = new CVShapeLayer(this);
+	axis->uri(uri());
+	axis->table("AVOLOV");
+	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	insert(axis);
 }
 	
 }

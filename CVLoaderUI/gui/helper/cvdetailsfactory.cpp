@@ -2,6 +2,7 @@
 
 #include "gui/details/missionlistdetails.h"
 #include "gui/details/plandetail.h"
+#include "gui/details/cvflydetail.h"
 
 namespace CV {
 namespace GUI {
@@ -19,7 +20,7 @@ QWidget* CVDetailsFactory::build(QWidget* p, CVNodeInfo::Type t, CV::Core::CVCat
             detail = new Details::CVMissionListDetails(p, category);
             break;
         case CVNodeInfo::FLY:
-           detail = new QWidget(p);
+			detail = new Details::CVFlyDetail(p, category);
            break;
         default:
             detail = new QWidget(p);
