@@ -11,24 +11,26 @@
 #include <QPushButton>
 #include <QTabWidget>
 
+#include <assert.h>
+
 namespace CV {
 namespace GUI {
 namespace Details {
 
 CVMissionListToolbar::CVMissionListToolbar(QWidget* p) : QWidget(p) {
    _back = new QPushButton("<", this);
-   _back->setMaximumSize(26, 26);
+   _back->setMaximumSize(28, 28);
    _back->setDisabled(true);
    connect(_back, SIGNAL(pressed()), this, SIGNAL(viewPrevious()));
 
    _next = new QPushButton(">", this);
-   _next->setMaximumSize(26, 26);
+   _next->setMaximumSize(28, 28);
    _next->setDisabled(true);
    connect(_next, SIGNAL(pressed()), this, SIGNAL(viewNext()));
 
    QMenu* menu = new QMenu(this);
    _menu = new QPushButton(tr(""), this);
-   _menu->setMaximumSize(20, 26);
+   _menu->setMaximumSize(20, 28);
    _menu->setMenu(menu);
 
    _title = new QLabel(tr("Nessuna missione attiva"), this);
@@ -84,55 +86,89 @@ void CVMissionListDetails::onNextMission() {
     _bar->title(mission->name());
 }
 
-CVMissionListDetails::CVMissionListDetails(QWidget* p) : QWidget(p) {
-   _bar = new CVMissionListToolbar(this);
-   _body = new CVMissionListBody(this);
+CVMissionListDetails::CVMissionListDetails(QWidget* p, CV::Core::CVCategory* cat) : QWidget(p) {
+	assert(cat != NULL);
+	_category = cat;
 
-   //TODO: change to this
-   connect(_bar, SIGNAL(viewPrevious()), this, SLOT(onPreviousMission()));
-   connect(_bar, SIGNAL(viewNext()), this, SLOT(onNextMission()));
+	_bar = new CVMissionListToolbar(this);
+	_body = new CVMissionListBody(this);
 
+	connect(_bar, SIGNAL(viewPrevious()), this, SLOT(onPreviousMission()));
+	connect(_bar, SIGNAL(viewNext()), this, SLOT(onNextMission()));
 
-   //TODO Action 
-   QMenu* menu = _bar->menu();
-   QAction* create = menu->addAction(QIcon(""), tr("Crea missione"));
-   connect(create, SIGNAL(triggered()), this, SLOT(onAddMission()));
-   QAction* remove = menu->addAction(QIcon(""), tr("Rimuovi missione"));
-   connect(remove, SIGNAL(triggered()), this, SLOT(onRemoveMission()));
-   menu->addSeparator();
+	//TODO Action 
+	QMenu* menu = _bar->menu();
+	QAction* create = menu->addAction(QIcon(""), tr("Crea missione"));
+	connect(create, SIGNAL(triggered()), this, SLOT(onAddMission()));
+	QAction* remove = menu->addAction(QIcon(""), tr("Rimuovi missione"));
+	connect(remove, SIGNAL(triggered()), this, SLOT(onRemoveMission()));
+	menu->addSeparator();
 
-   QVBoxLayout* box = new QVBoxLayout;
-   box->addWidget(_bar);
-   box->addWidget(_body, 2);
-   box->setContentsMargins(0, 0, 0, 0);
+	QVBoxLayout* box = new QVBoxLayout;
+	box->addWidget(_bar);
+	box->addWidget(_body, 2);
+	box->setContentsMargins(0, 0, 0, 0);
 
-   setLayout(box);
+	setLayout(box);
+	int count = _category->count();
+	for (int i = 0; i < count; ++i) {
+		Core::CVMissionObject* mission = static_cast<Core::CVMissionObject*>(_category->at(i));
+		add(mission);
+	}
+}
+
+void CVMissionListDetails::add(Core::CVMissionObject* m) {
+	CVMissionDetail* item = new CVMissionDetail(this, m);
+
+    QStackedLayout* stack = static_cast<QStackedLayout*>(_body->layout());
+    stack->addWidget(item);
+    stack->setCurrentIndex(stack->count() - 1);
+
+    QMenu* menu = _bar->menu();
+    QAction* mission = menu->addAction(QIcon(""), m->name());
+    mission->setData(m->id());
+
+	connect(mission, SIGNAL(triggered()), this, SLOT(onMissionChange()));
+
+    _bar->title(m->name());
+    _bar->previous()->setEnabled(stack->count() > 1);
+    _bar->next()->setEnabled(stack->count() > 1);
 }
 
 void CVMissionListDetails::onAddMission() {
-    QStackedLayout* stack = static_cast<QStackedLayout*>(_body->layout());
-    CVMissionDetail* item = new CVMissionDetail(this);
-
     Dialogs::CVMissionDialog dialog(_body);
     int ret = dialog.exec();
     if (ret != QDialog::Accepted) {
         return;
     }
-
+	
     QString name, note;
     dialog.getInput(name, note);
-    item->name(name);
+	//TODO note;
 
-    stack->addWidget(item);
-    stack->setCurrentIndex(stack->count() - 1);
+	//TODO: should projManager handle this?
+	Core::CVMissionObject* obj = new Core::CVMissionObject(_category);
+	_category->insert(obj);
 
-    QMenu* menu = _bar->menu();
-    QAction* mission = menu->addAction(QIcon(""), item->name());
-    mission->setData(item->key());
-    _bar->title(item->name());
+	obj->name(name);
+	obj->persist();
 
-    _bar->previous()->setEnabled(stack->count() > 1);
-    _bar->next()->setEnabled(stack->count() > 1);
+	add(obj);
+}
+
+void CVMissionListDetails::onMissionChange() {
+	QAction* origin = static_cast<QAction*>(sender());
+	QString key = origin->data().toString();
+	
+    QStackedLayout* stack = static_cast<QStackedLayout*>(_body->layout());
+	for (int i = 0; i < stack->count(); ++i) {
+		CVMissionDetail* m = static_cast<CVMissionDetail*>(stack->widget(i));
+		if (m->key() == key) {
+			stack->setCurrentWidget(m);
+			_bar->title(m->name());
+			return;
+		}
+	}
 }
 
 void CVMissionListDetails::onRemoveMission() {

@@ -25,16 +25,7 @@ public:
 	inline void body(QLayout* l) { _body->setLayout(l); }
 	inline QMenu* detailMenu() const { return _menu; }
 
-protected:
-    virtual void dragEnterEvent(QDragEnterEvent*);
-    virtual void dragMoveEvent(QDragMoveEvent*);
-    virtual void dragLeaveEvent(QDragLeaveEvent*);
-    virtual void dropEvent(QDropEvent*);
-
 private:
-    QScopedPointer<QFileInfo> _file;
-	QString _uri;
-
 	QLabel* _title, * _descr;
 	QWidget* _body;
 	QMenu* _menu;

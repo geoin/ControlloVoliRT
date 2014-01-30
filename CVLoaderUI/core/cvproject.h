@@ -21,10 +21,12 @@ public:
 
     explicit CVProject(QObject* p = 0);
 
-	void uri(const QString& uri) { _uri = uri; }
-
-	void loadFrom(const QDir&); 
+	QString loadFrom(const QDir&); 
 	bool create(const QString& db);
+	
+	void missionList(QStringList&);
+
+	QString db() const { return _db; }
 
 	void insert(CVCategory*);
 	CVCategory* get(CVCategory::Type);
@@ -34,8 +36,8 @@ public:
     Type type;
 
 private:
-	QString _uri;
 	QMap<CVCategory::Type, CVCategory*> _categories;
+	QString _db;
 };
 
 } // namespace Core

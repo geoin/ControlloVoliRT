@@ -12,9 +12,9 @@ CVStatusBar::CVStatusBar(QWidget *parent) : QStatusBar(parent) {
 
     addPermanentWidget(new QWidget(this), 1);
 
-    QProgressBar* progress = new QProgressBar(this);
-    progress->setMinimumWidth(160);
-    addPermanentWidget(progress);
+    //QProgressBar* progress = new QProgressBar(this);
+    //progress->setMinimumWidth(160);
+    //addPermanentWidget(progress);
 
     setContentsMargins(4, 0, 4, 2);
 }

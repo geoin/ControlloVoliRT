@@ -138,6 +138,39 @@ namespace SQL {
 		return _stm.recordset();
 	}
 
+	
+	bool Query::remove(const QString& tab, const QStringList& where, const QVariantList& binds) {
+		QString query("DELETE FROM %1");
+		if (where.length()) {
+			query.append(" WHERE %2");
+		}
+
+		query = query.arg(tab, where.join(" AND "));
+
+		assert(where.length() >= binds.length());
+		QRegExp reg("\\?([0-9]{1,2})");
+
+		try {
+			for (int i = 0; i < binds.length(); ++i) {
+				int pos = reg.indexIn(where.at(i));
+				if (pos < 0) {
+					continue;
+				}
+
+				int val = reg.cap(1).toInt();
+				QVariant b = binds.at(val - 1);
+				bindValue(val, b);
+			}
+
+			_stm.execute();
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			return false;
+		}
+
+		return true;
+	}
+
 	//let me bind from Qt types
 	void Query::bindValue(const int& index, const QVariant& val) {
 		QVariant::Type t = val.type();
@@ -145,6 +178,8 @@ namespace SQL {
 			case QVariant::String:	
 				_stm[index] = val.toString().toStdString();
 				break;
+			case QVariant::Bool:
+				_stm[index] = val.toBool();
 			case QVariant::Int:
 			case QVariant::LongLong:
 				_stm[index] = val.toLongLong();
@@ -155,6 +190,11 @@ namespace SQL {
 			case QVariant::Date:
 			case QVariant::DateTime:
 				_stm[index] = val.toDateTime().toMSecsSinceEpoch();
+				break;
+			case QVariant::ByteArray:
+				QByteArray b = val.toByteArray();
+				std::vector<unsigned char> blob(b.constData(), b.constData() + b.size());
+				_stm[index].fromBlob(blob);
 				break;
 		}
 	}

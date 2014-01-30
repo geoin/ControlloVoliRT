@@ -3,6 +3,7 @@
 
 #include <QList>
 #include <QObject>
+#include <QUuid>
 
 namespace CV {
 namespace Core {
@@ -12,7 +13,7 @@ class CVObject : public QObject {
 public:
 	enum Type { UNKNOWN_OBJECT = 0, CAMERA, FLY_AXIS };
 
-	explicit CVObject(QObject* p = 0) {}
+	explicit CVObject(QObject* p) : QObject(p) {}
 	virtual ~CVObject() {}
 
 	inline void uri(const QString& t) { _uri = t; }
@@ -21,6 +22,9 @@ public:
 	virtual bool isValid() const = 0;
 	virtual bool persist() = 0;
 	virtual bool load() = 0;
+	virtual bool remove() = 0;
+	
+	virtual void init() {}
 
 protected:
 	bool _isValid;
@@ -34,11 +38,13 @@ class CVCategory : public QObject {
 public:
 	enum Type { UNKNOWN_CATEGORY = 0, PLAN, GPS_DATA, FLY };
 
-	explicit CVCategory(Type t, QObject* p = 0) : _type(t) {}
+	explicit CVCategory(Type t, QObject* p) : QObject(p), _type(t) {}
 
-	Type type() const { return _type; }
+	inline Type type() const { return _type; }
 
-	CVObject* at(int i) const { return _objects.at(i); }
+	inline int count() const { return _objects.length(); }
+
+	inline CVObject* at(int i) const { return _objects.at(i); }
 
 	inline bool isComplete() const { 
 		foreach(CVObject* obj, _objects) {
@@ -49,11 +55,34 @@ public:
 		return true;
 	};
 
-	inline void insert(CVObject* obj) { _objects.append(obj); }
+	inline void load() { 
+		foreach(CVObject* obj, _objects) {
+			obj->load();
+		}
+	};
+
+	inline void insert(CVObject* obj, bool setPath = true) { 
+		if (setPath) {
+			obj->uri(uri());
+			obj->init();
+		}
+		_objects.append(obj); 
+	}
+
+	inline void uri(const QString& uri) { 
+		_uri = uri;
+	}
+
+	inline const QString& uri() const { 
+		return _uri;
+	}
 
 protected:
 	QList<CVObject*> _objects;
 	Type _type;
+
+private:
+	QString _uri;
 };
 
 }

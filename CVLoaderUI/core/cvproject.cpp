@@ -10,17 +10,17 @@ CVProject::CVProject(QObject *parent) : QObject(parent) {
 
 }
 
-void CVProject::loadFrom(const QDir& dir) {
-	QString db = dir.absolutePath() + dir.separator() + SQL::database;
+QString CVProject::loadFrom(const QDir& dir) {
+	_db = dir.absolutePath() + dir.separator() + SQL::database;
 	CV::Util::Spatialite::Connection cnn;
 	try {
-		cnn.open(db.toStdString()); 
+		cnn.open(_db.toStdString()); 
 		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
 			cnn.initialize_metdata(); 
 		}
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
-		return;
+		return QString();
 	}
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	try {
@@ -39,9 +39,10 @@ void CVProject::loadFrom(const QDir& dir) {
 			notes = QString(set[3].toString().c_str());
 			type = set[4].toInt() == 1 ? Core::CVProject::PHOTOGRAMMETRY : Core::CVProject::LIDAR;
 		} 
+		return _db;
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
-		return;
+		return QString();
 	}
 }
 
@@ -53,11 +54,11 @@ bool CVProject::create(const QString& d) {
 	}
 	dir.cd(path);
 
-	QString db = dir.absolutePath() + dir.separator() + d;
+	_db = dir.absolutePath() + dir.separator() + d;
 
 	CV::Util::Spatialite::Connection cnn;
 	try {
-		cnn.create(db.toStdString()); 
+		cnn.create(_db.toStdString()); 
 		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
 			cnn.initialize_metdata(); 
 		}
@@ -112,6 +113,38 @@ void CVProject::insert(CVCategory* category) {
 CVCategory* CVProject::get(CVCategory::Type t) {
 	return _categories.value(t);
 }
+
+void CVProject::missionList(QStringList& ids) {
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.create(db().toStdString()); 
+		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
+			cnn.initialize_metdata(); 
+		}
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	try {
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList() << "ID",
+			QStringList() << "MISSION", 
+			QStringList(),
+			QVariantList()
+		);
+		
+		while (!set.eof()) {
+			ids << set[0].toString().c_str();
+			set.next();
+		} 
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return;
+	}
+}
+
 
 } // namespace Core
 } // namespace CV

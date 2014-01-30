@@ -526,6 +526,57 @@ bool gps_exec::_create_gps_track()
 	cnn.remove_layer(BASI);
 	cnn.remove_layer(GPS);
 
+	std::stringstream q;
+	q << "select NAME, RINEX_NAME, RINEX, ID from MISSION";
+	CV::Util::Spatialite::Statement st(cnn, q.str());
+	CV::Util::Spatialite::Recordset rec = st.recordset();
+	while (!rec.eof()) {
+		std::string mission = rec[0].toString();
+		std::string name = rec[1].toString();
+		std::vector<unsigned char> rinex = rec[2].toBlob();
+
+		Poco::Path p(fn);
+		p.append(mission);
+
+		Poco::File(p).createDirectories();
+
+		std::stringstream f;
+		f << p.toString() << Path::separator() << name << ".zip";
+		std::fstream blob(f.str().c_str(), std::ios_base::out | std::ios_base::binary);
+
+		const char* ptr = reinterpret_cast<const char*>(&rinex[0]);
+		blob.write(ptr, rinex.size());
+		blob.close();
+
+		std::string missionID = rec[3].toString();
+		std::stringstream stat;
+		stat << "select NAME, RINEX from STATION where ID_MISSION=?1";
+			
+		CV::Util::Spatialite::Statement mStat(cnn);
+		mStat.prepare(stat.str());
+		mStat[1] = missionID;
+		CV::Util::Spatialite::Recordset stations = mStat.recordset();
+		while (!stations.eof()) {
+			std::string station = stations[0].toString();
+			std::vector<unsigned char> blob = stations[1].toBlob();
+
+			Poco::Path statPath(p);
+			statPath.append(station);
+			Poco::File(statPath).createDirectories();
+
+			std::stringstream f;
+			f << statPath.toString() << Path::separator() << station << ".zip";
+			std::fstream outF(f.str().c_str(), std::ios_base::out | std::ios_base::binary);
+
+			const char* ptr = reinterpret_cast<const char*>(&blob[0]);
+			outF.write(ptr, blob.size());
+			outF.close();
+			
+			stations.next();
+		}
+		rec.next();
+	}
+
 	// every folder is a different mission
 	Poco::File dircnt(fn);
 	std::vector<std::string> files;

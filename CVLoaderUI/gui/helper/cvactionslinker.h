@@ -19,7 +19,7 @@ enum Action_t {
     NEW_PROJECT = 0,
     LOAD_PROJECT,
 	CLOSE_PROJECT,
-	REMOVE_PROJECT
+	NEW_MISSION
 };
 
 enum Signal_t {
@@ -34,6 +34,7 @@ public:
 
     QAction* add(QWidget* context, Action_t);
     QAction* add(Action_t);
+    QAction* get(Action_t);
 
 	bool trig(Action_t ev);
 

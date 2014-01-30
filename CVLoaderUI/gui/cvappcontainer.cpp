@@ -19,6 +19,9 @@ namespace GUI {
 using namespace Status;
 
 CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
+	Helper::CVSignalHandle::create(parentWidget());
+	Helper::CVActionHandle::create(parentWidget());
+
     _menu = new CVMenuBar(this);
     _toolbar = new CVToolBar(this);
     _status = new CVStatusBar(this);
@@ -35,6 +38,7 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
     box->addWidget(split, 1);
     QTableWidget* table = new QTableWidget(this);
     //table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //TODO: QT5
+    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch); //TODO: QT5
     box->addWidget(table);
     setLayout(box);
 
@@ -46,15 +50,14 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
 
     //connect(_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
 	connect(this, SIGNAL(controlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)), _details, SLOT(onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)));
-    connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertPhotogrammetry(Core::CVProject*)));
+    connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertProject(Core::CVProject*)));
 
-	Helper::CVSignalHandle::create(parentWidget());
 	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
 	linker->add(Helper::ITEM_SELECTED, _tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)));
 	linker->on(Helper::ITEM_SELECTED, _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
 }
 
-void CVAppContainer::insertPhotogrammetry(Core::CVProject* proj) {
+void CVAppContainer::insertProject(Core::CVProject* proj) {
     CVNodeInfo* info = NULL;
 
 	QString type;
@@ -87,7 +90,6 @@ void CVAppContainer::insertPhotogrammetry(Core::CVProject* proj) {
 void CVAppContainer::link() {
     QMenu* projects = _menu->add(tr("Progetti"));
 
-	Helper::CVActionHandle::create(parentWidget());
 	Helper::CVActionsLinker* linker = Helper::CVActionHandle::get();
 
 	QAction* newProj = linker->add(Helper::NEW_PROJECT);
@@ -105,9 +107,8 @@ void CVAppContainer::link() {
     linker->on(Helper::CLOSE_PROJECT, _tree, SLOT(onCloseProject()));
 	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(""), tr("Chiudi"));
 
-	/*QAction* removeProj = linker->add(Helper::REMOVE_PROJECT);
-    linker->on(Helper::REMOVE_PROJECT, &_prjManager, SLOT(onDeleteProject()));
-	_addToMenuAndToolbar(removeProj, projects, _toolbar, QIcon(""), tr("Rimuovi"));*/
+	QAction* newMission = linker->add(Helper::NEW_MISSION);
+    linker->on(Helper::NEW_MISSION, &_prjManager, SLOT(onCreateMission()));
 }
 
 void CVAppContainer::_addToMenuAndToolbar(QAction* a, QMenu* m, QToolBar* t, QIcon icon, QString name) {
