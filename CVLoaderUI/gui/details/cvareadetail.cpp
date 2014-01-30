@@ -26,11 +26,13 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) 
 	title(tr("Aree da cartografare"));
 	description(tr("File shape"));
 
+	QMenu* m = detailMenu();
+	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
+
     /*QMenu* menu = new QMenu(this);
-    QAction* add = menu->addAction(QIcon(""), "Carica");
-    QAction* edit = menu->addAction(QIcon(""), "Modifica");*/
+    QAction* add = menu->addAction(QIcon(""), "Carica");*/
 	
-    QFormLayout* form = new QFormLayout(this);
+    QFormLayout* form = new QFormLayout;
 
 	QLabel* lab = new QLabel("", this);
 	lab->setMinimumHeight(26);
@@ -60,6 +62,14 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) 
 
 CVAreaDetail::~CVAreaDetail() {
 
+}
+
+void CVAreaDetail::clearAll() {
+	_layer->remove();
+	for (int i = 0; i < _labels.size(); ++i) {
+		QLabel* lab = _labels.at(i);
+		lab->setText("");
+	}
 }
 
 void CVAreaDetail::dragEnterEvent(QDragEnterEvent* ev) {

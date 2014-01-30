@@ -25,6 +25,9 @@ public:
 	inline void body(QLayout* l) { _body->setLayout(l); }
 	inline QMenu* detailMenu() const { return _menu; }
 
+public slots:
+	virtual void clearAll() = 0;
+
 private:
 	QLabel* _title, * _descr;
 	QWidget* _body;

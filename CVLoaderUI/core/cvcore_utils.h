@@ -59,6 +59,7 @@ public:
 			c.addFile(p, p.getFileName());
 		}
 		c.close();
+		out.close();
 		return tot;
 	}
 
@@ -67,6 +68,7 @@ public:
 		std::ifstream in(origin.c_str(), std::ios::binary);
 		Poco::Zip::Decompress dec(in, Poco::Path(folder)); 
 		dec.decompressAllFiles();
+		in.close();
 		return tot;
 	}
 };

@@ -17,19 +17,19 @@ CVPlanDetail::CVPlanDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : C
 	cam->isPlanning(true);
 	CVCameraDetail* container = new CVCameraDetail(p, cam);
     addTab(container, "");
-    setTabToolTip(0, "Fotocamera");
+    setTabToolTip(0, tr("Fotocamera"));
 
 	CVFlyAxis_p* axis = new CVFlyAxis_p(p, static_cast<Core::CVShapeLayer*>(c->at(1)));
     addTab(axis, "");
-    setTabToolTip(1, "Assi di volo");
+    setTabToolTip(1, tr("Assi di volo"));
 
 	CVAreaDetail* area = new CVAreaDetail(p, static_cast<Core::CVShapeLayer*>(c->at(2)));
     addTab(area, "");
-    setTabToolTip(2, "Aree da cartografare");
+    setTabToolTip(2, tr("Aree da cartografare"));
     
 	CVDemDetail* dem = new CVDemDetail(p, static_cast<Core::CVFileInput*>(c->at(3)));
 	addTab(dem, "");
-    setTabToolTip(3, "DEM");
+    setTabToolTip(3, tr("DEM"));
 
 	_category = c;
 }

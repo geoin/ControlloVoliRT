@@ -26,8 +26,10 @@ CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : CVBaseDetail(p) {
 	title(tr("DEM"));
 	description(tr("File DEM"));
 
+	QMenu* m = detailMenu();
+	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 	
-    QFormLayout* form = new QFormLayout(this);
+    QFormLayout* form = new QFormLayout;
 
 	QLabel* lab = new QLabel("", this);
 	lab->setMinimumHeight(26);
@@ -105,6 +107,13 @@ CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : CVBaseDetail(p) {
 
 CVDemDetail::~CVDemDetail() {
 
+}
+
+void CVDemDetail::clearAll() {
+	_layer->remove();
+	for (int i = 0; i < _labels.size(); ++i) {
+		_labels.at(i)->setText("");
+	}
 }
 
 void CVDemDetail::dragEnterEvent(QDragEnterEvent* ev) {

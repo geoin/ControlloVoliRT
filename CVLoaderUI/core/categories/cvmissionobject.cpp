@@ -21,6 +21,31 @@ CVMissionObject::CVMissionObject(QObject* p, QString key) : CVObject(p), _isVali
 	_id = key;
 }
 
+bool CVMissionObject::remove() { 
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	bool ret = q->remove(
+		"MISSION", 
+		QStringList() << "ID=?1",
+		QVariantList() << _id
+	);
+
+	ret = q->remove(
+		"STATION", 
+		QStringList() << "ID_MISSION=?1",
+		QVariantList() << _id
+	);
+
+	return ret;
+}
+
 bool CVMissionObject::persist() { 
 	bool ret = false;
 
@@ -108,8 +133,6 @@ bool CVMissionObject::load() {
 		set.next();
 	}
 
-	static_cast<CVShapeLayer*>(at(3))->load();
-
 	_isValid = ret;
 	return ret; 
 }
@@ -129,12 +152,6 @@ void CVMissionObject::init() {
 	CVStations* stations = new CVStations(this);
 	stations->mission(id());
 	insert(stations);
-
-	CVShapeLayer* axis = new CVShapeLayer(this);
-	axis->uri(uri());
-	axis->table("AVOLOV");
-	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
-	insert(axis);
 }
 	
 }

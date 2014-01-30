@@ -26,6 +26,9 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 
 	title(tr("Stazioni permanenti"));
 	description(tr("File zip o coppie (.n .o)"));
+	
+	QMenu* m = detailMenu();
+	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 
 	QVBoxLayout* l = new QVBoxLayout;
 	_stations = new QListWidget(this);
@@ -35,6 +38,8 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 	_details->setMaximumHeight(100);
 	_details->setVisible(false);
 	_details->setSelectionMode(QAbstractItemView::NoSelection);
+	_details->setAlternatingRowColors(true);
+	_details->setFocusPolicy(Qt::NoFocus);
 
 	connect(_stations, SIGNAL(currentRowChanged(int)), this, SLOT(onStationSelected(int)));
 
@@ -51,26 +56,42 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 CVStationsDetail::~CVStationsDetail() {
 }
 
-void CVStationsDetail::onStationSelected(int item) {
-	CV::GUI::CVScopedCursor cur;
-
+void CVStationsDetail::clearAll() {
+	_handler->remove();
+	_stations->clear();
 	_details->clear();
-	Core::CVStation* i = _handler->at(item);
-	QStringList data;
-	i->list(data);
-	foreach (const QString& f, data) {
-		QListWidgetItem* it = new QListWidgetItem(_details);
-		it->setSizeHint(QSize(0, 26));
-		it->setText(f);
-		_details->insertItem(0, it);
-	}
-	_details->setVisible(true);
+}
+
+void CVStationsDetail::onStationSelected(int item) {
+	if (item < 0 || !_handler->count()) {
+		_details->clear();
+		_details->setVisible(false);
+	} else if (item < _handler->count()) {
+		CV::GUI::CVScopedCursor cur;
+
+		_details->clear();
+		Core::CVStation* i = _handler->at(item);
+		QStringList data;
+		i->list(data);
+		foreach (const QString& f, data) {
+			QListWidgetItem* it = new QListWidgetItem(_details);
+			it->setSizeHint(QSize(0, 26));
+			it->setText(f);
+			_details->insertItem(0, it);
+		}
+		_details->setVisible(true);
+	} 
+}
+
+void CVStationsDetail::onRemoveStation(int r) {
+	_handler->removeAt(r);
 }
 
 CVStationDelegate* CVStationsDetail::addItem(const QString& name) {
 	CVStationDelegate* d = new CVStationDelegate(this); 
 	d->title(name);
-	QListWidgetItem* item = new CVStationListItem(_stations, d);
+	CVStationListItem* item = new CVStationListItem(_stations, d);
+	connect(item, SIGNAL(removeStation(int)), this, SLOT(onRemoveStation(int)));
 	_stations->setItemWidget(item, d);
 	item->setSizeHint(QSize(0, 72));
 	_stations->insertItem(0, item);
@@ -191,8 +212,7 @@ void CVStationsDetail::dropEvent(QDropEvent* ev) {
 		return;
 	}
 
-	if (!_items.contains(rinex) && id.isEmpty()) {
-		_items << rinex;
+	if (id.isEmpty()) {
 		CVStationDelegate* del = addItem(rinex);
 		//TODO: other info
 		_handler->add(r);

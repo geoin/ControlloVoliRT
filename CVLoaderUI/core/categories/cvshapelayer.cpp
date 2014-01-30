@@ -19,6 +19,18 @@ bool CVShapeLayer::isValid() const {
 	return _isValid;
 }
 
+bool CVShapeLayer::remove() { 
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString());
+		cnn.remove_layer(_table.toStdString());
+	} catch (const CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	} 
+	return true; 
+}
+
 bool CVShapeLayer::persist() {
 	_isValid = false;
 	CV::Util::Spatialite::Connection cnn;

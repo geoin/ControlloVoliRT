@@ -16,6 +16,8 @@ class CVRinexDetail : public CVBaseDetail {
 public:
 	explicit CVRinexDetail(QWidget *parent, Core::CVRinex*);
 
+	virtual void clearAll();
+
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
     virtual void dragMoveEvent(QDragMoveEvent*);

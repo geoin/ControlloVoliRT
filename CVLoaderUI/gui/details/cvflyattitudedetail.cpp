@@ -1,4 +1,4 @@
-#include "cvflyaxis_p.h"
+#include "cvflyattitudedetail.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -18,15 +18,20 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-//TODO: needs cleanup, field generation
+//TODO: needs cleanup, all details should use the same hooks
 
-CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
-	title(tr("Assi di volo"));
-	description(tr("File shape"));
+CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVFlyAttitude* l) : CVBaseDetail(p) {
+	setAcceptDrops(true);
+
+	title(tr("Assetti di volo"));
+	description(tr("File degli assetti"));
 
 	QMenu* m = detailMenu();
 	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 
+    /*QMenu* menu = new QMenu(this);
+    QAction* add = menu->addAction(QIcon(""), "Carica");*/
+	
     QFormLayout* form = new QFormLayout;
 
 	QLabel* lab = new QLabel("", this);
@@ -35,35 +40,11 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
 	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 	_labels << lab;
 
-	QLabel* n = new QLabel("Ente", this);
+	QLabel* n = new QLabel("Record inseriti", this);
 	n->setMinimumHeight(26);
 	n->setMaximumHeight(26);
 	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
 
-	form->addRow(n, lab);
-
-	lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
-
-	n = new QLabel("DT", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
-	form->addRow(n, lab);
-	
-	lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
-
-	n = new QLabel("RID", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
 	form->addRow(n, lab);
 
 	body(form);
@@ -71,15 +52,19 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
 	_layer = l;
 
 	if (_layer->isValid()) {
-		QStringList& info = _layer->data();
+		QStringList info = _layer->data();
 		for (int i = 0; i < info.size(); ++i) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
 		}
 	}
 }
- 
-void CVFlyAxis_p::clearAll() {
+
+CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
+
+}
+
+void CVFlyAttitudeDetail::clearAll() {
 	_layer->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
@@ -87,39 +72,30 @@ void CVFlyAxis_p::clearAll() {
 	}
 }
 
-CVFlyAxis_p::~CVFlyAxis_p() {
-
-}
-
-void CVFlyAxis_p::dragEnterEvent(QDragEnterEvent* ev) {
+void CVFlyAttitudeDetail::dragEnterEvent(QDragEnterEvent* ev) {
     const QMimeData* mime = ev->mimeData();
     QList<QUrl> list = mime->urls();
 
     if (list.size() != 1) {
         ev->ignore();
     } else {
-        _uri = list.at(0).toLocalFile();
-        _file.reset(new QFileInfo(_uri));
-        if (_file->suffix().toLower() != "shp") {
-            _file.reset();
-            ev->ignore();
-        } else {
-            ev->accept();
-        }
+        QString uri = list.at(0).toLocalFile();
+        _file.reset(new QFileInfo(uri));
+		ev->accept();
     }
 }
 
-void CVFlyAxis_p::dragMoveEvent(QDragMoveEvent* ev) {
+void CVFlyAttitudeDetail::dragMoveEvent(QDragMoveEvent* ev) {
     ev->accept();
 }
 
-void CVFlyAxis_p::dragLeaveEvent(QDragLeaveEvent* ev) {
+void CVFlyAttitudeDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
     ev->accept();
 }
 
-void CVFlyAxis_p::dropEvent(QDropEvent* ev) {
+void CVFlyAttitudeDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	_layer->shape(_file->absolutePath() + QDir::separator() + _file->baseName());
+	_layer->origin(_file->absoluteFilePath());
 	if (_layer->persist()) {
 		QStringList& info = _layer->data();
 		for (int i = 0; i < _labels.size(); ++i) {

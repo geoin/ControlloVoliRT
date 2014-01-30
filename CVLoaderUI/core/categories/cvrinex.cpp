@@ -11,7 +11,6 @@
 #include <QUuid>
 #include <QRegExp>
 
-//TODO: this must be the base class, move all specialized logic in derived
 #include "core/cvcore_utils.h"
 #include <sstream>
 
@@ -28,6 +27,28 @@ CVRinex::~CVRinex() {
 
 bool CVRinex::isValid() const {
 	return _isValid;
+}
+
+bool CVRinex::remove() {
+	_isValid = false;
+	bool ret = false;
+
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	ret = q->update(
+		"MISSION", 
+		QStringList() << "RINEX=?1" <<  "RINEX_NAME= ?2",
+		QStringList() << "ID=?3",
+		QVariantList() << QByteArray("0") << QString("") << mission()
+	);
+	return ret;
 }
 
 bool CVRinex::persist() {

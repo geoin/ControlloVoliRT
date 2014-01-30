@@ -30,17 +30,17 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : CVBaseDetail(p
 
     QMenu* menu = detailMenu();
     QAction* open = menu->addAction(QIcon(""), tr("Apri"));
-    QAction* editCam = menu->addAction(QIcon(""), tr("Modifica"));
     QAction* clearCam = menu->addAction(QIcon(""), tr("Cancella"));
     //TODO: move to controller
     connect(this, SIGNAL(cameraInput(QString)), SLOT(onCameraInput(QString)));
 
     connect(open, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
+    connect(clearCam, SIGNAL(triggered()), this, SLOT(clearAll()));
+
+    //QAction* editCam = menu->addAction(QIcon(""), tr("Modifica"));
     //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
-    //connect(clearCam, SIGNAL(triggered()), this, SLOT(onClearCamParameters()));
 
-
-    QFormLayout* form = new QFormLayout(this);
+    QFormLayout* form = new QFormLayout;
 
     QPalette pal = palette();
     _params.insert("FOC", lineEdit(this, pal));
@@ -179,6 +179,11 @@ void CVCameraDetail::view() {
 	_params.value("YP")->setText(QString::number(c.yp, 'f', 4));
 
 	 _note->setPlainText(c.descr.c_str());
+}
+
+void CVCameraDetail::clearAll() {
+	_cam->remove();
+	view();
 }
 
 void CVCameraDetail::onLoadCamParameters() {

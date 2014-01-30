@@ -22,6 +22,8 @@ class CVFlyAxis_p : public CVBaseDetail {
 public:
 	CVFlyAxis_p(QWidget *parent, Core::CVShapeLayer*);
 	~CVFlyAxis_p();
+	
+	virtual void clearAll();
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

@@ -133,6 +133,8 @@ void CVMissionListDetails::add(Core::CVMissionObject* m) {
     _bar->title(m->name());
     _bar->previous()->setEnabled(stack->count() > 1);
     _bar->next()->setEnabled(stack->count() > 1);
+
+	assert(stack->count() == _category->count());
 }
 
 void CVMissionListDetails::onAddMission() {
@@ -176,9 +178,15 @@ void CVMissionListDetails::onRemoveMission() {
     QWidget* actual = stack->currentWidget();
     if (actual) {
         CVMissionDetail* w = static_cast<CVMissionDetail*>(actual);
+		int row = stack->currentIndex();
+		_category->at(row)->remove();
+		_category->remove(row);
+
         QString key = w->key();
         stack->removeWidget(w);
         w->deleteLater();
+
+		assert(stack->count() == _category->count());
 
         QList<QAction*> actions = _bar->menu()->actions();
         foreach (QAction* action, actions) {

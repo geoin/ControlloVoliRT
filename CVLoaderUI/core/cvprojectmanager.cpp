@@ -7,6 +7,7 @@
 #include "core/sql/querybuilder.h"
 
 #include "core/categories/cvcamera.h"
+#include "core/categories/cvflyattitude.h"
 #include "core/categories/cvshapelayer.h"
 #include "core/categories/cvfileinput.h"
 #include "core/categories/cvmissionobject.h"
@@ -96,9 +97,24 @@ CVCategory* CVProjectManager::_fly(CVProject* proj, bool b) {
 	CVCategory* cat = new CVCategory(CVCategory::FLY, proj);
 	cat->uri(proj->db());
 
-	cat->insert(plan->at(1));
+	CVShapeLayer* axis = new CVShapeLayer(proj);
+	axis->uri(proj->path);
+	axis->table("AVOLOV");
+	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	cat->insert(axis);
+	if (b) {
+		axis->load();
+	}
+
 	cat->insert(plan->at(2));
-	cat->insert(plan->at(3));
+	cat->insert(plan->at(3), false);
+
+	CVFlyAttitude* fa = new CVFlyAttitude(proj);
+	fa->uri(proj->path);
+	cat->insert(fa);
+	if (b) {
+		fa->load();
+	}
 	return cat;
 }
 

@@ -46,6 +46,8 @@ public:
 
 	inline CVObject* at(int i) const { return _objects.at(i); }
 
+	inline void remove(int i) { _objects.removeAt(i); }
+
 	inline bool isComplete() const { 
 		foreach(CVObject* obj, _objects) {
 			if (!obj->isValid()) {

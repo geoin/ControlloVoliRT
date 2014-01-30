@@ -1,5 +1,5 @@
-#ifndef CV_FILE_INPUT_H
-#define CV_FILE_INPUT_H
+#ifndef CV_FLY_ATTITUDE_H
+#define CV_FLY_ATTITUDE_H
 
 #include "core/categories/cvcategory.h"
 
@@ -8,12 +8,12 @@
 namespace CV {
 namespace Core {
 
-class CVFileInput : public CVObject {
+class CVFlyAttitude : public CVObject {
 	Q_OBJECT
 
 public:
-	CVFileInput(QObject *parent);
-	~CVFileInput();
+	CVFlyAttitude(QObject *parent);
+	~CVFlyAttitude();
 
 	virtual bool isValid() const;
 	virtual bool persist();
@@ -24,17 +24,14 @@ public:
 	inline void origin(const QString& file) { _origin = file; }
 	inline const QString& origin() const { return _origin; }
 
-	inline void target(const QString& file) { _target = file; }
-	inline const QString& target() const { return _target; }
-
 	QStringList& data() { return _data; }
 
 private:
-	QString _origin, _target;
+	QString _origin;
 	QStringList _data;
 };
 
 } // namespace Core
 } // namespace CV
 
-#endif // CV_FILE_INPUT_H
+#endif // CV_FLY_ATTITUDE_H

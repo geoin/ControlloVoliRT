@@ -117,14 +117,54 @@ bool CVStation::load() {
 		return false;
 	}
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	CV::Util::Spatialite::Recordset set = q->select(
+	/*CV::Util::Spatialite::Recordset set = q->select(
 		QStringList() << "NAME",
 		QStringList() << "STATION", 
 		QStringList() << "ID = ?1",
 		QVariantList() << id()
-	);
+	);*/
 
 	return true; //EMPTY
+}
+
+bool CVStations::remove() {
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	bool ret = q->remove(
+		"STATION", 
+		QStringList() << "ID_MISSION=?1",
+		QVariantList() << mission()
+	);
+
+	return ret;
+}
+
+void CVStations::removeAt(int i) { 
+	QString id = _ps.at(i)->id();
+
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	bool ret = q->remove(
+		"STATION", 
+		QStringList() << "ID=?1",
+		QVariantList() << id
+	);
+
+	_ps.removeAt(i); 
 }
 
 QString CVStations::getZipFromStation(const QString& name, const QString& outPath, QString& id) {

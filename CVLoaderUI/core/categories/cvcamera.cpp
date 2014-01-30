@@ -132,7 +132,7 @@ bool CVCamera::load(const QString& mId) {
 	return ret; 
 }
 
-bool CVCamera::load() { 
+bool CVCamera::remove() { 
 	CV::Util::Spatialite::Connection cnn;
 	try {
 		cnn.open(uri().toStdString()); 
@@ -141,8 +141,26 @@ bool CVCamera::load() {
 		return false;
 	}
 
-	bool ret = cnn.is_valid();
-	if (!ret) {
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+
+	bool ret;
+	ret = q->remove(
+		"CAMERA",
+		QStringList() << "ID = ?1",
+		QVariantList() << _cam.id.c_str()
+	);
+
+	_cam = Camera();
+	_isValid = false;
+	return ret; 
+}
+
+bool CVCamera::load() { 
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString()); 
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
 		return false;
 	}
 
@@ -178,7 +196,7 @@ bool CVCamera::load() {
 		return false;
 	}
 
-	return ret; 
+	return true; 
 }
 
 } // namespace Core

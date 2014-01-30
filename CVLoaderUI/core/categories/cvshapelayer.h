@@ -19,7 +19,7 @@ public:
 	virtual bool persist();
 	virtual bool load();
 	
-	virtual bool remove() { return true; }
+	virtual bool remove();
 
 	inline void shape(const QString& shp) { _shp = shp; }
 	inline QString shape() { return _shp; }

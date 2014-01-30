@@ -9,6 +9,7 @@
 #include <QScopedPointer>
 #include <QFileInfo>
 #include <QList>
+#include <QShowEvent>
 
 class QLabel;
 
@@ -23,11 +24,17 @@ public:
 	CVDemDetail(QWidget *parent, Core::CVFileInput*);
 	~CVDemDetail();
 
+	virtual void clearAll();
+
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
     virtual void dragMoveEvent(QDragMoveEvent*);
     virtual void dragLeaveEvent(QDragLeaveEvent*);
     virtual void dropEvent(QDropEvent*);
+	virtual void showEvent(QShowEvent* event) {
+	
+	}
+
 
 private:
     QScopedPointer<QFileInfo> _file;

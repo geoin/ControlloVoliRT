@@ -84,7 +84,9 @@ bool CVProject::create(const QString& d) {
 	cnn.begin_transaction();
 	foreach(QString t, tables) {
 		try {
-			cnn.execute_immediate(t.simplified().toStdString());
+			if (!t.isEmpty()) {
+				cnn.execute_immediate(t.simplified().toStdString());
+			}
 		} catch (CV::Util::Spatialite::spatialite_error& err) {
 			Q_UNUSED(err)
 			cnn.rollback_transaction();

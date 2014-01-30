@@ -32,10 +32,12 @@ public slots:
 	void onRemove() {
 		QListWidget* list = listWidget();
 		int row = list->row(this);
+		emit removeStation(row);
 		QScopedPointer<QListWidgetItem>(list->takeItem(row));
-
-		//TODO: remove from db;
 	}
+
+signals:
+	void removeStation(int);
 
 private:
 	QWidget* _delegate;
@@ -48,10 +50,13 @@ public:
 	CVStationsDetail(QWidget *parent, Core::CVStations*);
 	~CVStationsDetail();
 
+	virtual void clearAll();
+
 	CVStationDelegate* addItem(const QString&);
 
 public slots:
 	void onStationSelected(int);
+	void onRemoveStation(int);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -65,7 +70,6 @@ private:
 
 	QListWidget* _stations, * _details;
 	Core::CVStations* _handler;
-	QSet<QString> _items;
 };
 
 } // namespace Details

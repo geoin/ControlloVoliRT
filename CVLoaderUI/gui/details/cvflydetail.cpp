@@ -2,6 +2,7 @@
 #include "cvflyaxis_p.h"
 #include "cvdemdetail.h"
 #include "cvareadetail.h"
+#include "cvflyattitudedetail.h"
 
 #include <QLabel>
 
@@ -13,15 +14,19 @@ CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : CVB
 	//TODO
 	CVFlyAxis_p* axis = new CVFlyAxis_p(p, static_cast<Core::CVShapeLayer*>(c->at(0)));
     addTab(axis, "");
-    setTabToolTip(0, "Assi di volo");
+    setTabToolTip(0, tr("Assi di volo"));
 
 	CVAreaDetail* area = new CVAreaDetail(p, static_cast<Core::CVShapeLayer*>(c->at(1)));
     addTab(area, "");
-    setTabToolTip(1, "Aree da cartografare");
+    setTabToolTip(1, tr("Aree da cartografare"));
     
 	CVDemDetail* dem = new CVDemDetail(p, static_cast<Core::CVFileInput*>(c->at(2)));
 	addTab(dem, "");
-    setTabToolTip(2, "DEM");
+    setTabToolTip(2, tr("DEM"));
+
+	CVFlyAttitudeDetail* fs = new CVFlyAttitudeDetail(p, static_cast<Core::CVFlyAttitude*>(c->at(3)));
+	addTab(fs, "");
+    setTabToolTip(3, tr("File degli assetti"));
 
 	_category = c;
 }
