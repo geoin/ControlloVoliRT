@@ -17,7 +17,6 @@ macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
 }
 
-LIBS += -lspatialite_i
 CONFIG(debug, debug|release) {
         LIBS += -lPocoUtild -lphoto_utild -ldem_interpolated -lspatialite4 -lsqlite3_i -lCVutild -lgdald_i
         TARGET = $$join(TARGET,,,d)

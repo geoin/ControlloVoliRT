@@ -17,11 +17,11 @@ macx {
 }
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoZipd
+        LIBS += -lPocoFoundationd -lPocoZipd -llaslibd
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoFoundation -lPocoZip
+        LIBS += -lPocoFoundation -lPocoZip -llaslib
 }
 
 win32 {
@@ -37,6 +37,7 @@ SOURCES += \
     geom.cpp \
     grid.cpp \
     triangle.c \
+    ../common/parser.cpp
 
 HEADERS +=\
     pslg.h \

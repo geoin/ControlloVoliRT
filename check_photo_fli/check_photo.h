@@ -55,7 +55,7 @@ private:
 	bool _read_cam(void);
 	bool _read_vdp(std::map<std::string, VDP>& vdps);
 	bool _calc_vdp(std::map<std::string, VDP>& vdps);
-
+	bool _strip_cam(void); // strip camera association
 	bool _read_dem(void);
 	std::string _get_key(const std::string& val);
 
@@ -96,9 +96,12 @@ private:
 	docbook _dbook;
 	Doc_Item _article;
 
-	std::map<std::string, VDP> _vdps;
-	std::map<std::string, VDP> _vdps_plan;
-	Camera	_cam;
+	std::map<std::string, VDP> _vdps; // map photo name  - photo attitude
+	std::map<std::string, VDP> _vdps_plan; // same but for planned
+	std::map<std::string, Camera> _cams;
+	std::map<std::string, std::string> _map_mission_cam;
+	std::map<std::string, Camera> _map_strip_cam;
+	Camera	_cam_plan; // camera for planned flight
 	DSM_Factory* _df;
 
 	double _GSD, _MAX_GSD;

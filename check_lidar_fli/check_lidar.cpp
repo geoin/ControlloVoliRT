@@ -70,77 +70,52 @@ void check_lidar::defineOptions(OptionSet& options)
 			.callback(OptionCallback<check_lidar>(this, &check_lidar::handleHelp)));
 
 	options.addOption(
-		Option("prj", "j", "Specifica il file di progetto")
+		Option("dir", "d", "Specifica il file di progetto")
 			.required(false)
 			.repeatable(false)
 			.argument("shape-file")
-			.callback(OptionCallback<check_lidar>(this, &check_lidar::handlePrj)));
-	
-	//options.addOption(
-	//	Option("pline", "p", "Specifica il file con le linee di volo proposte")
-	//		.required(false)
-	//		.repeatable(false)
-	//		.argument("shape-file")
-	//		.callback(OptionCallback<check_ta>(this, &check_ta::handlePline)));
-
-	//options.addOption(
-	//	Option("fline", "i", "Specifica il file con le linee di volo effettuate")
-	//		.required(false)
-	//		.repeatable(false)
-	//		.argument("shape-file")
-	//		.callback(OptionCallback<check_ta>(this, &check_ta::handleFline)));
-
-	//options.addOption(
-	//	Option("pcent", "e", "Specifica il file con i centri di presa")
-	//		.required(false)
-	//		.repeatable(false)
-	//		.argument("file di testo")
-	//		.callback(OptionCallback<check_ta>(this, &check_ta::handlePcent)));
-	
-	/*options.addOption(
-		Option("carto", "c", "Specifica il file con le aree da cartografare")
-			.required(false)
-			.repeatable(false)
-			.argument("shape-file")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleCarto)));
+			.callback(OptionCallback<check_lidar>(this, &check_lidar::handlePrjDir)));
 	
 	options.addOption(
-		Option("cam", "m", "Specifica il file ascii con focale la focale della fotocamera")
+		Option("flight", "f", "Specifica operazione di verifica del volo")
 			.required(false)
 			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleCam)));
-
+			.callback(OptionCallback<check_lidar>(this, &check_lidar::handleFlight)));
+			
 	options.addOption(
-		Option("dtm", "g", "Specifica il file con il modello numerico del terreno")
+		Option("proj", "p", "Specifica operazione di verifica del progetto di volo")
 			.required(false)
 			.repeatable(false)
-			.argument("file di testo")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleDtm)));*/
+			.callback(OptionCallback<check_lidar>(this, &check_lidar::handleProject)));
+	options.addOption(
+		Option("scale", "s", "Specifica la scala di lavoro")
+			.required(false)
+			.repeatable(false)
+			.argument("value")
+			.callback(OptionCallback<check_lidar>(this, &check_lidar::handleScale)));
 }
-void check_lidar::handleCam(const std::string & name, const std::string & value)
+void check_lidar::handleFlight(const std::string& name, const std::string& value)
 {
-	int a = 1;
+	_lix.set_checkType(lidar_exec::fli_type);
 }
-void check_lidar::handlePrj(const std::string & name, const std::string & value) {
-	int a = 1;
+void check_lidar::handleProject(const std::string& name, const std::string& value)
+{
+	_lix.set_checkType(lidar_exec::Prj_type);
 }
-void check_lidar::handleHelp(const std::string& name, const std::string& value) {
+void check_lidar::handlePrjDir(const std::string & name, const std::string & value)
+{
+	_lix.set_proj_dir(value);
+}
+void check_lidar::handleScale(const std::string & name, const std::string & value)
+{
+}
+void check_lidar::handleHelp(const std::string& name, const std::string& value)
+{
 	_helpRequested = true;
 	displayHelp();
 	stopOptionsProcessing();
 }
 
-void check_lidar::handleDefine(const std::string& name, const std::string& value)
-{
-	defineProperty(value);
-}
-
-void check_lidar::handleConfig(const std::string& name, const std::string& value)
-{
-	loadConfiguration(value);
-}
-	
 void check_lidar::displayHelp()
 {
 	HelpFormatter helpFormatter(options());
@@ -150,53 +125,12 @@ void check_lidar::displayHelp()
 	helpFormatter.format(std::cout);
 }
 	
-void check_lidar::defineProperty(const std::string& def)
-{
-	std::string name;
-	std::string value;
-	std::string::size_type pos = def.find('=');
-	if (pos != std::string::npos) {
-		name.assign(def, 0, pos);
-		value.assign(def, pos + 1, def.length() - pos);
-	} else 
-		name = def;
-	config().setString(name, value);
-}
-
 int check_lidar::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
-        _lix.set_cam_name("C:/Google_drive/Regione Toscana Tools/Dati_test/Vexcel_ucxp_263.xml");
-        _lix.set_vdp_name("C:/Google_drive/Regione Toscana Tools/Dati_test/180710_CAST_PESC_CP.txt");
-        _lix.set_out_folder("C:/Google_drive/Regione Toscana Tools/Dati_test/Out");
-        _lix.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/cast_pescaia");
-
         _lix.run();
 	}
 	return Application::EXIT_OK;
 }
 	
-void check_lidar::printProperties(const std::string& base)
-{
-	AbstractConfiguration::Keys keys;
-	config().keys(base, keys);
-	if ( keys.empty() ) {
-		if ( config().hasProperty(base) ) {
-			std::string msg;
-			msg.append(base);
-			msg.append(" = ");
-			msg.append(config().getString(base));
-			logger().information(msg);
-		}
-	} else {
-		for ( AbstractConfiguration::Keys::const_iterator it = keys.begin(); it != keys.end(); ++it ) {
-			std::string fullKey = base;
-			if ( !fullKey.empty() )
-				fullKey += '.';
-			fullKey.append(*it);
-			printProperties(fullKey);
-		}
-	}
-}
-
 POCO_APP_MAIN(check_lidar)

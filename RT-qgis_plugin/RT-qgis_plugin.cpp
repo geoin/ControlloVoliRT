@@ -658,7 +658,7 @@ void QgsRTtoolsPlugin::unload()
 /*********************** SLOTS attivazione comandi ************/
 void QgsRTtoolsPlugin::set_prj()
 {
-    QString name = "CVloader_ui.exe";
+    QString name = "CVloader.exe"; //"CVloader_ui.exe";
     QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
     QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
 

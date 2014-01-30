@@ -32,10 +32,12 @@
 #include "Poco/sharedPtr.h"
 #include <fstream>
 #include <sstream>
+#include "ogr_geometry.h"
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define REFSCALE "RefScale_2000"
+#define GEO_DB_NAME "geo.sqlite"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -77,6 +79,13 @@ std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
+std::string get_strip(const std::string& nome)
+{
+	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	if ( tok.count() != 2 )
+		return "";
+	return tok[0];
+}
 /***************************************************************************************/
 lidar_exec::~lidar_exec() 
 {
@@ -89,6 +98,38 @@ bool lidar_exec::run()
 	// initialize docbook xml file
 	_init_document();
 
+		Path geodb(_prj_folder, GEO_DB_NAME);
+		CV::Util::Spatialite::Connection cnn;
+		cnn.create( geodb.toString() ); // Create or open spatialite db
+		if ( cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA )
+			cnn.initialize_metdata(); // Initialize metadata (if already initialized noop)
+
+		Path avolo(_prj_folder, "assi volo");
+		avolo = Path(avolo.toString(), "lvolo");
+		int nrows = cnn.load_shapefile(avolo.toString(),
+			"lvolo",
+                   "CP1252",
+                   32632,
+                   "geom",
+                   true,
+                   false,
+                   false);
+
+
+	// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
+	_read_lidar();
+	_get_strips();
+
+	// se volo lidar confronta gli assi progettati con quelli effettivi
+
+	// verifica che le strip ricoprano l'area da cartografare
+
+	// determina il ricoprimento tra strisciate e la loro lunghezza, li confronta con i valori di riferimento
+
+	// se disponibile la velocità calcola la densità media dei pt
+
+	// per il volo verifica i punti dell'area di test
+
 
 	// write the result on the docbook report
 	_dbook.write();
@@ -96,46 +137,25 @@ bool lidar_exec::run()
 	return true;
 }
 
-void lidar_exec::set_vdp_name(const std::string& nome)
-{
-	// first results file used for comparison and control point check
-	_vdp_name = nome;
-}
-
-void lidar_exec::set_cam_name(const std::string& nome)
-{
-	_cam_name = nome;
-}
-void lidar_exec::set_out_folder(const std::string& nome)
-{
-	_out_folder = nome;
-}
 void lidar_exec::set_proj_dir(const std::string& nome)
 {
-	_proj_dir = nome;
+	_prj_folder = nome;
+}
+void lidar_exec::set_checkType(Check_Type t)
+{
+	_type = t;
 }
 bool lidar_exec::_read_ref_val()
 {
-	Path ref_file(_proj_dir, "*");
+	Path ref_file(_prj_folder, "*");
 	ref_file.popDirectory();
 	ref_file.setFileName("Regione_Toscana_RefVal.xml");
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
 		// toll of projection center
-		_T_CP = pConf->getDouble(get_key("T_CP"));
-		// toll for pitch and roll
-		_T_PR = pConf->getDouble(get_key("T_PR"));
-		//toll for headin angle
-		_T_H = pConf->getDouble(get_key("T_H"));
-		// toll of planimetric control points
-		_TP_PA = pConf->getDouble(get_key("TP_PA"));
-		// toll of altimetric control points
-		_TA_PA = pConf->getDouble(get_key("TA_PA"));
+		//_T_CP = pConf->getDouble(get_key("T_CP"));
 
-		_T_CP *= 3 * sqrt(2.);
-		_T_PR *= 3 * sqrt(2.);
-		_T_H *=  3 * sqrt(2.);
 	} catch (...) {
 		return false;
 	}
@@ -143,7 +163,7 @@ bool lidar_exec::_read_ref_val()
 }
 void lidar_exec::_init_document()
 {
-	Path doc_file(_proj_dir, "*");
+	Path doc_file(_prj_folder, "*");
 	doc_file.setFileName("check_ta.xml");
 	_dbook.set_name(doc_file.toString());
 	
@@ -158,11 +178,11 @@ Doc_Item lidar_exec::_initpg1()
 	sec->add_item("para")->append("Valori di riferimento:");
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
-	ss << "Tolleranza planimetrica " << _TP_PA << " m";
-	itl->add_item("listitem")->append(ss.str());
-	std::stringstream ss1;
-	ss1 << "Tolleranza altimetrica " << _TA_PA << " m";
-	itl->add_item("listitem")->append(ss1.str());
+	//ss << "Tolleranza planimetrica " << _TP_PA << " m";
+	//itl->add_item("listitem")->append(ss.str());
+	//std::stringstream ss1;
+	//ss1 << "Tolleranza altimetrica " << _TA_PA << " m";
+	//itl->add_item("listitem")->append(ss1.str());
 	
 	Doc_Item tab = sec->add_item("table");
 	tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
@@ -188,29 +208,24 @@ Doc_Item lidar_exec::_initpg1()
 }
 
 
-bool lidar_exec::_read_cam()
+bool lidar_exec::_read_lidar()
 {
+	std::string lidar_name = Path(_prj_folder, "lidar.xml").toString();
 	AutoPtr<XMLConfiguration> pConf;
 	try {
-		pConf = new XMLConfiguration(_cam_name);
-		_cam.foc = atof(pConf->getString("FOC").c_str());
-		_cam.dimx = atof(pConf->getString("DIMX").c_str());
-		_cam.dimy = atof(pConf->getString("DIMY").c_str());
-		_cam.dpix = atof(pConf->getString("DPIX").c_str());
-		_cam.xp = atof(pConf->getString("XP", "0").c_str());
-		_cam.yp = atof(pConf->getString("YP", "0").c_str());
+		pConf = new XMLConfiguration(lidar_name);
+		_lidar.fov = atof(pConf->getString("FOV").c_str());
+		_lidar.ifov = atof(pConf->getString("IFOV").c_str());
+		_lidar.freq = atof(pConf->getString("FREQ").c_str());
+		_lidar.scan = atof(pConf->getString("SCAN_RATE").c_str());
 	} catch (...) {
 		return false;
 	}
 	return true;
 }
 
-std::string lidar_exec::_get_strip(const std::string& nome)
+void lidar_exec::_get_strips()
 {
-	// extract strip name from image name
-	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[0];
+
 }
 
