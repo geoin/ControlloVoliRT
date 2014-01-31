@@ -33,48 +33,27 @@
 #include <fstream>
 #include <sstream>
 #include "ogr_geometry.h"
+#include "dem_interpolate/dsm.h"
+#include "common/util.h"
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define REFSCALE "RefScale_2000"
 #define GEO_DB_NAME "geo.sqlite"
+#define DEM "dem.asc"
+#define ASSI_VOLO "lvolo"
+#define SIGLA_PRJ "CSTP"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::SharedPtr;
 using Poco::Path;
+using namespace CV::Util::Spatialite;
+using namespace CV::Util::Geometry;
 /**************************************************************************/
-enum CHECK_TYPE {
-	less_ty = 0,
-	great_ty = 1,
-	abs_less_ty = 2,
-	between_ty =3
-};
-bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-{
-	bool rv = true;
-	switch ( ty ) {
-		case less_ty:
-			rv = val < tol1;
-			break;
-		case great_ty:
-			rv = val > tol1;
-			break;
-		case abs_less_ty:
-			rv = fabs(val) < tol1;
-			break;
-		case between_ty:
-			rv = val > tol1 && val < tol2;
-			break;
-	}
-	if ( !rv ) {
-		Doc_Item r = row->add_item("entry", attr);
-		r->add_instr("dbfo", "bgcolor=\"red\"");
-		r->append(val);
-	} else
-		row->add_item("entry", attr)->append(val);
-	return rv;
-}
+typedef std::vector<unsigned char> Blob;
+
+
 std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
@@ -98,16 +77,26 @@ bool lidar_exec::run()
 	// initialize docbook xml file
 	_init_document();
 
-		Path geodb(_prj_folder, GEO_DB_NAME);
-		CV::Util::Spatialite::Connection cnn;
+		Path geodb(_proj_dir, GEO_DB_NAME);
 		cnn.create( geodb.toString() ); // Create or open spatialite db
 		if ( cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA )
 			cnn.initialize_metdata(); // Initialize metadata (if already initialized noop)
 
-		Path avolo(_prj_folder, "assi volo");
+		Path avolo(_proj_dir, "assi volo");
 		avolo = Path(avolo.toString(), "lvolo");
 		int nrows = cnn.load_shapefile(avolo.toString(),
-			"lvolo",
+			"lvolop",
+                   "CP1252",
+                   32632,
+                   "geom",
+                   true,
+                   false,
+                   false);
+
+		Path carto(_proj_dir, "aree da cartografare");
+		carto = Path(carto.toString(), "new1mas-car");
+		nrows = cnn.load_shapefile(carto.toString(),
+			"carto",
                    "CP1252",
                    32632,
                    "geom",
@@ -118,7 +107,13 @@ bool lidar_exec::run()
 
 	// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 	_read_lidar();
-	_get_strips();
+	// read digital terrain model
+	_dem_name = Path(_proj_dir, DEM).toString();
+	if ( !_read_dem() )
+		throw std::runtime_error("Modello numerico non trovato");
+
+	_process_strips();
+	_process_block();
 
 	// se volo lidar confronta gli assi progettati con quelli effettivi
 
@@ -139,7 +134,7 @@ bool lidar_exec::run()
 
 void lidar_exec::set_proj_dir(const std::string& nome)
 {
-	_prj_folder = nome;
+	_proj_dir = nome;
 }
 void lidar_exec::set_checkType(Check_Type t)
 {
@@ -147,7 +142,7 @@ void lidar_exec::set_checkType(Check_Type t)
 }
 bool lidar_exec::_read_ref_val()
 {
-	Path ref_file(_prj_folder, "*");
+	Path ref_file(_proj_dir, "*");
 	ref_file.popDirectory();
 	ref_file.setFileName("Regione_Toscana_RefVal.xml");
 	AutoPtr<XMLConfiguration> pConf;
@@ -163,7 +158,7 @@ bool lidar_exec::_read_ref_val()
 }
 void lidar_exec::_init_document()
 {
-	Path doc_file(_prj_folder, "*");
+	Path doc_file(_proj_dir, "*");
 	doc_file.setFileName("check_ta.xml");
 	_dbook.set_name(doc_file.toString());
 	
@@ -210,7 +205,7 @@ Doc_Item lidar_exec::_initpg1()
 
 bool lidar_exec::_read_lidar()
 {
-	std::string lidar_name = Path(_prj_folder, "lidar.xml").toString();
+	std::string lidar_name = Path(_proj_dir, "lidar.xml").toString();
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(lidar_name);
@@ -223,9 +218,241 @@ bool lidar_exec::_read_lidar()
 	}
 	return true;
 }
-
-void lidar_exec::_get_strips()
+bool lidar_exec::_read_dem()
 {
+	_df = new DSM_Factory;
+	if ( !_df->Open(_dem_name, false) )
+		return false;
+	return true;
+}
+void lidar_exec::_process_strips()
+{
+	// create tthe table for the strip footprint
+	std::string table = std::string("STRIP") + (_type == Prj_type ? "P" : "V");
+	cnn.remove_layer(table);
+	std::cout << "Layer:" << table << std::endl;
 
+	// create the model table
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
+		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
+		"Z_MISSION TEXT NOT NULL)";	// overlap longitudinale
+	cnn.execute_immediate(sql.str());
+
+	// add the geometry column
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POLYGON'," <<
+		"'XY')";
+	cnn.execute_immediate(sql1.str());
+
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, geom) \
+		VALUES (?1, ?2, ?3, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());
+
+	// select data from flight lines
+	table = std::string(ASSI_VOLO) + (_type == Prj_type ? "P" : "V");
+	std::stringstream sql3;
+	sql3 << "SELECT A_VOL_QT, A_VOL_CS, mission, AsBinary(geom) geom from " << table;
+	Statement stm1(cnn);
+	stm1.prepare(sql3.str());
+	Recordset rs = stm1.recordset();
+
+	std::cout << "Layer:" << table << std::endl;
+
+	DSM* ds = _df->GetDsm();
+
+	double teta2 = DEG_RAD(_lidar.fov / 2.);
+
+	while ( !rs.eof() ) {
+		OGRGeomPtr pol = (Blob) rs["geom"];
+		OGRPoint* p0 = NULL;
+		OGRPoint* p1 = NULL;
+
+		OGRGeometry* og = (OGRGeometry*) pol;
+		OGRLineString* ls = (OGRLineString*)og;
+		int n = ls->getNumPoints();
+		if ( n != 2 ) // each line must have only two points
+			throw std::runtime_error("asse di volo non valido");
+
+		double z = rs[0];
+		DPOINT pt0(ls->getX(0), ls->getY(0), z);
+		DPOINT pt1(ls->getX(1), ls->getY(1), z);
+		double k = pt1.angdir(pt0);
+		std::string strip = rs[1];
+		std::string mission = rs[2];
+		MatOri m(0, 0, -k);
+
+		OGRGeometryFactory gf;
+		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
+
+		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
+		gp->setCoordinateDimension(2);
+
+		OGRSpatialReference sr;
+		sr.importFromEPSG(SRID);
+		gp->assignSpatialReference(&sr);
+
+		for ( int i = 0; i < 4; i++) {
+			DPOINT pa = ( i < 2 ) ? pt0 : pt1;
+			double x = ( i == 0 || i == 3 ) ? -tan(teta2) : tan(teta2);
+			DPOINT pd(x, 0, -1);
+			pd = m * pd;
+			//pd = pd - pa;
+
+			DPOINT pt;
+			if ( !ds->RayIntersect(pa, pd, pt) ) {
+				if ( !ds->IsInside(pt.z) ) {
+					std::stringstream ss;
+					ss << "la strisciata " << strip << " della missione " << mission << " cade al di fuori del dem";
+					throw std::runtime_error(ss.str());
+				}
+			}
+			gp->addPoint(pt.x, pt.y);
+		}
+		gp->closeRings();
+
+		OGRGeomPtr rg = gf.createGeometry(wkbPolygon);
+		OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) rg);
+		p->setCoordinateDimension(2);
+		p->assignSpatialReference(&sr);
+		p->addRing(gp);
+
+		stm[1] = SIGLA_PRJ;
+		stm[2] = strip;
+		stm[3] = mission;
+		stm[4].fromBlob(rg);
+		stm.execute();
+		stm.reset();
+
+		rs.next();
+	}
+	cnn.commit_transaction();
 }
 
+void lidar_exec::_process_block()
+{
+	// select data from flight lines
+	std::string table = std::string("STRIP") + (_type == Prj_type ? "P" : "V");
+	std::stringstream sql1;
+	sql1 << "SELECT AsBinary(geom) geom from " << table;
+	Statement stm1(cnn);
+	stm1.prepare(sql1.str());
+	Recordset rs = stm1.recordset();
+
+	std::cout << "Layer:" << table << std::endl;
+
+	OGRGeomPtr blk;
+	bool first = true;
+	while ( !rs.eof() ) {
+		OGRGeomPtr pol = (Blob) rs["geom"];
+		if ( first ) {
+			blk = pol;
+			first = false;
+		} else 
+			blk = blk->Union(pol);
+		rs.next();
+	}
+	std::string tableb = std::string("BLOCK") + (_type == Prj_type ? "P" : "V");
+	cnn.remove_layer(tableb);
+	std::cout << "Layer:" << tableb << std::endl;
+
+	std::stringstream sqla;
+	sqla << "CREATE TABLE " << tableb << 
+		"(Z_BLOCK_ID TEXT NOT NULL)";	// sigla del lavoro
+	cnn.execute_immediate(sqla.str());
+	// add the geometry column
+	std::stringstream sqlb;
+	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'" << get_typestring(blk) << "'," <<
+		"'XY')";
+	cnn.execute_immediate(sqlb.str());
+	
+	std::stringstream sqlc;
+	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	Statement stm0(cnn);
+	cnn.begin_transaction();
+	stm0.prepare(sqlc.str());
+	stm0[1] = SIGLA_PRJ;
+	stm0[2].fromBlob(blk);
+	stm0.execute();
+	stm0.reset();
+	cnn.commit_transaction();
+
+	_get_dif();
+}
+
+void lidar_exec::_get_dif()
+{
+	// select data from carto areas
+	std::string table = std::string("carto");
+	std::stringstream sql1;
+	sql1 << "SELECT AsBinary(geom) geom from " << table;
+	Statement stm1(cnn);
+	stm1.prepare(sql1.str());
+	Recordset rs = stm1.recordset();
+
+	std::cout << "Layer:" << table << std::endl;
+
+	// buid a unique feature
+	OGRGeomPtr blk;
+	bool first = true;
+	while ( !rs.eof() ) {
+		OGRGeomPtr pol = (Blob) rs["geom"];
+		if ( first ) {
+			blk = pol;
+			first = false;
+		} else 
+			blk = blk->Union(pol);
+		rs.next();
+	}
+
+	// select data from strips block
+	table = std::string("BLOCK") + (_type == Prj_type ? "P" : "V");
+	std::stringstream sql2;
+	sql2 << "SELECT AsBinary(geom) geom from " << table;
+	Statement stm2(cnn);
+	stm2.prepare(sql2.str());
+	rs = stm2.recordset();
+	OGRGeomPtr cart = (Blob) rs["geom"];
+
+	if ( !cart->Intersect(blk) )
+		return;
+	OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
+
+	std::string tabled = std::string("DIFF") + (_type == Prj_type ? "P" : "V");
+	cnn.remove_layer(tabled);
+	std::cout << "Layer:" << tabled << std::endl;
+
+	std::stringstream sqla;
+	sqla << "CREATE TABLE " << tabled << 
+		"(DIFF_ID TEXT NOT NULL)";	// sigla del lavoro
+	cnn.execute_immediate(sqla.str());
+	// add the geometry column
+	std::stringstream sqlb;
+	sqlb << "SELECT AddGeometryColumn('" << tabled << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'" << get_typestring(dif) << "'," <<
+		"'XY')";
+	cnn.execute_immediate(sqlb.str());
+	
+	std::stringstream sqlc;
+	sqlc << "INSERT INTO " << tabled << " (DIFF_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	Statement stm0(cnn);
+	cnn.begin_transaction();
+	stm0.prepare(sqlc.str());
+	stm0[1] = SIGLA_PRJ;
+	stm0[2].fromBlob(dif);
+	stm0.execute();
+	stm0.reset();
+	cnn.commit_transaction();
+}

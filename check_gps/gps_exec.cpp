@@ -94,7 +94,7 @@ typedef std::vector<unsigned char> Blob;
 /****************************************************************/
 std::string gps_exec::_get_key(const std::string& val)
 {
-	return std::string(REFSCALE) + "." + val;
+	return std::string("Fotogrammetria.") + std::string(REFSCALE) + "." + val;
 }
 
 gps_exec::~gps_exec()
