@@ -24,6 +24,8 @@ public:
 	~CVAreaDetail();
 
 	virtual void clearAll();
+	virtual void searchFile() {}
+	virtual void importAll(const QStringList&) {}
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

@@ -17,6 +17,8 @@ public:
 	explicit CVRinexDetail(QWidget *parent, Core::CVRinex*);
 
 	virtual void clearAll();
+	virtual void searchFile() {}
+	virtual void importAll(const QStringList&) {}
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

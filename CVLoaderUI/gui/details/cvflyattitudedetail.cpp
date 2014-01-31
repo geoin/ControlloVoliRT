@@ -34,18 +34,16 @@ CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVFlyAttitude* l) : C
 	
     QFormLayout* form = new QFormLayout;
 
-	QLabel* lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
+	QLabel* n = NULL;
+	QLabel* info = NULL;
+	createRow(this, tr("Numero strisciate"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
-	QLabel* n = new QLabel("Record inseriti", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
-
-	form->addRow(n, lab);
+	
+	createRow(this, tr("Numero fotogrammi"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
 	body(form);
 
@@ -61,6 +59,10 @@ CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVFlyAttitude* l) : C
 }
 
 CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
+
+}
+
+void CVFlyAttitudeDetail::importAll(const QStringList&) {
 
 }
 

@@ -12,6 +12,8 @@
 #include <QRegExp>
 #include <QTextStream>
 
+#include <assert.h>
+
 //TODO: this must be the base class, move all specialized logic in derived
 
 namespace CV {
@@ -30,9 +32,10 @@ bool CVFlyAttitude::isValid() const {
 }
 
 bool CVFlyAttitude::remove() { //TODO, should use id
+	_data.clear();
 	CV::Util::Spatialite::Connection cnn;
 	try {
-		cnn.open(QString(uri() + QDir::separator() + SQL::database).toStdString());
+		cnn.open(QString(uri()).toStdString());
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
 		return false;
@@ -66,14 +69,16 @@ bool CVFlyAttitude::persist() {
 		Q_UNUSED(err)
 		return false;
 	}
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 
 	QStringList rec;
-	rec << "PHOTO_ID" << "PX" << "PY" << "PZ" << "OMEGA" << "PHI" << "KAPPA";
+	rec << "ID" << "PHOTO" << "PX" << "PY" << "PZ" << "OMEGA" << "PHI" << "KAPPA";
 	
 	QStringList ph;
-	ph << "?1" << "?2" << "?3" << "?4" << "?5" << "?6" << "?7";
+	ph << "?1" << "?2" << "?3" << "?4" << "?5" << "?6" << "?7" << "?8";
 
-	while (str.status() != QTextStream::ReadPastEnd) { 
+	QMap<QString, int> attData;
+	while (!str.atEnd()) { 
 		QString line = str.readLine();
 		if (line.isEmpty()) { 
 			continue;
@@ -83,18 +88,28 @@ bool CVFlyAttitude::persist() {
 			continue;
 		}
 
+		QStringList id = l.at(0).split("_");
+		if (id.length() != 2) {
+			continue;
+		}
+
 		QVariantList data;
-		QString photo_id = l.at(0);
+		QString part = id.at(0);
+		QString photo = id.at(1);
+
+		attData[part]++; //QT container set default at zero, so i need no initialization
+		data << part << photo;
+
 		bool ok;
 		qreal val;
-		for (int i = 0; i < l.size(); ++i) {
-			val = l.at(1).toDouble(&ok);
+		for (int i = 1; i < l.size(); ++i) {
+			val = l.at(i).toDouble(&ok);
 			if (!ok) { break; }
 			data << val;
 		}
 		if (!ok) { continue; }
 
-		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+		assert(rec.size() == ph.size() && rec.size() == data.size());
 		q->insert(
 			"ASSETTI",
 			rec,
@@ -104,12 +119,50 @@ bool CVFlyAttitude::persist() {
 		
 	}
 
+	int num = 0;
+	foreach(int i, attData) {
+		num += i;
+	}
+	_data << QString::number(attData.size()) << QString::number(num);
 	return true;
 }
 
 bool CVFlyAttitude::load() {
+	_isValid = false;
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 
-	return true;
+	QMap<QString, int> attData;
+	try {
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList() << "ID" << "count(*)",
+			QStringList() << "ASSETTI GROUP BY ID", 
+			QStringList(),
+			QVariantList()
+		);
+	
+		while (!set.eof()) {
+			attData[QString(set[0].toString().c_str())] = set[1].toInt();
+			set.next();
+		}
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
+	int num = 0;
+	foreach(int i, attData) {
+		num += i;
+	}
+	_data << QString::number(attData.size()) << QString::number(num);
+	_isValid = _data.size() == 2;
+	return _isValid;
 }
 
 } // namespace Core

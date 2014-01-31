@@ -134,7 +134,7 @@ void CVMissionListDetails::add(Core::CVMissionObject* m) {
     _bar->previous()->setEnabled(stack->count() > 1);
     _bar->next()->setEnabled(stack->count() > 1);
 
-	assert(stack->count() == _category->count());
+	//assert(stack->count() == _category->count());
 }
 
 void CVMissionListDetails::onAddMission() {
@@ -153,9 +153,9 @@ void CVMissionListDetails::onAddMission() {
 	_category->insert(obj);
 
 	obj->name(name);
-	obj->persist();
-
-	add(obj);
+	if (obj->persist()) {
+		add(obj);
+	}
 }
 
 void CVMissionListDetails::onMissionChange() {

@@ -25,8 +25,12 @@ public:
 	inline void body(QLayout* l) { _body->setLayout(l); }
 	inline QMenu* detailMenu() const { return _menu; }
 
-public slots:
+	void createRow(QWidget* parent, const QString&, QLabel*& lab, QLabel*& info);
+
+public slots: //declared as slots only here, not in derived
 	virtual void clearAll() = 0;
+	virtual void searchFile() = 0;
+	virtual void importAll(const QStringList&) = 0;
 
 private:
 	QLabel* _title, * _descr;

@@ -25,6 +25,8 @@ public:
     QLineEdit* lineEdit(QWidget* p, const QPalette&);
 	
 	virtual void clearAll();
+	virtual void searchFile() {}
+	virtual void importAll(const QStringList&) {}
 
 	void save();
 	void view();

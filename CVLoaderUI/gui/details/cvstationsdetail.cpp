@@ -35,7 +35,6 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 	_stations->setFrameStyle(QFrame::NoFrame);
 
 	_details = new QListWidget(this);
-	_details->setMaximumHeight(100);
 	_details->setVisible(false);
 	_details->setSelectionMode(QAbstractItemView::NoSelection);
 	_details->setAlternatingRowColors(true);
@@ -43,8 +42,8 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 
 	connect(_stations, SIGNAL(currentRowChanged(int)), this, SLOT(onStationSelected(int)));
 
-	l->addWidget(_stations);
-	l->addWidget(_details);
+	l->addWidget(_stations, 3);
+	l->addWidget(_details, 2);
 
 	body(l);
 

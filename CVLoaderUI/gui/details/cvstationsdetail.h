@@ -51,6 +51,8 @@ public:
 	~CVStationsDetail();
 
 	virtual void clearAll();
+	virtual void searchFile() {}
+	virtual void importAll(const QStringList&) {}
 
 	CVStationDelegate* addItem(const QString&);
 
