@@ -7,6 +7,7 @@
 #include "core/sql/querybuilder.h"
 
 #include "core/categories/cvcamera.h"
+#include "core/categories/cvflyattitude.h"
 #include "core/categories/cvshapelayer.h"
 #include "core/categories/cvfileinput.h"
 #include "core/categories/cvmissionobject.h"
@@ -40,7 +41,8 @@ void CVProjectManager::onNewProject() {
 		cat->uri(proj->path + QDir::separator() + SQL::database);
 		proj->insert(cat);
 
-		proj->insert(new CVCategory(CVCategory::FLY, proj));
+		cat = _fly(proj, false);
+		proj->insert(cat);
 
 		emit addProject(proj);
 		_projects.append(proj);
@@ -78,12 +80,43 @@ void CVProjectManager::onLoadProject() {
 		}
 		cat->load();
 
-		proj->insert(new CVCategory(CVCategory::FLY, proj));
+		
+		cat = _fly(proj, true);
+		proj->insert(cat);
 		
 		emit addProject(proj);
 		_projects.append(proj);
 	}
 }   
+
+//Take most data from other categories
+CVCategory* CVProjectManager::_fly(CVProject* proj, bool b) {
+	CVCategory* plan = proj->get(CVCategory::PLAN);
+	CVCategory* gps = proj->get(CVCategory::GPS_DATA);
+
+	CVCategory* cat = new CVCategory(CVCategory::FLY, proj);
+	cat->uri(proj->db());
+
+	CVShapeLayer* axis = new CVShapeLayer(proj);
+	axis->uri(proj->path);
+	axis->table("AVOLOV");
+	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	cat->insert(axis);
+	if (b) {
+		axis->load();
+	}
+
+	cat->insert(plan->at(2));
+	cat->insert(plan->at(3), false);
+
+	CVFlyAttitude* fa = new CVFlyAttitude(proj);
+	fa->uri(proj->path);
+	cat->insert(fa);
+	if (b) {
+		fa->load();
+	}
+	return cat;
+}
 
 CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
 	CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
@@ -116,6 +149,7 @@ CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
    
 void CVProjectManager::onCloseProject() {
 	//TODO
+	_projects.clear();
 }
 
 

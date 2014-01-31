@@ -26,6 +26,7 @@ public slots:
 
 private:
 	CVCategory* _plan(CVProject*, bool load);
+	CVCategory* _fly(CVProject*, bool load);
 
     QList<CVProject*> _projects;
 };

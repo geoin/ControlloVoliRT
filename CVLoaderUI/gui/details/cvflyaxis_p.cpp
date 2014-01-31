@@ -21,10 +21,13 @@ namespace Details {
 //TODO: needs cleanup, field generation
 
 CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
-	title(tr("Assi di volo progettati"));
+	title(tr("Assi di volo"));
 	description(tr("File shape"));
 
-    QFormLayout* form = new QFormLayout(this);
+	QMenu* m = detailMenu();
+	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
+
+    QFormLayout* form = new QFormLayout;
 
 	QLabel* lab = new QLabel("", this);
 	lab->setMinimumHeight(26);
@@ -73,6 +76,14 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
 		}
+	}
+}
+ 
+void CVFlyAxis_p::clearAll() {
+	_layer->remove();
+	for (int i = 0; i < _labels.size(); ++i) {
+		QLabel* lab = _labels.at(i);
+		lab->setText("");
 	}
 }
 

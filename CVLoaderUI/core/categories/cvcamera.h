@@ -20,7 +20,7 @@ public:
 	virtual bool persist();
 	virtual bool load();
 
-	virtual bool remove() { return true; }
+	virtual bool remove();
 
 	bool load(const QString& mId);
 

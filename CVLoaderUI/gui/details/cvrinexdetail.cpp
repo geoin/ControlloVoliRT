@@ -40,6 +40,8 @@ CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVRinex* rinex) : CVBaseDetail(p)
 
 	_details = new QListWidget(this);
 	_details->setSelectionMode(QAbstractItemView::NoSelection);
+	_details->setAlternatingRowColors(true);
+	_details->setFocusPolicy(Qt::NoFocus);
 
 	l->addWidget(_name);
 	l->addWidget(_details, 2);
@@ -48,6 +50,9 @@ CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVRinex* rinex) : CVBaseDetail(p)
 
 	title(tr("Rinex aereo"));
 	description(tr("File rinex"));
+	
+	QMenu* m = detailMenu();
+	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 
 	if (_rinex->isValid()) {
 		_name->setText(_rinex->name());
@@ -64,6 +69,8 @@ CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVRinex* rinex) : CVBaseDetail(p)
 }
 
 void CVRinexDetail::dragEnterEvent(QDragEnterEvent* ev) {
+	_files.clear();
+
     const QMimeData* mime = ev->mimeData();
     QList<QUrl> list = mime->urls();
 
@@ -120,9 +127,7 @@ void CVRinexDetail::dropEvent(QDropEvent* ev) {
 	
 	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(_rinex->uri()).absolutePath());
 	const QString& tmp = tmpDir.toString();
-	if (tmp.isEmpty()) {
-		return;
-	}
+	assert(!tmp.isEmpty());
 
 	QDir& d = tmpDir.dir();
 
@@ -170,6 +175,14 @@ void CVRinexDetail::dropEvent(QDropEvent* ev) {
 		it->setText(f);
 		_details->insertItem(0, it);
 	}
+
+	_files.clear();
+}
+
+void CVRinexDetail::clearAll() {
+	_rinex->remove();
+	_name->setText("");
+	_details->clear();
 }
 
 } // namespace Details

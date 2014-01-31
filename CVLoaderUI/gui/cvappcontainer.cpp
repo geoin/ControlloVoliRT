@@ -36,10 +36,11 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
     box->setContentsMargins(2, 2, 2, 2);
     box->setSpacing(2);
     box->addWidget(split, 1);
-    QTableWidget* table = new QTableWidget(this);
+
+    /*QTableWidget* table = new QTableWidget(this);
     //table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //TODO: QT5
     table->horizontalHeader()->setResizeMode(QHeaderView::Stretch); //TODO: QT5
-    box->addWidget(table);
+    box->addWidget(table);*/
     setLayout(box);
 
     split->addWidget(_tree);
@@ -58,6 +59,9 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
 }
 
 void CVAppContainer::insertProject(Core::CVProject* proj) {
+	Helper::CVActionsLinker* linker = Helper::CVActionHandle::get();
+	linker->trig(Helper::CLOSE_PROJECT);
+
     CVNodeInfo* info = NULL;
 
 	QString type;
@@ -105,6 +109,7 @@ void CVAppContainer::link() {
 	QAction* closeProj = linker->add(Helper::CLOSE_PROJECT);
     linker->on(Helper::CLOSE_PROJECT, &_prjManager, SLOT(onCloseProject()));
     linker->on(Helper::CLOSE_PROJECT, _tree, SLOT(onCloseProject()));
+    linker->on(Helper::CLOSE_PROJECT, _details, SLOT(onClear()));
 	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(""), tr("Chiudi"));
 
 	QAction* newMission = linker->add(Helper::NEW_MISSION);

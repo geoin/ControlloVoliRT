@@ -2,6 +2,7 @@
 #include "cvcameradetail.h"
 #include "cvstationsdetail.h"
 #include "cvrinexdetail.h"
+#include "cvflyaxis_p.h"
 
 namespace CV {
 namespace GUI {

@@ -19,7 +19,7 @@ public:
 	virtual bool persist();
 	virtual bool load();
 	
-	virtual bool remove() { return true; }
+	virtual bool remove();
 
 	inline void origin(const QString& file) { _origin = file; }
 	inline const QString& origin() const { return _origin; }

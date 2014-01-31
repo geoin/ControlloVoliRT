@@ -53,6 +53,18 @@ CVBaseDetail::CVBaseDetail(QWidget* p) : QWidget(p) {
     setLayout(box);
 }
 
+void CVBaseDetail::createRow(QWidget* p, const QString& label, QLabel*& lab, QLabel*& info) {
+	lab = new QLabel(label, p);
+	lab->setMinimumHeight(26);
+	lab->setMaximumHeight(26);
+	lab->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
+
+	info = new QLabel("", p);
+	info->setMinimumHeight(26);
+	info->setMaximumHeight(26);
+	info->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
+}
+
 
 } // namespace Details
 } // namespace GUI

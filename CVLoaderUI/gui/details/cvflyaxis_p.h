@@ -22,6 +22,10 @@ class CVFlyAxis_p : public CVBaseDetail {
 public:
 	CVFlyAxis_p(QWidget *parent, Core::CVShapeLayer*);
 	~CVFlyAxis_p();
+	
+	virtual void clearAll();
+	virtual void searchFile() {}
+	virtual void importAll(const QStringList&) {}
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

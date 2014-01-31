@@ -28,7 +28,29 @@ bool CVFileInput::isValid() const {
 	return _isValid;
 }
 
+bool CVFileInput::remove() { //TODO, should use id
+	QFile::remove(_target);
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(QString(uri() + QDir::separator() + SQL::database).toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	bool ret = q->remove(
+		"DEM", 
+		QStringList(),
+		QVariantList()
+	);
+
+	return ret;
+}
+
 bool CVFileInput::persist() {
+	remove();
+
 	QFile file(_origin);
 	QFileInfo info(file);
 

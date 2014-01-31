@@ -20,7 +20,7 @@ public:
 	virtual bool isValid() const;
 	virtual bool load();
 	
-	virtual bool remove() { return true; }
+	virtual bool remove();
 
 	virtual void init();
 

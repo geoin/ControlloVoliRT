@@ -23,6 +23,10 @@ public:
 	CVAreaDetail(QWidget *parent, Core::CVShapeLayer*);
 	~CVAreaDetail();
 
+	virtual void clearAll();
+	virtual void searchFile() {}
+	virtual void importAll(const QStringList&) {}
+
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
     virtual void dragMoveEvent(QDragMoveEvent*);

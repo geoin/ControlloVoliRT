@@ -94,7 +94,7 @@ namespace SQL {
 		return true;
 	}
 	
-	//TODO: too basic - needs order by 
+	//TODO: too basic
 	CV::Util::Spatialite::Recordset Query::select(
 		const QStringList& what, 
 		const QStringList& from, 
@@ -149,6 +149,13 @@ namespace SQL {
 
 		assert(where.length() >= binds.length());
 		QRegExp reg("\\?([0-9]{1,2})");
+
+		try {
+			_stm.prepare(query.toStdString()); 
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			return false;
+		}
 
 		try {
 			for (int i = 0; i < binds.length(); ++i) {

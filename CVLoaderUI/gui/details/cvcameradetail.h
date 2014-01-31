@@ -23,6 +23,10 @@ public:
     explicit CVCameraDetail(QWidget *parent = 0, Core::CVCamera* = 0);
 
     QLineEdit* lineEdit(QWidget* p, const QPalette&);
+	
+	virtual void clearAll();
+	virtual void searchFile() {}
+	virtual void importAll(const QStringList&) {}
 
 	void save();
 	void view();

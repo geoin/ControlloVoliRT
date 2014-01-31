@@ -57,13 +57,16 @@ public:
 	virtual bool isValid() const { return true; }
 	virtual bool persist() { return true; }
 	virtual bool load() { return true; }
-	virtual bool remove() { return true; }
+	virtual bool remove();
+	void removeAt(int i);
+
 
 	inline const QString& mission() const { return _mission; }
 	inline void mission(const QString& m) { _mission = m; }
 
 	inline void add(CVStation* r) { _ps.append(CVStation::Ptr(r)); }
 	inline void add(CVStation::Ptr r) { _ps.append(r); }
+	
 
 	inline int count() const { return _ps.length(); }
 	inline Core::CVStation* at(int i) const { return _ps.at(i).data(); }

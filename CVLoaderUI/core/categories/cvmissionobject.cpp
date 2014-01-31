@@ -4,6 +4,7 @@
 #include "cvproject.h"
 #include "cvrinex.h"
 #include "cvstations.h"
+#include "cvshapelayer.h"
 
 #include "core/sql/querybuilder.h"
 
@@ -18,6 +19,31 @@ CVMissionObject::CVMissionObject(QObject* p) : CVObject(p), _isValid(false) {
 
 CVMissionObject::CVMissionObject(QObject* p, QString key) : CVObject(p), _isValid(false) {
 	_id = key;
+}
+
+bool CVMissionObject::remove() { 
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(uri().toStdString());
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	bool ret = q->remove(
+		"MISSION", 
+		QStringList() << "ID=?1",
+		QVariantList() << _id
+	);
+
+	ret = q->remove(
+		"STATION", 
+		QStringList() << "ID_MISSION=?1",
+		QVariantList() << _id
+	);
+
+	return ret;
 }
 
 bool CVMissionObject::persist() { 

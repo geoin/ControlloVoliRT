@@ -1,4 +1,4 @@
-#include "cvareadetail.h"
+#include "cvflyattitudedetail.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -20,11 +20,11 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
+CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVFlyAttitude* l) : CVBaseDetail(p) {
 	setAcceptDrops(true);
 
-	title(tr("Aree da cartografare"));
-	description(tr("File shape"));
+	title(tr("Assetti di volo"));
+	description(tr("File degli assetti"));
 
 	QMenu* m = detailMenu();
 	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
@@ -34,18 +34,16 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) 
 	
     QFormLayout* form = new QFormLayout;
 
-	QLabel* lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
+	QLabel* n = NULL;
+	QLabel* info = NULL;
+	createRow(this, tr("Numero strisciate"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
-	QLabel* n = new QLabel("Record inseriti", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
-
-	form->addRow(n, lab);
+	
+	createRow(this, tr("Numero fotogrammi"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
 	body(form);
 
@@ -60,11 +58,15 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) 
 	}
 }
 
-CVAreaDetail::~CVAreaDetail() {
+CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
 
 }
 
-void CVAreaDetail::clearAll() {
+void CVFlyAttitudeDetail::importAll(const QStringList&) {
+
+}
+
+void CVFlyAttitudeDetail::clearAll() {
 	_layer->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
@@ -72,35 +74,30 @@ void CVAreaDetail::clearAll() {
 	}
 }
 
-void CVAreaDetail::dragEnterEvent(QDragEnterEvent* ev) {
+void CVFlyAttitudeDetail::dragEnterEvent(QDragEnterEvent* ev) {
     const QMimeData* mime = ev->mimeData();
     QList<QUrl> list = mime->urls();
 
     if (list.size() != 1) {
         ev->ignore();
     } else {
-        _uri = list.at(0).toLocalFile();
-        _file.reset(new QFileInfo(_uri));
-        if (_file->suffix().toLower() != "shp") {
-            _file.reset();
-            ev->ignore();
-        } else {
-            ev->accept();
-        }
+        QString uri = list.at(0).toLocalFile();
+        _file.reset(new QFileInfo(uri));
+		ev->accept();
     }
 }
 
-void CVAreaDetail::dragMoveEvent(QDragMoveEvent* ev) {
+void CVFlyAttitudeDetail::dragMoveEvent(QDragMoveEvent* ev) {
     ev->accept();
 }
 
-void CVAreaDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
+void CVFlyAttitudeDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
     ev->accept();
 }
 
-void CVAreaDetail::dropEvent(QDropEvent* ev) {
+void CVFlyAttitudeDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	_layer->shape(_file->absolutePath() + QDir::separator() + _file->baseName());
+	_layer->origin(_file->absoluteFilePath());
 	if (_layer->persist()) {
 		QStringList& info = _layer->data();
 		for (int i = 0; i < _labels.size(); ++i) {
