@@ -34,9 +34,13 @@ protected:
     virtual void dragLeaveEvent(QDragLeaveEvent*);
     virtual void dropEvent(QDropEvent*);
 	virtual void showEvent(QShowEvent* event) {
-	
+		if (_layer->isValid()) {
+			QStringList& data = _layer->data();
+			for (int i = 0; i < data.size(); ++i) {
+				_labels.at(i)->setText(data.at(i));
+			}
+		}
 	}
-
 
 private:
     QScopedPointer<QFileInfo> _file;
