@@ -42,7 +42,7 @@
 #define BASI "Basi"
 #define MISSIONI "missioni"
 #define ASSI_VOLO "AVOLOV"
-#define STRIP_NAME "A_VOL_CS"
+
 #define REFSCALE "RefScale_2000"
 #define SRID 32632 // SRID UTM32 wgs84
 #define SRIDGEO 4326 // SRID lat lon wgs84

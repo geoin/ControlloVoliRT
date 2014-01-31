@@ -33,9 +33,12 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "ogr_geometry.h"
+#include "common/util.h"
+#include "photo_util/sun.h"
+#include "Poco/DateTime.h"
+#include "Poco/DateTimeParser.h"
 
-#define SRID 32632
+//#define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
 #define ASSI_VOLO "AVOLO"
@@ -49,7 +52,7 @@
 
 #define CAMERA "camera.xml"
 #define ASSETTI "assetti"
-#define DEM "dem.asc"
+#define DEM "dem"
 
 #define Z_FOTO "Z_FOTO"
 #define Z_MODEL "Z_MODEL"
@@ -68,37 +71,37 @@ using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 
 /**************************************************************/
-enum CHECK_TYPE {
-	less_ty = 0,
-	great_ty = 1,
-	abs_less_ty = 2,
-	between_ty =3
-};
-bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-{
-	bool rv = true;
-	switch ( ty ) {
-		case less_ty:
-			rv = val < tol1;
-			break;
-		case great_ty:
-			rv = val > tol1;
-			break;
-		case abs_less_ty:
-			rv = fabs(val) < tol1;
-			break;
-		case between_ty:
-			rv = val > tol1 && val < tol2;
-			break;
-	}
-	if ( !rv ) {
-		Doc_Item r = row->add_item("entry", attr);
-		r->add_instr("dbfo", "bgcolor=\"red\"");
-		r->append(val);
-	} else
-		row->add_item("entry", attr)->append(val);
-	return rv;
-}
+//enum CHECK_TYPE {
+//	less_ty = 0,
+//	great_ty = 1,
+//	abs_less_ty = 2,
+//	between_ty =3
+//};
+//bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
+//{
+//	bool rv = true;
+//	switch ( ty ) {
+//		case less_ty:
+//			rv = val < tol1;
+//			break;
+//		case great_ty:
+//			rv = val > tol1;
+//			break;
+//		case abs_less_ty:
+//			rv = fabs(val) < tol1;
+//			break;
+//		case between_ty:
+//			rv = val > tol1 && val < tol2;
+//			break;
+//	}
+//	if ( !rv ) {
+//		Doc_Item r = row->add_item("entry", attr);
+//		r->add_instr("dbfo", "bgcolor=\"red\"");
+//		r->append(val);
+//	} else
+//		row->add_item("entry", attr)->append(val);
+//	return rv;
+//}
 std::string get_strip(const std::string& nome)
 {
 	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
@@ -167,6 +170,8 @@ bool photo_exec::run()
 		
 		// read planned photo position and attitude
 		if ( _type == fli_type ) {
+			_update_assi_volo();
+
 			// read photo position and attitude
 			if ( !_read_vdp(_vdps) )
 				throw std::runtime_error("File assetti non trovato");
@@ -247,27 +252,27 @@ bool photo_exec::_read_ref_val()
 	}
 	return true;
 }
-OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>& blocks)
-{
-	// detetect the difference between the carto polygon
-	// and the liest of blocks
-	OGRGeomPtr dif;
-	for ( size_t i = 0; i < blocks.size(); i++) {
-		if ( cart->Intersect(blocks[i]) ) {
-			dif =  cart->Difference(blocks[i]);
-			OGRPolygon* p1 = (OGRPolygon*) cart;
-			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
-			//double a1 = p1->get_Area();
-			//double a2 = p2->get_Area();
-			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
-				break;
-			}
-		} else 
-			dif = cart->Intersection(cart);
-	}
-	return dif;
-}
-bool photo_exec::_get_carto(std::vector<OGRGeomPtr>& blocks) 
+//OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>& blocks)
+//{
+//	// detetect the difference between the carto polygon
+//	// and the liest of blocks
+//	OGRGeomPtr dif;
+//	for ( size_t i = 0; i < blocks.size(); i++) {
+//		if ( cart->Intersect(blocks[i]) ) {
+//			dif =  cart->Difference(blocks[i]);
+//			OGRPolygon* p1 = (OGRPolygon*) cart;
+//			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
+//			//double a1 = p1->get_Area();
+//			//double a2 = p2->get_Area();
+//			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
+//				break;
+//			}
+//		} else 
+//			dif = cart->Intersection(cart);
+//	}
+//	return dif;
+//}
+bool photo_exec::_get_carto(OGRGeomPtr& blk)
 {
 	std::string table(CARTO);
 
@@ -278,46 +283,29 @@ bool photo_exec::_get_carto(std::vector<OGRGeomPtr>& blocks)
 	Recordset rs = stm.recordset();
 	
 	bool first = true;
-	OGRGeomPtr blk;
+	OGRGeomPtr carto;
 
+	long count = 0;
 	while ( !rs.eof() ) { //for every strip
+		++count;
 		if ( first ) {
 			first = false;
-			blk = (Blob) rs[0];
+			carto = (Blob) rs[0];
 		} else {
-			OGRGeomPtr pol2 = (Blob) rs[0];
-			OGRGeomPtr pol1 = blk->Union(pol2);
-			blk = pol1;
+			OGRGeomPtr pol = (Blob) rs[0];
+			carto = carto->Union(pol);
 		}
 		rs.next();
 	}
-	std::vector<OGRGeomPtr> vs;
-	OGRwkbGeometryType ty = blk->getGeometryType();
-	if ( ty == wkbMultiPolygon ) {
-		OGRGeometryCollection* oc = (OGRGeometryCollection*) ((OGRGeometry*) blk);
-		int np = oc->getNumGeometries();
-		for (int i = 0; i < np; i++ ) {
-			OGRGeometry* pol = oc->getGeometryRef(i);
-			OGRGeomPtr dif = _get_dif(pol, blocks);
-			if ( dif != NULL && !dif->IsEmpty() ) {
-				vs.push_back(dif);
-			}
-		}
-	} else {
-		OGRGeomPtr dif = _get_dif(blk, blocks);
-		if ( !dif->IsEmpty() ) {
-			vs.push_back(dif);
-		}
-	}
-	_uncovered(vs);
-	return vs.empty();
+	OGRGeomPtr dif = carto->Difference(blk);
+	return _uncovered(dif);
 }
-void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
+bool photo_exec::_uncovered(OGRGeomPtr& vs)
 {
 	std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
-	if ( vs.empty() )
-		return;
+	if ( vs->IsEmpty() ) 
+		return true;
 
 	// create the photo table
 	std::stringstream sql;
@@ -330,7 +318,7 @@ void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'POLYGON'," <<
+		"'" << get_typestring(vs) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
 	std::cout << "Layer:" << table << std::endl;
@@ -343,14 +331,12 @@ void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
-	for (size_t i = 0; i < vs.size(); i++) {
-		stm[1] = (int) i;
-		stm[2].fromBlob(vs[i]);
-
-		stm.execute();
-		stm.reset();
-	}
+	stm[1] = (int) 1;
+	stm[2].fromBlob(vs);
+	stm.execute();
+	stm.reset();
 	cnn.commit_transaction();
+	return false;
 }
 bool photo_exec::_read_cam()
 {
@@ -369,8 +355,8 @@ bool photo_exec::_read_cam()
 		cam.yp = rs["YP"];
 		cam.serial = rs["SERIAL_NUMBER"];
 		cam.id = rs["ID"];
-		int plan = rs["planning"];
-		cam.planning = plan == '1';
+		int plan = rs["PLANNING"];
+		cam.planning = plan == 1;
 		rs.next();
 		_cams[cam.id] = cam;
 		if ( cam.planning )
@@ -410,7 +396,7 @@ bool photo_exec::_strip_cam()
 		rs.next();
 	}
 	// get the mission associated to each strip
-	table = std::string(ASSETTI) + "V";
+	table = std::string(ASSI_VOLO) + "V";
 	std::stringstream sql1;
 	sql1 << "SELECT A_VOL_CS, MISSION from " << table;
 	stm = Statement(cnn);
@@ -419,18 +405,20 @@ bool photo_exec::_strip_cam()
 	while ( !rs.eof() ) {
 		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
 		std::string mission = rs["MISSION"];
-		std::string cam_id = _map_mission_cam[mission]; // camera id for mission
+		std::string cam_id = map_mission_cam[mission]; // camera id for mission
 		if ( _cams.find(cam_id) != _cams.end() )
 			_map_strip_cam[strip] = _cams[cam_id];
 		else
 			_map_strip_cam[strip] = _cam_plan;
+		rs.next();
 	}
-
+	return true;
 }
 bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 {
+	_strip_cam();
 	// rilegge gli assetti dal db
-	std::string table = std::string(ASSETTI) + "V";
+	std::string table = std::string(ASSETTI);// + "V";
 	std::cout << "Layer:" << table << std::endl;
 	std::stringstream sql;
 	sql << "SELECT * from " << table;
@@ -438,7 +426,7 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
 	while ( !rs.eof() ) {
-		std::string strip = get_strip(rs[0]);
+		std::string strip = rs[0];
 		Camera cam;
 		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
 			cam = _cams[strip];
@@ -504,10 +492,21 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 }
 bool photo_exec::_read_dem()
 {
-	_df = new DSM_Factory;
-	if ( !_df->Open(_dem_name, false) )
-		return false;
-	return true;
+	std::string table = DEM;
+	std::stringstream sql;
+	sql << "SELECT URI from " << table;
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	if ( !rs.eof() ) {
+		_dem_name = rs[0];
+
+		_df = new DSM_Factory;
+		if ( !_df->Open(_dem_name, false) )
+			return false;
+		return true;
+	}
+	return false;
 }
 
 void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
@@ -998,40 +997,24 @@ void photo_exec::_process_block()
 	
 	std::vector<mstrp> vs;
 
+	OGRGeomPtr blk;
+	bool first = true;
 	while ( !rs.eof() ) { //for every strip
 		mstrp s;
 		s.strip = rs[0];
 		s.first = rs[1];
 		s.last = rs[2];
 		s.geo = (Blob) rs[3];
-		s.used = false;
+		if ( first ) {
+			blk = s.geo;
+			first = false;
+		} else {
+			blk = blk->Union(s.geo);
+		}
 		vs.push_back(s);
 		rs.next();
 	}
 
-	std::vector<OGRGeomPtr> blks;
-	if ( !vs.empty() ) {
-		OGRGeomPtr blk;
-		for (size_t k = 0; k < vs.size(); k++) {
-			if ( !vs[k].used ) {
-				blk = vs[k].geo;
-				vs[k].used = true;
-				bool finished = false;
-				while ( !finished ) {
-					finished = true;
-					for ( size_t i = 1; i < vs.size(); i++) {
-						OGRGeomPtr& geo = vs[i].geo;
-						if ( !vs[i].used && geo->Intersect(blk) ) {
-							blk = geo->Union(blk);
-							vs[i].used = true;
-							finished = false;
-						}
-					}
-				}
-				blks.push_back(blk);
-			}
-		}
-	}
 	std::string tableb = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(tableb);
 	std::cout << "Layer:" << tableb << std::endl;
@@ -1045,7 +1028,7 @@ void photo_exec::_process_block()
 	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'POLYGON'," <<
+		"'" << get_typestring(blk) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sqlb.str());
 	std::stringstream sqlc;
@@ -1053,14 +1036,12 @@ void photo_exec::_process_block()
 	Statement stm0(cnn);
 	cnn.begin_transaction();
 	stm0.prepare(sqlc.str());
-	for ( size_t i = 0; i < blks.size(); i++) {
-		stm0[1] = SIGLA_PRJ;
-		stm0[2].fromBlob(blks[i]);
-		stm0.execute();
-		stm0.reset();
-	}
+	stm0[1] = SIGLA_PRJ;
+	stm0[2].fromBlob(blk);
+	stm0.execute();
+	stm0.reset();
 	cnn.commit_transaction();
-	_get_carto(blks);
+	_get_carto(blk);
 
 	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
@@ -1313,6 +1294,129 @@ bool photo_exec::_strip_report()
 		rs.next();
 	}
 	return false;
+}
+
+typedef struct feature {
+	std::string strip;
+	std::string time;
+	std::string date;
+	std::string mission;
+	int nsat;
+	int nbasi;
+	double pdop;
+	OGRGeomPtr pt;
+} feature;
+void photo_exec::_update_assi_volo()
+{
+	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
+
+	std::string table = ASSI_VOLO + std::string("V");
+
+	// add the columns for the gps data
+	add_column(cnn, table, "DATE TEXT");
+	add_column(cnn, table, "TIME_S TEXT");
+	add_column(cnn, table, "TIME_E TEXT");
+	add_column(cnn, table, "MISSION TEXT");
+	add_column(cnn, table, "SUN_HL DOUBLE");
+	add_column(cnn, table, "NBASI INTEGER");
+	add_column(cnn, table, "NSAT INTEGER");
+	add_column(cnn, table, "PDOP DOUBLE");
+
+	// query to associate to the first and last point of each flight line the nearest point of the gps track
+	std::stringstream sql;
+	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
+		table << " a, gps b group by strip";
+
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+
+	stm[1] = 1;
+	Recordset rs = stm.recordset();
+
+	// for every strip get the GPS time of the first point
+	std::vector<feature> ft1;
+	while ( !rs.eof() ) {
+		feature f;
+		f.strip = rs["strip"];
+		f.mission = rs["MISSION"];
+		f.time = rs["TIME"];
+		f.date = rs["DATE"];
+		f.nsat = rs["NSAT"];
+		f.nbasi = rs["NBASI"];
+		f.pdop = rs["PDOP"];
+		f.pt = (Blob) rs["geo"];
+		ft1.push_back(f);
+		rs.next();
+	}
+	stm.reset();
+	stm[1] = 2;
+	rs = stm.recordset();
+
+	// for every strip get the GPS time of the last point
+	std::vector<feature> ft2;
+	while ( !rs.eof() ) {
+		feature f;
+		f.strip = rs["strip"];
+		f.mission = rs["MISSION"];
+		f.time = rs["TIME"];
+		f.date = rs["DATE"];
+		f.nsat = rs["NSAT"];
+		f.nbasi = rs["NBASI"];
+		f.pdop = rs["PDOP"];
+		f.pt = (Blob) rs["geo"];
+		ft2.push_back(f);
+		rs.next();
+	}
+
+	std::stringstream sql1;
+	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8 where " << STRIP_NAME  << "=?9";
+	Statement stm1(cnn);
+	stm1.prepare(sql1.str());
+	cnn.begin_transaction();
+
+	// per ogni strip determina i parametri gps con cui è stata acquisita
+	for ( size_t i = 0; i < ft1.size(); i++) {
+		const std::string & val = ft1[i].strip;
+		std::string t1 = ft1[i].time;
+		for ( size_t j = 0; j < ft2.size(); j++) {
+			if ( ft2[j].strip == ft1[i].strip ) {
+				std::string t2 = ft2[j].time;
+				if ( t1 > t2 )
+					std::swap(t1, t2);
+
+				std::stringstream sql;
+				sql << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
+				stm.prepare(sql.str());
+				rs = stm.recordset();
+				if ( rs.eof() )
+					return;
+
+				// determina l'altezza media del sole sull'orizzonte
+				OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft1[i].pt);
+				Sun sun(pt->getY(), pt->getX());
+				int td;
+				std::stringstream ss2;
+				ss2 << ft1[i].date << " " << t1;
+				Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
+				sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
+				double h = sun.altit();
+
+				stm1[1] = (std::string const &) rs[0]; // mission
+				stm1[2] = rs[1].toString(); // date
+				stm1[3] = t1;
+				stm1[4] = t2;
+				stm1[5] = rs[2].toInt(); // minimal number of satellite
+				stm1[6] = rs[3].toDouble(); // max pdop
+				stm1[7] = rs[4].toInt(); // number of bases
+				stm1[8] = h;	// sun elevation
+				stm1[9] = val;
+				stm1.execute();
+				stm1.reset();
+				break;
+			}
+		}
+	}
+	cnn.commit_transaction();
 }
 void photo_exec::_final_report()
 {

@@ -218,7 +218,7 @@ public:
 	double angdir2(const DPOINT& ptb) const {
 		double dx = ptb.x - x;
 		double dy = ptb.y - y;
-		return atan2(dx, dy);
+		return atan2(dy, dx);
 	}
 	// ritorna vero se il pt coincide con un estremo
 	//bool TouchPoint(const DPOINT& pt, double tol = EPS) const;
