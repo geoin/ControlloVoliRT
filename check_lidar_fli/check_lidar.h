@@ -34,6 +34,8 @@
 #include "CVUtil/ogrgeomptr.h"
 #include "geom.h"
 
+class DSM_Factory;
+
 class Lidar {
 public:
 	double fov;
@@ -54,8 +56,12 @@ public:
 	void set_proj_dir(const std::string& nome);
 	void set_checkType(Check_Type t);
 private:
-	void _get_strips(void);
+	void _process_strips(void);
+	void _process_block(void);
+	void _get_dif(void);
+
 	bool _read_lidar(void);
+	bool _read_dem(void);
 	std::string _get_strip(const std::string& nome);
 	bool _check_differences(void);
 	bool _check_cpt(void);
@@ -70,13 +76,17 @@ private:
 
 	bool _get_photo(void);
 
-	std::string _prj_folder;
-	Check_Type _type;
+	std::string _proj_dir;
+	// spatial lite connection
+	CV::Util::Spatialite::Connection cnn;
 
+	Check_Type _type;
+	
+	DSM_Factory* _df;
 	Lidar	_lidar;
 	docbook _dbook;
 	Doc_Item _article;
-	
+	std::string _dem_name;
 };
 
 class check_lidar: public Poco::Util::Application {
