@@ -1,7 +1,7 @@
 #ifndef CV_INPUT_RINEX_H
 #define CV_INPUT_RINEX_H
 
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 #include <QStringList>
 

@@ -37,10 +37,13 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
     box->setSpacing(2);
     box->addWidget(split, 1);
 
-    /*QTableWidget* table = new QTableWidget(this);
+    /*QTableWidget* table = new QTableWidget(10, 4, this);
     //table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch); //TODO: QT5
-    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch); //TODO: QT5
+    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch); 
+	table->setHorizontalHeaderLabels(QStringList()<< tr("Data") << tr("Note") << tr("Controllo") << tr("Oggetto"));
+	table->verticalHeader()->hide();
     box->addWidget(table);*/
+
     setLayout(box);
 
     split->addWidget(_tree);
@@ -50,7 +53,7 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
     split->setStretchFactor(1, 1);
 
     //connect(_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
-	connect(this, SIGNAL(controlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)), _details, SLOT(onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory*)));
+	connect(this, SIGNAL(controlAdded(CV::Core::CVControl::Type, Core::CVControl*)), _details, SLOT(onControlAdded(CV::Core::CVControl::Type, Core::CVControl*)));
     connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertProject(Core::CVProject*)));
 
 	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
@@ -61,34 +64,23 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
 void CVAppContainer::insertProject(Core::CVProject* proj) {
 	Helper::CVActionsLinker* linker = Helper::CVActionHandle::get();
 	linker->trig(Helper::CLOSE_PROJECT);
-
-    CVNodeInfo* info = NULL;
-
-	QString type;
-	type = proj->type == Core::CVProject::PHOTOGRAMMETRY ? tr("Fotogrammetria") : tr("Lidar");
 		
-    // TODO: remove logic from here
-	// TODO: use core enums
-	CVTreeNode* root = _tree->insertProjectTree(type + ": " + proj->name);
-    info = root->info();
-    info->type(CVNodeInfo::PHOTOGRAMMETRY);
-	emit controlAdded(info->type());
+	CVTreeNode* root = _tree->insertProjectTree(proj->name, Core::CVProject::PHOTOGRAMMETRY);
+	emit controlAdded(root->info()->type());
 
     CVTreeNode* node = NULL;
-    node = _tree->insertNode(root, tr("Progetto di volo"));
-    info = node->info();
-    info->type(CVNodeInfo::FLY_PLAN);
-    emit controlAdded(info->type(), proj->get(Core::CVCategory::PLAN));
+    node = _tree->insertNode(root, tr("Progetto di volo"), Core::CVControl::PLAN);
+    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::PLAN));
 
-    node = _tree->insertNode(root, tr("Dati GPS"));
-    info = node->info();
-    info->type(CVNodeInfo::GPS_DATA);
-    emit controlAdded(info->type(), proj->get(Core::CVCategory::GPS_DATA));
+    node = _tree->insertNode(root, tr("Dati GPS"), Core::CVControl::GPS_DATA);
+    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::GPS_DATA));
 
-    node = _tree->insertNode(root, tr("Volo effettuato"));
-    info = node->info();
-    info->type(CVNodeInfo::FLY);
-    emit controlAdded(info->type(), proj->get(Core::CVCategory::FLY));
+    node = _tree->insertNode(root, tr("Volo effettuato"), Core::CVControl::FLY);
+    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::FLY));
+
+	
+    node = _tree->insertNode(root, tr("Orto immagini"), Core::CVControl::ORTO);
+    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::ORTO));
 }
 
 void CVAppContainer::link() {

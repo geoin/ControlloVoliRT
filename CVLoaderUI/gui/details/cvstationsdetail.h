@@ -47,14 +47,16 @@ class CVStationsDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVStationsDetail(QWidget *parent, Core::CVStations*);
+	CVStationsDetail(QWidget *parent, Core::CVObject*);
 	~CVStationsDetail();
 
 	virtual void clearAll();
-	virtual void searchFile() {}
-	virtual void importAll(const QStringList&) {}
+	virtual void searchFile();
+	virtual void importAll(QStringList&);
 
 	CVStationDelegate* addItem(const QString&);
+
+	inline Core::CVStations* stations() const { return static_cast<Core::CVStations*>(controller()); }
 
 public slots:
 	void onStationSelected(int);
@@ -68,10 +70,9 @@ protected:
 
 private:
 	QString _base, _station;
-    QList<QString> _files;
+    QStringList _files;
 
 	QListWidget* _stations, * _details;
-	Core::CVStations* _handler;
 };
 
 } // namespace Details

@@ -29,9 +29,8 @@ namespace Details {
 
 	//TODO: STATIONS AND RINEX DETAIL MUST SHARE CODE, do it as soon as possible
 
-CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVRinex* rinex) : CVBaseDetail(p) {
-	assert(rinex != NULL);
-	_rinex = rinex;
+CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVObject* r) : CVBaseDetail(p, r) {
+	assert(r != NULL);
 
     setAcceptDrops(true);
 
@@ -50,15 +49,12 @@ CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVRinex* rinex) : CVBaseDetail(p)
 
 	title(tr("Rinex aereo"));
 	description(tr("File rinex"));
-	
-	QMenu* m = detailMenu();
-	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 
-	if (_rinex->isValid()) {
-		_name->setText(_rinex->name());
+	if (controller()->isValid()) {
+		_name->setText(rinex()->name());
 
 		QStringList data;
-		_rinex->list(data);
+		rinex()->list(data);
 		foreach (const QString& f, data) {
 			QListWidgetItem* it = new QListWidgetItem(_details);
 			it->setSizeHint(QSize(0, 26));
@@ -122,39 +118,78 @@ void CVRinexDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 
 	CV::GUI::CVScopedCursor cur;
-
-	//need a tmp dir
-	
-	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(_rinex->uri()).absolutePath());
-	const QString& tmp = tmpDir.toString();
-	assert(!tmp.isEmpty());
-
-	QDir& d = tmpDir.dir();
-
 	/*
 	TODO
 	*/
 
 	//if a zip is dragged, decompress it in tmp
+	importAll(_files);
+}
+
+void CVRinexDetail::clearAll() {
+	controller()->remove();
+	_name->setText("");
+	_details->clear();
+}
+
+void CVRinexDetail::searchFile() {
+	QStringList uri = QFileDialog::getOpenFileNames(
+        this,
+        tr("Importa dati GPS"),
+		Core::CVSettings::get("/paths/search").toString(),
+        "(*.*n *.*o *.zip)"
+    );
+
+	CV::GUI::CVScopedCursor cur;
+
+	QSet<QString> ext;
+	if (!uri.isEmpty()) {
+		for (int i = 0; i < uri.size(); ++i) {
+			QFileInfo info(uri.at(i));
+			ext << info.completeSuffix().toLower();
+			if (_station.isEmpty()) {
+				_station = info.baseName();
+				Core::CVSettings::set("/paths/search", info.absolutePath());
+			}
+		}
+		if (ext.size() == 1 && ext.contains("zip")) { //one or more zip
+			_base = "zip";
+		} else if ((uri.size() % 2) || ext.contains("zip")) { //.n .o, but not valid
+			return;
+		}
+
+		importAll(uri);
+	}
+}
+	
+void CVRinexDetail::importAll(QStringList& uri) {
+	//need a tmp dir
+	
+	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(rinex()->uri()).absolutePath());
+	const QString& tmp = tmpDir.toString();
+	assert(!tmp.isEmpty());
+
+	QDir& d = tmpDir.dir();
+
 	if (_base == "zip") {
-		foreach (const QString& f, _files) {
+		foreach (const QString& f, uri) {
 			Core::CVZip::unzip(f.toStdString(), tmp.toStdString());
 		}
 		QStringList tmpFiles = d.entryList(QDir::Files);
 
-		_files.clear();
+		uri.clear();
 		foreach (const QString& n, tmpFiles) {
-			_files.append(tmp + QDir::separator() + n);
+			uri.append(tmp + QDir::separator() + n);
 		}
 	} else { 
-		foreach (const QString& f, _files) {
+		foreach (const QString& f, uri) {
 			QFileInfo info(f);
 			QFile::copy(f, tmp + QDir::separator() + info.fileName());// .n .o in tmp 
 		}
 	}
 
 	std::vector<std::string> files;
-	foreach (const QString& f, _files) {
+	foreach (const QString& f, uri) {
 		files.push_back(f.toStdString());
 	}
 
@@ -162,12 +197,12 @@ void CVRinexDetail::dropEvent(QDropEvent* ev) {
 	QString z(tmp + QDir::separator() + _station + ".zip");
 	Core::CVZip::zip(files, z.toStdString());
 	
-	_rinex->origin(z);
-	_rinex->persist();
+	rinex()->origin(z);
+	controller()->persist();
 
-	_name->setText(_rinex->name());
+	_name->setText(rinex()->name());
 	QStringList data;
-	_rinex->list(data);
+	rinex()->list(data);
 	_details->clear();
 	foreach (const QString& f, data) {
 		QListWidgetItem* it = new QListWidgetItem(_details);
@@ -176,13 +211,7 @@ void CVRinexDetail::dropEvent(QDropEvent* ev) {
 		_details->insertItem(0, it);
 	}
 
-	_files.clear();
-}
-
-void CVRinexDetail::clearAll() {
-	_rinex->remove();
-	_name->setText("");
-	_details->clear();
+	uri.clear();
 }
 
 } // namespace Details

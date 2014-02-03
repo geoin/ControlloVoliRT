@@ -2,6 +2,7 @@
 #include "cvmissiondetail.h"
 
 #include "gui/dialogs/cvmissiondialog.h"
+#include "core/cvjournal.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -86,9 +87,9 @@ void CVMissionListDetails::onNextMission() {
     _bar->title(mission->name());
 }
 
-CVMissionListDetails::CVMissionListDetails(QWidget* p, CV::Core::CVCategory* cat) : QWidget(p) {
-	assert(cat != NULL);
-	_category = cat;
+CVMissionListDetails::CVMissionListDetails(QWidget* p, CV::Core::CVControl* ctrl) : QWidget(p) {
+	assert(ctrl != NULL);
+	_control = ctrl;
 
 	_bar = new CVMissionListToolbar(this);
 	_body = new CVMissionListBody(this);
@@ -110,9 +111,9 @@ CVMissionListDetails::CVMissionListDetails(QWidget* p, CV::Core::CVCategory* cat
 	box->setContentsMargins(0, 0, 0, 0);
 
 	setLayout(box);
-	int count = _category->count();
+	int count = _control->count();
 	for (int i = 0; i < count; ++i) {
-		Core::CVMissionObject* mission = static_cast<Core::CVMissionObject*>(_category->at(i));
+		Core::CVMissionObject* mission = static_cast<Core::CVMissionObject*>(_control->at(i));
 		add(mission);
 	}
 }
@@ -134,7 +135,7 @@ void CVMissionListDetails::add(Core::CVMissionObject* m) {
     _bar->previous()->setEnabled(stack->count() > 1);
     _bar->next()->setEnabled(stack->count() > 1);
 
-	//assert(stack->count() == _category->count());
+	//assert(stack->count() == _control->count());
 }
 
 void CVMissionListDetails::onAddMission() {
@@ -146,15 +147,21 @@ void CVMissionListDetails::onAddMission() {
 	
     QString name, note;
     dialog.getInput(name, note);
-	//TODO note;
 
 	//TODO: should projManager handle this?
-	Core::CVMissionObject* obj = new Core::CVMissionObject(_category);
-	_category->insert(obj);
+	Core::CVMissionObject* obj = new Core::CVMissionObject(_control);
+	_control->insert(obj);
 
 	obj->name(name);
 	if (obj->persist()) {
 		add(obj);
+		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+		e->note = note;
+		e->control = Core::CVControl::GPS_DATA;
+		e->object = Core::CVObject::MISSION;
+		e->uri = name;
+		e->db = obj->uri();
+		Core::CVJournal::add(e);
 	}
 }
 
@@ -179,14 +186,14 @@ void CVMissionListDetails::onRemoveMission() {
     if (actual) {
         CVMissionDetail* w = static_cast<CVMissionDetail*>(actual);
 		int row = stack->currentIndex();
-		_category->at(row)->remove();
-		_category->remove(row);
+		_control->at(row)->remove();
+		_control->remove(row);
 
         QString key = w->key();
         stack->removeWidget(w);
         w->deleteLater();
 
-		assert(stack->count() == _category->count());
+		assert(stack->count() == _control->count());
 
         QList<QAction*> actions = _bar->menu()->actions();
         foreach (QAction* action, actions) {

@@ -1,7 +1,7 @@
 #ifndef CVSHAPELAYER_H
 #define CVSHAPELAYER_H
 
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 #include <QStringList>
 

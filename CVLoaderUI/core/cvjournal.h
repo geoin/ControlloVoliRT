@@ -6,6 +6,7 @@
 #include <QList>
 #include <QStringList>
 #include <QVariantList>
+#include <QDateTime>
 
 namespace CV {
 namespace Core {
@@ -16,13 +17,16 @@ struct CVJournalEntry {
 
 	CVJournalEntry() {}
 
-	QString id, date, uri, note, control, object;
+	QString id, uri, note;
+	short control, object;
+	QDateTime date;
+	QString db;
 };
 
 class CVJournal {
 public:
 	static void add(CVJournalEntry::Entry);
-	static CVJournalEntry::Entry last(const QStringList& filters, const QVariantList& binds, const QStringList& order = QStringList());
+	static CVJournalEntry::EntryList last(const QStringList& filters, const QVariantList& binds, int num = 1);
 };
 
 } // namespace Core

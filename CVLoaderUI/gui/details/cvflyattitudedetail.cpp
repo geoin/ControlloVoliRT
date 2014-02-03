@@ -1,5 +1,8 @@
 #include "cvflyattitudedetail.h"
 
+#include "core/cvcore_utils.h"
+#include "GUI/cvgui_utils.h"
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -20,17 +23,11 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVFlyAttitude* l) : CVBaseDetail(p) {
+CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	setAcceptDrops(true);
 
 	title(tr("Assetti di volo"));
 	description(tr("File degli assetti"));
-
-	QMenu* m = detailMenu();
-	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
-
-    /*QMenu* menu = new QMenu(this);
-    QAction* add = menu->addAction(QIcon(""), "Carica");*/
 	
     QFormLayout* form = new QFormLayout;
 
@@ -47,10 +44,8 @@ CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVFlyAttitude* l) : C
 
 	body(form);
 
-	_layer = l;
-
-	if (_layer->isValid()) {
-		QStringList info = _layer->data();
+	if (controller()->isValid()) {
+		QStringList info = layer()->data();
 		for (int i = 0; i < info.size(); ++i) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
@@ -62,12 +57,35 @@ CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
 
 }
 
-void CVFlyAttitudeDetail::importAll(const QStringList&) {
+void CVFlyAttitudeDetail::importAll(QStringList& uri) {
+	CV::GUI::CVScopedCursor cur;
 
+	layer()->origin(uri.at(0));
+	if (controller()->persist()) {
+		QStringList& info = layer()->data();
+		for (int i = 0; i < _labels.size(); ++i) {
+			QLabel* lab = _labels.at(i);
+			lab->setText(info.at(i));
+		}
+	}
+}
+
+void CVFlyAttitudeDetail::searchFile() {
+	QString uri = QFileDialog::getOpenFileName(
+        this,
+        tr("Importa assetti"),
+		Core::CVSettings::get("/paths/search").toString(),
+        ""
+    );
+	if (!uri.isEmpty()) {
+		QFileInfo info(uri);
+		Core::CVSettings::set("/paths/search", info.absolutePath());
+		importAll(QStringList() << uri);
+	}
 }
 
 void CVFlyAttitudeDetail::clearAll() {
-	_layer->remove();
+	controller()->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
@@ -97,14 +115,7 @@ void CVFlyAttitudeDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVFlyAttitudeDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	_layer->origin(_file->absoluteFilePath());
-	if (_layer->persist()) {
-		QStringList& info = _layer->data();
-		for (int i = 0; i < _labels.size(); ++i) {
-			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i));
-		}
-	}
+	importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);
 }
 

@@ -10,17 +10,17 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
+CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
 	//TODO
-	CVFlyAxis_p* axis = new CVFlyAxis_p(p, static_cast<Core::CVShapeLayer*>(c->at(0)));
+	CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(0));
     addTab(axis, "");
     setTabToolTip(0, tr("Assi di volo"));
 
-	CVAreaDetail* area = new CVAreaDetail(p, static_cast<Core::CVShapeLayer*>(c->at(1)));
+	CVAreaDetail* area = new CVAreaDetail(p, c->at(1));
     addTab(area, "");
     setTabToolTip(1, tr("Aree da cartografare"));
     
-	CVDemDetail* dem = new CVDemDetail(p, static_cast<Core::CVFileInput*>(c->at(2)));
+	CVDemDetail* dem = new CVDemDetail(p, c->at(2));
 	addTab(dem, "");
     setTabToolTip(2, tr("DEM"));
 
@@ -28,7 +28,7 @@ CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : CVB
 	addTab(fs, "");
     setTabToolTip(3, tr("File degli assetti"));
 
-	_category = c;
+	_control = c;
 }
 
 } // namespace Details

@@ -1,7 +1,7 @@
 #ifndef CV_CORE_CATEGORIES_MISSIONCATEGORY_H
 #define CV_CORE_CATEGORIES_MISSIONCATEGORY_H
 
-#include "cvcategory.h"
+#include "cvcontrol.h"
 
 #include <QList>
 #include <QObject>

@@ -1,4 +1,5 @@
 #include "cvflyaxis_p.h"
+#include "core/cvcore_utils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -20,12 +21,9 @@ namespace Details {
 
 //TODO: needs cleanup, field generation
 
-CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
+CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	title(tr("Assi di volo"));
 	description(tr("File shape"));
-
-	QMenu* m = detailMenu();
-	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 
     QFormLayout* form = new QFormLayout;
 
@@ -68,11 +66,34 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
 
 	body(form);
 
-	_layer = l;
-
-	if (_layer->isValid()) {
-		QStringList& info = _layer->data();
+	if (controller()->isValid()) {
+		QStringList& info = layer()->data();
 		for (int i = 0; i < info.size(); ++i) {
+			QLabel* lab = _labels.at(i);
+			lab->setText(info.at(i));
+		}
+	}
+}
+
+void CVFlyAxis_p::searchFile() {
+	QString uri = QFileDialog::getOpenFileName(
+        this,
+        tr("Importa assi di volo"),
+		Core::CVSettings::get("/paths/search").toString(),
+        "(*.shp)"
+    );
+	if (!uri.isEmpty()) {
+		QFileInfo shp(uri);
+		Core::CVSettings::set("/paths/search", shp.absolutePath());
+		importAll(QStringList() << shp.absolutePath() + QDir::separator() + shp.baseName());
+	}
+}
+
+void CVFlyAxis_p::importAll(QStringList& uri) {
+	layer()->shape(uri.at(0));
+	if (controller()->persist()) {
+		QStringList& info = layer()->data();
+		for (int i = 0; i < _labels.size(); ++i) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
 		}
@@ -80,7 +101,7 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
 }
  
 void CVFlyAxis_p::clearAll() {
-	_layer->remove();
+	controller()->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
@@ -119,14 +140,7 @@ void CVFlyAxis_p::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVFlyAxis_p::dropEvent(QDropEvent* ev) {
     ev->accept();
-	_layer->shape(_file->absolutePath() + QDir::separator() + _file->baseName());
-	if (_layer->persist()) {
-		QStringList& info = _layer->data();
-		for (int i = 0; i < _labels.size(); ++i) {
-			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i));
-		}
-	}
+	importAll(QStringList() << _file->absolutePath() + QDir::separator() + _file->baseName());
     _file.reset(NULL);
 }
 

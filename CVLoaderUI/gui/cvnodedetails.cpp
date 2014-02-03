@@ -23,7 +23,7 @@ CVNodeDetails::CVNodeDetails(QWidget* p) : QWidget(p) {
     setLayout(box);
 }
 
-void CVNodeDetails::onControlAdded(CVNodeInfo::Type t, Core::CVCategory* controller) {
+void CVNodeDetails::onControlAdded(Core::CVControl::Type t, Core::CVControl* controller) {
     if (_details.contains(t)) {
         return;
     }
@@ -38,7 +38,7 @@ void CVNodeDetails::onProjectItemActivated(QTreeWidgetItem* item, int col) {
     Q_UNUSED(col)
 
     CVTreeNode* node = static_cast<CVTreeNode*>(item);
-	QMap<Status::CVNodeInfo::Type, QWidget*>::iterator iter = _details.find(node->info()->type());
+	QMap<Core::CVControl::Type, QWidget*>::iterator iter = _details.find(node->info()->type());
     if (iter != _details.end()) {
         QWidget* widget = *iter;
         _stack->setCurrentWidget(widget);

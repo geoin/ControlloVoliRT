@@ -2,7 +2,7 @@
 #define CV_GUI_HELPER_CVDETAILSFACTORY_H
 
 #include "gui/status/cvnodeinfo.h"
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 namespace CV {
 namespace GUI {
@@ -10,7 +10,7 @@ namespace Helper {
 
 class CVDetailsFactory {
 public:
-    static QWidget* build(QWidget* parent, Status::CVNodeInfo::Type, CV::Core::CVCategory*);
+    static QWidget* build(QWidget* parent, Core::CVControl::Type, CV::Core::CVControl*);
 };
 
 } // namespace Helper

@@ -1,4 +1,4 @@
-#include "cvareadetail.h"
+#include "cvcontourdetail.h"
 
 #include "core/cvcore_utils.h"
 
@@ -20,31 +20,31 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-//TODO: needs cleanup, all details should use the same hooks
-
-CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
+CVContourDetail::CVContourDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	setAcceptDrops(true);
 
-	title(tr("Aree da cartografare"));
+	title(tr("Limiti amministrativi"));
 	description(tr("File shape"));
 
-    /*QMenu* menu = new QMenu(this);
-    QAction* add = menu->addAction(QIcon(""), "Carica");*/
 	
     QFormLayout* form = new QFormLayout;
 
-	QLabel* lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
+	QLabel* lab, * info;
+	createRow(this, tr(""), lab, info);
+	_labels << info;
+	form->addRow(lab, info);
 
-	QLabel* n = new QLabel("Record inseriti", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
-
-	form->addRow(n, lab);
+	/*createRow(this, tr("Perimetro"), lab, info);
+	_labels << info;
+	form->addRow(lab, info);
+	
+	createRow(this, tr("Nome"), lab, info);
+	_labels << info;
+	form->addRow(lab, info);
+	
+	createRow(this, tr("CODREG"), lab, info);
+	_labels << info;
+	form->addRow(lab, info);*/
 
 	body(form);
 
@@ -52,16 +52,16 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 		QStringList info = layer()->data();
 		for (int i = 0; i < info.size(); ++i) {
 			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i));
+			lab->setText(info.at(i).toInt() != 0 ? "Dati inseriti." : "");
 		}
 	}
 }
 
-CVAreaDetail::~CVAreaDetail() {
+CVContourDetail::~CVContourDetail() {
 
 }
 
-void CVAreaDetail::clearAll() {
+void CVContourDetail::clearAll() {
 	controller()->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
@@ -69,10 +69,10 @@ void CVAreaDetail::clearAll() {
 	}
 }
 
-void CVAreaDetail::searchFile() {
+void CVContourDetail::searchFile() {
 	QString uri = QFileDialog::getOpenFileName(
         this,
-        tr("Importa aree da cartografare"),
+        tr("Importa contorno regione"),
 		Core::CVSettings::get("/paths/search").toString(),
         "(*.shp)"
     );
@@ -83,18 +83,18 @@ void CVAreaDetail::searchFile() {
 	}
 }
 
-void CVAreaDetail::importAll(QStringList& uri) {
+void CVContourDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
 	if (controller()->persist()) {
 		QStringList& info = layer()->data();
 		for (int i = 0; i < _labels.size(); ++i) {
 			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i));
+			lab->setText(info.at(i).toInt() != 0 ? "Dati inseriti" : "");
 		}
 	}
 }
 
-void CVAreaDetail::dragEnterEvent(QDragEnterEvent* ev) {
+void CVContourDetail::dragEnterEvent(QDragEnterEvent* ev) {
     const QMimeData* mime = ev->mimeData();
     QList<QUrl> list = mime->urls();
 
@@ -112,15 +112,15 @@ void CVAreaDetail::dragEnterEvent(QDragEnterEvent* ev) {
     }
 }
 
-void CVAreaDetail::dragMoveEvent(QDragMoveEvent* ev) {
+void CVContourDetail::dragMoveEvent(QDragMoveEvent* ev) {
     ev->accept();
 }
 
-void CVAreaDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
+void CVContourDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
     ev->accept();
 }
 
-void CVAreaDetail::dropEvent(QDropEvent* ev) {
+void CVContourDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 	importAll(QStringList() << _file->absolutePath() + QDir::separator() + _file->baseName());
     _file.reset(NULL);

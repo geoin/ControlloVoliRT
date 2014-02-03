@@ -1,7 +1,7 @@
 #ifndef CV_FLY_ATTITUDE_H
 #define CV_FLY_ATTITUDE_H
 
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 #include <QStringList>
 

@@ -2,7 +2,7 @@
 #define CV_GUI_DETAILS_CVMISSIONDETAIL_H
 
 #include "gui/cvbasetabwidget.h"
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 #include "core/categories/cvmissionobject.h"
 
 #include <QUuid>

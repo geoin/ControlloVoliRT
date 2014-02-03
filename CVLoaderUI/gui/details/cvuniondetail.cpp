@@ -1,4 +1,4 @@
-#include "cvareadetail.h"
+#include "cvuniondetail.h"
 
 #include "core/cvcore_utils.h"
 
@@ -22,14 +22,11 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
+CVUnionDetail::CVUnionDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	setAcceptDrops(true);
 
-	title(tr("Aree da cartografare"));
+	title(tr("Quadro di unione"));
 	description(tr("File shape"));
-
-    /*QMenu* menu = new QMenu(this);
-    QAction* add = menu->addAction(QIcon(""), "Carica");*/
 	
     QFormLayout* form = new QFormLayout;
 
@@ -39,7 +36,7 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 	_labels << lab;
 
-	QLabel* n = new QLabel("Record inseriti", this);
+	QLabel* n = new QLabel("Fogli inseriti", this);
 	n->setMinimumHeight(26);
 	n->setMaximumHeight(26);
 	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
@@ -57,11 +54,11 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	}
 }
 
-CVAreaDetail::~CVAreaDetail() {
+CVUnionDetail::~CVUnionDetail() {
 
 }
 
-void CVAreaDetail::clearAll() {
+void CVUnionDetail::clearAll() {
 	controller()->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
@@ -69,10 +66,10 @@ void CVAreaDetail::clearAll() {
 	}
 }
 
-void CVAreaDetail::searchFile() {
+void CVUnionDetail::searchFile() {
 	QString uri = QFileDialog::getOpenFileName(
         this,
-        tr("Importa aree da cartografare"),
+        tr("Importa quadro di unione"),
 		Core::CVSettings::get("/paths/search").toString(),
         "(*.shp)"
     );
@@ -83,7 +80,7 @@ void CVAreaDetail::searchFile() {
 	}
 }
 
-void CVAreaDetail::importAll(QStringList& uri) {
+void CVUnionDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
 	if (controller()->persist()) {
 		QStringList& info = layer()->data();
@@ -94,7 +91,7 @@ void CVAreaDetail::importAll(QStringList& uri) {
 	}
 }
 
-void CVAreaDetail::dragEnterEvent(QDragEnterEvent* ev) {
+void CVUnionDetail::dragEnterEvent(QDragEnterEvent* ev) {
     const QMimeData* mime = ev->mimeData();
     QList<QUrl> list = mime->urls();
 
@@ -112,15 +109,15 @@ void CVAreaDetail::dragEnterEvent(QDragEnterEvent* ev) {
     }
 }
 
-void CVAreaDetail::dragMoveEvent(QDragMoveEvent* ev) {
+void CVUnionDetail::dragMoveEvent(QDragMoveEvent* ev) {
     ev->accept();
 }
 
-void CVAreaDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
+void CVUnionDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
     ev->accept();
 }
 
-void CVAreaDetail::dropEvent(QDropEvent* ev) {
+void CVUnionDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 	importAll(QStringList() << _file->absolutePath() + QDir::separator() + _file->baseName());
     _file.reset(NULL);

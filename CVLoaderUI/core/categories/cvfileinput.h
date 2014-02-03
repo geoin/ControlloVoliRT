@@ -1,7 +1,7 @@
 #ifndef CV_FILE_INPUT_H
 #define CV_FILE_INPUT_H
 
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 #include <QStringList>
 

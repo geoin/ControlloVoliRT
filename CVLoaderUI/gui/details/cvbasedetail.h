@@ -6,6 +6,9 @@
 #include <QMenu>
 #include <QFileInfo>
 #include <QScopedPointer>
+#include <QFileDialog>
+
+#include "core/categories/cvcontrol.h"
 
 namespace CV {
 namespace GUI {
@@ -14,7 +17,7 @@ namespace Details {
 class CVBaseDetail : public QWidget {
     Q_OBJECT
 public:
-    explicit CVBaseDetail(QWidget *parent = 0);
+	explicit CVBaseDetail(QWidget* p, Core::CVObject*);
 
 	inline void title(const QString& title) { _title->setText(title); }
 	inline QString title() const { return _title->text(); }
@@ -27,12 +30,17 @@ public:
 
 	void createRow(QWidget* parent, const QString&, QLabel*& lab, QLabel*& info);
 
+protected:
+	inline Core::CVObject* controller() const { return _controller; }
+
 public slots: //declared as slots only here, not in derived
 	virtual void clearAll() = 0;
 	virtual void searchFile() = 0;
-	virtual void importAll(const QStringList&) = 0;
+	virtual void importAll(QStringList&) = 0;
 
 private:
+	Core::CVObject* _controller;
+
 	QLabel* _title, * _descr;
 	QWidget* _body;
 	QMenu* _menu;

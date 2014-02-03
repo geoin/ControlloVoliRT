@@ -1,7 +1,7 @@
 #ifndef CV_CORE_CVPROJECT_H
 #define CV_CORE_CVPROJECT_H
 
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 #include <QMap>
 #include <QDir>
@@ -17,7 +17,7 @@ namespace Core {
 class CVProject : public QObject {
     Q_OBJECT
 public:
-    enum Type { INVALID = 0, PHOTOGRAMMETRY, LIDAR };
+    enum Type { INVALID = 0, PHOTOGRAMMETRY = 1, LIDAR = 2 };
 
     explicit CVProject(QObject* p = 0);
 
@@ -28,15 +28,15 @@ public:
 
 	QString db() const { return _db; }
 
-	void insert(CVCategory*);
-	CVCategory* get(CVCategory::Type);
+	void insert(CVControl*);
+	CVControl* get(CVControl::Type);
 
     QString id, name, path, notes; //TODO, to be private
 	long long timestamp;
     Type type;
 
 private:
-	QMap<CVCategory::Type, CVCategory*> _categories;
+	QMap<CVControl::Type, CVControl*> _controls;
 	QString _db;
 };
 

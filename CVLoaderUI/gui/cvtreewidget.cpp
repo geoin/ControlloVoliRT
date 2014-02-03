@@ -17,15 +17,20 @@ CVTreeWidget::CVTreeWidget(QWidget* parent) : QTreeWidget(parent) {
     setMinimumWidth(260);
 }
 
-CVTreeNode* CVTreeWidget::insertProjectTree(const QString& title) {
-    CVTreeNode* root = new CVTreeNode(this, QStringList() << title);
+CVTreeNode* CVTreeWidget::insertProjectTree(const QString& title, Core::CVProject::Type t) {
+	QString type;
+	type = t == Core::CVProject::PHOTOGRAMMETRY ? tr("Fotogrammetria") : tr("Lidar");
+
+	CVTreeNode* root = new CVTreeNode(this, QStringList() << type + ": " + title);
+	root->info()->projType(t);
     addTopLevelItem(root);
     setCurrentItem(root);
     return root;
 }
 
-CVTreeNode* CVTreeWidget::insertNode(CVTreeNode* parent, const QString& text) {
+CVTreeNode* CVTreeWidget::insertNode(CVTreeNode* parent, const QString& text, Core::CVControl::Type t) {
 	CVTreeNode* node = new CVTreeNode(parent, QStringList() << text);
+	node->info()->type(t);
     return node;
 }
 

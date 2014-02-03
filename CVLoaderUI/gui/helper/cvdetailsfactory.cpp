@@ -3,6 +3,9 @@
 #include "gui/details/missionlistdetails.h"
 #include "gui/details/plandetail.h"
 #include "gui/details/cvflydetail.h"
+#include "gui/details/cvortodetail.h"
+
+#include "core/categories/cvcontrol.h"
 
 namespace CV {
 namespace GUI {
@@ -10,17 +13,20 @@ namespace Helper {
 
 using namespace Status;
 
-QWidget* CVDetailsFactory::build(QWidget* p, CVNodeInfo::Type t, CV::Core::CVCategory* category) {
+QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::CVControl* control) {
     QWidget* detail = NULL;
     switch (t) {
-        case CVNodeInfo::FLY_PLAN:
-            detail = new Details::CVPlanDetail(p, category);
+		case Core::CVControl::PLAN:
+            detail = new Details::CVPlanDetail(p, control);
             break;
-        case CVNodeInfo::GPS_DATA:
-            detail = new Details::CVMissionListDetails(p, category);
+        case Core::CVControl::GPS_DATA:
+            detail = new Details::CVMissionListDetails(p, control);
             break;
-        case CVNodeInfo::FLY:
-			detail = new Details::CVFlyDetail(p, category);
+        case Core::CVControl::FLY:
+			detail = new Details::CVFlyDetail(p, control);
+           break;
+        case Core::CVControl::ORTO:
+			detail = new Details::CVOrtoDetail(p, control);
            break;
         default:
             detail = new QWidget(p);

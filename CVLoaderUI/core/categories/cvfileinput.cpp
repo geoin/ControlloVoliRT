@@ -77,7 +77,7 @@ bool CVFileInput::persist() {
 			"DEM", 
 			QStringList() << "ID" << "URI",
 			QStringList() << "?1" << "?2" ,
-			QVariantList() << QUuid::createUuid().toString() << target()
+			QVariantList() << QUuid::createUuid().toString() << name
 		);
 		if (!ret) {
 			return false;
@@ -110,7 +110,8 @@ bool CVFileInput::load() {
 			1
 		);
 		if (!set.eof()) {
-			target(set[1].toString().c_str());
+			QString name(set[1].toString().c_str());
+			target(uri() + QDir::separator() + name);
 		} else {
 			return false;
 		}

@@ -1,7 +1,7 @@
-#ifndef CV_FLY_ATTITUDE_DETAIL_H
-#define CV_FLY_ATTITUDE_DETAIL_H
+#ifndef CV_CONTOUR_DETAIL_H
+#define CV_CONTOUR_DETAIL_H
 
-#include "core/categories/cvflyattitude.h"
+#include "core/categories/cvshapelayer.h"
 
 #include "cvbasedetail.h"
 
@@ -16,18 +16,18 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-class CVFlyAttitudeDetail : public CVBaseDetail {
+class CVContourDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVFlyAttitudeDetail(QWidget *parent, Core::CVObject*);
-	~CVFlyAttitudeDetail();
+	CVContourDetail(QWidget *parent, Core::CVObject*);
+	~CVContourDetail();
 
 	virtual void clearAll();
 	virtual void searchFile();
 	virtual void importAll(QStringList&);
-
-	inline Core::CVFlyAttitude* layer() const { return static_cast<Core::CVFlyAttitude*>(controller()); }
+	
+	inline Core::CVShapeLayer* layer() const { return static_cast<Core::CVShapeLayer*>(controller()); }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -37,6 +37,7 @@ protected:
 
 private:
     QScopedPointer<QFileInfo> _file;
+	QString _uri;
 	QList<QLabel*> _labels;
 };
 
@@ -44,4 +45,4 @@ private:
 } // namespace GUI
 } // namespace CV
 
-#endif // CV_FLY_ATTITUDE_DETAIL_H
+#endif // CVAREADETAIL_H
