@@ -20,12 +20,14 @@ class CVFlyAxis_p : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVFlyAxis_p(QWidget *parent, Core::CVShapeLayer*);
+	CVFlyAxis_p(QWidget *parent, Core::CVObject*);
 	~CVFlyAxis_p();
 	
 	virtual void clearAll();
-	virtual void searchFile() {}
-	virtual void importAll(const QStringList&) {}
+	virtual void searchFile();
+	virtual void importAll(QStringList&);
+
+	inline Core::CVShapeLayer* layer() const { return static_cast<Core::CVShapeLayer*>(controller()); }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -37,8 +39,6 @@ private:
     QScopedPointer<QFileInfo> _file;
 	QString _uri;
 	QList<QLabel*> _labels;
-
-	Core::CVShapeLayer* _layer;
 };
 
 } // namespace Details

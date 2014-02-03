@@ -11,6 +11,7 @@
 #include "core/categories/cvshapelayer.h"
 #include "core/categories/cvfileinput.h"
 #include "core/categories/cvmissionobject.h"
+#include "core/cvcore_utils.h"
 
 #include "CVUtil/cvspatialite.h"
 
@@ -34,14 +35,20 @@ void CVProjectManager::onNewProject() {
 
 	bool ret = proj->create(SQL::database);
 	if (ret) {
+		QString db = proj->path + QDir::separator() + SQL::database;
+
 		CVCategory* cat = _plan(proj, false);
 		proj->insert(cat);
 		
 		cat = new CVCategory(CVCategory::GPS_DATA, proj);
-		cat->uri(proj->path + QDir::separator() + SQL::database);
+		cat->uri(db);
 		proj->insert(cat);
 
 		cat = _fly(proj, false);
+		proj->insert(cat);
+
+		cat = new CVCategory(CVCategory::ORTO, proj);
+		cat->uri(db);
 		proj->insert(cat);
 
 		emit addProject(proj);
@@ -54,10 +61,15 @@ void CVProjectManager::onNewMission() {
 }
 
 void CVProjectManager::onLoadProject() {
-	QString proj = QFileDialog::getExistingDirectory(NULL, tr("Seleziona cartella progetto"));
+	QString proj = QFileDialog::getExistingDirectory(
+		NULL, 
+		tr("Seleziona cartella progetto"),
+		Core::CVSettings::get("/paths/project").toString()
+	);
 	if (proj.isEmpty()) {
 		return;
 	}
+	Core::CVSettings::set("/paths/project", proj);
 
 	GUI::CVScopedCursor c;
 	QDir dir(proj);
@@ -79,9 +91,12 @@ void CVProjectManager::onLoadProject() {
 			cat->insert(new CVMissionObject(cat, id));
 		}
 		cat->load();
-
 		
 		cat = _fly(proj, true);
+		proj->insert(cat);
+
+		cat = new CVCategory(CVCategory::ORTO, proj);
+		cat->uri(db);
 		proj->insert(cat);
 		
 		emit addProject(proj);

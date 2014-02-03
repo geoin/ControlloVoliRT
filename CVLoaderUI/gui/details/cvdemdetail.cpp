@@ -1,5 +1,8 @@
 #include "cvdemdetail.h"
 
+#include "core/cvcore_utils.h"
+#include "GUI/cvgui_utils.h"
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -22,12 +25,9 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : CVBaseDetail(p) {
+CVDemDetail::CVDemDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	title(tr("DEM"));
 	description(tr("File DEM"));
-
-	QMenu* m = detailMenu();
-	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 	
     QFormLayout* form = new QFormLayout;
 
@@ -94,10 +94,8 @@ CVDemDetail::CVDemDetail(QWidget* p, Core::CVFileInput* l) : CVBaseDetail(p) {
 
 	body(form);
 
-	_layer = l;
-
-	if (_layer->isValid()) {
-		QStringList& data = _layer->data();
+	if (controller()->isValid()) {
+		QStringList& data = file()->data();
 		assert(data.size() == _labels.size());
 		for (int i = 0; i < data.size(); ++i) {
 			_labels.at(i)->setText(data.at(i));
@@ -110,9 +108,36 @@ CVDemDetail::~CVDemDetail() {
 }
 
 void CVDemDetail::clearAll() {
-	_layer->remove();
+	controller()->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		_labels.at(i)->setText("");
+	}
+}
+
+void CVDemDetail::searchFile() {
+	QString uri = QFileDialog::getOpenFileName(
+        this,
+        tr("Importa DEM"),
+		Core::CVSettings::get("/paths/search").toString(),
+        ""
+    );
+	if (!uri.isEmpty()) {
+		QFileInfo info(uri);
+		Core::CVSettings::set("/paths/search", info.absolutePath());
+		importAll(QStringList() << uri);
+	}
+}
+
+void CVDemDetail::importAll(QStringList& uri) {
+	CV::GUI::CVScopedCursor cur;
+
+	file()->origin(uri.at(0));
+	if (controller()->persist()) {
+		QStringList& data = file()->data();
+		assert(data.size() == _labels.size());
+		for (int i = 0; i < data.size(); ++i) {
+			_labels.at(i)->setText(data.at(i));
+		}
 	}
 }
 
@@ -144,14 +169,7 @@ void CVDemDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVDemDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	_layer->origin(_file->absoluteFilePath());
-	if (_layer->persist()) {
-		QStringList& data = _layer->data();
-		assert(data.size() == _labels.size());
-		for (int i = 0; i < data.size(); ++i) {
-			_labels.at(i)->setText(data.at(i));
-		}
-	}
+	importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);
 }
 

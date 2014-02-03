@@ -2,7 +2,9 @@
 #define CV_CORE_COREUTILS
 
 #include <QDir>
+#include <QSettings>
 #include <QFileInfo>
+#include <QVariant>
 
 #include <Poco/Zip/Compress.h>
 #include <Poco/Zip/Decompress.h>
@@ -70,6 +72,17 @@ public:
 		dec.decompressAllFiles();
 		in.close();
 		return tot;
+	}
+};
+
+class CVSettings {
+public:
+	static void set(const QString& k, const QVariant& value) {
+		QSettings().setValue(k, value);
+	}
+
+	static QVariant get(const QString& k) {
+		return QSettings().value(k, QVariant());
 	}
 };
 

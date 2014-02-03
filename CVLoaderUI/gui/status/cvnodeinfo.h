@@ -11,7 +11,7 @@ class CVNodeInfo {
 public:
     enum Type {
         UNKNOWN_TYPE, PHOTOGRAMMETRY, FLY_PLAN,
-        GPS_DATA, FLY
+        GPS_DATA, FLY, ORTO
     };
 
     enum Status {

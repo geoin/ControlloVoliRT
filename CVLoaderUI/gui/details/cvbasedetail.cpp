@@ -21,7 +21,7 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVBaseDetail::CVBaseDetail(QWidget* p) : QWidget(p) {
+CVBaseDetail::CVBaseDetail(QWidget* p, Core::CVObject* c) : QWidget(p), _controller(c) {
     setAcceptDrops(true);
 
     QHBoxLayout* hLayout = new QHBoxLayout;
@@ -51,6 +51,10 @@ CVBaseDetail::CVBaseDetail(QWidget* p) : QWidget(p) {
     box->addWidget(_descr);
     box->addWidget(_body, 2);
     setLayout(box);
+
+	QMenu* m = detailMenu();
+	connect(m->addAction(QIcon(""), tr("Apri")), SIGNAL(triggered()), this, SLOT(searchFile()));
+	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 }
 
 void CVBaseDetail::createRow(QWidget* p, const QString& label, QLabel*& lab, QLabel*& info) {

@@ -20,26 +20,21 @@ namespace Details {
 class CVCameraDetail : public CVBaseDetail {
     Q_OBJECT
 public:
-    explicit CVCameraDetail(QWidget *parent = 0, Core::CVCamera* = 0);
+    explicit CVCameraDetail(QWidget *parent, Core::CVObject*);
 
     QLineEdit* lineEdit(QWidget* p, const QPalette&);
 	
 	virtual void clearAll();
-	virtual void searchFile() {}
-	virtual void importAll(const QStringList&) {}
+	virtual void searchFile();
+	virtual void importAll(QStringList&);
 
 	void save();
 	void view();
 
+	inline Core::CVCamera* camera() const { return static_cast<Core::CVCamera*>(controller()); }
+
 signals:
     void cameraInput(const QString& uri);
-
-public slots:
-    void onCameraInput(const QString& uri);
-
-    void onLoadCamParameters();
-    void onEditCamParameters();
-    void onClearCamParameters();
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -54,8 +49,6 @@ private:
     QString _uri;
 
     QPlainTextEdit* _note;
-
-	Core::CVCamera* _cam;
 };
 
 } // namespace Details

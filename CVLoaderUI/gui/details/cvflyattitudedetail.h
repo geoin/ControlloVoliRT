@@ -20,12 +20,14 @@ class CVFlyAttitudeDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVFlyAttitudeDetail(QWidget *parent, Core::CVFlyAttitude*);
+	CVFlyAttitudeDetail(QWidget *parent, Core::CVObject*);
 	~CVFlyAttitudeDetail();
 
 	virtual void clearAll();
-	virtual void searchFile() {}
-	virtual void importAll(const QStringList&);
+	virtual void searchFile();
+	virtual void importAll(QStringList&);
+
+	inline Core::CVFlyAttitude* layer() const { return static_cast<Core::CVFlyAttitude*>(controller()); }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -36,8 +38,6 @@ protected:
 private:
     QScopedPointer<QFileInfo> _file;
 	QList<QLabel*> _labels;
-
-	Core::CVFlyAttitude* _layer;
 };
 
 } // namespace Details

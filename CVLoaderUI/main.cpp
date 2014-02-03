@@ -3,6 +3,8 @@
 #include <QApplication>
 #include <QStyleFactory>
 
+#include "core/cvcore_utils.h"
+
 using namespace CV::GUI;
 
 int main(int argc, char *argv[]) {

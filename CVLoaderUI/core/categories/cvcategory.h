@@ -11,7 +11,7 @@ namespace Core {
 class CVObject : public QObject {
     Q_OBJECT
 public:
-	enum Type { UNKNOWN_OBJECT = 0, CAMERA, FLY_AXIS };
+	enum Type { UNKNOWN_OBJECT = 0, CAMERA, FLY_AXIS }; //TODO: COMPLETE
 
 	explicit CVObject(QObject* p) : QObject(p) {}
 	virtual ~CVObject() {}
@@ -36,7 +36,7 @@ private:
 class CVCategory : public QObject {
     Q_OBJECT
 public:
-	enum Type { UNKNOWN_CATEGORY = 0, PLAN, GPS_DATA, FLY };
+	enum Type { UNKNOWN_CATEGORY = 0, PLAN, GPS_DATA, FLY, ORTO };
 
 	explicit CVCategory(Type t, QObject* p) : QObject(p), _type(t) {}
 

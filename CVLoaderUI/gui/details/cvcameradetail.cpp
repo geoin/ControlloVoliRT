@@ -1,6 +1,7 @@
 #include "cvcameradetail.h"
 
 #include "gui/helper/cvactionslinker.h"
+#include "core/cvcore_utils.h"
 
 #include <QLabel>
 #include <QLineEdit>
@@ -25,17 +26,8 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : CVBaseDetail(p) {
+CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p, cam) {
     setAcceptDrops(true);
-
-    QMenu* menu = detailMenu();
-    QAction* open = menu->addAction(QIcon(""), tr("Apri"));
-    QAction* clearCam = menu->addAction(QIcon(""), tr("Cancella"));
-    //TODO: move to controller
-    connect(this, SIGNAL(cameraInput(QString)), SLOT(onCameraInput(QString)));
-
-    connect(open, SIGNAL(triggered()), this, SLOT(onLoadCamParameters()));
-    connect(clearCam, SIGNAL(triggered()), this, SLOT(clearAll()));
 
     //QAction* editCam = menu->addAction(QIcon(""), tr("Modifica"));
     //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
@@ -65,13 +57,12 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVCamera* cam) : CVBaseDetail(p
     body(form);
 
 	if (cam) {
-		_cam = cam;
-		bool plan = _cam->isPlanning(); 
-		_cam->data().planning = plan;
+		bool plan = camera()->isPlanning(); 
+		camera()->data().planning = plan;
 		
 		description(tr(plan ? "Fotocamera di progetto" : "Fotocamera di missione"));
 		
-		if (_cam->isValid()) {
+		if (controller()->isValid()) {
 			view();
 		}
 	}
@@ -116,13 +107,13 @@ void CVCameraDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVCameraDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-    onCameraInput(_file->absoluteFilePath());
+    importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);
 }
 
 //TODO: move validation in control class
-void CVCameraDetail::onCameraInput(const QString& uri) {
-    QFile file(uri);
+void CVCameraDetail::importAll(QStringList& uri) {
+    QFile file(uri.at(0));
     bool open = file.open(QIODevice::ReadOnly | QIODevice::Text);
     if (!open) {
         return;
@@ -156,7 +147,7 @@ void CVCameraDetail::onCameraInput(const QString& uri) {
 }
 
 void CVCameraDetail::save() {
-	Camera& c = _cam->data();
+	Camera& c = camera()->data();
 	c.foc = _params.value("FOC")->text().toDouble();
 	c.dimx = _params.value("DIMX")->text().toDouble();
 	c.dimy = _params.value("DIMY")->text().toDouble();
@@ -166,11 +157,11 @@ void CVCameraDetail::save() {
 	
 	c.descr = _note->toPlainText().toStdString();
 
-	_cam->persist();
+	controller()->persist();
 }
 
 void CVCameraDetail::view() {
-	Camera& c = _cam->data();
+	Camera& c = camera()->data();
 	_params.value("FOC")->setText(QString::number(c.foc, 'f', 4));
 	_params.value("DIMX")->setText(QString::number(c.dimx, 'f', 4));
 	_params.value("DIMY")->setText(QString::number(c.dimy, 'f', 4));
@@ -182,35 +173,37 @@ void CVCameraDetail::view() {
 }
 
 void CVCameraDetail::clearAll() {
-	_cam->remove();
-	view();
+	controller()->remove();
+	
+    foreach (QLineEdit* i, _params) {
+        i->setText("");
+    }
+    _note->setPlainText(QString());
+	
+	//view();
 }
 
-void CVCameraDetail::onLoadCamParameters() {
+void CVCameraDetail::searchFile() {
     QString uri = QFileDialog::getOpenFileName(
         this,
         tr("Importa parametri fotocamera"),
-        "",//QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).at(0), //QT5 only
+		Core::CVSettings::get("/paths/search").toString(),
         "(*.xml)"
     );
-    onCameraInput(uri);
+	if (!uri.isEmpty()) {
+		QFileInfo info(uri);
+		Core::CVSettings::set("/paths/search", info.absolutePath());
+		importAll(QStringList() << uri);
+	}
 }
-
+/*
 void CVCameraDetail::onEditCamParameters() {
     foreach (QLineEdit* i, _params) {
         i->setReadOnly(false);
         i->setStyleSheet("");
     }
     _note->setReadOnly(false);
-}
-
-void CVCameraDetail::onClearCamParameters() {
-    foreach (QLineEdit* i, _params) {
-        i->setText("");
-    }
-    _note->setPlainText(QString());
-}
-
+}*/
 
 } // namespace Details
 } // namespace GUI

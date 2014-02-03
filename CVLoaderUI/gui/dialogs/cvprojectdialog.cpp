@@ -1,5 +1,7 @@
 #include "cvprojectdialog.h"
 
+#include "core/cvcore_utils.h"
+
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QFileDialog>
@@ -60,8 +62,9 @@ void CVProjectDialog::selectProjectFolder() {
 	QString dir = QFileDialog::getExistingDirectory(
 		NULL,
 		tr("Selezionare cartella"),
-		""
+		Core::CVSettings::get("/paths/project").toString()
 	);
+	Core::CVSettings::set("/paths/project", dir);
 	_path->setText(dir);
 }
 

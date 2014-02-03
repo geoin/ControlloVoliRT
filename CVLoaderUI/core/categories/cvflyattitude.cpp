@@ -72,10 +72,10 @@ bool CVFlyAttitude::persist() {
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 
 	QStringList rec;
-	rec << "ID" << "PHOTO" << "PX" << "PY" << "PZ" << "OMEGA" << "PHI" << "KAPPA";
+	rec << "ID" << "STRIP" << "NAME" << "PX" << "PY" << "PZ" << "OMEGA" << "PHI" << "KAPPA";
 	
 	QStringList ph;
-	ph << "?1" << "?2" << "?3" << "?4" << "?5" << "?6" << "?7" << "?8";
+	ph << "?1" << "?2" << "?3" << "?4" << "?5" << "?6" << "?7" << "?8" << "?9";
 
 	QMap<QString, int> attData;
 	while (!str.atEnd()) { 
@@ -88,7 +88,8 @@ bool CVFlyAttitude::persist() {
 			continue;
 		}
 
-		QStringList id = l.at(0).split("_");
+		QString key = l.at(0);
+		QStringList id = key.split("_");
 		if (id.length() != 2) {
 			continue;
 		}
@@ -98,7 +99,7 @@ bool CVFlyAttitude::persist() {
 		QString photo = id.at(1);
 
 		attData[part]++; //QT container set default at zero, so i need no initialization
-		data << part << photo;
+		data << key << part << photo;
 
 		bool ok;
 		qreal val;
@@ -141,8 +142,8 @@ bool CVFlyAttitude::load() {
 	QMap<QString, int> attData;
 	try {
 		CV::Util::Spatialite::Recordset set = q->select(
-			QStringList() << "ID" << "count(*)",
-			QStringList() << "ASSETTI GROUP BY ID", 
+			QStringList() << "STRIP" << "count(*)",
+			QStringList() << "ASSETTI GROUP BY STRIP", 
 			QStringList(),
 			QVariantList()
 		);

@@ -20,15 +20,11 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDetail(p) {
+CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVObject* s) : CVBaseDetail(p, s) {
 	assert(s != NULL);
-	_handler = s;
 
 	title(tr("Stazioni permanenti"));
 	description(tr("File zip o coppie (.n .o)"));
-	
-	QMenu* m = detailMenu();
-	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 
 	QVBoxLayout* l = new QVBoxLayout;
 	_stations = new QListWidget(this);
@@ -47,8 +43,8 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVStations* s) : CVBaseDeta
 
 	body(l);
 
-	for (int i = 0; i < _handler->count(); ++i) {
-		addItem(_handler->at(i)->name());
+	for (int i = 0; i < stations()->count(); ++i) {
+		addItem(stations()->at(i)->name());
 	}
 }
 
@@ -56,20 +52,125 @@ CVStationsDetail::~CVStationsDetail() {
 }
 
 void CVStationsDetail::clearAll() {
-	_handler->remove();
+	controller()->remove();
 	_stations->clear();
 	_details->clear();
 }
 
+void CVStationsDetail::searchFile() {
+	QStringList uri = QFileDialog::getOpenFileNames(
+        this,
+        tr("Importa dati GPS"),
+		Core::CVSettings::get("/paths/search").toString(),
+        "(*.*n *.*o *.zip)"
+    );
+
+	CV::GUI::CVScopedCursor cur;
+
+	QSet<QString> ext;
+	if (!uri.isEmpty()) {
+		for (int i = 0; i < uri.size(); ++i) {
+			QFileInfo info(uri.at(i));
+			ext << info.completeSuffix().toLower();
+			if (_station.isEmpty()) {
+				_station = info.baseName().left(7);
+				Core::CVSettings::set("/paths/search", info.absolutePath());
+			}
+		}
+		if (ext.size() == 1 && ext.contains("zip")) { //one or more zip
+			_base = "zip";
+		} else if ((uri.size() % 2) || ext.contains("zip")) { //.n .o, but not valid
+			return;
+		}
+
+		importAll(uri);
+	}
+}
+
+void CVStationsDetail::importAll(QStringList& uri) {
+	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(stations()->uri()).absolutePath());
+
+	//need a tmp dir
+	const QString& tmp = tmpDir.toString();
+	if (tmp.isEmpty()) {
+		return;
+	}
+	
+	//check if this station is already in for actual mission, if so get the zip and decompress
+	QString id;
+	QString zipToUpdate = stations()->getZipFromStation(_station, tmp, id);
+	if (!zipToUpdate.isEmpty()) {
+		Core::CVZip::unzip(zipToUpdate.toStdString(), tmp.toStdString());
+		tmpDir.dir().remove(zipToUpdate);
+	}
+
+	//if a zip is dragged, decompress it in tmp
+	if (_base == "zip") {
+		foreach (const QString& f, uri) {
+			Core::CVZip::unzip(f.toStdString(), tmp.toStdString());
+		}
+		QStringList tmpFiles = tmpDir.dir().entryList(QDir::Files);
+
+		uri.clear();
+		foreach (const QString& n, tmpFiles) {
+			uri.append(tmp + QDir::separator() + n);
+		}
+	} else { 
+		foreach (const QString& f, uri) {
+			QFileInfo info(f);
+			QFile::copy(f, tmp + QDir::separator() + info.fileName());// .n .o in tmp 
+		}
+	}
+
+	std::vector<std::string> files;
+	foreach (const QString& f, uri) {
+		files.push_back(f.toStdString());
+	}
+
+	//new zip creation
+	QString z(tmp + QDir::separator() + _station + ".zip");
+	Core::CVZip::zip(files, z.toStdString());
+
+	//update view
+	QFileInfo info(z);
+	QString rinex = info.baseName();
+	
+	//TODO (FIX): needs to handle station id inside controller
+	Core::CVStation::Ptr r(id.isEmpty() ? new Core::CVStation(this) : new Core::CVStation(this, id));
+	r->mission(stations()->mission());
+	r->origin(info.absoluteFilePath());
+	r->uri(stations()->uri());
+	if (!r->persist()) {
+		return;
+	}
+
+	if (id.isEmpty()) {
+		CVStationDelegate* del = addItem(rinex);
+		//TODO: other info
+		stations()->add(r);
+	} 
+
+	//clean up
+	
+    uri.clear();
+	_base = QString();
+	_station = QString();
+
+	if (_details->isVisible()) {
+		int index = _stations->currentRow();
+		onStationSelected(index);
+	}
+}
+
 void CVStationsDetail::onStationSelected(int item) {
-	if (item < 0 || !_handler->count()) {
+	if (item < 0 || !stations()->count()) {
 		_details->clear();
 		_details->setVisible(false);
-	} else if (item < _handler->count()) {
+	} else if (item < stations()->count()) {
 		CV::GUI::CVScopedCursor cur;
 
 		_details->clear();
-		Core::CVStation* i = _handler->at(item);
+		Core::CVStation* i = stations()->at(item);
 		QStringList data;
 		i->list(data);
 		foreach (const QString& f, data) {
@@ -83,7 +184,7 @@ void CVStationsDetail::onStationSelected(int item) {
 }
 
 void CVStationsDetail::onRemoveStation(int r) {
-	_handler->removeAt(r);
+	stations()->removeAt(r);
 }
 
 CVStationDelegate* CVStationsDetail::addItem(const QString& name) {
@@ -154,79 +255,8 @@ void CVStationsDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 
 	CV::GUI::CVScopedCursor cur;
-
-	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(_handler->uri()).absolutePath());
-
-	//need a tmp dir
-	const QString& tmp = tmpDir.toString();
-	if (tmp.isEmpty()) {
-		return;
-	}
+	importAll(_files);
 	
-	//check if this station is already in for actual mission, if so get the zip and decompress
-	QString id;
-	QString zipToUpdate = _handler->getZipFromStation(_station, tmp, id);
-	if (!zipToUpdate.isEmpty()) {
-		Core::CVZip::unzip(zipToUpdate.toStdString(), tmp.toStdString());
-		tmpDir.dir().remove(zipToUpdate);
-	}
-
-	//if a zip is dragged, decompress it in tmp
-	if (_base == "zip") {
-		foreach (const QString& f, _files) {
-			Core::CVZip::unzip(f.toStdString(), tmp.toStdString());
-		}
-		QStringList tmpFiles = tmpDir.dir().entryList(QDir::Files);
-
-		_files.clear();
-		foreach (const QString& n, tmpFiles) {
-			_files.append(tmp + QDir::separator() + n);
-		}
-	} else { 
-		foreach (const QString& f, _files) {
-			QFileInfo info(f);
-			QFile::copy(f, tmp + QDir::separator() + info.fileName());// .n .o in tmp 
-		}
-	}
-
-	std::vector<std::string> files;
-	foreach (const QString& f, _files) {
-		files.push_back(f.toStdString());
-	}
-
-	//new zip creation
-	QString z(tmp + QDir::separator() + _station + ".zip");
-	Core::CVZip::zip(files, z.toStdString());
-
-	//update view
-	QFileInfo info(z);
-	QString rinex = info.baseName();
-	
-	//TODO (FIX): needs to handle station id inside controller
-	Core::CVStation::Ptr r(id.isEmpty() ? new Core::CVStation(this) : new Core::CVStation(this, id));
-	r->mission(_handler->mission());
-	r->origin(info.absoluteFilePath());
-	r->uri(_handler->uri());
-	if (!r->persist()) {
-		return;
-	}
-
-	if (id.isEmpty()) {
-		CVStationDelegate* del = addItem(rinex);
-		//TODO: other info
-		_handler->add(r);
-	} 
-
-	//clean up
-	
-    _files.clear();
-	_base = QString();
-	_station = QString();
-
-	if (_details->isVisible()) {
-		int index = _stations->currentRow();
-		onStationSelected(index);
-	}
 }
 
 } // namespace Details

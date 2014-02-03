@@ -3,6 +3,7 @@
 #include "gui/details/missionlistdetails.h"
 #include "gui/details/plandetail.h"
 #include "gui/details/cvflydetail.h"
+#include "gui/details/cvortodetail.h"
 
 namespace CV {
 namespace GUI {
@@ -21,6 +22,9 @@ QWidget* CVDetailsFactory::build(QWidget* p, CVNodeInfo::Type t, CV::Core::CVCat
             break;
         case CVNodeInfo::FLY:
 			detail = new Details::CVFlyDetail(p, category);
+           break;
+        case CVNodeInfo::ORTO:
+			detail = new Details::CVOrtoDetail(p, category);
            break;
         default:
             detail = new QWidget(p);

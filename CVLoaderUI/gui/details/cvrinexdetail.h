@@ -14,11 +14,13 @@ namespace Details {
 class CVRinexDetail : public CVBaseDetail {
     Q_OBJECT
 public:
-	explicit CVRinexDetail(QWidget *parent, Core::CVRinex*);
+	explicit CVRinexDetail(QWidget *parent, Core::CVObject*);
 
 	virtual void clearAll();
-	virtual void searchFile() {}
-	virtual void importAll(const QStringList&) {}
+	virtual void searchFile();
+	virtual void importAll(QStringList&);
+
+	inline Core::CVRinex* rinex() const { return static_cast<Core::CVRinex*>(controller()); }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -31,9 +33,7 @@ private:
 	QListWidget* _details;
 	
 	QString _base, _station;
-    QList<QString> _files;
-	
-	Core::CVRinex* _rinex;
+    QStringList _files;
 };
 
 } // namespace Details

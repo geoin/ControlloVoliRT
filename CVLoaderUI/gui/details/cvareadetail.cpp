@@ -1,5 +1,7 @@
 #include "cvareadetail.h"
 
+#include "core/cvcore_utils.h"
+
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -20,14 +22,11 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) {
+CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	setAcceptDrops(true);
 
 	title(tr("Aree da cartografare"));
 	description(tr("File shape"));
-
-	QMenu* m = detailMenu();
-	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
 
     /*QMenu* menu = new QMenu(this);
     QAction* add = menu->addAction(QIcon(""), "Carica");*/
@@ -49,10 +48,8 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVShapeLayer* l) : CVBaseDetail(p) 
 
 	body(form);
 
-	_layer = l;
-
-	if (_layer->isValid()) {
-		QStringList info = _layer->data();
+	if (controller()->isValid()) {
+		QStringList info = layer()->data();
 		for (int i = 0; i < info.size(); ++i) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
@@ -65,10 +62,35 @@ CVAreaDetail::~CVAreaDetail() {
 }
 
 void CVAreaDetail::clearAll() {
-	_layer->remove();
+	controller()->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
+	}
+}
+
+void CVAreaDetail::searchFile() {
+	QString uri = QFileDialog::getOpenFileName(
+        this,
+        tr("Importa aree da cartografare"),
+		Core::CVSettings::get("/paths/search").toString(),
+        "(*.shp)"
+    );
+	if (!uri.isEmpty()) {
+		QFileInfo shp(uri);
+		Core::CVSettings::set("/paths/search", shp.absolutePath());
+		importAll(QStringList() << shp.absolutePath() + QDir::separator() + shp.baseName());
+	}
+}
+
+void CVAreaDetail::importAll(QStringList& uri) {
+	layer()->shape(uri.at(0));
+	if (controller()->persist()) {
+		QStringList& info = layer()->data();
+		for (int i = 0; i < _labels.size(); ++i) {
+			QLabel* lab = _labels.at(i);
+			lab->setText(info.at(i));
+		}
 	}
 }
 
@@ -100,14 +122,7 @@ void CVAreaDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVAreaDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	_layer->shape(_file->absolutePath() + QDir::separator() + _file->baseName());
-	if (_layer->persist()) {
-		QStringList& info = _layer->data();
-		for (int i = 0; i < _labels.size(); ++i) {
-			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i));
-		}
-	}
+	importAll(QStringList() << _file->absolutePath() + QDir::separator() + _file->baseName());
     _file.reset(NULL);
 }
 

@@ -89,6 +89,12 @@ void CVAppContainer::insertProject(Core::CVProject* proj) {
     info = node->info();
     info->type(CVNodeInfo::FLY);
     emit controlAdded(info->type(), proj->get(Core::CVCategory::FLY));
+
+	
+    node = _tree->insertNode(root, tr("Orto immagini"));
+    info = node->info();
+    info->type(CVNodeInfo::ORTO);
+    emit controlAdded(info->type(), proj->get(Core::CVCategory::ORTO));
 }
 
 void CVAppContainer::link() {
