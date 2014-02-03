@@ -109,17 +109,18 @@ void CVStationsDetail::importAll(QStringList& uri) {
 		foreach (const QString& f, uri) {
 			Core::CVZip::unzip(f.toStdString(), tmp.toStdString());
 		}
-		QStringList tmpFiles = tmpDir.dir().entryList(QDir::Files);
-
-		uri.clear();
-		foreach (const QString& n, tmpFiles) {
-			uri.append(tmp + QDir::separator() + n);
-		}
 	} else { 
 		foreach (const QString& f, uri) {
 			QFileInfo info(f);
 			QFile::copy(f, tmp + QDir::separator() + info.fileName());// .n .o in tmp 
 		}
+	}
+	
+	QStringList tmpFiles = tmpDir.dir().entryList(QDir::Files);
+
+	uri.clear();
+	foreach (const QString& n, tmpFiles) {
+		uri.append(tmp + QDir::separator() + n);
 	}
 
 	std::vector<std::string> files;
