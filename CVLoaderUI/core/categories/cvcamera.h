@@ -1,7 +1,7 @@
 #ifndef CVCAMERA_H
 #define CVCAMERA_H
 
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 //#include "core/cvbaseinputverifier.h"
 
 #include <photo_util/vdp.h>

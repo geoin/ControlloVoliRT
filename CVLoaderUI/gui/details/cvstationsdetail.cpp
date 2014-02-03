@@ -65,8 +65,6 @@ void CVStationsDetail::searchFile() {
         "(*.*n *.*o *.zip)"
     );
 
-	CV::GUI::CVScopedCursor cur;
-
 	QSet<QString> ext;
 	if (!uri.isEmpty()) {
 		for (int i = 0; i < uri.size(); ++i) {
@@ -88,7 +86,9 @@ void CVStationsDetail::searchFile() {
 }
 
 void CVStationsDetail::importAll(QStringList& uri) {
-	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(stations()->uri()).absolutePath());
+	GUI::CVScopedCursor cur;
+	
+	Core::CVScopedTmpDir tmpDir(QFileInfo(stations()->uri()).absolutePath());
 
 	//need a tmp dir
 	const QString& tmp = tmpDir.toString();
@@ -253,8 +253,6 @@ void CVStationsDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 //TODO: handle this in controller
 void CVStationsDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-
-	CV::GUI::CVScopedCursor cur;
 	importAll(_files);
 	
 }

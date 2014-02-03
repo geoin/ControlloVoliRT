@@ -3,17 +3,16 @@
 
 #include <QObject>
 
+#include "core/categories/cvcontrol.h"
+#include "core/cvproject.h"
+
+
 namespace CV {
 namespace GUI {
 namespace Status {
 
 class CVNodeInfo {
 public:
-    enum Type {
-        UNKNOWN_TYPE, PHOTOGRAMMETRY, FLY_PLAN,
-        GPS_DATA, FLY, ORTO
-    };
-
     enum Status {
         UNKNOWN_STATUS, INCOMPLETE, COMPLETE
     };
@@ -23,16 +22,20 @@ public:
     inline bool isProjectRoot() const { return _isRoot; }
     inline void isProjectRoot(bool b) { _isRoot = b; }
 
-    inline Type type() const { return _type; }
-    inline void type(Type t) { _type = t; }
+    inline Core::CVControl::Type type() const { return _type; }
+    inline void type(Core::CVControl::Type t) { _type = t; }
+	
+    inline Core::CVProject::Type projType() const { return _projType; }
+    inline void projType(Core::CVProject::Type t) { _projType = t; }
 
     inline Status status() const { return _status; }
     inline void status(Status s) { _status = s; }
 
 private:
     bool _isRoot;
-    Type _type;
     Status _status;
+	Core::CVControl::Type _type;
+	Core::CVProject::Type _projType;
 
     Q_DISABLE_COPY(CVNodeInfo)
 };

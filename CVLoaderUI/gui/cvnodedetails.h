@@ -2,7 +2,7 @@
 #define CV_GUI_CVNODEDETAILS_H
 
 #include "gui/status/cvnodeinfo.h"
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 #include <QWidget>
 #include <QMap>
@@ -20,18 +20,18 @@ public:
 
     explicit CVNodeDetails(QWidget *parent = 0);
 
-	QWidget* getDetail(Status::CVNodeInfo::Type t) const { _details.contains(t) ? _details.value(t) : NULL; }
+	QWidget* getDetail(Core::CVControl::Type t) const { _details.contains(t) ? _details.value(t) : NULL; }
 
 signals:
 
 public slots:
     void onProjectItemActivated(QTreeWidgetItem* item, int col);
-    void onControlAdded(CV::GUI::Status::CVNodeInfo::Type, Core::CVCategory* = NULL);
+	void onControlAdded(CV::Core::CVControl::Type, Core::CVControl* = NULL);
 	void onClear();
 
 private:
     QStackedWidget* _stack;
-    QMap<Status::CVNodeInfo::Type, QWidget*> _details;
+    QMap<Core::CVControl::Type, QWidget*> _details;
 };
 
 } // namespace GUI

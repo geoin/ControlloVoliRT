@@ -1,5 +1,7 @@
 #include "cvortodetail.h"
 
+#include "cvuniondetail.h"
+#include "cvcontourdetail.h"
 
 #include <QLabel>
 
@@ -7,19 +9,17 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVOrtoDetail::CVOrtoDetail(QWidget* p, Core::CVCategory* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
+CVOrtoDetail::CVOrtoDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
 	//TODO
-	/*CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(0));
-    addTab(axis, "");
-    setTabToolTip(0, tr("Assi di volo"));
+	CVUnionDetail* un = new CVUnionDetail(p, c->at(0));
+    addTab(un, "");
+    setTabToolTip(0, tr("Quadro di unione"));
 
-	CVAreaDetail* area = new CVAreaDetail(p, c->at(1));
-    addTab(area, "");
-    setTabToolTip(1, tr("Aree da cartografare"));
-    
-	*/
+	CVContourDetail* cont = new CVContourDetail(p, c->at(1));
+    addTab(cont, "");
+    setTabToolTip(1, tr("Contorno regione"));
 
-	_category = c;
+	_control = c;
 }
 
 } // namespace Details

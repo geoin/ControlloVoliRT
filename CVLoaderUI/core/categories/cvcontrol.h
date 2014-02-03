@@ -1,5 +1,5 @@
-#ifndef CV_CORE_CATEGORIES_CATEGORY_H
-#define CV_CORE_CATEGORIES_CATEGORY_H
+#ifndef CV_CORE_CATEGORIES_CONTROL_H
+#define CV_CORE_CATEGORIES_CONTROL_H
 
 #include <QList>
 #include <QObject>
@@ -11,7 +11,20 @@ namespace Core {
 class CVObject : public QObject {
     Q_OBJECT
 public:
-	enum Type { UNKNOWN_OBJECT = 0, CAMERA, FLY_AXIS }; //TODO: COMPLETE
+	enum Type { 
+		UNKNOWN_OBJECT = 0, 
+		CAMERA, 
+		AVOLOP,
+		CARTO,
+		DEM,
+		MISSION,
+		FLY_RINEX,
+		STATION,
+		AVOLOV,
+		ATTITUDE,
+		QUADRO,
+		CONTOUR
+	};
 
 	explicit CVObject(QObject* p) : QObject(p) {}
 	virtual ~CVObject() {}
@@ -33,12 +46,12 @@ private:
 	QString _uri;
 };
 
-class CVCategory : public QObject {
+class CVControl : public QObject {
     Q_OBJECT
 public:
-	enum Type { UNKNOWN_CATEGORY = 0, PLAN, GPS_DATA, FLY, ORTO };
+	enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO };
 
-	explicit CVCategory(Type t, QObject* p) : QObject(p), _type(t) {}
+	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}
 
 	inline Type type() const { return _type; }
 

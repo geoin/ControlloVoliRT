@@ -25,8 +25,9 @@ public slots:
     void onNewMission();
 
 private:
-	CVCategory* _plan(CVProject*, bool load);
-	CVCategory* _fly(CVProject*, bool load);
+	CVControl* _plan(CVProject*, bool load);
+	CVControl* _fly(CVProject*, bool load);
+	CVControl* _orto(CVProject*, bool load);
 
     QList<CVProject*> _projects;
 };

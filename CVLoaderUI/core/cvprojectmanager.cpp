@@ -37,19 +37,18 @@ void CVProjectManager::onNewProject() {
 	if (ret) {
 		QString db = proj->path + QDir::separator() + SQL::database;
 
-		CVCategory* cat = _plan(proj, false);
-		proj->insert(cat);
+		CVControl* ctrl = _plan(proj, false);
+		proj->insert(ctrl);
 		
-		cat = new CVCategory(CVCategory::GPS_DATA, proj);
-		cat->uri(db);
-		proj->insert(cat);
+		ctrl = new CVControl(CVControl::GPS_DATA, proj);
+		ctrl->uri(db);
+		proj->insert(ctrl);
 
-		cat = _fly(proj, false);
-		proj->insert(cat);
+		ctrl = _fly(proj, false);
+		proj->insert(ctrl);
 
-		cat = new CVCategory(CVCategory::ORTO, proj);
-		cat->uri(db);
-		proj->insert(cat);
+		ctrl = _orto(proj, false);
+		proj->insert(ctrl);
 
 		emit addProject(proj);
 		_projects.append(proj);
@@ -77,89 +76,109 @@ void CVProjectManager::onLoadProject() {
 		CVProject* proj = new CVProject(this);
 		QString db = proj->loadFrom(dir.absolutePath());
 
-		// Init categories
-		CVCategory* cat = _plan(proj, true);
-		proj->insert(cat);
+		// Init controls
+		CVControl* ctrl = _plan(proj, true);
+		proj->insert(ctrl);
 
-		cat = new CVCategory(CVCategory::GPS_DATA, proj);
-		cat->uri(db);
-		proj->insert(cat);
+		ctrl = new CVControl(CVControl::GPS_DATA, proj);
+		ctrl->uri(db);
+		proj->insert(ctrl);
 
 		QStringList ids;
 		proj->missionList(ids);
 		foreach(const QString& id, ids) {
-			cat->insert(new CVMissionObject(cat, id));
+			ctrl->insert(new CVMissionObject(ctrl, id));
 		}
-		cat->load();
+		ctrl->load();
 		
-		cat = _fly(proj, true);
-		proj->insert(cat);
+		ctrl = _fly(proj, true);
+		proj->insert(ctrl);
 
-		cat = new CVCategory(CVCategory::ORTO, proj);
-		cat->uri(db);
-		proj->insert(cat);
+		ctrl = _orto(proj, true);
+		proj->insert(ctrl);
 		
 		emit addProject(proj);
 		_projects.append(proj);
 	}
 }   
 
-//Take most data from other categories
-CVCategory* CVProjectManager::_fly(CVProject* proj, bool b) {
-	CVCategory* plan = proj->get(CVCategory::PLAN);
-	CVCategory* gps = proj->get(CVCategory::GPS_DATA);
+//Take most data from other controls
+CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
+	CVControl* plan = proj->get(CVControl::PLAN);
+	CVControl* gps = proj->get(CVControl::GPS_DATA);
 
-	CVCategory* cat = new CVCategory(CVCategory::FLY, proj);
-	cat->uri(proj->db());
+	CVControl* ctrl = new CVControl(CVControl::FLY, proj);
+	ctrl->uri(proj->db());
 
 	CVShapeLayer* axis = new CVShapeLayer(proj);
 	axis->uri(proj->path);
 	axis->table("AVOLOV");
 	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
-	cat->insert(axis);
+	ctrl->insert(axis);
 	if (b) {
 		axis->load();
 	}
 
-	cat->insert(plan->at(2));
-	cat->insert(plan->at(3), false);
+	ctrl->insert(plan->at(2));
+	ctrl->insert(plan->at(3), false);
 
 	CVFlyAttitude* fa = new CVFlyAttitude(proj);
 	fa->uri(proj->path);
-	cat->insert(fa);
+	ctrl->insert(fa);
 	if (b) {
 		fa->load();
 	}
-	return cat;
+	return ctrl;
 }
 
-CVCategory* CVProjectManager::_plan(CVProject* proj, bool b) {
-	CVCategory* cat = new CVCategory(CVCategory::PLAN, proj);
-	cat->uri(proj->db());
+CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
+	CVControl* ctrl = new CVControl(CVControl::PLAN, proj);
+	ctrl->uri(proj->db());
 
 	// Init camera
-	CVCamera* cam = new CVCamera(cat);
-	cat->insert(cam);
+	CVCamera* cam = new CVCamera(ctrl);
+	ctrl->insert(cam);
 	
-	CVShapeLayer* layer = new CVShapeLayer(cat);
+	CVShapeLayer* layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
-	cat->insert(layer);
+	ctrl->insert(layer);
 
-	layer = new CVShapeLayer(cat);
+	layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList() << "count(*)");
 	layer->table("CARTO");
-	cat->insert(layer);
+	ctrl->insert(layer);
 
-	CVFileInput* file = new CVFileInput(cat);
+	CVFileInput* file = new CVFileInput(ctrl);
 	file->uri(proj->path); 
-	cat->insert(file, false);
+	ctrl->insert(file, false);
 
 	if (b) {
-		cat->load();
+		ctrl->load();
 	}
 
-	return cat;
+	return ctrl;
+}
+
+CVControl* CVProjectManager::_orto(CVProject* proj, bool b) {
+	CVControl* ctrl = new CVControl(CVControl::ORTO, proj);
+	ctrl->uri(proj->db());
+
+	CVShapeLayer* layer = new CVShapeLayer(ctrl);
+	layer->columns(QStringList() << "count(*)");
+	layer->table("QUADRO_RT");
+	ctrl->insert(layer);
+
+	layer = new CVShapeLayer(ctrl);
+	layer->columns(QStringList() << "count(*)");
+	layer->table("CONTORNO_RT");
+	ctrl->insert(layer);
+
+	if (b) {
+		ctrl->load();
+	}
+
+	return ctrl;
 }
    
 void CVProjectManager::onCloseProject() {

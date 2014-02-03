@@ -8,7 +8,7 @@
 #include <QScopedPointer>
 #include <QFileDialog>
 
-#include "core/categories/cvcategory.h"
+#include "core/categories/cvcontrol.h"
 
 namespace CV {
 namespace GUI {

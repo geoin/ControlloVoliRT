@@ -1,5 +1,6 @@
 #include "cvjournal.h"
 #include "core/sql/querybuilder.h"
+#include "core/categories/cvcontrol.h"
 
 #include "CVUtil/cvspatialite.h"
 
@@ -12,7 +13,7 @@ namespace Core {
 void CVJournal::add(CVJournalEntry::Entry e) {
 	CV::Util::Spatialite::Connection cnn;
 	try {
-		cnn.open(SQL::database.toStdString()); 
+		cnn.open(e->db.toStdString()); 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
 		return;
@@ -22,8 +23,8 @@ void CVJournal::add(CVJournalEntry::Entry e) {
 		e->id = QUuid::createUuid().toString();
 	}
 
-	if (e->date.isEmpty()) {
-		e->date = QDateTime::currentMSecsSinceEpoch();
+	if (!e->date.isValid()) {
+		e->date = QDateTime::currentDateTimeUtc();
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
@@ -35,26 +36,40 @@ void CVJournal::add(CVJournalEntry::Entry e) {
 	);
 }
 
-CVJournalEntry::Entry CVJournal::last(const QStringList& filters, const QVariantList& binds, const QStringList& order) {
+CVJournalEntry::EntryList CVJournal::last(const QStringList& filters, const QVariantList& binds, int num) {
+	CVJournalEntry::EntryList list;
 	CV::Util::Spatialite::Connection cnn;
 	try {
 		cnn.open(SQL::database.toStdString()); 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
-		return CVJournalEntry::Entry();
+		return list;
 	}
-
-	CVJournalEntry::Entry e(new CVJournalEntry); 
+ 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	q->select(
-		QStringList()  << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL" << "OBJECT",
-		QStringList()  << "JOURNAL", 
-		filters,
-		binds,
-		order
-	);
+	try {
+		Util::Spatialite::Recordset set = q->select(
+			QStringList()  << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL" << "OBJECT",
+			QStringList()  << "JOURNAL", 
+			filters,
+			binds,
+			QStringList() << "ORDER BY DATE DESC LIMIT " + QString::number(num)
+		);
 
-	return e;
+		while (!set.eof()) {
+			CVJournalEntry::Entry e(new CVJournalEntry);
+			e->id = set[0].toString().c_str();
+			e->date = QDateTime::fromMSecsSinceEpoch(set[1].toInt64());
+			e->uri = set[0].toString().c_str();
+			e->note = set[0].toString().c_str();
+			
+			list.append(e);
+			set.next();
+		}
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+	}
+	return list;
 }
 
 } // namespace Core

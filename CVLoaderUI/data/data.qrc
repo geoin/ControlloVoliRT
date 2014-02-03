@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/sql">
         <file>db.sql</file>
+        <file>update.sql</file>
     </qresource>
 </RCC>

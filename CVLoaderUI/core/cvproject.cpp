@@ -72,6 +72,8 @@ bool CVProject::create(const QString& d) {
 		return false;
 	}
 
+	cnn.begin_transaction();
+
 	QResource sql(":/sql/db.sql");
 	QFile res(sql.absoluteFilePath());
 	if (!res.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -81,7 +83,6 @@ bool CVProject::create(const QString& d) {
 	QString query = str.readAll();
 
 	QStringList tables = query.split(";", QString::SkipEmptyParts);
-	cnn.begin_transaction();
 	foreach(QString t, tables) {
 		try {
 			if (!t.isEmpty()) {
@@ -93,7 +94,34 @@ bool CVProject::create(const QString& d) {
 			return false;
 		}
 	}
+
+	res.close();
+
+	QResource udpSql(":/sql/update.sql");
+	QFile upd(udpSql.absoluteFilePath());
+	if (!upd.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		return false;
+	}
+
+	str.setDevice(&upd);
+	query = str.readAll();
+
+	tables = query.split(";", QString::SkipEmptyParts);
+	foreach(QString t, tables) {
+		try {
+			if (!t.isEmpty()) {
+				cnn.execute_immediate(t.simplified().toStdString());
+			}
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			cnn.rollback_transaction();
+			return false;
+		}
+	}
+
 	cnn.commit_transaction();
+
+	upd.close();
 
 	id = QUuid::createUuid().toString();
 
@@ -108,12 +136,12 @@ bool CVProject::create(const QString& d) {
 	return true;
 }
 
-void CVProject::insert(CVCategory* category) {
-	_categories.insert(category->type(), category);
+void CVProject::insert(CVControl* control) {
+	_controls.insert(control->type(), control);
 }
 
-CVCategory* CVProject::get(CVCategory::Type t) {
-	return _categories.value(t);
+CVControl* CVProject::get(CVControl::Type t) {
+	return _controls.value(t);
 }
 
 void CVProject::missionList(QStringList& ids) {
