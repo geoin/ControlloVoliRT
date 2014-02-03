@@ -1,7 +1,7 @@
 #include "gui/cvmainwindow.h"
 
 #include <QApplication>
-#include <QStyleFactory>
+//#include <QStyleFactory>
 
 #include "core/cvcore_utils.h"
 
@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     QApplication::setApplicationName("Controllo Voli");
     QApplication::setApplicationVersion("0.0.1");
 
-    QApplication::setStyle(QStyleFactory::create("fusion"));
+    //QApplication::setStyle(QStyleFactory::create("fusion"));
     QApplication app(argc, argv);
 
     CVMainWindow w;
