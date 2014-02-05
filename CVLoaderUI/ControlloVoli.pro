@@ -13,10 +13,14 @@ QMAKE_CXXFLAGS += -std=c++11
 TARGET = ControlloVoli
 TEMPLATE = app
 
-CV_INCL = D:\projects\RT\tools\ControlloVoliRT\include
+CV_INCL = ..\include
 CV_TOOLS_INCL = D:\projects\RT\tools\ControlloVoliRT_Tools\include
 
-INCLUDEPATH += $${CV_INCL} $${CV_TOOLS_INCL}
+INCLUDEPATH += /home/geoin/projects/ControlloVoliRT/include
+
+win32 {
+    INCLUDEPATH += $${CV_TOOLS_INCL}
+}
 
 SOURCES += main.cpp \
     gui/cvmainwindow.cpp \
@@ -40,7 +44,29 @@ SOURCES += main.cpp \
     gui/dialogs/cvprojectdialog.cpp \
     gui/helper/cvactionslinker.cpp \
     core/cvprojectmanager.cpp \
-    core/cvproject.cpp
+    core/cvproject.cpp \
+    core/cvjournal.cpp \
+    core/cvbaseinputverifier.cpp \
+    core/categories/cvstations.cpp \
+    core/categories/cvshapelayer.cpp \
+    core/categories/cvrinex.cpp \
+    core/categories/cvmissionobject.cpp \
+    core/categories/cvflyattitude.cpp \
+    core/categories/cvfileinput.cpp \
+    core/categories/cvcamera.cpp \
+    core/sql/querybuilder.cpp \
+    gui/details/cvuniondetail.cpp \
+    gui/details/cvstationsdetail.cpp \
+    gui/details/cvstationdelegate.cpp \
+    gui/details/cvrinexdetail.cpp \
+    gui/details/cvortodetail.cpp \
+    gui/details/cvflydetail.cpp \
+    gui/details/cvflyaxis_p.cpp \
+    gui/details/cvflyattitudedetail.cpp \
+    gui/details/cvdemdetail.cpp \
+    gui/details/cvcontourdetail.cpp \
+    gui/details/cvbasedetail.cpp \
+    gui/details/cvareadetail.cpp
 
 HEADERS  += \
     gui/cvmainwindow.h \
@@ -64,29 +90,38 @@ HEADERS  += \
     gui/dialogs/cvprojectdialog.h \
     gui/helper/cvactionslinker.h \
     core/cvprojectmanager.h \
-    core/cvproject.h
+    core/cvproject.h \
+    core/cvjournal.h \
+    core/cvcore_utils.h \
+    core/cvbaseinputverifier.h \
+    core/categories/cvstations.h \
+    core/categories/cvshapelayer.h \
+    core/categories/cvrinex.h \
+    core/categories/cvmissionobject.h \
+    core/categories/cvflyattitude.h \
+    core/categories/cvfileinput.h \
+    core/categories/cvcontrol.h \
+    core/categories/cvcamera.h \
+    core/sql/querybuilder.h \
+    gui/cvgui_utils.h \
+    gui/details/cvuniondetail.h \
+    gui/details/cvstationsdetail.h \
+    gui/details/cvstationdelegate.h \
+    gui/details/cvrinexdetail.h \
+    gui/details/cvortodetail.h \
+    gui/details/cvflydetail.h \
+    gui/details/cvflyaxis_p.h \
+    gui/details/cvflyattitudedetail.h \
+    gui/details/cvdemdetail.h \
+    gui/details/cvcontourdetail.h \
+    gui/details/cvbasedetail.h \
+    gui/details/cvareadetail.h
 
 RESOURCES += \
-    data/res.qrc
+    data/data.qrc
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../ControlloVoliRT/lib/ -lCVUtil
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../ControlloVoliRT/lib/ -lCVUtild
-else:unix: LIBS += -L$$PWD/../../ControlloVoliRT/lib/ -lCVUtil
+OTHER_FILES += \
+    data/update.sql \
+    data/db.sql
 
-INCLUDEPATH += $$PWD/../../ControlloVoliRT/include
-DEPENDPATH += $$PWD/../../ControlloVoliRT/include
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../ControlloVoliRT/lib/libCVUtil.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../ControlloVoliRT/lib/libCVUtild.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../../ControlloVoliRT/lib/CVUtil.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../../ControlloVoliRT/lib/CVUtild.lib
-else:unix: PRE_TARGETDEPS += $$PWD/../../ControlloVoliRT/lib/libCVUtil.a
-
-
-unix|win32: LIBS += -L$$PWD/lib/ -lgeos -lspatialite -lsqlite3
-
-INCLUDEPATH += $$PWD/include
-DEPENDPATH += $$PWD/include
-
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/lib/spatialite.lib $$PWD/lib/sqlite3.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/lib/libgeos.a $$PWD/lib/libspatialite.a $$PWD/lib/libsqlite3.a
+LIBS += -lCVUtil -lPocoZip -lspatialite

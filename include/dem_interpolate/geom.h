@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include "exports.h"
 
+#include <memory>
+
 #ifndef INF
 #define INF	1.e30
 #endif

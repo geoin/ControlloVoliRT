@@ -1,12 +1,12 @@
 #include "cvmissionobject.h"
 
 #include "cvcamera.h"
-#include "cvproject.h"
 #include "cvrinex.h"
 #include "cvstations.h"
 #include "cvshapelayer.h"
 
 #include "core/sql/querybuilder.h"
+#include "core/cvproject.h"
 
 #include <QByteArray>
 
@@ -86,11 +86,11 @@ bool CVMissionObject::load() {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	CV::Util::Spatialite::Recordset& set = q->select(
+    CV::Util::Spatialite::Recordset set = q->select(
 		QStringList() << "NAME" << "ID_CAMERA" << "RINEX",
 		QStringList() << "MISSION",
 		QStringList() << "id=?1",
-		QVariantList() << id()
+        QVariantList() << id()
 	);
 
 	QString idCam;
