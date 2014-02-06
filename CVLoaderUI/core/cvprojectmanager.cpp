@@ -23,7 +23,7 @@ CVProjectManager::CVProjectManager(QObject* p) : QObject(p) {
 }
 
 void CVProjectManager::onNewProject() {
-    GUI::Dialogs::CVProjectDialog dialog;
+    GUI::Dialogs::CVProjectDialog dialog(static_cast<QWidget*>(parent()));
     if (dialog.exec() != QDialog::Accepted) {
         return;
     }

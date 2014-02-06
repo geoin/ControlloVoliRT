@@ -147,6 +147,9 @@ void CVMissionListDetails::onAddMission() {
 	
     QString name, note;
     dialog.getInput(name, note);
+	if (name.isEmpty()) {
+		return;
+	}
 
 	//TODO: should projManager handle this?
 	Core::CVMissionObject* obj = new Core::CVMissionObject(_control);
@@ -193,7 +196,7 @@ void CVMissionListDetails::onRemoveMission() {
         stack->removeWidget(w);
         w->deleteLater();
 
-		assert(stack->count() == _control->count());
+		//assert(stack->count() == _control->count());
 
         QList<QAction*> actions = _bar->menu()->actions();
         foreach (QAction* action, actions) {

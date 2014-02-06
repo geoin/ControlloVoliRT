@@ -13,6 +13,7 @@
 #include <QDropEvent>
 #include <QUrl>
 #include <QDir>
+#include <QMimeData>
 
 #include <assert.h>
 
