@@ -103,20 +103,11 @@ public:
 	double GetZ(int i) const {
 		return node[i].z * _p_scale.z + _p_off.z;
 	}
-	void SetZ(int i, double z) { 
-		node[i].z = (z - _p_off.z) / _p_scale.z;
-	}
 	double GetX(int i) const {
 		return node[i].x * _p_scale.x + _p_off.x;
 	}
-	void SetX(int i, double x) {
-		node[i].x = (x - _p_off.x) / _p_scale.x;
-	}
 	double GetY(int i) const {
 		return node[i].y * _p_scale.y + _p_off.y;
-	}
-	void SetY(int i, double y) {
-		node[i].y = (y - _p_off.y) / _p_scale.y;
 	}
 	DSM_Type GetType(void) const { return DSM_TIN; }
 	void SetEps(double eps) {

@@ -109,11 +109,8 @@ public:
 	virtual unsigned int Ntriangle(void) const = 0;
 	virtual unsigned int Nseg(void) const = 0;
 	virtual double GetX(int i) const  = 0;
-	virtual void SetX(int i, double z) = 0;
 	virtual double GetY(int i) const = 0;
-	virtual void SetY(int i, double z) = 0;
 	virtual double GetZ(int i) const = 0;
-	virtual void SetZ(int i, double z) = 0;
 	virtual const ND Node(unsigned int i) const = 0;
 	virtual void Node(const DPOINT& p, unsigned int i) = 0;
 	virtual const TRIANGLE& Triangle(unsigned int i) const = 0;
@@ -278,11 +275,8 @@ public:
 	const SEGMENT& Segment(unsigned int i) const;
 	void Node(const DPOINT& p, unsigned int i);
 	double GetX(int i) const  { return _getX(i); }
-	void SetX(int i, double x) {}
 	double GetY(int i) const { return _getY(i); }
-	void SetY(int i, double z) {}
 	double GetZ(int i) const { return quote[i]; }
-	void SetZ(int i, double z) { quote[i] = (float) z; }
 
 	int FindTriangle(double X, double Y, int trIdx = -1) const;
 	bool Open(const std::string& nome, bool verbose, Progress* prb = NULL);
