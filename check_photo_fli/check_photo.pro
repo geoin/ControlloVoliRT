@@ -37,7 +37,10 @@ DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
 
 SOURCES += \
     check_photo.cpp \
-    photo_exec.cpp
+    photo_exec.cpp \
+    photo_report.cpp \
+    ..\common\geo_util.cpp \
+    ..\common\doc_book_util.cpp
 
 HEADERS +=\
     check_photo.h

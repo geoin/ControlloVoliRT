@@ -215,7 +215,7 @@ public:
 		}
 		return alfa;
 	}
-	double angdir(const DPOINT& ptb) const {
+	double angdir2(const DPOINT& ptb) const {
 		double dx = ptb.x - x;
 		double dy = ptb.y - y;
 		return atan2(dy, dx);
