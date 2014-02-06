@@ -12,6 +12,7 @@ TARGET = check_photo
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
         LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib"
+        DEFINES += NOMINMAX
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"

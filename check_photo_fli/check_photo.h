@@ -78,6 +78,7 @@ private:
 	bool _model_report(void);
 	bool _strip_report(void);
 	bool _prj_report(void);
+	void _gps_report(void);
 
 	bool _read_ref_val(void);
 
@@ -111,6 +112,13 @@ private:
 	double _MAX_STRIP_LENGTH;
 	double _MAX_HEADING_DIFF;
 	double _MAX_ANG;
+	// reference values
+	double _MAX_PDOP;
+	int _MIN_SAT;
+	int _MAX_DIST;
+	double _MIN_SAT_ANG;
+	int _NBASI;
+	double _MIN_ANG_SOL;
 
 	std::string _refscale;
 };

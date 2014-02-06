@@ -59,37 +59,7 @@ using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 
 /**************************************************************/
-enum CHECK_TYPE {
-	less_ty = 0,
-	great_ty = 1,
-	abs_less_ty = 2,
-	between_ty =3
-};
-bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-{
-	bool rv = true;
-	switch ( ty ) {
-		case less_ty:
-			rv = val < tol1;
-			break;
-		case great_ty:
-			rv = val > tol1;
-			break;
-		case abs_less_ty:
-			rv = fabs(val) < tol1;
-			break;
-		case between_ty:
-			rv = val > tol1 && val < tol2;
-			break;
-	}
-	if ( !rv ) {
-		Doc_Item r = row->add_item("entry", attr);
-		r->add_instr("dbfo", "bgcolor=\"red\"");
-		r->append(val);
-	} else
-		row->add_item("entry", attr)->append(val);
-	return rv;
-}
+
 typedef std::vector<unsigned char> Blob;
 /****************************************************************/
 std::string gps_exec::_get_key(const std::string& val)
@@ -134,16 +104,16 @@ bool gps_exec::run()
 		_create_gps_track();
 
 		// add information to the fligth lines
-		_update_assi_volo();
+		//_update_assi_volo();
 		
 		// initialize docbook xml file
-		_init_document();
+		//_init_document();
 		
 		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
-		_final_report();
+		//_final_report();
 		
 		// write the result on the docbook report
-		_dbook.write();
+		//_dbook.write();
         std::cout << "Prodcedura terminata corretamente" << std::endl;
 	}
     catch(std::exception &e) {
@@ -677,116 +647,117 @@ typedef struct feature {
 	OGRGeomPtr pt;
 } feature;
 
-void gps_exec::_update_assi_volo()
-{
-	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
-
-	// add the columns for the gps data
-	_add_column("DATE TEXT");
-	_add_column("TIME_S TEXT");
-	_add_column("TIME_E TEXT");
-	_add_column("MISSION TEXT");
-	_add_column("SUN_HL DOUBLE");
-	_add_column("NBASI INTEGER");
-	_add_column("NSAT INTEGER");
-	_add_column("PDOP DOUBLE");
-
-	// query to associate to the first and last point of each flight line the nearest point of the gps track
-	std::stringstream sql;
-	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
-		ASSI_VOLO << " a, gps b group by strip";
-
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-
-	stm[1] = 1;
-	Recordset rs = stm.recordset();
-
-	// for every strip get the GPS time of the first point
-	std::vector<feature> ft1;
-	while ( !rs.eof() ) {
-		feature f;
-		f.strip = rs["strip"];
-		f.mission = rs["MISSION"];
-		f.time = rs["TIME"];
-		f.date = rs["DATE"];
-		f.nsat = rs["NSAT"];
-		f.nbasi = rs["NBASI"];
-		f.pdop = rs["PDOP"];
-		f.pt = (Blob) rs["geo"];
-		ft1.push_back(f);
-		rs.next();
-	}
-	stm.reset();
-	stm[1] = 2;
-	rs = stm.recordset();
-
-	// for every strip get the GPS time of the last point
-	std::vector<feature> ft2;
-	while ( !rs.eof() ) {
-		feature f;
-		f.strip = rs["strip"];
-		f.mission = rs["MISSION"];
-		f.time = rs["TIME"];
-		f.date = rs["DATE"];
-		f.nsat = rs["NSAT"];
-		f.nbasi = rs["NBASI"];
-		f.pdop = rs["PDOP"];
-		f.pt = (Blob) rs["geo"];
-		ft2.push_back(f);
-		rs.next();
-	}
-
-	std::stringstream sql1;
-	sql1 << "UPDATE " << ASSI_VOLO << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8 where " << STRIP_NAME  << "=?9";
-	Statement stm1(cnn);
-	stm1.prepare(sql1.str());
-	cnn.begin_transaction();
-
-	// per ogni strip determina i parametri gps con cui è stata acquisita
-	for ( size_t i = 0; i < ft1.size(); i++) {
-		const std::string & val = ft1[i].strip;
-		std::string t1 = ft1[i].time;
-		for ( size_t j = 0; j < ft2.size(); j++) {
-			if ( ft2[j].strip == ft1[i].strip ) {
-				std::string t2 = ft2[j].time;
-				if ( t1 > t2 )
-					std::swap(t1, t2);
-
-				std::stringstream sql;
-				sql << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
-				stm.prepare(sql.str());
-				rs = stm.recordset();
-				if ( rs.eof() )
-					return;
-
-				// determina l'altezza media del sole sull'orizzonte
-				OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft1[i].pt);
-				Sun sun(pt->getY(), pt->getX());
-				int td;
-				std::stringstream ss2;
-				ss2 << ft1[i].date << " " << t1;
-				Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
-				sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
-				double h = sun.altit();
-
-				stm1[1] = (std::string const &) rs[0]; // mission
-				stm1[2] = rs[1].toString(); // date
-				stm1[3] = t1;
-				stm1[4] = t2;
-				stm1[5] = rs[2].toInt(); // minimal number of satellite
-				stm1[6] = rs[3].toDouble(); // max pdop
-				stm1[7] = rs[4].toInt(); // number of bases
-				stm1[8] = h;	// sun elevation
-				stm1[9] = val;
-				stm1.execute();
-				stm1.reset();
-				break;
-			}
-		}
-	}
-	cnn.commit_transaction();
-}
+//void gps_exec::_update_assi_volo()
+//{
+//	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
+//
+//	// add the columns for the gps data
+//	_add_column("DATE TEXT");
+//	_add_column("TIME_S TEXT");
+//	_add_column("TIME_E TEXT");
+//	_add_column("MISSION TEXT");
+//	_add_column("SUN_HL DOUBLE");
+//	_add_column("NBASI INTEGER");
+//	_add_column("NSAT INTEGER");
+//	_add_column("PDOP DOUBLE");
+//
+//	// query to associate to the first and last point of each flight line the nearest point of the gps track
+//	std::stringstream sql;
+//	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
+//		ASSI_VOLO << " a, gps b group by strip";
+//
+//	Statement stm(cnn);
+//	stm.prepare(sql.str());
+//
+//	stm[1] = 1;
+//	Recordset rs = stm.recordset();
+//
+//	// for every strip get the GPS time of the first point
+//	std::vector<feature> ft1;
+//	while ( !rs.eof() ) {
+//		feature f;
+//		f.strip = rs["strip"];
+//		f.mission = rs["MISSION"];
+//		f.time = rs["TIME"];
+//		f.date = rs["DATE"];
+//		f.nsat = rs["NSAT"];
+//		f.nbasi = rs["NBASI"];
+//		f.pdop = rs["PDOP"];
+//		f.pt = (Blob) rs["geo"];
+//		ft1.push_back(f);
+//		rs.next();
+//	}
+//	stm.reset();
+//	stm[1] = 2;
+//	rs = stm.recordset();
+//
+//	// for every strip get the GPS time of the last point
+//	std::vector<feature> ft2;
+//	while ( !rs.eof() ) {
+//		feature f;
+//		f.strip = rs["strip"];
+//		f.mission = rs["MISSION"];
+//		f.time = rs["TIME"];
+//		f.date = rs["DATE"];
+//		f.nsat = rs["NSAT"];
+//		f.nbasi = rs["NBASI"];
+//		f.pdop = rs["PDOP"];
+//		f.pt = (Blob) rs["geo"];
+//		ft2.push_back(f);
+//		rs.next();
+//	}
+//
+//	std::stringstream sql1;
+//	sql1 << "UPDATE " << ASSI_VOLO << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8 where " << STRIP_NAME  << "=?9";
+//	Statement stm1(cnn);
+//	stm1.prepare(sql1.str());
+//	cnn.begin_transaction();
+//
+//	// per ogni strip determina i parametri gps con cui è stata acquisita
+//	for ( size_t i = 0; i < ft1.size(); i++) {
+//		const std::string & val = ft1[i].strip;
+//		std::string t1 = ft1[i].time;
+//		for ( size_t j = 0; j < ft2.size(); j++) {
+//			if ( ft2[j].strip == ft1[i].strip ) {
+//				std::string t2 = ft2[j].time;
+//				if ( t1 > t2 )
+//					std::swap(t1, t2);
+//
+//				std::stringstream sql;
+//				sql << "SELECT MISSION, DATE, min(NSAT) NSAT, max(PDOP) PDOP, min(NBASI) NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "'";
+//				stm.prepare(sql.str());
+//				rs = stm.recordset();
+//				if ( rs.eof() )
+//					return;
+//
+//				// determina l'altezza media del sole sull'orizzonte
+//				OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft1[i].pt);
+//				Sun sun(pt->getY(), pt->getX());
+//				int td;
+//				std::stringstream ss2;
+//				ss2 << ft1[i].date << " " << t1;
+//				Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
+//				sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
+//				double h = sun.altit();
+//
+//				stm1[1] = (std::string const &) rs[0]; // mission
+//				stm1[2] = rs[1].toString(); // date
+//				stm1[3] = t1;
+//				stm1[4] = t2;
+//				stm1[5] = rs[2].toInt(); // minimal number of satellite
+//				stm1[6] = rs[3].toDouble(); // max pdop
+//				stm1[7] = rs[4].toInt(); // number of bases
+//				stm1[8] = h;	// sun elevation
+//				stm1[9] = val;
+//				stm1.execute();
+//				stm1.reset();
+//				break;
+//			}
+//		}
+//	}
+//	cnn.commit_transaction();
+//}
+#ifdef pippo
 void gps_exec::_final_report()
 {
 	Doc_Item sec = _article->add_item("section");
@@ -803,13 +774,13 @@ void gps_exec::_final_report()
 	std::stringstream ss2;
 	ss2 << "Minimo numero di stazioni permanenti entro " << _MAX_DIST / 1000 << " km non inferiore a " << _NBASI;
 	itl->add_item("listitem")->append(ss2.str());
-	std::stringstream ss3;
-	ss3 << "Minimo angolo del sole rispetto all'orizzonte al momento del rilievo " << _MIN_ANG_SOL << " deg";
-	itl->add_item("listitem")->append(ss3.str());
+	//std::stringstream ss3;
+	//ss3 << "Minimo angolo del sole rispetto all'orizzonte al momento del rilievo " << _MIN_ANG_SOL << " deg";
+	//itl->add_item("listitem")->append(ss3.str());
 
 	// check finale
 	std::stringstream sql;
-	sql << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI, SUN_HL from " << ASSI_VOLO <<  " where NSAT<" << _MIN_SAT <<
+	sql << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI from " << GPS <<  " where NSAT<" << _MIN_SAT <<
 		" OR PDOP >" << _MAX_PDOP << " OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL << " order by " << STRIP_NAME;
 
 	Statement stm(cnn);
@@ -858,3 +829,35 @@ void gps_exec::_final_report()
 	}
 	return;
 }
+enum CHECK_TYPE {
+	less_ty = 0,
+	great_ty = 1,
+	abs_less_ty = 2,
+	between_ty =3
+};
+bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
+{
+	bool rv = true;
+	switch ( ty ) {
+		case less_ty:
+			rv = val < tol1;
+			break;
+		case great_ty:
+			rv = val > tol1;
+			break;
+		case abs_less_ty:
+			rv = fabs(val) < tol1;
+			break;
+		case between_ty:
+			rv = val > tol1 && val < tol2;
+			break;
+	}
+	if ( !rv ) {
+		Doc_Item r = row->add_item("entry", attr);
+		r->add_instr("dbfo", "bgcolor=\"red\"");
+		r->append(val);
+	} else
+		row->add_item("entry", attr)->append(val);
+	return rv;
+}
+#endif
