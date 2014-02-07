@@ -29,6 +29,8 @@
 #include <sstream>
 #include <string.h>
 
+#include <spatialite.h>
+
 namespace CV {
     namespace Util {
         namespace Spatialite {
@@ -61,7 +63,7 @@ namespace CV {
             int ret = sqlite3_open_v2 (dbname.c_str(), &hndl, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
             if (ret != SQLITE_OK) {
                 std::stringstream err;
-                err << "error: cannot open " << dbname << " - " <<  std::string(sqlite3_errstr (ret));
+                err << "error: cannot open " << dbname << " - " <<  std::string(sqlite3_errmsg(hndl));
                 throw spatialite_error(err.str());
             }
 

@@ -1,7 +1,7 @@
 #include "cvflyattitudedetail.h"
 
 #include "core/cvcore_utils.h"
-#include "GUI/cvgui_utils.h"
+#include "gui/cvgui_utils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>

@@ -5,7 +5,7 @@
 #include "CVUtil/cvspatialite.h"
 
 #include <QUuid>
-#include <QdateTime>
+#include <QDateTime>
 
 #include <assert.h>
 

@@ -28,8 +28,10 @@ else {
         LIBS += -lPocoUtil -lPocoFoundation -lCVUtil
 }
 
+INCLUDEPATH += ../../
+
 win32 {
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+        INCLUDEPATH += C:/ControlloVoliRT_Tools/include
 }
 macx {
         INCLUDEPATH += ../../../SwTools/include

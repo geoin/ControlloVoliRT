@@ -8,6 +8,8 @@ QT       -= core gui
 TARGET = photo_util
 TEMPLATE = lib
 
+INCLUDEPATH += ../include
+
 win32 {
         INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
         DEFINES += DLL_EXPORTS
