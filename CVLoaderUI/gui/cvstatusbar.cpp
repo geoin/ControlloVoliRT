@@ -17,6 +17,7 @@ CVStatusBar::CVStatusBar(QWidget *parent) : QStatusBar(parent) {
     //addPermanentWidget(progress);
 
     setContentsMargins(4, 0, 4, 2);
+	setStyleSheet("QStatusBar { background-color: rgba(236, 29, 37, 85%) }");
 }
 
 } // namespace GUI
