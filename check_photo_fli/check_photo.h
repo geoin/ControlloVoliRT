@@ -63,12 +63,14 @@ private:
 	void _process_strips(void);
 	void _process_photos(void);
 	void _process_block(void);
+	void _update_assi_volo(void);
+
 
 	void _get_elong(CV::Util::Geometry::OGRGeomPtr fv, double ka, double* d1, double* d2);
-	bool _get_carto(std::vector<CV::Util::Geometry::OGRGeomPtr>& blocks);
+	bool _get_carto(CV::Util::Geometry::OGRGeomPtr& blk);
 	CV::Util::Geometry::OGRGeomPtr _get_dif(const OGRGeometry* cart, std::vector<CV::Util::Geometry::OGRGeomPtr>& blocks);
 
-	void _uncovered(std::vector<CV::Util::Geometry::OGRGeomPtr>& vs);
+	bool _uncovered(CV::Util::Geometry::OGRGeomPtr& vs);
 
 	void _init_document(void);
 	void _final_report(void);
@@ -76,6 +78,7 @@ private:
 	bool _model_report(void);
 	bool _strip_report(void);
 	bool _prj_report(void);
+	void _gps_report(void);
 
 	bool _read_ref_val(void);
 
@@ -99,7 +102,6 @@ private:
 	std::map<std::string, VDP> _vdps; // map photo name  - photo attitude
 	std::map<std::string, VDP> _vdps_plan; // same but for planned
 	std::map<std::string, Camera> _cams;
-	std::map<std::string, std::string> _map_mission_cam;
 	std::map<std::string, Camera> _map_strip_cam;
 	Camera	_cam_plan; // camera for planned flight
 	DSM_Factory* _df;
@@ -110,6 +112,13 @@ private:
 	double _MAX_STRIP_LENGTH;
 	double _MAX_HEADING_DIFF;
 	double _MAX_ANG;
+	// reference values
+	double _MAX_PDOP;
+	int _MIN_SAT;
+	int _MAX_DIST;
+	double _MIN_SAT_ANG;
+	int _NBASI;
+	double _MIN_ANG_SOL;
 
 	std::string _refscale;
 };

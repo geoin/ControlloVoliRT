@@ -33,30 +33,28 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "ogr_geometry.h"
+#include "common/util.h"
+#include "photo_util/sun.h"
+#include "Poco/DateTime.h"
+#include "Poco/DateTimeParser.h"
 
-#define SRID 32632
+//#define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
-#define ASSI_VOLO "AVOLO"
+//#define ASSI_VOLO "AVOLO"
 //#define UNCOVER "Z_UNCOVER"
 #define SHAPE_CHAR_SET "CP1252"
 #define DB_NAME "geo.sqlite"
-#define OUT_DOCV "check_photoV.xml"
-#define OUT_DOCP "check_photoP.xml"
 #define REF_FILE "Regione_Toscana_RefVal.xml"
 #define FOTOGRAMMETRIA "Fotogrammetria"
 
 #define CAMERA "camera.xml"
 #define ASSETTI "assetti"
-#define DEM "dem.asc"
+#define DEM "dem"
 
-#define Z_FOTO "Z_FOTO"
-#define Z_MODEL "Z_MODEL"
-#define Z_STRIP "Z_STRIP"
+
 #define Z_BLOCK "Z_BLOCK"
-#define Z_UNCOVER "Z_UNCOVER"
-#define Z_STR_OVL "Z_STR_OVL"
+
 
 #define Z_CAMERA "Camera"
 
@@ -68,51 +66,51 @@ using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 
 /**************************************************************/
-enum CHECK_TYPE {
-	less_ty = 0,
-	great_ty = 1,
-	abs_less_ty = 2,
-	between_ty =3
-};
-bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-{
-	bool rv = true;
-	switch ( ty ) {
-		case less_ty:
-			rv = val < tol1;
-			break;
-		case great_ty:
-			rv = val > tol1;
-			break;
-		case abs_less_ty:
-			rv = fabs(val) < tol1;
-			break;
-		case between_ty:
-			rv = val > tol1 && val < tol2;
-			break;
-	}
-	if ( !rv ) {
-		Doc_Item r = row->add_item("entry", attr);
-		r->add_instr("dbfo", "bgcolor=\"red\"");
-		r->append(val);
-	} else
-		row->add_item("entry", attr)->append(val);
-	return rv;
-}
-std::string get_strip(const std::string& nome)
-{
-	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[0];
-}
-std::string get_nome(const std::string& nome)
-{
-	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[1];
-}
+//enum CHECK_TYPE {
+//	less_ty = 0,
+//	great_ty = 1,
+//	abs_less_ty = 2,
+//	between_ty =3
+//};
+//bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
+//{
+//	bool rv = true;
+//	switch ( ty ) {
+//		case less_ty:
+//			rv = val < tol1;
+//			break;
+//		case great_ty:
+//			rv = val > tol1;
+//			break;
+//		case abs_less_ty:
+//			rv = fabs(val) < tol1;
+//			break;
+//		case between_ty:
+//			rv = val > tol1 && val < tol2;
+//			break;
+//	}
+//	if ( !rv ) {
+//		Doc_Item r = row->add_item("entry", attr);
+//		r->add_instr("dbfo", "bgcolor=\"red\"");
+//		r->append(val);
+//	} else
+//		row->add_item("entry", attr)->append(val);
+//	return rv;
+//}
+//std::string get_strip(const std::string& nome)
+//{
+//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+//	if ( tok.count() != 2 )
+//		return "";
+//	return tok[0];
+//}
+//std::string get_nome(const std::string& nome)
+//{
+//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+//	if ( tok.count() != 2 )
+//		return "";
+//	return tok[1];
+//}
 typedef std::vector<unsigned char> Blob;
 /**************************************************************/
 
@@ -121,15 +119,7 @@ photo_exec::~photo_exec()
 	if ( _df != NULL )
 		delete _df;
 }
-void photo_exec::_init_document()
-{
-	Path doc_file(_proj_dir, "*");
-	doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
-	_dbook.set_name(doc_file.toString());	
 
-	_article = _dbook.add_item("article");
-	_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
-}
 std::string photo_exec::_get_key(const std::string& val)
 {
 	return std::string(FOTOGRAMMETRIA) + "." + _refscale + "." + val;
@@ -167,6 +157,8 @@ bool photo_exec::run()
 		
 		// read planned photo position and attitude
 		if ( _type == fli_type ) {
+			_update_assi_volo();
+
 			// read photo position and attitude
 			if ( !_read_vdp(_vdps) )
 				throw std::runtime_error("File assetti non trovato");
@@ -242,32 +234,39 @@ bool photo_exec::_read_ref_val()
 		_MAX_STRIP_LENGTH = pConf->getDouble(_get_key("MAX_STRIP_LENGTH"));
 		_MAX_HEADING_DIFF = pConf->getDouble(_get_key("MAX_HEADING_DIFF"));
 		_MAX_ANG = pConf->getDouble(_get_key("MAX_ANG"));
+
+		_MAX_PDOP = pConf->getDouble(_get_key("MAX_PDOP"));
+		_MIN_SAT = pConf->getInt(_get_key("MIN_SAT"));
+		_MAX_DIST = pConf->getInt(_get_key("MAX_DIST")) * 1000;
+		_MIN_SAT_ANG = pConf->getDouble(_get_key("MIN_SAT_ANG"));
+		_NBASI = pConf->getInt(_get_key("NBASI"));
+		_MIN_ANG_SOL = pConf->getDouble(_get_key("MIN_ANG_SOL"));
 	} catch (...) {
 		throw std::runtime_error("Errore nela lettura dei valori di riferimento");
 	}
 	return true;
 }
-OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>& blocks)
-{
-	// detetect the difference between the carto polygon
-	// and the liest of blocks
-	OGRGeomPtr dif;
-	for ( size_t i = 0; i < blocks.size(); i++) {
-		if ( cart->Intersect(blocks[i]) ) {
-			dif =  cart->Difference(blocks[i]);
-			OGRPolygon* p1 = (OGRPolygon*) cart;
-			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
-			//double a1 = p1->get_Area();
-			//double a2 = p2->get_Area();
-			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
-				break;
-			}
-		} else 
-			dif = cart->Intersection(cart);
-	}
-	return dif;
-}
-bool photo_exec::_get_carto(std::vector<OGRGeomPtr>& blocks) 
+//OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>& blocks)
+//{
+//	// detetect the difference between the carto polygon
+//	// and the liest of blocks
+//	OGRGeomPtr dif;
+//	for ( size_t i = 0; i < blocks.size(); i++) {
+//		if ( cart->Intersect(blocks[i]) ) {
+//			dif =  cart->Difference(blocks[i]);
+//			OGRPolygon* p1 = (OGRPolygon*) cart;
+//			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
+//			//double a1 = p1->get_Area();
+//			//double a2 = p2->get_Area();
+//			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
+//				break;
+//			}
+//		} else 
+//			dif = cart->Intersection(cart);
+//	}
+//	return dif;
+//}
+bool photo_exec::_get_carto(OGRGeomPtr& blk)
 {
 	std::string table(CARTO);
 
@@ -278,46 +277,29 @@ bool photo_exec::_get_carto(std::vector<OGRGeomPtr>& blocks)
 	Recordset rs = stm.recordset();
 	
 	bool first = true;
-	OGRGeomPtr blk;
+	OGRGeomPtr carto;
 
+	long count = 0;
 	while ( !rs.eof() ) { //for every strip
+		++count;
 		if ( first ) {
 			first = false;
-			blk = (Blob) rs[0];
+			carto = (Blob) rs[0];
 		} else {
-			OGRGeomPtr pol2 = (Blob) rs[0];
-			OGRGeomPtr pol1 = blk->Union(pol2);
-			blk = pol1;
+			OGRGeomPtr pol = (Blob) rs[0];
+			carto = carto->Union(pol);
 		}
 		rs.next();
 	}
-	std::vector<OGRGeomPtr> vs;
-	OGRwkbGeometryType ty = blk->getGeometryType();
-	if ( ty == wkbMultiPolygon ) {
-		OGRGeometryCollection* oc = (OGRGeometryCollection*) ((OGRGeometry*) blk);
-		int np = oc->getNumGeometries();
-		for (int i = 0; i < np; i++ ) {
-			OGRGeometry* pol = oc->getGeometryRef(i);
-			OGRGeomPtr dif = _get_dif(pol, blocks);
-			if ( dif != NULL && !dif->IsEmpty() ) {
-				vs.push_back(dif);
-			}
-		}
-	} else {
-		OGRGeomPtr dif = _get_dif(blk, blocks);
-		if ( !dif->IsEmpty() ) {
-			vs.push_back(dif);
-		}
-	}
-	_uncovered(vs);
-	return vs.empty();
+	OGRGeomPtr dif = carto->Difference(blk);
+	return _uncovered(dif);
 }
-void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
+bool photo_exec::_uncovered(OGRGeomPtr& vs)
 {
 	std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
-	if ( vs.empty() )
-		return;
+	if ( vs->IsEmpty() ) 
+		return true;
 
 	// create the photo table
 	std::stringstream sql;
@@ -330,7 +312,7 @@ void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'POLYGON'," <<
+		"'" << get_typestring(vs) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
 	std::cout << "Layer:" << table << std::endl;
@@ -343,14 +325,12 @@ void photo_exec::_uncovered(std::vector<OGRGeomPtr>& vs)
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
-	for (size_t i = 0; i < vs.size(); i++) {
-		stm[1] = (int) i;
-		stm[2].fromBlob(vs[i]);
-
-		stm.execute();
-		stm.reset();
-	}
+	stm[1] = (int) 1;
+	stm[2].fromBlob(vs);
+	stm.execute();
+	stm.reset();
 	cnn.commit_transaction();
+	return false;
 }
 bool photo_exec::_read_cam()
 {
@@ -369,8 +349,8 @@ bool photo_exec::_read_cam()
 		cam.yp = rs["YP"];
 		cam.serial = rs["SERIAL_NUMBER"];
 		cam.id = rs["ID"];
-		int plan = rs["planning"];
-		cam.planning = plan == '1';
+		int plan = rs["PLANNING"];
+		cam.planning = plan == 1;
 		rs.next();
 		_cams[cam.id] = cam;
 		if ( cam.planning )
@@ -410,7 +390,7 @@ bool photo_exec::_strip_cam()
 		rs.next();
 	}
 	// get the mission associated to each strip
-	table = std::string(ASSETTI) + "V";
+	table = std::string(ASSI_VOLO) + "V";
 	std::stringstream sql1;
 	sql1 << "SELECT A_VOL_CS, MISSION from " << table;
 	stm = Statement(cnn);
@@ -419,33 +399,35 @@ bool photo_exec::_strip_cam()
 	while ( !rs.eof() ) {
 		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
 		std::string mission = rs["MISSION"];
-		std::string cam_id = _map_mission_cam[mission]; // camera id for mission
+		std::string cam_id = map_mission_cam[mission]; // camera id for mission
 		if ( _cams.find(cam_id) != _cams.end() )
 			_map_strip_cam[strip] = _cams[cam_id];
 		else
 			_map_strip_cam[strip] = _cam_plan;
+		rs.next();
 	}
-
+	return true;
 }
 bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 {
+	_strip_cam();
 	// rilegge gli assetti dal db
-	std::string table = std::string(ASSETTI) + "V";
-	std::cout << "Layer:" << table << std::endl;
+	std::string table = std::string(ASSETTI);// + "V";
+	//std::cout << "Layer:" << table << std::endl;
 	std::stringstream sql;
 	sql << "SELECT * from " << table;
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
 	while ( !rs.eof() ) {
-		std::string strip = get_strip(rs[0]);
+		std::string strip = rs["STRIP"];
 		Camera cam;
 		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
-			cam = _cams[strip];
+			cam = _map_strip_cam[strip];
 		else
 			cam = _cam_plan;
-		VDP vdp(_cams[strip], rs[0]);
-		vdp.Init(DPOINT(rs[1], rs[2], rs[3]), (double) rs[4], (double) rs[5], (double) rs[6]);
+		VDP vdp(cam, rs["ID"]);
+		vdp.Init(DPOINT(rs["PX"], rs["PY"], rs["PZ"]), (double) rs["OMEGA"], (double) rs["PHI"], (double) rs["KAPPA"]);
 		vdps[vdp.nome] = vdp;
 		rs.next();
 	}
@@ -467,8 +449,8 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 
 	while ( !rs.eof() ) {
 		OGRGeomPtr pol = (Blob) rs["geom"];
-		OGRPoint* p0 = NULL;
-		OGRPoint* p1 = NULL;
+		//OGRPoint* p0 = NULL;
+		//OGRPoint* p1 = NULL;
 
 		OGRGeometry* og = (OGRGeometry*) pol;
 		OGRLineString* ls = (OGRLineString*)og;
@@ -504,10 +486,22 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 }
 bool photo_exec::_read_dem()
 {
-	_df = new DSM_Factory;
-	if ( !_df->Open(_dem_name, false) )
-		return false;
-	return true;
+	std::string table = DEM;
+	std::stringstream sql;
+	sql << "SELECT URI from " << table;
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	if ( !rs.eof() ) {
+		Path dem_path = Path(_proj_dir, rs[0]);
+		_dem_name = dem_path.toString();
+
+		_df = new DSM_Factory;
+		if ( !_df->Open(_dem_name, false) )
+			return false;
+		return true;
+	}
+	return false;
 }
 
 void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
@@ -525,10 +519,10 @@ void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 		double y = or->getY(i) - po.getY();
 		double x1 = x * cos(ka) + y * sin(ka);
 		double y1 = -x * sin(ka) + y * cos(ka);
-		xm = min(xm, x1);
-		ym = min(ym, y1);
-		xM = max(xM, x1);
-		yM = max(yM, y1);
+		xm = std::min(xm, x1);
+		ym = std::min(ym, y1);
+		xM = std::max(xM, x1);
+		yM = std::max(yM, y1);
 	}
 	double l1 = fabs(xM - xm);
 	double l2 = fabs(yM - ym);
@@ -998,40 +992,24 @@ void photo_exec::_process_block()
 	
 	std::vector<mstrp> vs;
 
+	OGRGeomPtr blk;
+	bool first = true;
 	while ( !rs.eof() ) { //for every strip
 		mstrp s;
 		s.strip = rs[0];
 		s.first = rs[1];
 		s.last = rs[2];
 		s.geo = (Blob) rs[3];
-		s.used = false;
+		if ( first ) {
+			blk = s.geo;
+			first = false;
+		} else {
+			blk = blk->Union(s.geo);
+		}
 		vs.push_back(s);
 		rs.next();
 	}
 
-	std::vector<OGRGeomPtr> blks;
-	if ( !vs.empty() ) {
-		OGRGeomPtr blk;
-		for (size_t k = 0; k < vs.size(); k++) {
-			if ( !vs[k].used ) {
-				blk = vs[k].geo;
-				vs[k].used = true;
-				bool finished = false;
-				while ( !finished ) {
-					finished = true;
-					for ( size_t i = 1; i < vs.size(); i++) {
-						OGRGeomPtr& geo = vs[i].geo;
-						if ( !vs[i].used && geo->Intersect(blk) ) {
-							blk = geo->Union(blk);
-							vs[i].used = true;
-							finished = false;
-						}
-					}
-				}
-				blks.push_back(blk);
-			}
-		}
-	}
 	std::string tableb = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(tableb);
 	std::cout << "Layer:" << tableb << std::endl;
@@ -1045,7 +1023,7 @@ void photo_exec::_process_block()
 	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'POLYGON'," <<
+		"'" << get_typestring(blk) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sqlb.str());
 	std::stringstream sqlc;
@@ -1053,14 +1031,12 @@ void photo_exec::_process_block()
 	Statement stm0(cnn);
 	cnn.begin_transaction();
 	stm0.prepare(sqlc.str());
-	for ( size_t i = 0; i < blks.size(); i++) {
-		stm0[1] = SIGLA_PRJ;
-		stm0[2].fromBlob(blks[i]);
-		stm0.execute();
-		stm0.reset();
-	}
+	stm0[1] = SIGLA_PRJ;
+	stm0[2].fromBlob(blk);
+	stm0.execute();
+	stm0.reset();
 	cnn.commit_transaction();
-	_get_carto(blks);
+	_get_carto(blk);
 
 	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
@@ -1114,233 +1090,170 @@ void photo_exec::_process_block()
 	}
 	cnn.commit_transaction();
 }
-bool photo_exec::_foto_report()
+
+Poco::Timestamp from_string(const std::string time)
 {
-	Doc_Item sec = _article->add_item("section");
-	sec->add_item("title")->append("Verifica Parametri immagini");
+	Poco::StringTokenizer tok(time, ":", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	Poco::Timestamp tm;
+	if ( tok.count() < 3 )
+		return tm;
+	double sec = atof(tok[2].c_str());
+	double msec = 1000 * ( sec - (int) sec);
+	Poco::DateTime dm(2010, 1, 1, atoi(tok[0].c_str()), atoi(tok[1].c_str()), (int) sec, (int) msec);
+	return dm.timestamp();
+}
+typedef struct feature {
+	std::string strip;
+	std::string time;
+	std::string date;
+	std::string mission;
+	int nsat;
+	int nbasi;
+	double pdop;
+	OGRGeomPtr pt;
+} feature;
+void photo_exec::_update_assi_volo()
+{
+	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
 
-	double v1 = _GSD * (1 - _MAX_GSD / 100);
-	double v2 = _GSD * (1 + _MAX_GSD / 100);
+	std::string table = ASSI_VOLO + std::string("V");
 
-	sec->add_item("para")->append("Valori di riferimento:");
-	Doc_Item itl = sec->add_item("itemizedlist");
-	std::stringstream ss;
-	ss << "GSD compreso tra " << v1 << " m e " << v2 << " m";
-	itl->add_item("listitem")->append(ss.str());
-	std::stringstream ss1;
-	ss1 << "angoli di pitch e roll minori di " << _MAX_ANG << " deg";
-	itl->add_item("listitem")->append(ss1.str());
+	// add the columns for the gps data
+	add_column(cnn, table, "DATE TEXT");
+	add_column(cnn, table, "TIME_S TEXT");
+	add_column(cnn, table, "TIME_E TEXT");
+	add_column(cnn, table, "MISSION TEXT");
+	add_column(cnn, table, "SUN_HL DOUBLE");
+	add_column(cnn, table, "NBASI INTEGER");
+	add_column(cnn, table, "NSAT INTEGER");
+	add_column(cnn, table, "PDOP DOUBLE");
+	add_column(cnn, table, "GPS_GAP INTEGER");
 
-	// verifica della dimensione del pixel e dei valori di picth e roll
+	// query to associate to the first and last point of each flight line the nearest point of the gps track
 	std::stringstream sql;
-	std::string table = std::string(Z_FOTO) + (_type == Prj_type ? "P" : "V");
-	sql << "SELECT Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL FROM " << table << " WHERE Z_FOTO_DIMPIX not between " << v1 << " and " << v2 <<
-		" OR Z_FOTO_PITCH>" << _MAX_ANG << " OR Z_FOTO_ROLL>" << _MAX_ANG;
+	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
+		table << " a, gps b group by strip";
+
 	Statement stm(cnn);
 	stm.prepare(sql.str());
+
+	stm[1] = 1;
 	Recordset rs = stm.recordset();
-	if ( rs.fields_count() == 0 ) {
-		sec->add_item("para")->append("In tutte le immagini i parametri verificati rientrano nei range previsti");
-		return true;
-	}
-	sec->add_item("para")->append("Nelle seguenti immagini i parametri verificati non rientrano nei range previsti");
-	
-	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("Immagini con parametri fuori range");
 
-	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "cols", "", "4");
-	tab = tab->add_item("tgroup", attr);
-
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-
-	attr.clear();
-	attr.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attr)->append("Foto");
-	row->add_item("entry", attr)->append("GSD");
-	row->add_item("entry", attr)->append("Pitch");
-	row->add_item("entry", attr)->append("Roll");
-
-	Doc_Item tbody = tab->add_item("tbody");
-
-	Poco::XML::AttributesImpl attrr;
-	attrr.addAttribute("", "", "align", "", "right");
+	// for every strip get the GPS time of the first point
+	std::vector<feature> ft1;
 	while ( !rs.eof() ) {
-		row = tbody->add_item("row");
-
-		row->add_item("entry", attr)->append(rs[0].toString());
-		
-		print_item(row, attrr, rs[1], between_ty, v1, v2);
-		print_item(row, attrr, rs[2], abs_less_ty, _MAX_ANG);
-		print_item(row, attrr, rs[3], abs_less_ty, _MAX_ANG);
+		feature f;
+		f.strip = rs["strip"];
+		f.mission = rs["MISSION"];
+		f.time = rs["TIME"];
+		f.date = rs["DATE"];
+		f.nsat = rs["NSAT"];
+		f.nbasi = rs["NBASI"];
+		f.pdop = rs["PDOP"];
+		f.pt = (Blob) rs["geo"];
+		ft1.push_back(f);
 		rs.next();
 	}
-	return false;
-}
-bool photo_exec::_model_report()
-{
-	Doc_Item sec = _article->add_item("section");
-	sec->add_item("title")->append("Verifica parametri stereo modelli");
+	stm.reset();
+	stm[1] = 2;
+	rs = stm.recordset();
 
-	double v1 = _MODEL_OVERLAP * (1 - _MODEL_OVERLAP_RANGE / 100);
-	double v2 = _MODEL_OVERLAP * (1 + _MODEL_OVERLAP_RANGE / 100);
-
-	sec->add_item("para")->append("Valori di riferimento:");
-	Doc_Item itl = sec->add_item("itemizedlist");
-	std::stringstream ss;
-	ss << "Ricoprimento longitudinale compreso tra " << v1 << "% e " << v2 << "%";
-	itl->add_item("listitem")->append(ss.str());
-	std::stringstream ss1;
-	ss1 << "Ricoprimento trasversale maggiore di " << _MODEL_OVERLAP_T << "%";
-	itl->add_item("listitem")->append(ss1.str());
-	std::stringstream ss2;
-	ss2 << "Differenza di heading tra i fotogrammi minori di " << _MAX_HEADING_DIFF << " deg";
-	itl->add_item("listitem")->append(ss2.str());
-
-	// Check the photos
-	std::string table = std::string(Z_MODEL) + (_type == Prj_type ? "P" : "V");
-	std::stringstream sql;
-	sql << "SELECT Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING FROM " << table << " WHERE Z_MODEL_L_OVERLAP not between " << v1 << " and " << v2 <<
-		" OR Z_MODEL_T_OVERLAP <" << _MODEL_OVERLAP_T << " OR Z_MODEL_D_HEADING >" << _MAX_HEADING_DIFF;
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-	if ( rs.fields_count() == 0 ) {
-		sec->add_item("para")->append("In tutti i modelli i parametri verificati rientrano nei range previsti");
-		return true;
-	}
-	sec->add_item("para")->append("Nei seguenti modelli i parametri verificati non rientrano nei range previsti");
-	
-	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("modelli con parametri fuori range");
-
-	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "cols", "", "5");
-	tab = tab->add_item("tgroup", attr);
-
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-
-	attr.clear();
-	attr.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attr)->append("Foto Sx");
-	row->add_item("entry", attr)->append("Foto Dx");
-	row->add_item("entry", attr)->append("Ric. long.");
-	row->add_item("entry", attr)->append("Ric. trasv.");
-	row->add_item("entry", attr)->append("Dif. head.");
-
-	Doc_Item tbody = tab->add_item("tbody");
-
-	Poco::XML::AttributesImpl attrr;
-	attrr.addAttribute("", "", "align", "", "right");
+	// for every strip get the GPS time of the last point
+	std::vector<feature> ft2;
 	while ( !rs.eof() ) {
-		row = tbody->add_item("row");
-
-		row->add_item("entry", attr)->append(rs[0].toString());
-		row->add_item("entry", attr)->append(rs[1].toString());
-		
-		print_item(row, attrr, rs[2], between_ty, v1, v2);
-		print_item(row, attrr, rs[3], great_ty, _MODEL_OVERLAP_T);
-		print_item(row, attrr, rs[4], abs_less_ty, _MAX_HEADING_DIFF);
+		feature f;
+		f.strip = rs["strip"];
+		f.mission = rs["MISSION"];
+		f.time = rs["TIME"];
+		f.date = rs["DATE"];
+		f.nsat = rs["NSAT"];
+		f.nbasi = rs["NBASI"];
+		f.pdop = rs["PDOP"];
+		f.pt = (Blob) rs["geo"];
+		ft2.push_back(f);
 		rs.next();
 	}
-	return false;
-}
-bool photo_exec::_strip_report()
-{
-	Doc_Item sec = _article->add_item("section");
-	sec->add_item("title")->append("Verifica parametri strisciate");
 
-	double v1 = _STRIP_OVERLAP * (1 - _STRIP_OVERLAP_RANGE / 100);
-	double v2 = _STRIP_OVERLAP * (1 + _STRIP_OVERLAP_RANGE / 100);
+	std::stringstream sql1;
+	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8, GPS_GAP=?9 where " << STRIP_NAME  << "=?10";
+	Statement stm1(cnn);
+	stm1.prepare(sql1.str());
+	cnn.begin_transaction();
 
-	sec->add_item("para")->append("Valori di riferimento:");
-	Doc_Item itl = sec->add_item("itemizedlist");
-	std::stringstream ss;
-	ss << "Ricoprimento Trasversale compreso tra " << v1 << "% e " << v2 << "%";
-	itl->add_item("listitem")->append(ss.str());
-	std::stringstream ss1;
-	ss1 << "Massima lunghezza strisciate minore di " << _MAX_STRIP_LENGTH << " km";
-	itl->add_item("listitem")->append(ss1.str());
+	// per ogni strip determina i parametri gps con cui è stata acquisita
+	for ( size_t i = 0; i < ft1.size(); i++) {
+		const std::string & val = ft1[i].strip;
+		std::string t1 = ft1[i].time;
+		for ( size_t j = 0; j < ft2.size(); j++) {
+			if ( ft2[j].strip == ft1[i].strip ) {
+				std::string t2 = ft2[j].time;
+				if ( t1 > t2 )
+					std::swap(t1, t2);
 
-	// Strip verification
-	std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
-	std::string table2 = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
-	std::stringstream sql;
-	sql << "SELECT Z_STRIP_CS, Z_STRIP_LENGTH, Z_STRIP_T_OVERLAP, Z_STRIP2 FROM " << table << " a inner JOIN " << 
-		table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << _MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << v1 << " OR Z_STRIP_T_OVERLAP>" << v2;
+				std::stringstream sql;
+				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' ORDER BY TIME";
+				stm.prepare(sql.str());
+				rs = stm.recordset();
+				bool first = true;
+				
+				Poco::Timestamp tm0, tm1;
+				double dt0 = 0.;
+				int nsat, nbasi;
+				double pdop;
+				while ( !rs.eof() ) {
+					if ( first ) {
+						tm0 = from_string(rs["TIME"]);
+						// determina l'altezza media del sole sull'orizzonte
+						OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft1[i].pt);
+						Sun sun(pt->getY(), pt->getX());
+						int td;
+						std::stringstream ss2;
+						ss2 << ft1[i].date << " " << t1;
+						Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
+						sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
+						double h = sun.altit();
 
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-	if ( rs.fields_count() == 0 ) {
-		sec->add_item("para")->append("In tutte le strisciate i parametri verificati rientrano nei range previsti");
-		return true;
+						stm1[1] = (std::string const &) rs["MISSION"]; // mission
+						stm1[2] = rs["DATE"].toString(); // date
+						stm1[3] = t1; // istante di inizio acquisizione
+						stm1[4] = t2; // istante di fine acquisizione
+
+						nsat = rs["NSAT"].toInt();
+						pdop = rs["PDOP"].toDouble();
+						nbasi = rs["NBASI"].toInt();
+
+						//stm1[5] = rs["NSAT"].toInt(); // minimal number of satellite
+						//stm1[6] = rs["PDOP"].toDouble(); // max pdop
+						//stm1[7] = rs["NBASI"].toInt(); // number of bases
+						stm1[8] = h;	// sun elevation
+						stm1[10] = val;
+						//stm1.execute();
+						//stm1.reset();
+						first = false;
+						//continue;
+					} else {
+						nsat = std::min(nsat, rs["NSAT"].toInt());
+						pdop = std::max(pdop, rs["PDOP"].toDouble());
+						nbasi = std::min(nbasi, rs["NBASI"].toInt());
+						tm1 = from_string(rs["TIME"]);
+						double dt = (double) (tm1 - tm0) / 1000000;
+						tm0 = tm1;
+						if ( dt > dt0 )
+							dt0 = dt;
+					}
+					rs.next();
+				}
+				if ( first )
+					return;
+				stm1[5] = nsat; // minimal number of satellite
+				stm1[6] = pdop; // max pdop
+				stm1[7] = nbasi; // number of bases
+				stm1[9] = (int) dt0;
+				stm1.execute();
+				stm1.reset();
+			}
+		}
 	}
-	sec->add_item("para")->append("Nelle seguenti strisciate i parametri verificati non rientrano nei range previsti");
-	
-	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("Strisciate con parametri fuori range");
-
-	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "cols", "", "4");
-	tab = tab->add_item("tgroup", attr);
-
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-
-	attr.clear();
-	attr.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attr)->append("Strip.");
-	row->add_item("entry", attr)->append("Lung.");
-	row->add_item("entry", attr)->append("Ric. trasv.");
-	row->add_item("entry", attr)->append("Strip adiac.");
-
-	Doc_Item tbody = tab->add_item("tbody");
-
-	Poco::XML::AttributesImpl attrr;
-	attrr.addAttribute("", "", "align", "", "right");
-	while ( !rs.eof() ) {
-		row = tbody->add_item("row");
-
-		row->add_item("entry", attr)->append(rs[0].toString());
-		
-		print_item(row, attrr, rs[1], less_ty, _MAX_STRIP_LENGTH);
-		print_item(row, attrr, rs[2], between_ty, v1, v2);
-
-		row->add_item("entry", attr)->append(rs[3].toString());
-		rs.next();
-	}
-	return false;
-}
-void photo_exec::_final_report()
-{
-	// test to be done only for the real flight
-	if ( _type == fli_type ) {
-		_prj_report();
-	}
-
-	// common tests
-
-	// coverage of cartographic areas
-	std::stringstream sql;
-	std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
-	sql << "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" << table << "'";
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-
-	Doc_Item sec = _article->add_item("section");
-	sec->add_item("title")->append("Verifica Copertura aree da cartografare");
-
-	int cv = rs[0];
-	if ( cv == 0 ) {
-		sec->add_item("para")->append("Tutte le aree da cartografare sono state ricoperte da modelli stereoscopici");
-	} else {
-		sec->add_item("para")->append("Esistono delle aree da cartografare non completamente ricoperte da modelli stereoscopici");
-	}
-	_foto_report();
-	_model_report();
-	_strip_report();
+	cnn.commit_transaction();
 }
