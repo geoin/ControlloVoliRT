@@ -3,4 +3,7 @@
         <file>db.sql</file>
         <file>update.sql</file>
     </qresource>
+    <qresource prefix="/style">
+        <file>style.qss</file>
+    </qresource>
 </RCC>

@@ -13,7 +13,7 @@ namespace GUI {
 CVBaseTabWidget::CVBaseTabWidget(QWidget* p, TabPosition pos) : QTabWidget(p) {
     setAcceptDrops(true);
     setTabPosition(pos);
-    setStyleSheet("QTabBar::tab {width: 26px; height: 28px; }");
+	//setStyleSheet("QTabBar::tab { width: 38px; height: 42px; };");
 }
 
 void CVBaseTabWidget::dragEnterEvent(QDragEnterEvent* ev) {
