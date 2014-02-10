@@ -176,13 +176,13 @@
     inserire e aggiornare i file di input necessari agli strumenti di
     verifica.</para>
 
-    <para>Tramite il menù applicativo e la barra degli strumenti è possibile
-    creare o caricare un progetto. La voce "Nuovo" presenta una finestra di
-    dialogo tramite la quale è possibile scegliere nome e tipologia, mentre la
-    voce apri richiede la selezione della cartella root di un progetto già
-    presente nel filesystem. </para>
+    <para>Tramite il menù applicativo e la barra degli strumenti, vedi
+    figura(...), è possibile creare o caricare un progetto. La voce "Nuovo"
+    presenta una finestra di dialogo tramite la quale è possibile scegliere
+    nome e tipologia, la voce "Apri" richiede la selezione della cartella root
+    di un progetto già presente nel filesystem. </para>
 
-    <para>Una volta caricato il progetto viene presentato un albero nella
+    <para>Una volta caricato il progetto, viene presentato un albero nella
     barra laterale per la navigazione tra i vari controlli. A ciascun
     controllo nell'albero corrisponde una scheda di dettaglio nel corpo
     principale dell'applicazione, dove è possibile inserire i dati in
@@ -197,10 +197,11 @@
     <para>Il controllo GPS si differenzia leggermente; comprende infatti la
     lista delle missioni, ciascuna avente il proprio dettaglio</para>
 
-    <para>Le missioni vengono create dinamicamente dal menù contestuale in
-    figura (...); la navigazione avviene tramite gli appositi bottoni o
-    selezionando la voce di menù relativa. La metodologia di inserimento dei
-    dati resta la stessa degli altri controlli. </para>
+    <para>Le missioni vengono create dinamicamente partendo dal menù
+    contestuale in figura (...); la navigazione avviene tramite gli appositi
+    bottoni o selezionando la voce di menù relativa a ciascuna missione. La
+    metodologia di inserimento dei dati resta la stessa degli altri controlli.
+    </para>
 
     <para>Gli oggetti gestiti sono i seguenti.</para>
 
