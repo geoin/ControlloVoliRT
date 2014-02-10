@@ -30,6 +30,7 @@
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Util/HelpFormatter.h"
 #include <iostream>
+#include "dem_interpolate/dsm.h"
 
 using Poco::Util::Application;
 using Poco::Util::Option;
@@ -128,17 +129,9 @@ void check_photo::displayHelp()
 int check_photo::main(const std::vector<std::string>& args) 
 {
 	if ( !_helpRequested ) {
-		//_phe.set_proj_dir("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino");
-		//_phe.set_checkType(photo_exec::Prj_type);
 
 		_phe.run();
 
-		//logger().information("Arguments to main():");
-		//for (std::vector<std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
-		//	logger().information(*it);
-		//}
-		//logger().information("Application properties:");
-		////printProperties("");
 	}
 	return Application::EXIT_OK;
 }

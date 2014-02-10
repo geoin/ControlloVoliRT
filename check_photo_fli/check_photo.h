@@ -55,6 +55,8 @@ private:
 	bool _read_cam(void);
 	bool _read_vdp(std::map<std::string, VDP>& vdps);
 	bool _calc_vdp(std::map<std::string, VDP>& vdps);
+	void _assi_from_vdp(std::map<std::string, VDP>& vdps);
+
 	bool _strip_cam(void); // strip camera association
 	bool _read_dem(void);
 	std::string _get_key(const std::string& val);
@@ -119,6 +121,7 @@ private:
 	double _MIN_SAT_ANG;
 	int _NBASI;
 	double _MIN_ANG_SOL;
+	double _MAX_GPS_GAP;
 
 	std::string _refscale;
 };
