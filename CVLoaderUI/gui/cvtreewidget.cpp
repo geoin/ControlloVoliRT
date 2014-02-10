@@ -10,7 +10,8 @@ namespace GUI {
 CVTreeWidget::CVTreeWidget(QWidget* parent) : QTreeWidget(parent) {
     setColumnCount(1);
     setHeaderHidden(true);
-    //setFrameShape(QFrame::NoFrame);
+    setFrameShape(QFrame::NoFrame);
+	setFocusPolicy(Qt::NoFocus);
 
     setAcceptDrops(true);
     setDropIndicatorShown(true);

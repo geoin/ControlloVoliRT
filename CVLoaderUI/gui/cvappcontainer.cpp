@@ -104,8 +104,8 @@ void CVAppContainer::link() {
     linker->on(Helper::CLOSE_PROJECT, _details, SLOT(onClear()));
 	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(""), tr("Chiudi"));
 
-	QAction* newMission = linker->add(Helper::NEW_MISSION);
-    linker->on(Helper::NEW_MISSION, &_prjManager, SLOT(onCreateMission()));
+	//QAction* newMission = linker->add(Helper::NEW_MISSION);
+    //linker->on(Helper::NEW_MISSION, &_prjManager, SLOT(onCreateMission()));
 }
 
 void CVAppContainer::_addToMenuAndToolbar(QAction* a, QMenu* m, QToolBar* t, QIcon icon, QString name) {
