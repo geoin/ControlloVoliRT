@@ -1,4 +1,6 @@
 #include "cvcamera.h"
+#include "cvjournal.h"
+#include "core/categories/cvcontrol.h"
 
 #include "core/sql/querybuilder.h"
 
@@ -62,13 +64,12 @@ bool CVCamera::persist() {
 	}
 
 	_isValid = ret;
-
-	ret = q->insert(
-		"JOURNAL", 
-		QStringList() << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL" << "OBJECT",
-		QStringList() << "?1" << "?2" << "?3" << "?4" << "?5" << "?6",
-		QVariantList() << QUuid::createUuid().toString() << QDateTime::currentMSecsSinceEpoch() << "" << "" << 1 << 0
-	);
+	
+	Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+	e->control = isPlanning() ? Core::CVControl::PLAN : Core::CVControl::GPS_DATA;
+	e->object = Core::CVObject::CAMERA;
+	e->db = uri();
+	Core::CVJournal::add(e);
 
 	if (!isPlanning()) {
 		assert(!_mission.isEmpty());

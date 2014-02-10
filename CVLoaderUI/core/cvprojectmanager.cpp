@@ -51,7 +51,7 @@ void CVProjectManager::onNewProject() {
 		proj->insert(ctrl);
 
 		emit addProject(proj);
-		_projects.append(proj);
+		_projects.append(CVProject::Ptr(proj));
 	}
 }
 
@@ -77,7 +77,9 @@ void CVProjectManager::onLoadProject() {
 		QString db = proj->loadFrom(dir.absolutePath());
 
 		// Init controls
-		CVControl* ctrl = _plan(proj, true);
+		CVControl* ctrl = NULL;
+
+		ctrl = _plan(proj, true);
 		proj->insert(ctrl);
 
 		ctrl = new CVControl(CVControl::GPS_DATA, proj);
@@ -98,7 +100,7 @@ void CVProjectManager::onLoadProject() {
 		proj->insert(ctrl);
 		
 		emit addProject(proj);
-		_projects.append(proj);
+		_projects.append(CVProject::Ptr(proj));
 	}
 }   
 
@@ -156,7 +158,6 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	if (b) {
 		ctrl->load();
 	}
-
 	return ctrl;
 }
 
@@ -177,7 +178,6 @@ CVControl* CVProjectManager::_orto(CVProject* proj, bool b) {
 	if (b) {
 		ctrl->load();
 	}
-
 	return ctrl;
 }
    

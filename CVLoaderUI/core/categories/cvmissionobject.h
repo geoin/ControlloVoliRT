@@ -15,6 +15,9 @@ class CVMissionObject : public CVObject {
 public:
 	explicit CVMissionObject(QObject* p);
 	explicit CVMissionObject(QObject* p, QString key);
+	~CVMissionObject() {
+	
+	}
 
 	virtual bool persist();
 	virtual bool isValid() const;

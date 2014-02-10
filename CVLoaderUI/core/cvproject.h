@@ -17,6 +17,7 @@ namespace Core {
 class CVProject : public QObject {
     Q_OBJECT
 public:
+	typedef QSharedPointer<CVProject> Ptr;
     enum Type { INVALID = 0, PHOTOGRAMMETRY = 1, LIDAR = 2 };
 
     explicit CVProject(QObject* p = 0);

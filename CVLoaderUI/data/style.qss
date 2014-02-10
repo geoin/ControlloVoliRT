@@ -24,9 +24,11 @@ QTabBar::tab:selected, QTabBar::tab:hover {
 
 QTabBar::tab:selected {
 	background-color: white;
-}*/
+}
 
 QTreeView::item {
+	border-top-left-radius: 2px;
+	border-bottom-left-radius: 2px;
 	border-top-color: transparent;
 	border-bottom-color: transparent;
 }
@@ -36,5 +38,5 @@ QTreeView::item:hover {
 }
 
 QTreeView::item:selected {
-	background-color: rgba(236, 29, 37, 85%);
-}
+	background-color: rgba(236, 29, 37, 60%);
+}*/

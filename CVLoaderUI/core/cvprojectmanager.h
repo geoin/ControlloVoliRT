@@ -29,7 +29,7 @@ private:
 	CVControl* _fly(CVProject*, bool load);
 	CVControl* _orto(CVProject*, bool load);
 
-    QList<CVProject*> _projects;
+	QList<CVProject::Ptr> _projects;
 };
 
 } // namespace Core

@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<book>
+  <bookinfo>
+    <title/>
+
+    <author>
+      <firstname>Geoin SRL</firstname>
+
+      <surname/>
+
+      <affiliation>
+        <orgname/>
+      </affiliation>
+    </author>
+
+    <pubdate>02-2014</pubdate>
+  </bookinfo>
+
+  <chapter>
+    <title>Descrizione</title>
+
+    <section>
+      <title>Introduzione</title>
+
+      <para>Il sistema è costituito da nove moduli software per la verifica
+      automatica di alcuni dei parametri che caratterizzano il rilievo
+      aerofotogrammetrico e quello Lidar. I parametri che vengono verificati
+      sono esclusivamente quelli derivanti dalle caratteristiche geometriche
+      della ripresa e che possono essere controllati senza che venga richiesto
+      alcun intervento da parte dell'operatore.</para>
+
+      <para>Ciascun modulo richiede uno specifico set di dati di ingresso,
+      questi vengono elaborati e confrontati con i valori di riferimento per
+      produrre il report finale.</para>
+
+      <para>Per rendere più agevole l'immissione dei dati ogni attività viene
+      configurata in un progetto; ogni modulo ha il compito di verificare una
+      fase ben precisa dell'iter produttivo, un'opportuna interfaccia a
+      finestre permette di inserire i dati e di verificare in ogni istante lo
+      stato di avanzamento.</para>
+    </section>
+
+    <section>
+      <title>Il rilievo aero fotogrammetrico</title>
+
+      <para>Viene suddiviso in 5 fasi:</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Verifica del progetto di ripresa. Ha come obiettivo quello di
+          verificare che la pianificazione proposta permetta di realizzare
+          quanto richiesto; in particolare si verifica che tutta l'area
+          oggetto del rilievo risulti acquisita mediante modelli
+          stereoscopici, aventi il ricoprimento richiesto, che il GSD
+          (impronta del pixel al suolo) abbia i valori richiesti, che le
+          strisciate non siano troppo lunghe</para>
+        </listitem>
+
+        <listitem>
+          <para>Verifica del GPS. Ha come obiettivo la verifica che i dati
+          acquisiti dal GPS di bordo durante la ripresa siano idonei a
+          garantire la geo referenziazione dei fotogrammi. In particolare la
+          traccia viene ricalcolata sulla base delle stazioni di terra
+          indicate verificando che la traccia sia continua e che i valori di
+          PDOP, scarto quadratico della soluzione, numero di satelliti e
+          numero di stazioni a terra sia conforme con quanto richiesto.</para>
+        </listitem>
+
+        <listitem>
+          <para>Verifica del volo. Si verifica che durante gli intervalli di
+          acquisizione delle strisciate il gps abbia fornito valori coretti
+          privi di lacune. Inoltre si verifica il GSD, la sovrapposizione tra
+          fotogrammi, tra strisciate, l'altezza del sole sull'orizzonte e
+          l'assetto dei fotogrammi.</para>
+        </listitem>
+
+        <listitem>
+          <para>Verifica della triangolazione aerea. Vengono confrontati i
+          risultati di due calcoli (effettuati con condizioni diverse) in modo
+          da stabilire se le due soluzioni sono intercambiabili. Si ritiene
+          che per la verifica del risultato sia necessario ripetere il calcolo
+          variando la quantità e la disposizione dei punti noti ed
+          introducendo dei punti di verifica. Quando gli indicatori numerici
+          del nuovo risultato segnalano la sua correttezza occorre verificare
+          anche che le due soluzioni siano tra loro equivalenti confrontando
+          gli assetti di ciascun fotogramma. Inoltre si fornisce un ulteriore
+          controllo atto a verificare che i punti noti, riletti in un singolo
+          modello producano scarti non eccedenti i valori attesi.</para>
+        </listitem>
+
+        <listitem>
+          <para>Controllo delle orto immagini. Dato il blocco di orto immagini
+          prodotte a seguito di una ripresa aero fotogrammetrica si verifica
+          che siano state realizzate tutte le tavole possibili e che queste
+          abbiano sfruttato l'intero materiale fotografico disponibile. Si
+          verifica inoltre la correttezza del GSD, della geo referenziazione e
+          l'attribuzione del nome alle tavole.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>Il rilievo Lidar</title>
+
+      <para>Viene suddiviso in 5 fasi</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Controllo del progetto di volo. Ha lo scopo di verificare che
+          le linee di volo proposte, unitamente ai parametri del sistema
+          (frequenza degli impulsi angolo e frequenza di scansione) consentano
+          di coprire le aree richieste con valori soddisfacenti i requisiti in
+          termini di quantità e accuratezza.</para>
+        </listitem>
+
+        <listitem>
+          <para>Controllo del gps ha lo scopo di accertare che durante le
+          missioni di rilievo il gps abbia funzionato correttamente e che
+          quindi la geo referenziazione della nuvola sia corretta.</para>
+        </listitem>
+
+        <listitem>
+          <para>Controllo del rilievo effettuato. Ha lo scopo di verificare
+          che le aree richieste siano state acquisite con la dovuta
+          densità</para>
+        </listitem>
+
+        <listitem>
+          <para>Controllo degli elaborati prodotti. Ha lo scopo di verificare
+          che i prodotti derivati ( modelli di superficie e del terreno) siano
+          stati prodotti concordemente con i prodotti grezzi e che il taglio
+          la nomenclatura e la consistenza sia completa</para>
+        </listitem>
+      </orderedlist>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Il plugin Qgis</title>
+
+    <para>Ogni verifica parte da dei dati, di progetto o realmente acquisiti e
+    li elabora per graficizzare gli aspetti oggetto della verifica. Oltre al
+    report in formato testuale e tabellare, le evidenze degli elaborati sono
+    visibili attraverso Qgis in modo da dare maggior risalto alle eventuali
+    non conformità che potranno quindi essere utilizzate per contestare
+    l'operato della ditta esecutrice.</para>
+
+    <para>Per rendere più semplice ed intuitiva l'integrazione con Qgis e
+    l'attivazione dei moduli è stato realizzato un opportuno plugin. Una volta
+    installato questo aggiunge all'interfaccia di Qgis una barra di bottoni
+    (ed un menu) in cui ad ogni controllo viene fatto corrispondere un bottone
+    (e l'analoga voce del menu). In più per rendere più semplice la selezione
+    ed il caricamento dei dati di ingresso è stata aggiunta un comando di
+    gestione del progetto che permette in modo schematico ed intuitivo di
+    indicare i dati di ingresso.</para>
+
+    <para>Come repository per i dati si è scelto di utilizzare un data base
+    Sql Lite con estensione spaziale. Tutti i dati (ad eccezione delle
+    immagini e dei modelli numerici) vengono caricati nel db in modo che tutti
+    i dati ed i risultati afferenti ad un progetto possano essere contenuti in
+    un unico file strutturato.</para>
+
+    <para>Al termine di ogni elaborazione viene avviata automaticamente la
+    produzione del report di uscita in formato PDF. tale file che ha un nome
+    fisso per ogni controllo viene registrato nella cartella del
+    progetto.</para>
+  </chapter>
+
+  <chapter>
+    <title>Il caricatore dei dati</title>
+
+    <para>Il modulo di caricamento consente la creazione e la gestione di un
+    progetto, tenendo traccia dello stato di avanzamento e permettendo di
+    inserire e aggiornare i file di input necessari agli strumenti di
+    verifica.</para>
+
+    <para>Tramite il menù applicativo e la barra degli strumenti è possibile
+    creare o caricare un progetto. La voce "Nuovo" presenta una finestra di
+    dialogo tramite la quale è possibile scegliere nome e tipologia, mentre la
+    voce apri richiede la selezione della cartella root di un progetto già
+    presente nel filesystem. </para>
+
+    <para>Una volta caricato il progetto viene presentato un albero nella
+    barra laterale per la navigazione tra i vari controlli. A ciascun
+    controllo nell'albero corrisponde una scheda di dettaglio nel corpo
+    principale dell'applicazione, dove è possibile inserire i dati in
+    ingresso.</para>
+
+    <para>Ogni dettaglio è in generale composto da una scheda per ogni file di
+    input. L'inserimento o la modifica dei dati avviene tramite drag&amp;drop
+    nell'area visualizzata o selezionando i file dalla finestra di dialogo
+    attivabile nel menù dell'oggetto attivo, vedi figura(...). Il menù di
+    dettaglio consente inoltre la rimozione dei dati.</para>
+
+    <para>Il controllo GPS si differenzia leggermente; comprende infatti la
+    lista delle missioni, ciascuna avente il proprio dettaglio</para>
+
+    <para>Le missioni vengono create dinamicamente dal menù contestuale in
+    figura (...); la navigazione avviene tramite gli appositi bottoni o
+    selezionando la voce di menù relativa. La metodologia di inserimento dei
+    dati resta la stessa degli altri controlli. </para>
+
+    <para>Gli oggetti gestiti sono i seguenti.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Fotocamera, richiede un file XML contenete i parametri della
+        fotocamera di progetto o di volo, relativa ad ogni missione.</para>
+      </listitem>
+
+      <listitem>
+        <para>Assi di volo, richiede un file shape. Vengono visualizzate al
+        momento dell'inserimento informazioni quali l'ente, il RID e il
+        DT.</para>
+      </listitem>
+
+      <listitem>
+        <para>Aree da cartografare, richiede un file shape. L'unico campo
+        obbligatorio è la geometria, dunque viene visualizzato esclusivamente
+        il numero di record inseriti nel database di progetto.</para>
+      </listitem>
+
+      <listitem>
+        <para>Dem, richiede un file con estensione.asc. Viene visualizzato
+        l'header del file.</para>
+      </listitem>
+
+      <listitem>
+        <para>Rinex aereo, richiede uno zip o una coppia di .*n e.*o.</para>
+      </listitem>
+
+      <listitem>
+        <para>Stazioni permanenti, consente l'inserimento dei .*n e .*o di
+        ciascuna stazione permantente, anche in formato zip. La selezione di
+        una stazione consente di visualizzare tutti i file inseriti.</para>
+      </listitem>
+
+      <listitem>
+        <para>Assetti di volo, prende in ingresso un file ASCII contentete i
+        dati relativi alle strisciate effettuatye durante il volo. Viene
+        visualizzato il numero delle strisciate inserite, insieme al numero di
+        fotogrammi.</para>
+      </listitem>
+
+      <listitem>
+        <para> Quadro di unione, richiede uno shape con i fogli relativi al
+        volo effettuato.</para>
+      </listitem>
+
+      <listitem>
+        <para>Limiti amministrativi, prende in ingresso uno shape. Non avendo
+        un formato standardizzato, non viene visualizzata nessuna informazione
+        aggiuntiva.</para>
+      </listitem>
+    </orderedlist>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo del progetto di volo per ripresa
+    aerofotogrammetica</title>
+
+    <para>Richiede che siano stati caricati nel progetto:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Il tema delle aree da cartografare</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema con gli assi di volo che sono stati proposti</para>
+      </listitem>
+
+      <listitem>
+        <para>I parametri della fotocamera tipo che verrà utilizzata</para>
+      </listitem>
+
+      <listitem>
+        <para>Il modello numerico del terreno relativo all'area oggetto del
+        rilievo.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Vengono prodotti i seguenti dati</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Il tema (puntuale) degli assetti in cui ogni fotogramma è
+        rappresentato dalla posizione del suo centro di presa</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale dei fotogrammi (ottenuto proiettando questi sul
+        modello numerico)</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale degli stereo modelli</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale delle strisciate</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale del blocco</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale delle zone scoperte</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Per avviare il modulo dal plugin di Qgis è necessario
+    specificare:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>La cartella del progetto</para>
+      </listitem>
+
+      <listitem>
+        <para>la scala a cui fa riferimento il progetto</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Il modulo può essere avviato anche da linea di comando
+    digitando:</para>
+
+    <para>check_photo /d path_progetto /fscala /p</para>
+
+    <para>Se avviato dal plugin al termine dell'elaborazione vengono inseriti
+    nella mappa corrente i temi prodotti, contemporaneamente viene prodotto e
+    visualizzato il report in formato pdf.</para>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo del GPS</title>
+
+    <para>Il rilievo può essere suddiviso in più missioni, intendendo per
+    missione l'attività di acquisizione svolta in una sessione compresa tra
+    decollo ed atterraggio. Ad ogni missione è associata una unica traccia
+    GPS. Inoltre a ciascuna missione viene associata una fotocamera. E'
+    previsto che missioni diverse dello stesso rilievo possano essere fatte
+    con fotocamere diverse anche se probabilmente saranno molto simili
+    differenziandosi solo per qualche parametro di calibrazione.</para>
+
+    <para>Per ogni missione è necessario specificare</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Il file rinex prodotto dal ricevitore di bordo; è necessario
+        fornire sia il file delle osservazioni (estensione xxo) che il file
+        della navigazione (estensione xxn) dove secondo lo standard rinex xx
+        rappresentano le ultime due cifre dell'anno in cui è stato effettuato
+        il rilievo.</para>
+      </listitem>
+
+      <listitem>
+        <para>File rinex delle stazioni permanenti che vanno utilizzate per il
+        controllo differenziale. E' p</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+
+  <chapter>
+    <title/>
+
+    <para/>
+  </chapter>
+</book>
