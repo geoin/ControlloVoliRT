@@ -27,6 +27,7 @@
 #include "common/util.h"
 #include "check_photo.h"
 #include "Poco/DateTime.h"
+#include <iostream>
 
 #define OUT_DOCV "check_photoV.xml"
 #define OUT_DOCP "check_photoP.xml"
@@ -107,8 +108,8 @@ void photo_exec::_gps_report()
 	// check finale
 	std::string assi = ASSI_VOLO + std::string("V");
 	std::stringstream sql;
-	sql << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI, SUN_HL from " << assi <<  " where NSAT<" << _MIN_SAT <<
-		" OR PDOP >" << _MAX_PDOP << " OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL << " order by " << STRIP_NAME;
+	sql << "SELECT " << STRIP_NAME << ", MISSION, DATE, NSAT, PDOP, NBASI, SUN_HL, GPS_GAP from " << assi <<  " where NSAT<" << _MIN_SAT <<
+		" OR PDOP >" << _MAX_PDOP << " OR NBASI <" << _NBASI << " OR SUN_HL <" << _MIN_ANG_SOL << " OR GPS_GAP >" <<  _MAX_GPS_GAP << " order by " << STRIP_NAME;
 
 	Statement stm(cnn);
 	stm.prepare(sql.str());
@@ -124,7 +125,7 @@ void photo_exec::_gps_report()
 	tab->add_item("title")->append("Strisciate acquisite con parametri GPS fuori range");
 
 	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "cols", "", "5");
+	attr.addAttribute("", "", "cols", "", "6");
 	tab = tab->add_item("tgroup", attr);
 
 	Doc_Item thead = tab->add_item("thead");
@@ -137,6 +138,7 @@ void photo_exec::_gps_report()
 	row->add_item("entry", attr)->append("PDOP");
 	row->add_item("entry", attr)->append("N. staz.");
 	row->add_item("entry", attr)->append("Ang. sole");
+	row->add_item("entry", attr)->append("Gap GPS");
 
 	Doc_Item tbody = tab->add_item("tbody");
 
@@ -148,10 +150,11 @@ void photo_exec::_gps_report()
 
 		row->add_item("entry", attr)->append(rs[STRIP_NAME].toString());
 		
-		print_item(row, attrr, rs["NSAT"], great_ty, _MIN_SAT);
+		print_item(row, attrr, rs["NSAT"], great_ty, _MIN_SAT-1);
 		print_item(row, attrr, rs["PDOP"], less_ty, _MAX_PDOP);
-		print_item(row, attrr, rs["NBASI"], great_ty, _NBASI);
+		print_item(row, attrr, rs["NBASI"], great_ty, _NBASI-1);
 		print_item(row, attrr, rs["SUN_HL"], great_ty, _MIN_ANG_SOL);
+		print_item(row, attrr, rs["GPS_GAP"], less_ty, _MAX_GPS_GAP);
 		rs.next();
 	}
 	return;
@@ -356,4 +359,143 @@ bool photo_exec::_model_report()
 		rs.next();
 	}
 	return false;
+}
+class strip_desc {
+public:
+	void clear() {
+		id.clear();
+		n_fot = 0;
+		len = 0;
+	}
+	std::string id;
+	int n_fot;
+	DPOINT p1, p2;
+	double len;
+};
+bool photo_exec::_prj_report()
+{
+	std::cout << "Confronto del volo col progetto di volo" << std::endl;
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Confronto del volo col progetto di volo");
+
+	std::vector<strip_desc> real, plan;
+
+	strip_desc stp;
+	bool start = true;
+
+	std::map<std::string, VDP>::iterator it1;
+	for ( it1 = _vdps.begin(); it1 != _vdps.end(); it1++) {
+		VDP& vdp = it1->second;
+		std::string nn = vdp.nome;
+		std::string strip = get_strip(nn);
+		if ( strip == stp.id ) {
+			stp.n_fot++;
+			stp.p2 = vdp.Pc;
+			stp.len = stp.p1.dist2D(stp.p2);
+		} else {
+			if ( !start ) {
+				//stp.p2 = vdp.Pc;
+				//stp.len = stp.p1.dist2D(stp.p2);
+				real.push_back(stp);
+				
+			}
+			start = false;
+			stp.clear();
+			stp.id = strip;
+			stp.n_fot = 1;
+			stp.p1 = vdp.Pc;
+		}
+	}
+	real.push_back(stp);
+
+	stp.clear();
+	start = true;
+	for ( it1 = _vdps_plan.begin(); it1 != _vdps_plan.end(); it1++) {
+		VDP& vdp = it1->second;
+		std::string nn = vdp.nome;
+		std::string strip = get_strip(nn);
+		if ( strip == stp.id ) {
+			stp.n_fot++;
+			stp.p2 = vdp.Pc;
+			stp.len = stp.p1.dist2D(stp.p2);
+		} else {
+			if ( !start ) {
+				//stp.p2 = vdp.Pc;
+				//stp.len = stp.p1.dist2D(stp.p2);
+				plan.push_back(stp);
+				
+			}
+			start = false;
+			stp.clear();
+			stp.id = strip;
+			stp.n_fot = 1;
+			stp.p1 = vdp.Pc;
+		}
+	}
+	plan.push_back(stp);
+
+	if ( real.size() != plan.size() ) {
+		std ::stringstream ss;
+		ss << " Numero di strisciate pianificate: " << plan.size() 
+			<< " Numero di strisciate volate: " << real.size();
+		sec->add_item("para")->append(ss.str());
+		std::cout << ss.str() << std::endl;
+	} else {
+		std ::stringstream ss;
+		ss << "Il numero di strisciate pianificate coincide con quelle volate" << std::endl;
+		sec->add_item("para")->append(ss.str());
+		std::cout << ss.str() << std::endl;
+	}
+	
+	std::map<int, int> mp;
+	for ( size_t i = 0; i < plan.size(); i++) {
+		double dmin = 1e10;
+		for ( size_t j = 0; j < real.size(); j++) {
+			double d1 = std::min(plan[i].p1.dist2D(real[j].p1), plan[i].p1.dist2D(real[j].p2));
+			double d2 = std::min(plan[i].p2.dist2D(real[j].p1), plan[i].p2.dist2D(real[j].p2));
+			double d = (d1 + d2) / 2;
+			if ( d < dmin) {
+				dmin = d;
+				mp[i] = j;
+			}
+		}
+	}
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("Accoppiamento tra strisciate progettate e volate");
+
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "6");
+	tab = tab->add_item("tgroup", attr);
+
+	attr.clear();
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Strisciata pianificata");
+	row->add_item("entry", attr)->append("N. foto");
+	row->add_item("entry", attr)->append("lung.");
+	row->add_item("entry", attr)->append("Strisciata volata");
+	row->add_item("entry", attr)->append("N. foto");
+	row->add_item("entry", attr)->append("lung.");
+
+	Doc_Item tbody = tab->add_item("tbody");
+		
+	std::map<int, int>::iterator itt;
+	for ( itt = mp.begin(); itt != mp.end(); itt++) {
+		row = tbody->add_item("row");
+		int i = itt->first;
+		//int j = itt->second;
+		row->add_item("entry", attr)->append(plan[i].id);
+		std::stringstream s1; s1 << plan[i].n_fot;
+		row->add_item("entry", attr)->append(s1.str());
+		std::stringstream s2; s2 << plan[i].len;
+		row->add_item("entry", attr)->append(s2.str());
+
+		row->add_item("entry", attr)->append(real[i].id);
+		std::stringstream s3; s3 << real[i].n_fot;
+		row->add_item("entry", attr)->append(s3.str());
+		std::stringstream s4; s4 << real[i].len;
+		row->add_item("entry", attr)->append(s4.str());
+	}
+	return true;
 }

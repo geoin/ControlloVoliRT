@@ -157,11 +157,11 @@ bool photo_exec::run()
 		
 		// read planned photo position and attitude
 		if ( _type == fli_type ) {
-			_update_assi_volo();
 
 			// read photo position and attitude
 			if ( !_read_vdp(_vdps) )
 				throw std::runtime_error("File assetti non trovato");
+
 			std::string assi = std::string(ASSI_VOLO) + "V";
 			std::cout << "Layer:" << assi << std::endl;
 			if ( !_calc_vdp(_vdps_plan) )
@@ -241,6 +241,8 @@ bool photo_exec::_read_ref_val()
 		_MIN_SAT_ANG = pConf->getDouble(_get_key("MIN_SAT_ANG"));
 		_NBASI = pConf->getInt(_get_key("NBASI"));
 		_MIN_ANG_SOL = pConf->getDouble(_get_key("MIN_ANG_SOL"));
+
+		_MAX_GPS_GAP = pConf->getDouble(_get_key("MAX_GPS_GAP"), 3);
 	} catch (...) {
 		throw std::runtime_error("Errore nela lettura dei valori di riferimento");
 	}
@@ -291,6 +293,8 @@ bool photo_exec::_get_carto(OGRGeomPtr& blk)
 		}
 		rs.next();
 	}
+	if ( !carto->IsValid() )
+		throw std::runtime_error("Geometria delle aree da cartografare no valide");
 	OGRGeomPtr dif = carto->Difference(blk);
 	return _uncovered(dif);
 }
@@ -408,12 +412,116 @@ bool photo_exec::_strip_cam()
 	}
 	return true;
 }
+
+void photo_exec::_assi_from_vdp(std::map<std::string, VDP>& vdps)
+{
+	std::string table = ASSI_VOLO + std::string("V");
+	cnn.remove_layer(table);
+
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(A_VOL_ENTE TEXT NOT NULL, " <<		
+		"A_VOL_DT TEXT, " <<
+		"A_VOL_RID TEXT, " <<
+		"A_VOL_CS TEXT NOT NULL PRIMARY KEY," <<
+		"A_VOL_DR TEXT," << 
+		"A_VOL_QT DOUBLE NOT NULL, " <<
+		"A_VOL_CCOD TEXT, " <<
+		"A_VOL_DSTP DOUBLE, " <<
+		"A_VOL_NFI NUMBER NOT NULL, " <<
+		"A_VOL_NFF NUMBER NOT NULL)";
+	cnn.execute_immediate(sql.str());
+
+	// add the geom column
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'LINESTRING'," <<
+		"'XY')";
+	cnn.execute_immediate(sql1.str());
+
+	// create the insertion query
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (A_VOL_ENTE, A_VOL_DT, A_VOL_RID, A_VOL_CS, A_VOL_DR, A_VOL_QT, A_VOL_CCOD, A_VOL_DSTP, A_VOL_NFI, A_VOL_NFF, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ST_GeomFromWKB(:geom, " << SRID << ") )";
+
+	Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());
+		
+	OGRSpatialReference sr;
+	sr.importFromEPSG(SRID);
+
+	std::map<std::string, VDP>::iterator it;
+	std::string strip0, fi, ff;
+
+	bool first = true;
+	DPOINT p0, p1;
+	for ( it = vdps.begin(); it != vdps.end(); it++) {
+		std::string strip = get_strip(it->first);
+		if ( strip != strip0 ) {
+			if ( !first ) {
+				OGRGeometryFactory gf;
+				OGRGeomPtr gp_ = gf.createGeometry(wkbLineString);
+				OGRLineString* gp = (OGRLineString*) ((OGRGeometry*) gp_);
+				gp->setCoordinateDimension(2);
+				gp->assignSpatialReference(&sr);
+				gp->addPoint(p0.x, p0.y);
+				gp->addPoint(p1.x, p1.y);
+
+				stm[1] = "Regione Toscana";
+				stm[2] = "";
+				stm[3] = "";
+				stm[4] = strip0;
+				stm[5] = ""; // data
+				stm[6] = (p1.z + p0.z) / 2;
+				stm[7] = ""; // fotocamera
+				stm[8] = 100; // focale
+				stm[9] = fi; // numero prima foto
+				stm[10] = ff; // numero ultima foto
+				stm[11].fromBlob(gp_);
+				stm.execute();
+				stm.reset();
+			} else
+				first = false;
+			strip0 = strip;
+			p0 = it->second.Pc;
+			fi = get_nome(it->first);
+		}
+		p1 = it->second.Pc;
+		ff = get_nome(it->first);
+	}
+
+	// record the last strip
+	OGRGeometryFactory gf;
+	OGRGeomPtr gp_ = gf.createGeometry(wkbLineString);
+	OGRLineString* gp = (OGRLineString*) ((OGRGeometry*) gp_);
+	gp->setCoordinateDimension(2);
+	gp->assignSpatialReference(&sr);
+	gp->addPoint(p0.x, p0.y);
+	gp->addPoint(p1.x, p1.y);
+
+	stm[1] = "Regione Toscana";
+	stm[2] = "";
+	stm[3] = "";
+	stm[4] = strip0;
+	stm[5] = ""; // data
+	stm[6] = (p1.z + p0.z) / 2;
+	stm[7] = ""; // fotocamera
+	stm[8] = 100; // focale
+	stm[9] = fi; // numero prima foto
+	stm[10] = ff; // numero ultima foto
+	stm[11].fromBlob(gp_);
+	stm.execute();
+	stm.reset();
+
+	cnn.commit_transaction();
+}
 bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 {
-	_strip_cam();
-	// rilegge gli assetti dal db
-	std::string table = std::string(ASSETTI);// + "V";
-	//std::cout << "Layer:" << table << std::endl;
+	std::string table = std::string(ASSETTI);
+
 	std::stringstream sql;
 	sql << "SELECT * from " << table;
 	Statement stm(cnn);
@@ -422,14 +530,24 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 	while ( !rs.eof() ) {
 		std::string strip = rs["STRIP"];
 		Camera cam;
-		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
-			cam = _map_strip_cam[strip];
-		else
-			cam = _cam_plan;
 		VDP vdp(cam, rs["ID"]);
 		vdp.Init(DPOINT(rs["PX"], rs["PY"], rs["PZ"]), (double) rs["OMEGA"], (double) rs["PHI"], (double) rs["KAPPA"]);
 		vdps[vdp.nome] = vdp;
 		rs.next();
+	}
+	_assi_from_vdp(vdps);
+	_update_assi_volo();
+	_strip_cam();
+
+	std::map<std::string, VDP>::iterator it;
+	for ( it = vdps.begin(); it !=vdps.end(); it++) {
+		std::string strip = it->first;
+		Camera cam;
+		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
+			cam = _map_strip_cam[strip];
+		else
+			cam = _cam_plan;
+		it->second.InitIor(cam);
 	}
 	return true;
 }
@@ -465,7 +583,12 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 		std::string strip = rs[1];
 		int first = rs[2]; // number of first photo in the strip
 		int last = rs[3]; // number of last photo in the strip
-		double alfa = pt1.angdir2(pt0); // plane heading
+
+		double dx = pt0.x - pt1.x;
+		double dy = pt0.y - pt1.y;
+		//double alfa = atan2(dy, dx); //pt1.angdir(pt0); // plane heading
+		double alfa = pt0.angdir2(pt1);
+
 		double len = pt1.dist2D(pt0); // strip length
 		double step = len / (last - first); // distance between photos
 
@@ -474,7 +597,7 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 			char nomef[256];
 			sprintf(nomef, "%s_%04d", strip.c_str(), k);
 			VDP vdp(_cam_plan, nomef); // cam is the camera used for planning the flight
-			DPOINT pt(pt0.x - (i - first) * step * cos(alfa), pt0.y + (i - first) * step * sin(alfa), z);
+			DPOINT pt(pt0.x + (i - first) * step * cos(alfa), pt0.y + (i - first) * step * sin(alfa), z);
 			vdp.Init(pt, 0, 0, RAD_DEG(alfa));
 			vdps[vdp.nome] = vdp;
 		}
@@ -497,35 +620,64 @@ bool photo_exec::_read_dem()
 		_dem_name = dem_path.toString();
 
 		_df = new DSM_Factory;
+		if ( _df == NULL )
+			return false;
 		if ( !_df->Open(_dem_name, false) )
 			return false;
+		DSM* ds = _df->GetDsm();
 		return true;
 	}
 	return false;
 }
-
-void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
+MBR GetMbr(const OGRGeometry* fv, const OGRPoint& po, double ka)
 {
-	OGRPoint po;
-	if ( fv0->Centroid(&po) != OGRERR_NONE )
-		return;
-	OGRGeometry* fv = fv0;
+	MBR mbr;
 	OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
-	double xm = 1.e20, ym = 1.e20;
-	double xM = -1.e20, yM = -1.e20;
 
 	for (int i = 0; i < or->getNumPoints(); i++) {
 		double x = or->getX(i) - po.getX();
 		double y = or->getY(i) - po.getY();
 		double x1 = x * cos(ka) + y * sin(ka);
 		double y1 = -x * sin(ka) + y * cos(ka);
-		xm = std::min(xm, x1);
-		ym = std::min(ym, y1);
-		xM = std::max(xM, x1);
-		yM = std::max(yM, y1);
+		mbr.Update(x1, y1);
 	}
-	double l1 = fabs(xM - xm);
-	double l2 = fabs(yM - ym);
+	return mbr;
+}
+void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
+{
+	OGRPoint po;
+	if ( fv0->Centroid(&po) != OGRERR_NONE )
+		return;
+	MBR mbr;
+
+	OGRGeometry* fv = fv0;
+	if ( fv0->getGeometryType() == wkbMultiPolygon ) {
+		OGRGeometryCollection* or = (OGRGeometryCollection*) fv;
+		int n = or->getNumGeometries();
+		for (int i = 0; i < n; i++)
+			mbr.Extend(GetMbr(or->getGeometryRef(i), po, ka));
+	} else {
+		OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
+		mbr.Extend(GetMbr(fv, po, ka));
+	}
+	//OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
+	//double xm = 1.e20, ym = 1.e20;
+	//double xM = -1.e20, yM = -1.e20;
+
+	//for (int i = 0; i < or->getNumPoints(); i++) {
+	//	double x = or->getX(i) - po.getX();
+	//	double y = or->getY(i) - po.getY();
+	//	double x1 = x * cos(ka) + y * sin(ka);
+	//	double y1 = -x * sin(ka) + y * cos(ka);
+	//	xm = std::min(xm, x1);
+	//	ym = std::min(ym, y1);
+	//	xM = std::max(xM, x1);
+	//	yM = std::max(yM, y1);
+	//}
+	double l1 = mbr.GetDx();
+	double l2 = mbr.GetDy();
+	//double l1 = fabs(xM - xm);
+	//double l2 = fabs(yM - ym);
 	if ( l1 > l2 ) {
 		*d1 = l2;
 		*d2 = l1;
@@ -601,7 +753,6 @@ void photo_exec::_process_photos()
 			dt += vdp.Pc.z - pt.z;
 			dpol.push_back(pt);
 		}
-
 		OGRGeometryFactory gf;
 		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
 
@@ -635,143 +786,7 @@ void photo_exec::_process_photos()
 	}
 	cnn.commit_transaction();
 }
-class strip_desc {
-public:
-	void clear() {
-		id.clear();
-		n_fot = 0;
-		len = 0;
-	}
-	std::string id;
-	int n_fot;
-	DPOINT p1, p2;
-	double len;
-};
-bool photo_exec::_prj_report()
-{
-	std::cout << "Confronto del volo col progetto di volo" << std::endl;
-	Doc_Item sec = _article->add_item("section");
-	sec->add_item("title")->append("Confronto del volo col progetto di volo");
 
-	std::vector<strip_desc> real, plan;
-
-	strip_desc stp;
-	bool start = true;
-
-	std::map<std::string, VDP>::iterator it1;
-	for ( it1 = _vdps.begin(); it1 != _vdps.end(); it1++) {
-		VDP& vdp = it1->second;
-		std::string nn = vdp.nome;
-		std::string strip = get_strip(nn);
-		if ( strip == stp.id ) {
-			stp.n_fot++;
-			stp.p2 = vdp.Pc;
-			stp.len = stp.p1.dist2D(stp.p2);
-		} else {
-			if ( !start ) {
-				stp.p2 = vdp.Pc;
-				stp.len = stp.p1.dist2D(stp.p2);
-				real.push_back(stp);
-				
-			}
-			start = false;
-			stp.clear();
-			stp.id = strip;
-			stp.n_fot = 1;
-			stp.p1 = vdp.Pc;
-		}
-	}
-	real.push_back(stp);
-
-	stp.clear();
-	start = true;
-	for ( it1 = _vdps_plan.begin(); it1 != _vdps_plan.end(); it1++) {
-		VDP& vdp = it1->second;
-		std::string nn = vdp.nome;
-		std::string strip = get_strip(nn);
-		if ( strip == stp.id ) {
-			stp.n_fot++;
-			stp.p2 = vdp.Pc;
-			stp.len = stp.p1.dist2D(stp.p2);
-		} else {
-			if ( !start ) {
-				stp.p2 = vdp.Pc;
-				stp.len = stp.p1.dist2D(stp.p2);
-				plan.push_back(stp);
-				
-			}
-			start = false;
-			stp.clear();
-			stp.id = strip;
-			stp.n_fot = 1;
-			stp.p1 = vdp.Pc;
-		}
-	}
-	plan.push_back(stp);
-
-	if ( real.size() != plan.size() ) {
-		std ::stringstream ss;
-		ss << " Numero di strisciate pianificate: " << plan.size() 
-			<< " Numero di strisciate volate: " << real.size();
-		sec->add_item("para")->append(ss.str());
-		std::cout << ss.str() << std::endl;
-	} else {
-		std ::stringstream ss;
-		ss << "Il numero di strisciate pianificate coincide con quelle volate" << std::endl;
-		sec->add_item("para")->append(ss.str());
-		std::cout << ss.str() << std::endl;
-	}
-	
-	std::map<int, int> mp;
-	for ( size_t i = 0; i < plan.size(); i++) {
-		double dmin = 1e10;
-		for ( size_t j = 0; j < real.size(); j++) {
-			double d = plan[i].p1.dist2D(real[j].p1);
-			if ( d < dmin) {
-				dmin = d;
-				mp[i] = j;
-			}
-		}
-	}
-	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("Accoppiamento tra strisciate progettate e volate");
-
-	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "cols", "", "6");
-	tab = tab->add_item("tgroup", attr);
-
-	attr.clear();
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-	attr.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attr)->append("Strisciata pianificata");
-	row->add_item("entry", attr)->append("N. foto");
-	row->add_item("entry", attr)->append("lung.");
-	row->add_item("entry", attr)->append("Strisciata volata");
-	row->add_item("entry", attr)->append("N. foto");
-	row->add_item("entry", attr)->append("lung.");
-
-	Doc_Item tbody = tab->add_item("tbody");
-		
-	std::map<int, int>::iterator itt;
-	for ( itt = mp.begin(); itt != mp.end(); itt++) {
-		row = tbody->add_item("row");
-		int i = itt->first;
-		//int j = itt->second;
-		row->add_item("entry", attr)->append(plan[i].id);
-		std::stringstream s1; s1 << plan[i].n_fot;
-		row->add_item("entry", attr)->append(s1.str());
-		std::stringstream s2; s2 << plan[i].len;
-		row->add_item("entry", attr)->append(s2.str());
-
-		row->add_item("entry", attr)->append(real[i].id);
-		std::stringstream s3; s3 << real[i].n_fot;
-		row->add_item("entry", attr)->append(s3.str());
-		std::stringstream s4; s4 << real[i].len;
-		row->add_item("entry", attr)->append(s4.str());
-	}
-	return true;
-}
 
 // builds the models from adjacent Photos of the same strip
 void photo_exec::_process_models()
@@ -906,7 +921,7 @@ void photo_exec::_process_strips()
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'POLYGON'," <<
+		"'MULTIPOLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
 	
@@ -934,7 +949,7 @@ void photo_exec::_process_strips()
 		stm2.prepare(sql4.str());
 		CV::Util::Spatialite::Recordset rs1 = stm2.recordset();
 		std::string id;
-		OGRGeomPtr pol1;
+		OGRGeomPtr pol;
 		std::string firstname, lastname;
 		bool first = true;
 		int count = 1;
@@ -944,18 +959,30 @@ void photo_exec::_process_strips()
 				strip = rs1["Z_MODEL_CS"];
 				firstname = rs1["Z_MODEL_LEFT"];
 				first = false;
-
-				pol1 = (Blob) rs1[4];
+				pol = (Blob) rs1[4];
 			} else {
 				lastname = rs1["Z_MODEL_RIGHT"];
 				// joins all the models
 				OGRGeomPtr pol2 = (Blob) rs1[4];
-				OGRGeomPtr mod = pol1->Union(pol2);
-				pol1 = mod;
+				pol = pol->Union(pol2);
 			}
 			count++;
 			rs1.next();
 		}
+		if ( pol->getGeometryType() == wkbPolygon ) {
+			OGRSpatialReference sr;
+			sr.importFromEPSG(SRID);
+
+			OGRGeometryFactory gf;
+			OGRGeomPtr gp_ = gf.createGeometry(wkbMultiPolygon);
+			OGRMultiPolygon* gp = (OGRMultiPolygon*) ((OGRGeometry*) gp_);
+			gp->setCoordinateDimension(2);
+			gp->assignSpatialReference(&sr);
+			gp->addGeometry(pol);
+			stm[7].fromBlob(gp_);
+		} else
+			stm[7].fromBlob(pol);
+
 		double l = _vdps[firstname].Pc.dist2D(_vdps[lastname].Pc) / 1000.; // strip length in km
 		stm[1] = id;
 		stm[2] = strip;
@@ -963,7 +990,7 @@ void photo_exec::_process_strips()
 		stm[4] = lastname;
 		stm[5] = count;
 		stm[6] = l;
-		stm[7].fromBlob(pol1);
+		//stm[7].fromBlob(pol);
 		stm.execute();
 		stm.reset();
 		
@@ -1009,6 +1036,7 @@ void photo_exec::_process_block()
 		vs.push_back(s);
 		rs.next();
 	}
+	OGRGeomPtr blk1 = blk;
 
 	std::string tableb = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(tableb);
@@ -1036,7 +1064,7 @@ void photo_exec::_process_block()
 	stm0.execute();
 	stm0.reset();
 	cnn.commit_transaction();
-	_get_carto(blk);
+	_get_carto(blk1);
 
 	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
@@ -1062,7 +1090,7 @@ void photo_exec::_process_block()
 	for (size_t i = 0; i < vs.size(); i++) {
 		VDP& vdp1 = _vdps[vs[i].first];
 		VDP& vdp2 = _vdps[vs[i].last];
-		double k1 = vdp2.Pc.angdir(vdp1.Pc);
+		double k1 = vdp2.Pc.angdir2(vdp1.Pc);
 		VecOri v1(vdp2.Pc - vdp1.Pc);
 		for (size_t j = i + 1; j < vs.size(); j++) {
 			VDP& vdp3 = _vdps[vs[j].first];
@@ -1076,14 +1104,16 @@ void photo_exec::_process_block()
 					double d1, d2, d3, d4;
 					_get_elong(g1, k1, &d1, &d2);
 					OGRGeomPtr inter = g1->Intersection(g2);
-					_get_elong(inter, k1, &d3, &d4);
-					double dt = (int) 100 * (d3 / d1);
-					stm2[1] = (int) k++;
-					stm2[2] = vs[i].strip;
-					stm2[3] = vs[j].strip;
-					stm2[4] = dt;
-					stm2.execute();
-					stm2.reset();
+					if ( inter->getGeometryType() == wkbPolygon ) {
+						_get_elong(inter, k1, &d3, &d4);
+						double dt = (int) 100 * (d3 / d1);
+						stm2[1] = (int) k++;
+						stm2[2] = vs[i].strip;
+						stm2[3] = vs[j].strip;
+						stm2[4] = dt;
+						stm2.execute();
+						stm2.reset();
+					}
 				}
 			}
 		}

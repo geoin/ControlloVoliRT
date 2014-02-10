@@ -10,6 +10,7 @@
 #include "dem_interpolate/dsm.h"
 #include "dem_interpolate/pslg.h"
 #include <fstream>
+#include <iostream>
 #include "Poco/StringTokenizer.h"
 #include "Poco/String.h"
 #include "Poco/Buffer.h"
