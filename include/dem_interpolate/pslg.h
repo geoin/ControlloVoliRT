@@ -20,6 +20,8 @@
 #include <Poco/File.h>
 #include "fastparser.h"
 
+#include <cstdio>
+
 #ifndef INF
 #define INF	1.e30
 #endif

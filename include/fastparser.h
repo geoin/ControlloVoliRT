@@ -2,6 +2,7 @@
 #define FASTPARSER_H
 
 #include <vector>
+#include <string>
 
 class FastParser {
 public:

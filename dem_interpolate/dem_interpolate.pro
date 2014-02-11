@@ -3,14 +3,17 @@
 # Project created by QtCreator 2013-10-10T17:26:24
 #
 #-------------------------------------------------
-CONFIG += sharedlib
+CONFIG += staticlib
 QT       -= core gui
 TARGET = dem_interpolate
 TEMPLATE = lib
 
 win32 {
-        LIBS += -L"C:/ControlloVoliRT_Tools/lib"
+        LIBS += -L"../../ControlloVoliRT_Tools/lib"
         DEFINES += DLL_EXPORTS
+}
+linux{
+    LIBS += -L"/usr/local/lib"
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib"
@@ -24,14 +27,14 @@ else {
         LIBS += -lPocoFoundation -lPocoZip -llaslib
 }
 
-win32 {
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
-}
+
+INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+
 macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
 }
 
-DEFINES +=DEMINTERPOLATE_LIBRARY
+DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS
 
 SOURCES += \
     geom.cpp \
