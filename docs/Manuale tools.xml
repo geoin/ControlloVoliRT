@@ -176,38 +176,169 @@
     inserire e aggiornare i file di input necessari agli strumenti di
     verifica.</para>
 
-    <para>Tramite il menù applicativo e la barra degli strumenti, vedi
-    figura(...), è possibile creare o caricare un progetto. La voce "Nuovo"
-    presenta una finestra di dialogo tramite la quale è possibile scegliere
-    nome e tipologia, la voce "Apri" richiede la selezione della cartella root
-    di un progetto già presente nel filesystem. </para>
+    <para>Tramite il menù applicativo e la barra degli strumenti è possibile
+    creare o caricare un progetto. </para>
 
-    <para>Una volta caricato il progetto, viene presentato un albero nella
-    barra laterale per la navigazione tra i vari controlli. A ciascun
-    controllo nell'albero corrisponde una scheda di dettaglio nel corpo
-    principale dell'applicazione, dove è possibile inserire i dati in
-    ingresso.</para>
-
-    <para>Ogni dettaglio è in generale composto da una scheda per ogni file di
-    input. L'inserimento o la modifica dei dati avviene tramite drag&amp;drop
-    nell'area visualizzata o selezionando i file dalla finestra di dialogo
-    attivabile nel menù dell'oggetto attivo, vedi figura(...). Il menù di
-    dettaglio consente inoltre la rimozione dei dati.</para>
-
-    <para>Il controllo GPS si differenzia leggermente; comprende infatti la
-    lista delle missioni, ciascuna avente il proprio dettaglio</para>
-
-    <para>Le missioni vengono create dinamicamente partendo dal menù
-    contestuale in figura (...); la navigazione avviene tramite gli appositi
-    bottoni o selezionando la voce di menù relativa a ciascuna missione. La
-    metodologia di inserimento dei dati resta la stessa degli altri controlli.
+    <para>La voce "Nuovo" presenta una finestra di dialogo per la creazione di
+    un progetto; deve essere inserito il nome, la tipologia (fotogrammetria o
+    lidar) e la cartella radice. Opzionale l'inserimento di una nota relativa
+    al progetto. La voce "Apri" richiede la selezione della cartella root
+    contenente un progetto creato precedentemente e presente nel filesystem.
     </para>
 
-    <para>Gli oggetti gestiti sono i seguenti.</para>
+    <para>Al momento della conferma, l'applicativo presenta l'albero di
+    navigazione del progetto. </para>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="Cattura.PNG"/>
+      </imageobject>
+    </mediaobject>
+
+    <para>Tramite l'albero di navigazione è possibile visualizzare il
+    dettaglio relativo a ciascun controllo. Selezionando ciascun controllo
+    nell'albero viene visualizzata la scheda di dettaglio corrispondente nel
+    corpo principale dell'applicazione, dove è possibile visualizzare ed
+    inserire i dati in ingresso.</para>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata contentwidth="511" fileref="dettaglio.PNG"/>
+      </imageobject>
+    </mediaobject>
+
+    <para>Ogni dettaglio è in generale composto da una scheda per ogni file di
+    input; i tab laterali permettono la navigazione tra le varie schede.
+    </para>
+
+    <para>Le schede sono tutte composte da:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>un'intestazione contente il menù di dettaglio seguito dal
+        nome;</para>
+      </listitem>
+
+      <listitem>
+        <para>il corpo principale, rappresentante una sintesi delle
+        informazioni inserite dall'utente.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>L'inserimento o la modifica dei dati avviene tramite drag&amp;drop
+    di uno o più file nell'area visualizzata, oppute selezionando i file
+    dall'apposita finestra di dialogo attivabile nel menù dell'oggetto in
+    esame, raggiungibile tramite il pulsante posizionato alla sinistra del
+    nome. Il menù di dettaglio consente inoltre la rimozione dei dati
+    precedentemente inseriti nel progetto.</para>
+
+    <para>L'interfaccia del controllo GPS si differenzia leggermente;
+    comprende infatti un numero variabile di missioni, ciascuna avente il
+    proprio dettaglio, con la medesima struttura descritta
+    precedentemente.</para>
+
+    <para>Le missioni vengono create dinamicamente partendo dal menù
+    contestuale in figura; la navigazione avviene tramite gli appositi bottoni
+    o selezionando la voce di menù relativa a ciascuna missione. La
+    metodologia di inserimento dei dati resta la stessa degli altri
+    controlli.</para>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="missioni.PNG"/>
+      </imageobject>
+    </mediaobject>
+
+    <para>Gli oggetti gestiti, sono divisi per controllo. In
+    particolare:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Progetto di volo, dettaglio composto da:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>fotocamera di progetto,</para>
+          </listitem>
+
+          <listitem>
+            <para>assi di volo,</para>
+          </listitem>
+
+          <listitem>
+            <para>aree da cartografare,</para>
+          </listitem>
+
+          <listitem>
+            <para>dem.</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>Dati Gps, comprende un numero variabile di missioni, ciascuna
+        con:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>fotocamera di missione,</para>
+          </listitem>
+
+          <listitem>
+            <para>rinex di volo,</para>
+          </listitem>
+
+          <listitem>
+            <para>un numero variabile di stazioni permanenti.</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>Volo effettuato, composto da:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>aree da cartografare,</para>
+          </listitem>
+
+          <listitem>
+            <para>dem,</para>
+          </listitem>
+
+          <listitem>
+            <para>assetti di volo.</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>Orto immagini, composto da:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>quadro di unione,</para>
+          </listitem>
+
+          <listitem>
+            <para>limiti amministrativi.</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+    </itemizedlist>
+
+    <para> </para>
+
+    <para>Le aree da cartografare e il dem possono essere inseriti sia nel
+    contesto del progetto di volo che del volo effettuato; la modifica nella
+    relativa scheda di ciascun controllo sarà riportata correttamente in tutte
+    le schede di dettaglio collegate alla stessa informazione. </para>
+
+    <para>Ogni oggetto necessita di diversi tipi di dati in ingresso.</para>
 
     <orderedlist>
       <listitem>
-        <para>Fotocamera, richiede un file XML contenete i parametri della
+        <para>Fotocamera, richiede un file XML contenente i parametri della
         fotocamera di progetto o di volo, relativa ad ogni missione.</para>
       </listitem>
 
@@ -246,7 +377,7 @@
       </listitem>
 
       <listitem>
-        <para> Quadro di unione, richiede uno shape con i fogli relativi al
+        <para>Quadro di unione, richiede uno shape con i fogli relativi al
         volo effettuato.</para>
       </listitem>
 

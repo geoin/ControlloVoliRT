@@ -16,7 +16,8 @@ using namespace CV::GUI;
 
 int main(int argc, char *argv[]) {
 
-#ifdef Q_WS_WIN
+#ifdef Q_WS_WIN 
+	QString v(qVersion());
 	if (QSysInfo::windowsVersion() > 0x0090) {
 		QApplication::setStyle(new QWindowsXPStyle);
 	}

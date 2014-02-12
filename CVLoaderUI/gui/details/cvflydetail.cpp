@@ -12,9 +12,9 @@ namespace Details {
 
 CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
 	//TODO
-	CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(0));
+	/*CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(0));
     addTab(axis, "");
-    setTabToolTip(0, tr("Assi di volo"));
+    setTabToolTip(0, tr("Assi di volo"));*/
 
 	CVAreaDetail* area = new CVAreaDetail(p, c->at(1));
     addTab(area, "");
