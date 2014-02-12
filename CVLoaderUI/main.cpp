@@ -16,6 +16,8 @@ int main(int argc, char *argv[]) {
     QApplication::setApplicationName("Controllo Voli");
     QApplication::setApplicationVersion("0.0.1");
 
+    QApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+
     //QApplication::setStyle(QStyleFactory::create("fusion"));
     QApplication app(argc, argv);
 

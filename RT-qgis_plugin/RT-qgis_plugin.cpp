@@ -578,7 +578,7 @@ QString icon_path; //("C:/Google Drive/Regione Toscana Tools/icons");
 /*******************************************/
 QgsRTtoolsPlugin::QgsRTtoolsPlugin(QgisInterface* iface): mIface(iface)
 {
-	mAction.resize(10);
+    mAction.resize(10);
 }
 QgsRTtoolsPlugin::~QgsRTtoolsPlugin()
 {
@@ -589,11 +589,11 @@ void QgsRTtoolsPlugin::initGui()
     icon_path = QDir::cleanPath(QString(p.data()) + QDir::separator() + "icons");
 
     // get the main menu of QGIS
-	QMenu* qm = (QMenu*) mIface->layerMenu()->parent();
-	// appende il menu di collaudo
-	qmb = (QMenu*) qm->addMenu("Collaudo");
-	// appende la toolbar di collaudo
-	qtb = mIface->addToolBar( "Collaudo" );
+    QMenu* qm = (QMenu*) mIface->layerMenu()->parent();
+    // appende il menu di collaudo
+    qmb = (QMenu*) qm->addMenu("Collaudo");
+    // appende la toolbar di collaudo
+    qtb = mIface->addToolBar( "Collaudo" );
 
     long k = -1;
 
@@ -650,17 +650,21 @@ void QgsRTtoolsPlugin::initGui()
 void QgsRTtoolsPlugin::unload()
 {
     for (int i = 0; i < mAction.size(); i++)
-		delete mAction[i];
-	qtb->deleteLater();
-	qmb->deleteLater();
+        delete mAction[i];
+    qtb->deleteLater();
+    qmb->deleteLater();
 
 }
 /*********************** SLOTS attivazione comandi ************/
 void QgsRTtoolsPlugin::set_prj()
 {
-    QString name = "CVloader.exe"; //"CVloader_ui.exe";
+    QString name = "CVloader"; //"CVloader_ui.exe";
     QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+#ifdef WIN32
     QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
+#else
+    QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "lib/qgis/plugins");
+#endif
 
     QFileInfo qf(plugin_dir, name);
 
@@ -712,7 +716,7 @@ void QgsRTtoolsPlugin::ver_prod_lidar()
 /*********************** INTERFACCIA PIANA ********************/
 QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
 {
-	return new QgsRTtoolsPlugin(iface);
+    return new QgsRTtoolsPlugin(iface);
 }
 QGISEXTERN QString icon()
 {
@@ -725,78 +729,78 @@ QGISEXTERN QString icon()
 }
 QGISEXTERN QString name()
 {
-	return "Regione Toscana tools";
+    return "Regione Toscana tools";
 }
 QGISEXTERN QString category()
 {
-	return "Plugin";
+    return "Plugin";
 }
 QGISEXTERN QString description()
 {
-	return "Regione Toscana tools per il collaudo di riprese aerofotogrammetriche e LIDAR";
+    return "Regione Toscana tools per il collaudo di riprese aerofotogrammetriche e LIDAR";
 }
 QGISEXTERN QString version()
 {
-	return "0.00001";
+    return "0.00001";
 }
 // Return the type (either UI or MapLayer plugin)
 QGISEXTERN int type()
 {
-	return QgisPlugin::UI;
+    return QgisPlugin::UI;
 }
 // Delete ourself
 QGISEXTERN void unload(QgisPlugin* theQgsPointConverterPluginPointer)
 {
-	delete theQgsPointConverterPluginPointer;
+    delete theQgsPointConverterPluginPointer;
 }
 /********************************************************************/
 /*
 _declspec (dllexport) void volo()
 {
-	QgsVectorLayer* qvf1 = new QgsVectorLayer("C:/assistenza/Rossi/13-aug-06/shp/linee_o.shp", "myLayer", "ogr");
-	QgsVectorFileWriter::writeAsVectorFormat(qvf1, "C:/assistenza/Rossi/13-aug-06/shp/outofqgis.shp", "CP1250", 0, "ESRI Shapefile");
+    QgsVectorLayer* qvf1 = new QgsVectorLayer("C:/assistenza/Rossi/13-aug-06/shp/linee_o.shp", "myLayer", "ogr");
+    QgsVectorFileWriter::writeAsVectorFormat(qvf1, "C:/assistenza/Rossi/13-aug-06/shp/outofqgis.shp", "CP1250", 0, "ESRI Shapefile");
 }
 QgsVectorLayer* qvf;
 void QgsRTtoolsPlugin::ver_gps()
 {
-	//QFileDialog qf;
-	//QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
+    //QFileDialog qf;
+    //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
 
-	qvf = mIface->addVectorLayer("C:/assistenza/Rossi/13-aug-06/shp/linee_o.shp", "myLayer", "ogr");
-	//QMessageBox::information(0, tr("Regione Toscana"), tr("Verifica dati GPS"), QMessageBox::Ok);
+    qvf = mIface->addVectorLayer("C:/assistenza/Rossi/13-aug-06/shp/linee_o.shp", "myLayer", "ogr");
+    //QMessageBox::information(0, tr("Regione Toscana"), tr("Verifica dati GPS"), QMessageBox::Ok);
 }
 void QgsRTtoolsPlugin::ver_proj_volo()
 {
-	QgsVectorFileWriter::writeAsVectorFormat(qvf, "C:/assistenza/Rossi/13-aug-06/shp/qgis.shp", "CP1250", 0, "ESRI Shapefile");
-	QMessageBox::information(0, tr("Regione Toscana"), tr("Verifica progetto di volo"), QMessageBox::Ok);
+    QgsVectorFileWriter::writeAsVectorFormat(qvf, "C:/assistenza/Rossi/13-aug-06/shp/qgis.shp", "CP1250", 0, "ESRI Shapefile");
+    QMessageBox::information(0, tr("Regione Toscana"), tr("Verifica progetto di volo"), QMessageBox::Ok);
 }
 void QgsRTtoolsPlugin::ver_volo()
 {
-	QgsFieldMap fields;
-	QgsField field("id", QVariant::Int);
-	fields[0] = field;
-	field = QgsField ("nome", QVariant::String);
-	fields[1] = field;
+    QgsFieldMap fields;
+    QgsField field("id", QVariant::Int);
+    fields[0] = field;
+    field = QgsField ("nome", QVariant::String);
+    fields[1] = field;
 
-	QgsVectorFileWriter writer("C:/assistenza/Rossi/13-aug-06/shp/ppp.shp", "CP1250", fields, QGis::WKBPoint, 0, "ESRI Shapefile");
+    QgsVectorFileWriter writer("C:/assistenza/Rossi/13-aug-06/shp/ppp.shp", "CP1250", fields, QGis::WKBPoint, 0, "ESRI Shapefile");
 
-	QgsFeature fet;
+    QgsFeature fet;
 
-	fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(653136, 4856108)));
-	fet.addAttribute(0, QVariant(1));
-	fet.addAttribute(1, QVariant("pippo"));
-	writer.addFeature(fet);
+    fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(653136, 4856108)));
+    fet.addAttribute(0, QVariant(1));
+    fet.addAttribute(1, QVariant("pippo"));
+    writer.addFeature(fet);
 
-	fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(651025,4855169)));
-	fet.addAttribute(0, QVariant(2));
-	fet.addAttribute(1, QVariant("pluto"));
-	writer.addFeature(fet);
+    fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(651025,4855169)));
+    fet.addAttribute(0, QVariant(2));
+    fet.addAttribute(1, QVariant("pluto"));
+    writer.addFeature(fet);
 
-	fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(649934,4855553)));
-	fet.addAttribute(0, QVariant(3));
-	fet.addAttribute(1, QVariant("paperino"));
-	writer.addFeature(fet);
+    fet.setGeometry(QgsGeometry::fromPoint(QgsPoint(649934,4855553)));
+    fet.addAttribute(0, QVariant(3));
+    fet.addAttribute(1, QVariant("paperino"));
+    writer.addFeature(fet);
 
-	QMessageBox::information(0, tr("Regione Toscana"), tr("Verifica volo"), QMessageBox::Ok);
+    QMessageBox::information(0, tr("Regione Toscana"), tr("Verifica volo"), QMessageBox::Ok);
 }*/
 

@@ -14,9 +14,9 @@ TARGET = ControlloVoli
 TEMPLATE = app
 
 CV_INCL = ..\include
-CV_TOOLS_INCL = ..\..\ControlloVoliRT_Tools\include
+CV_TOOLS_INCL = D:\projects\RT\tools\ControlloVoliRT_Tools\include
 
-INCLUDEPATH += $${CV_INCL}
+INCLUDEPATH += /home/geoin/projects/ControlloVoliRT/include
 
 win32 {
     INCLUDEPATH += $${CV_TOOLS_INCL}
@@ -124,22 +124,4 @@ OTHER_FILES += \
     data/update.sql \
     data/db.sql
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build/lib/ -lPocoZip -lspatialite -lsqlite3 -lgeos_c -lproj -lfreexl -lz -liconv -lgdal -lPocoFoundation
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build/lib/ -lPocoZipd -lCVUtild -lspatialite -lsqlite3 -lgeos_c -lproj -lfreexl -lz -liconv -lgdal -lPocoFoundationd
-else:unix:!macx: LIBS += -L$$PWD/../build/lib/ -lPocoZip -lspatialite -lsqlite3 -lgeos_c -lproj -lfreexl -lz -liconv -lgdal -lPocoFoundation
-
-INCLUDEPATH += $$PWD/../build
-DEPENDPATH += $$PWD/../build
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../build/lib/ -lCVUtil
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build/lib/ -lCVUtild -lspatialite -lsqlite3 -lgeos_c -lproj -lfreexl -lz -liconv -lgdal -lPocoFoundationd
-else:unix:!macx: LIBS += -L$$PWD/../build/lib/ -lCVUtil
-
-INCLUDEPATH += $$PWD/../build
-DEPENDPATH += $$PWD/../build
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../build/lib/libCVUtil.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../build/lib/libCVUtild.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../build/lib/CVUtil.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../build/lib/CVUtild.lib
-else:unix:!macx: PRE_TARGETDEPS += $$PWD/../build/lib/libCVUtil.a
+LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3

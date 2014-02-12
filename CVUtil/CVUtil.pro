@@ -13,7 +13,7 @@ CONFIG += staticlib
 INCLUDEPATH += ../include
 
 win32 {
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include
+         ../../ControlloVoliRT_Tools/include
 }
 macx {
         INCLUDEPATH += ../../SwTools/include
@@ -38,3 +38,6 @@ incl.path = ../include/CVUtil
 incl.files += ../CVUtil/cvspatialite.h
 incl.files += ../CVUtil/ogrgeomptr.h
 INSTALLS += incl
+
+LIBS += -lPocoFoundation
+

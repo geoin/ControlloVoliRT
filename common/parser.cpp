@@ -1,8 +1,16 @@
 #include "fastparser.h"
 #include <vector>
+#include <cstdlib>
+#include <cstring>
 
 #define white_space(c) ((c) == ' ' || (c) == '\t')
 #define valid_digit(c) ((c) >= '0' && (c) <= '9')
+
+#ifdef WIN32
+#define STRTOK strtok_s
+#else
+#define STRTOK strtok_r
+#endif
 
 FastParser::FastParser() {
 	_init();
@@ -51,7 +59,7 @@ void FastParser::_tokenize(const char* mes)
 	char* p = ch;
 	char* cont;
 	const char* d = _sep.c_str();
-	while ( (p = strtok_s(p, d, &cont)) ) {
+    while ( (p = STRTOK(p, d, &cont)) ) {
 		_vtok.push_back(p);
 		p = NULL;
 	}
