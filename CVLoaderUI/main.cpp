@@ -3,13 +3,24 @@
 #include <QApplication>
 #include <QResource>
 #include <QTextStream>
+#include <QSysInfo>
 //#include <QStyleFactory>
 
 #include "core/cvcore_utils.h"
 
 using namespace CV::GUI;
 
+#ifdef Q_WS_WIN
+#include <QWindowsXPStyle>
+#endif
+
 int main(int argc, char *argv[]) {
+
+#ifdef Q_WS_WIN
+	if (QSysInfo::windowsVersion() > 0x0090) {
+		QApplication::setStyle(new QWindowsXPStyle);
+	}
+#endif
 
     QApplication::setOrganizationName("Geoin");
     QApplication::setOrganizationDomain("CV");

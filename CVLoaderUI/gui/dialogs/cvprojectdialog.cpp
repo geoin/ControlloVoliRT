@@ -26,7 +26,8 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
     box->addWidget(w);
 
     QDialogButtonBox* buttons = new QDialogButtonBox(
-                QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+		QDialogButtonBox::Ok | QDialogButtonBox::Cancel
+	);
     box->addWidget(buttons);
 
     connect(buttons, SIGNAL(accepted()), this, SLOT(accept()));
@@ -65,7 +66,7 @@ void CVProjectDialog::selectProjectFolder() {
 	d.cdUp();
 
 	QString dir = QFileDialog::getExistingDirectory(
-		NULL,
+		this,
 		tr("Selezionare cartella"),
 		d.absolutePath()
 	);
