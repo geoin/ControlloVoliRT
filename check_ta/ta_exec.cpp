@@ -33,59 +33,38 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "common/util.h"
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CAMERA "camera.xml"
 #define OUT_DOC "check_ta.xml"
 #define REF_FILE "Regione_Toscana_RefVal.xml"
+#define FOTOGRAMMETRIA "Fotogrammetria"
+#define Z_CAMERA "Camera"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::SharedPtr;
 using Poco::Path;
+using namespace CV::Util::Spatialite;
 /**************************************************************************/
-enum CHECK_TYPE {
-	less_ty = 0,
-	great_ty = 1,
-	abs_less_ty = 2,
-	between_ty =3
-};
-bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-{
-	bool rv = true;
-	switch ( ty ) {
-		case less_ty:
-			rv = val < tol1;
-			break;
-		case great_ty:
-			rv = val > tol1;
-			break;
-		case abs_less_ty:
-			rv = fabs(val) < tol1;
-			break;
-		case between_ty:
-			rv = val > tol1 && val < tol2;
-			break;
-	}
-	if ( !rv ) {
-		Doc_Item r = row->add_item("entry", attr);
-		r->add_instr("dbfo", "bgcolor=\"red\"");
-		r->append(val);
-	} else
-		row->add_item("entry", attr)->append(val);
-	return rv;
-}
+
 /***************************************************************************************/
 std::string ta_exec::_get_key(const std::string& val)
 {
-	return _refscale + "." + val;
+	return std::string(FOTOGRAMMETRIA) + "." + _refscale + "." + val;
 }
 ta_exec::~ta_exec() 
 {
 }
 bool ta_exec::run()
 {
+	std::cout << "check_ta" << std::endl; 
+	// initialize spatial lite connection
+	Poco::Path db_path(_proj_dir, DB_NAME);
+	cnn.open(db_path.toString());
+
 	if ( _refscale.empty() )
 		throw std::runtime_error("scala di lavoro non impostata");
 	if ( _vdp_name.empty() )
@@ -305,17 +284,62 @@ bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const 
 }
 bool ta_exec::_read_cam()
 {
-	AutoPtr<XMLConfiguration> pConf;
-	try {
-		pConf = new XMLConfiguration(_cam_name);
-		_cam.foc = atof(pConf->getString("FOC").c_str());
-		_cam.dimx = atof(pConf->getString("DIMX").c_str());
-		_cam.dimy = atof(pConf->getString("DIMY").c_str());
-		_cam.dpix = atof(pConf->getString("DPIX").c_str());
-		_cam.xp = atof(pConf->getString("XP", "0").c_str());
-		_cam.yp = atof(pConf->getString("YP", "0").c_str());
-	} catch (...) {
-		return false;
+	std::stringstream sql;
+	sql << "SELECT * from " << Z_CAMERA; // << " where planning=1";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	while ( !rs.eof() ) {
+		Camera cam;
+		cam.foc = rs["FOC"];
+		cam.dimx = rs["DIMX"];
+		cam.dimy = rs["DIMY"];
+		cam.dpix = rs["DPIX"];
+		cam.xp = rs["XP"];
+		cam.yp = rs["YP"];
+		cam.serial = rs["SERIAL_NUMBER"];
+		cam.id = rs["ID"];
+		int plan = rs["PLANNING"];
+		cam.planning = plan == 1;
+		rs.next();
+		_cams[cam.id] = cam;
+		if ( cam.planning )
+			_cam_plan = cam;
+	}
+	return true;
+}
+bool ta_exec::_strip_cam()
+{
+	// get the camera associated to each mission
+	std::string table = "MISSION";
+	std::stringstream sql;
+	sql << "SELECT ID_CAMERA, NAME from " << table;
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+
+	std::map<std::string, std::string> map_mission_cam;
+
+	while ( !rs.eof() ) {
+		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
+		rs.next();
+	}
+	// get the mission associated to each strip
+	table = std::string(ASSI_VOLO) + "V";
+	std::stringstream sql1;
+	sql1 << "SELECT A_VOL_CS, MISSION from " << table;
+	stm = Statement(cnn);
+	stm.prepare(sql1.str());
+	rs = stm.recordset();
+	while ( !rs.eof() ) {
+		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
+		std::string mission = rs["MISSION"];
+		std::string cam_id = map_mission_cam[mission]; // camera id for mission
+		if ( _cams.find(cam_id) != _cams.end() )
+			_map_strip_cam[strip] = _cams[cam_id];
+		else
+			_map_strip_cam[strip] = _cam_plan;
+		rs.next();
 	}
 	return true;
 }
@@ -337,12 +361,25 @@ bool ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
 			continue;
 		if ( atof(tok[1].c_str()) == 0. )
 			continue;
-		vdps[tok[0]] = VDPC(_cam, tok[0]);
+		Camera cam;
+		vdps[tok[0]] = VDPC(cam, tok[0]);
 		VDPC& vdp = vdps[tok[0]];
 		vdp.Init(DPOINT(atof(tok[1].c_str()), atof(tok[2].c_str()), atof(tok[3].c_str())), atof(tok[4].c_str()), atof(tok[5].c_str()), atof(tok[6].c_str()));
 	}
-	return true;
 
+	_strip_cam();
+
+	std::map<std::string, VDPC>::iterator it;
+	for ( it = vdps.begin(); it != vdps.end(); it++) {
+		std::string strip = get_strip(it->first);
+		Camera cam;
+		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
+			cam = _map_strip_cam[strip];
+		else
+			cam = _cam_plan;
+		it->second.InitIor(cam);
+	}
+	return true;
 }
 bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts) 
 {
@@ -358,10 +395,6 @@ bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts)
 			throw std::runtime_error("nome del file delle osservazioni non valido");
 	} else
 		throw std::runtime_error("nome del file delle osservazioni non valido");
-
-	//nome.append("_image");
-	//gf.setBaseName(nome);
-	//gf.setExtension("pat");
 
 	pts.clear();
 	
@@ -404,14 +437,6 @@ bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts)
 	}
 	return true;
 }
-std::string ta_exec::_get_strip(const std::string& nome)
-{
-	// extract strip name from image name
-	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[0];
-}
 bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 {
 	Doc_Item row = _initpg1();
@@ -426,7 +451,7 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 		it1++;
 		for (; it1 != ret.second; it1++) {
 			std::string nome2 = it1->second;
-			if ( _get_strip(nome1) == _get_strip(nome2) ) {
+			if ( get_strip(nome1) == get_strip(nome2) ) {
 				// only for images of the same strip
 				VDPC& vdp1 = vdps[nome1];
 				VDPC& vdp2 = vdps[nome2];

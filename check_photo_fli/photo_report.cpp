@@ -46,6 +46,18 @@ void photo_exec::_init_document()
 	_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
 
 	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Intestazione");
+
+	std::stringstream sql;
+	sql << "SELECT NOTE from JOURNAL where CONTROL=1";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	std::string head = rs[0];
+	if ( !head.empty() ) {
+		sec->add_item("para")->append(head);
+	}
+
 	Poco::DateTime dt;
 	dt.makeLocal(+2);
 	std::stringstream ss;

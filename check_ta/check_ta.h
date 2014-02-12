@@ -30,6 +30,7 @@
 #include "photo_util/vdp.h"
 #include "Poco/Util/Application.h"
 #include "docbook/docbook.h"
+#include "CVUtil/cvspatialite.h"
 
 class ta_exec {
 public:
@@ -51,10 +52,10 @@ public:
 
 private:
 	bool _read_cam(void);
+	bool _strip_cam(void);
 	bool _read_vdp(const std::string& nome, VDP_MAP& vdps);
 	bool _read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts);
 	bool _read_cont_pat(CPT_MAP& pm); 
-	std::string _get_strip(const std::string& nome);
 	bool _check_differences(void);
 	bool _check_cpt(void);
 	bool _read_ref_val(void);
@@ -75,7 +76,9 @@ private:
 	std::string _obs_name;
 	std::string _proj_dir;
 
-	Camera	_cam;
+	Camera	_cam_plan; // camera for planned flight
+	std::map<std::string, Camera> _cams;
+	std::map<std::string, Camera> _map_strip_cam;
 	docbook _dbook;
 	Doc_Item _article;
 	
@@ -88,6 +91,9 @@ private:
 
 	std::list<std::string> _cpt_out_tol;
 	std::list<std::string> _tria_out_tol;
+	
+	// spatial lite connection
+	CV::Util::Spatialite::Connection cnn;
 };
 
 class check_ta: public Poco::Util::Application {
