@@ -1,5 +1,5 @@
 #include "cvcamera.h"
-#include "cvjournal.h"
+#include "core/cvjournal.h"
 #include "core/categories/cvcontrol.h"
 
 #include "core/sql/querybuilder.h"

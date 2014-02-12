@@ -124,4 +124,4 @@ OTHER_FILES += \
     data/update.sql \
     data/db.sql
 
-LIBS += -lCVUtil -lPocoZip -lspatialite
+LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3
