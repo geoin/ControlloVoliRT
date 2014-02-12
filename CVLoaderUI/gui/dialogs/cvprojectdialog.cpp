@@ -9,6 +9,8 @@
 #include <QFormLayout>
 #include <QDialogButtonBox>
 #include <QComboBox>
+#include <QTextDocument>
+#include <QTextBlock>
 
 namespace CV {
 namespace GUI {
@@ -67,16 +69,23 @@ void CVProjectDialog::selectProjectFolder() {
 		tr("Selezionare cartella"),
 		d.absolutePath()
 	);
-
-	_path->setText(dir);
+	if (!dir.isEmpty()) {
+		_path->setText(dir);
+	}
 }
 
 void CVProjectDialog::getInput(Core::CVProject& proj) {
     proj.name = _name->text();
 	proj.path = _path->text() + QDir::separator() + proj.name;
-    proj.notes = _note->toPlainText().simplified();
+    //proj.notes = _note->toPlainText().simplified();
     proj.type = _type->currentIndex() == 0 ? Core::CVProject::PHOTOGRAMMETRY : Core::CVProject::LIDAR;
 
+	QTextDocument* doc = _note->document();
+	QStringList l;
+	for (QTextBlock it = doc->begin(); it != doc->end(); it = it.next()) {
+         l << it.text();
+	}
+	proj.notes = l.join("\n");
 }
 
 } // namespace Dialogs

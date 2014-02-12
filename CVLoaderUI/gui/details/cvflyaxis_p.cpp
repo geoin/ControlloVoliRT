@@ -27,42 +27,24 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 
     QFormLayout* form = new QFormLayout;
 
-	QLabel* lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
+	QLabel* n = NULL;
+	QLabel* info = NULL;
 
-	QLabel* n = new QLabel("Ente", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
+	createRow(this, tr("Record inseriti"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
-	form->addRow(n, lab);
+	createRow(this, tr("Ente"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
-	lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
+	createRow(this, tr("DT"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
-	n = new QLabel("DT", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
-	form->addRow(n, lab);
-	
-	lab = new QLabel("", this);
-	lab->setMinimumHeight(26);
-	lab->setMaximumHeight(26);
-	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
-	_labels << lab;
-
-	n = new QLabel("RID", this);
-	n->setMinimumHeight(26);
-	n->setMaximumHeight(26);
-	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
-	form->addRow(n, lab);
+	createRow(this, tr("RID"), n, info);
+	_labels << info;
+	form->addRow(n, info);
 
 	body(form);
 

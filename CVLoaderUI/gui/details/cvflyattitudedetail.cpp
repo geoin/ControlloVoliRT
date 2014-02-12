@@ -33,10 +33,10 @@ CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBase
 
 	QLabel* n = NULL;
 	QLabel* info = NULL;
+
 	createRow(this, tr("Numero strisciate"), n, info);
 	_labels << info;
 	form->addRow(n, info);
-
 	
 	createRow(this, tr("Numero fotogrammi"), n, info);
 	_labels << info;

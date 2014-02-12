@@ -115,7 +115,7 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 	CVShapeLayer* axis = new CVShapeLayer(proj);
 	axis->uri(proj->path);
 	axis->table("AVOLOV");
-	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	axis->columns(QStringList() << "count(*)" << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	ctrl->insert(axis);
 	if (b) {
 		axis->load();
@@ -142,7 +142,7 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	ctrl->insert(cam);
 	
 	CVShapeLayer* layer = new CVShapeLayer(ctrl);
-	layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	layer->columns(QStringList() << "count(*)" << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
 	ctrl->insert(layer);
 

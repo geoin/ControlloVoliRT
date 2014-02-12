@@ -31,7 +31,7 @@ CVMissionListToolbar::CVMissionListToolbar(QWidget* p) : QWidget(p) {
 
    QMenu* menu = new QMenu(this);
    _menu = new QPushButton(tr(""), this);
-   _menu->setMaximumSize(20, 28);
+   _menu->setMaximumSize(28, 28);
    _menu->setMenu(menu);
 
    _title = new QLabel(tr("Nessuna missione attiva"), this);
