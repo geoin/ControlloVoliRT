@@ -42,6 +42,10 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
     _type->addItem(tr("Fotogrammetria"));
     _type->addItem(tr("Lidar"));
 
+	_scale = new QComboBox(this);
+	_scale->addItem(tr("2000"));
+	_scale->addItem(tr("10000"));
+
     QFormLayout* form = new QFormLayout;
     form->addRow(tr("Nome"), _name);
 
@@ -55,6 +59,7 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
 
     form->addRow(tr("Cartella"), filePicker);
     form->addRow(tr("Tipo"), _type);
+    form->addRow(tr("Scala"), _scale);
     form->addRow(tr("Note"), _note);
     w->setLayout(form);
 
@@ -78,8 +83,8 @@ void CVProjectDialog::selectProjectFolder() {
 void CVProjectDialog::getInput(Core::CVProject& proj) {
     proj.name = _name->text();
 	proj.path = _path->text() + QDir::separator() + proj.name;
-    //proj.notes = _note->toPlainText().simplified();
     proj.type = _type->currentIndex() == 0 ? Core::CVProject::PHOTOGRAMMETRY : Core::CVProject::LIDAR;
+    proj.scale = _scale->currentText();
 
 	QTextDocument* doc = _note->document();
 	QStringList l;

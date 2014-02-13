@@ -151,7 +151,7 @@ void CVMissionListDetails::onAddMission() {
 		return;
 	}
 
-	//TODO: should projManager handle this?
+	//TODO: should projManager handle this? probably yes
 	Core::CVMissionObject* obj = new Core::CVMissionObject(_control);
 	_control->insert(obj);
 

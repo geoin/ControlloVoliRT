@@ -5,6 +5,8 @@
 #include <QObject>
 #include <QUuid>
 
+#include "core/cvjournal.h"
+
 namespace CV {
 namespace Core {
 
@@ -29,6 +31,9 @@ public:
 	explicit CVObject(QObject* p) : QObject(p) {}
 	virtual ~CVObject() {}
 
+	inline void type(Type t) { _type = t; }
+	inline Type type() const { return _type; }
+
 	inline void uri(const QString& t) { _uri = t; }
 	inline const QString& uri() const { return _uri; }
 
@@ -44,6 +49,7 @@ protected:
 
 private:
 	QString _uri;
+	Type _type;
 };
 
 class CVControl : public QObject {

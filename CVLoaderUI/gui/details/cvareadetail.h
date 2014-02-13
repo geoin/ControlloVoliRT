@@ -35,7 +35,11 @@ protected:
     virtual void dragLeaveEvent(QDragLeaveEvent*);
     virtual void dropEvent(QDropEvent*);
 	virtual void showEvent(QShowEvent* event) {
-		if (controller()->isValid()) {
+		Core::CVObject* obj = controller(); // check destruction order, maybe a weak pointer?
+		if (!obj) {
+			return;
+		}
+		if (obj->isValid()) {
 			QStringList info = layer()->data();
 			for (int i = 0; i < info.size(); ++i) {
 				QLabel* lab = _labels.at(i);

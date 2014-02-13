@@ -1,5 +1,6 @@
 #include "cvproject.h"
 #include "core/sql/querybuilder.h"
+#include "core/cvjournal.h"
 
 #include "CVUtil/cvspatialite.h"
 
@@ -15,9 +16,6 @@ QString CVProject::loadFrom(const QDir& dir) {
 	CV::Util::Spatialite::Connection cnn;
 	try {
 		cnn.open(_db.toStdString()); 
-		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
-			cnn.initialize_metdata(); 
-		}
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
 		return QString();
@@ -36,9 +34,22 @@ QString CVProject::loadFrom(const QDir& dir) {
 			id = QString(set[0].toString().c_str());
 			timestamp = set[1].toInt64();
 			path = dir.absolutePath();
-			notes = QString(set[3].toString().c_str());
+			//notes = QString(set[3].toString().c_str());
 			type = set[4].toInt() == 1 ? Core::CVProject::PHOTOGRAMMETRY : Core::CVProject::LIDAR;
 		} 
+
+		set = q->select(
+			QStringList() << "NOTE" << "SCALE",
+			QStringList() << "PROJECT", 
+			QStringList(),
+			QVariantList()
+		);
+		
+		if (!set.eof()) {
+			notes = QString(set[0].toString().c_str());
+			scale = QString(set[1].toString().c_str());
+		} 
+
 		return _db;
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
@@ -133,6 +144,13 @@ bool CVProject::create(const QString& d) {
 		QVariantList() << id << QDateTime::currentMSecsSinceEpoch() << path << notes << type
 	);
 
+	q->insert(
+		"PROJECT", 
+		QStringList() << "NAME" << "NOTE" << "SCALE" << "TYPE",
+		QStringList() << "?1" << "?2" << "?3" << "?4",
+		QVariantList() << name << notes << scale << type
+	);
+
 	return true;
 }
 
@@ -175,6 +193,83 @@ void CVProject::missionList(QStringList& ids) {
 	}
 }
 
+QDateTime CVProject::creationDate() {
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.create(db().toStdString()); 
+		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
+			cnn.initialize_metdata(); 
+		}
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	try {
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList() << "DATE",
+			QStringList() << "JOURNAL", 
+			QStringList() << "CONTROL=?1",
+			QVariantList() << 1,
+			QStringList() << "DATE ASC",
+			1
+		);
+		
+		if (!set.eof()) {
+			return QDateTime::fromMSecsSinceEpoch(set[0].toInt64());
+		} 
+
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+	}
+	return QDateTime();
+}
+	
+QDateTime CVProject::lastModificationDate() {
+	CVJournalEntry::EntryList l = Core::CVJournal::last(
+		_db,
+		QStringList(),
+		QVariantList(),
+		1
+	);
+
+	if (l.size()) {
+		return l.at(0)->date;
+	}
+	return QDateTime();
+}
+
+bool CVProject::persist() {
+	bool ret = false;
+	CV::Util::Spatialite::Connection cnn;
+	try {
+		cnn.open(db().toStdString()); 
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+	}
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	ret = q->update(
+		"PROJECT",
+		QStringList() << "NOTE=?1" << "SCALE=?2",
+		QStringList(),
+		QVariantList() << notes << scale
+	);
+
+	if (ret) {
+		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+		e->note = notes;
+		e->control = PHOTOGRAMMETRY;
+		e->uri = name;
+		e->db = _db;
+		Core::CVJournal::add(e);
+	}
+	return ret;
+}
+
+QString CVProject::projectNotes() {
+	return QString();
+}
 
 } // namespace Core
 } // namespace CV

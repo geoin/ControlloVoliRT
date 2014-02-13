@@ -29,7 +29,6 @@ QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::
 			detail = new Details::CVOrtoDetail(p, control);
            break;
         default:
-            detail = new QWidget(p);
             break;
     }
     return detail;

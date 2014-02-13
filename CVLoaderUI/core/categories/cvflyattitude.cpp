@@ -125,6 +125,14 @@ bool CVFlyAttitude::persist() {
 		num += i;
 	}
 	_data << QString::number(attData.size()) << QString::number(num);
+
+	Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+	e->control = Core::CVControl::FLY;  
+	e->object = Core::CVObject::ATTITUDE;
+	e->uri = _origin;
+	e->db = uri();
+	Core::CVJournal::add(e);
+
 	return true;
 }
 

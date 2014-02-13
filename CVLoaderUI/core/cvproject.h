@@ -22,6 +22,8 @@ public:
 
     explicit CVProject(QObject* p = 0);
 
+	bool persist();
+
 	QString loadFrom(const QDir&); 
 	bool create(const QString& db);
 	
@@ -32,7 +34,11 @@ public:
 	void insert(CVControl*);
 	CVControl* get(CVControl::Type);
 
-    QString id, name, path, notes; //TODO, to be private
+	QDateTime creationDate();
+	QDateTime lastModificationDate();
+	QString projectNotes();
+
+    QString id, name, path, notes, scale; //TODO, to be private
 	long long timestamp;
     Type type;
 

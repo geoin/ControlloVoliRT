@@ -27,11 +27,13 @@ signals:
 public slots:
     void onProjectItemActivated(QTreeWidgetItem* item, int col);
 	void onControlAdded(CV::Core::CVControl::Type, Core::CVControl* = NULL);
+	void onProjectAdded(Core::CVProject*);
 	void onClear();
 
 private:
     QStackedWidget* _stack;
     QMap<Core::CVControl::Type, QWidget*> _details;
+	QSharedPointer<QWidget> _projDetail;
 };
 
 } // namespace GUI

@@ -35,7 +35,8 @@ public:
     QStatusBar* statusbar() const;
 
 signals:
-    void controlAdded(CV::Core::CVControl::Type, Core::CVControl* = NULL);
+    void controlAdded(CV::Core::CVControl::Type, Core::CVControl*);
+	void projectAdded(Core::CVProject*);
 
 public slots:
 	void insertProject(Core::CVProject*);
