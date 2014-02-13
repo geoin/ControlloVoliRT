@@ -114,6 +114,8 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 
 	CVShapeLayer* axis = new CVShapeLayer(proj);
 	axis->uri(proj->path);
+	axis->type(CVObject::AVOLOV);
+	axis->controlType(CVControl::FLY);
 	axis->table("AVOLOV");
 	axis->columns(QStringList() << "count(*)" << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	ctrl->insert(axis);
@@ -144,11 +146,15 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	CVShapeLayer* layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList() << "count(*)" << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
+	layer->type(CVObject::AVOLOP);
+	layer->controlType(CVControl::PLAN);
 	ctrl->insert(layer);
 
 	layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList() << "count(*)");
 	layer->table("CARTO");
+	layer->type(CVObject::CARTO);
+	layer->controlType(CVControl::PLAN);
 	ctrl->insert(layer);
 
 	CVFileInput* file = new CVFileInput(ctrl);
@@ -168,11 +174,15 @@ CVControl* CVProjectManager::_orto(CVProject* proj, bool b) {
 	CVShapeLayer* layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList() << "count(*)");
 	layer->table("QUADRO_RT");
+	layer->type(CVObject::QUADRO);
+	layer->controlType(CVControl::ORTO);
 	ctrl->insert(layer);
 
 	layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList() << "count(*)");
 	layer->table("CONTORNO_RT");
+	layer->controlType(CVControl::ORTO);
+	layer->type(CVObject::CONTOUR);
 	ctrl->insert(layer);
 
 	if (b) {

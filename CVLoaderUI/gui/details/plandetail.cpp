@@ -23,11 +23,11 @@ CVPlanDetail::CVPlanDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CV
     addTab(axis, "");
     setTabToolTip(1, tr("Assi di volo"));
 
-	CVAreaDetail* area = new CVAreaDetail(p, c->at(2));
+	CVAreaDetail* area = new CVAreaDetail(p, c->at(2), c->type());
     addTab(area, "");
     setTabToolTip(2, tr("Aree da cartografare"));
     
-	CVDemDetail* dem = new CVDemDetail(p, c->at(3));
+	CVDemDetail* dem = new CVDemDetail(p, c->at(3), c->type());
 	addTab(dem, "");
     setTabToolTip(3, tr("DEM"));
 

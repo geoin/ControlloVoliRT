@@ -10,6 +10,40 @@
 namespace CV {
 namespace Core {
 
+class CVObject;
+
+class CVControl : public QObject {
+    Q_OBJECT
+public:
+	enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO };
+
+	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}
+
+	inline Type type() const { return _type; }
+
+	int count() const;
+	CVObject* at(int i) const;
+	void remove(int i);
+	bool isComplete() const;
+	void load();
+	void insert(CVObject* obj, bool setPath = true);
+
+	inline void uri(const QString& uri) { 
+		_uri = uri;
+	}
+
+	inline const QString& uri() const { 
+		return _uri;
+	}
+
+protected:
+	QList<CVObject*> _objects;
+	Type _type;
+
+private:
+	QString _uri;
+};
+
 class CVObject : public QObject {
     Q_OBJECT
 public:
@@ -34,6 +68,10 @@ public:
 	inline void type(Type t) { _type = t; }
 	inline Type type() const { return _type; }
 
+	
+	inline void controlType(CVControl::Type t) { _controlType = t; }
+	inline CVControl::Type controlType() const { return _controlType; }
+
 	inline void uri(const QString& t) { _uri = t; }
 	inline const QString& uri() const { return _uri; }
 
@@ -49,61 +87,9 @@ protected:
 
 private:
 	QString _uri;
+
 	Type _type;
-};
-
-class CVControl : public QObject {
-    Q_OBJECT
-public:
-	enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO };
-
-	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}
-
-	inline Type type() const { return _type; }
-
-	inline int count() const { return _objects.length(); }
-
-	inline CVObject* at(int i) const { return _objects.at(i); }
-
-	inline void remove(int i) { _objects.removeAt(i); }
-
-	inline bool isComplete() const { 
-		foreach(CVObject* obj, _objects) {
-			if (!obj->isValid()) {
-				return false;
-			}
-		}
-		return true;
-	};
-
-	inline void load() { 
-		foreach(CVObject* obj, _objects) {
-			obj->load();
-		}
-	};
-
-	inline void insert(CVObject* obj, bool setPath = true) { 
-		if (setPath) {
-			obj->uri(uri());
-			obj->init();
-		}
-		_objects.append(obj); 
-	}
-
-	inline void uri(const QString& uri) { 
-		_uri = uri;
-	}
-
-	inline const QString& uri() const { 
-		return _uri;
-	}
-
-protected:
-	QList<CVObject*> _objects;
-	Type _type;
-
-private:
-	QString _uri;
+	CVControl::Type _controlType;
 };
 
 }

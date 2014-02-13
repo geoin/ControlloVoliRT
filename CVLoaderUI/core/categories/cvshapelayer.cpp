@@ -54,8 +54,8 @@ bool CVShapeLayer::persist() {
 
 	if (_rows) {
 		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
-		//e->control = Core::CVControl::FLY;  
-		//e->object = Core::CVObject::FLY_RINEX;
+		e->control = controlType();  
+		e->object = type();
 		e->uri = _shp;
 		e->db = uri();
 		Core::CVJournal::add(e);

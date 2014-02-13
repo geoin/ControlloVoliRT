@@ -25,7 +25,7 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVDemDetail::CVDemDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
+CVDemDetail::CVDemDetail(QWidget* p, Core::CVObject* l, Core::CVControl::Type t) : CVBaseDetail(p, l), _control(t) {
 	title(tr("DEM"));
 	description(tr("File DEM"));
 	

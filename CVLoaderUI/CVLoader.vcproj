@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\core\categories\cvcontrol.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\gui\details\cvdemdetail.cpp"
 				>
 			</File>
@@ -2587,7 +2591,7 @@
 		/>
 		<Global
 			Name="QtVersion Win32"
-			Value="4.7.1"
+			Value="4.7.4"
 		/>
 		<Global
 			Name="RccDir"
