@@ -177,17 +177,17 @@
     verifica.</para>
 
     <para>Tramite il menù applicativo e la barra degli strumenti è possibile
-    creare o caricare un progetto. </para>
+    creare o caricare un progetto.</para>
 
     <para>La voce "Nuovo" presenta una finestra di dialogo per la creazione di
     un progetto; deve essere inserito il nome, la tipologia (fotogrammetria o
     lidar) e la cartella radice. Opzionale l'inserimento di una nota relativa
     al progetto. La voce "Apri" richiede la selezione della cartella root
-    contenente un progetto creato precedentemente e presente nel filesystem.
-    </para>
+    contenente un progetto creato precedentemente e presente nel
+    filesystem.</para>
 
     <para>Al momento della conferma, l'applicativo presenta l'albero di
-    navigazione del progetto. </para>
+    navigazione del progetto.</para>
 
     <mediaobject>
       <imageobject>
@@ -208,8 +208,8 @@
     </mediaobject>
 
     <para>Ogni dettaglio è in generale composto da una scheda per ogni file di
-    input; i tab laterali permettono la navigazione tra le varie schede.
-    </para>
+    input; i tab laterali permettono la navigazione tra le varie
+    schede.</para>
 
     <para>Le schede sono tutte composte da:</para>
 
@@ -327,12 +327,12 @@
       </listitem>
     </itemizedlist>
 
-    <para> </para>
+    <para/>
 
     <para>Le aree da cartografare e il dem possono essere inseriti sia nel
     contesto del progetto di volo che del volo effettuato; la modifica nella
     relativa scheda di ciascun controllo sarà riportata correttamente in tutte
-    le schede di dettaglio collegate alla stessa informazione. </para>
+    le schede di dettaglio collegate alla stessa informazione.</para>
 
     <para>Ogni oggetto necessita di diversi tipi di dati in ingresso.</para>
 
@@ -493,11 +493,104 @@
         <para>File rinex delle stazioni permanenti che vanno utilizzate per il
         controllo differenziale. E' p</para>
       </listitem>
+
+      <listitem>
+        <para>La descrizione della fotocamera utilizzata per la
+        missione</para>
+      </listitem>
     </itemizedlist>
   </chapter>
 
   <chapter>
-    <title/>
+    <title>Il controllo del volo per ripresa aerofotogrammetica</title>
+
+    <para>Richiede che sia stato eseguito precedentemente il controllo del
+    gps.</para>
+
+    <para>Se è stato fatto anche il controllo del progetto di ripresa verrà
+    effettuato il confronto tra quanto progettato e quanto effettivamente
+    realizzato.</para>
+
+    <para>Richiede che siano stati caricati nel progetto:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Il tema delle aree da cartografare (già presente se è stato
+        fatto il controllo del progetto di volo)</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema con gli assi di volo che sono stati proposti ( se
+        presenti per il confronto col progetto</para>
+      </listitem>
+
+      <listitem>
+        <para>Il file con i parametri di assetto dei fotogrammi</para>
+      </listitem>
+
+      <listitem>
+        <para>Il modello numerico del terreno relativo all'area oggetto del
+        rilievo (già presente se è stato fatto il controllo del progetto di
+        volo).</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Vengono prodotti i seguenti dati</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Il tema (lineare) degli assi di volo derivante dal file degli
+        assetti</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale dei fotogrammi (ottenuto proiettando questi sul
+        modello numerico)</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale degli stereo modelli</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale delle strisciate</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale del blocco</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale delle zone scoperte ( presente solo se tali aree
+        esistono</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Per avviare il modulo dal plugin di Qgis è necessario
+    specificare:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>La cartella del progetto</para>
+      </listitem>
+
+      <listitem>
+        <para>la scala a cui fa riferimento il progetto</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Il modulo può essere avviato anche da linea di comando
+    digitando:</para>
+
+    <para>check_photo /d path_progetto /fscala /f</para>
+
+    <para>Se avviato dal plugin al termine dell'elaborazione vengono inseriti
+    nella mappa corrente i temi prodotti, contemporaneamente viene prodotto e
+    visualizzato il report in formato pdf.</para>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo della triangolazione aerea</title>
 
     <para/>
   </chapter>
