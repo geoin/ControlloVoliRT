@@ -38,13 +38,8 @@
 #include "Poco/DateTime.h"
 #include "Poco/DateTimeParser.h"
 
-//#define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
-//#define ASSI_VOLO "AVOLO"
-//#define UNCOVER "Z_UNCOVER"
-#define SHAPE_CHAR_SET "CP1252"
-#define DB_NAME "geo.sqlite"
 #define REF_FILE "Regione_Toscana_RefVal.xml"
 #define FOTOGRAMMETRIA "Fotogrammetria"
 
@@ -52,67 +47,12 @@
 #define ASSETTI "assetti"
 #define DEM "dem"
 
-
-#define Z_BLOCK "Z_BLOCK"
-
-
-#define Z_CAMERA "Camera"
-
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::SharedPtr;
 using Poco::Path;
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
-
-/**************************************************************/
-//enum CHECK_TYPE {
-//	less_ty = 0,
-//	great_ty = 1,
-//	abs_less_ty = 2,
-//	between_ty =3
-//};
-//bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-//{
-//	bool rv = true;
-//	switch ( ty ) {
-//		case less_ty:
-//			rv = val < tol1;
-//			break;
-//		case great_ty:
-//			rv = val > tol1;
-//			break;
-//		case abs_less_ty:
-//			rv = fabs(val) < tol1;
-//			break;
-//		case between_ty:
-//			rv = val > tol1 && val < tol2;
-//			break;
-//	}
-//	if ( !rv ) {
-//		Doc_Item r = row->add_item("entry", attr);
-//		r->add_instr("dbfo", "bgcolor=\"red\"");
-//		r->append(val);
-//	} else
-//		row->add_item("entry", attr)->append(val);
-//	return rv;
-//}
-//std::string get_strip(const std::string& nome)
-//{
-//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-//	if ( tok.count() != 2 )
-//		return "";
-//	return tok[0];
-//}
-//std::string get_nome(const std::string& nome)
-//{
-//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-//	if ( tok.count() != 2 )
-//		return "";
-//	return tok[1];
-//}
-typedef std::vector<unsigned char> Blob;
-/**************************************************************/
 
 photo_exec::~photo_exec() 
 {
@@ -541,7 +481,7 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 
 	std::map<std::string, VDP>::iterator it;
 	for ( it = vdps.begin(); it !=vdps.end(); it++) {
-		std::string strip = it->first;
+		std::string strip = get_strip(it->first);
 		Camera cam;
 		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
 			cam = _map_strip_cam[strip];

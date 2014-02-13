@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="..\bin\"
 			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)"
 			ConfigurationType="1"
 			>
@@ -2587,7 +2587,7 @@
 		/>
 		<Global
 			Name="QtVersion Win32"
-			Value="4.7.4"
+			Value="4.7.1"
 		/>
 		<Global
 			Name="RccDir"

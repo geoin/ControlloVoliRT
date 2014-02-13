@@ -98,7 +98,7 @@ bool gps_exec::run()
 
 		_read_ref_val();
 
-		std::cout << "Layer:" << ASSI_VOLO << std::endl;
+		//std::cout << "Layer:" << ASSI_VOLO << std::endl;
 		
 		// create the gps track
 		_create_gps_track();

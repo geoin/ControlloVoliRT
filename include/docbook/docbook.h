@@ -90,11 +90,6 @@ public:
 			writer.startElement("", _tag, "");
 
 		_write(writer);
-		//std::list< Doc_Item >::iterator it;
-		//for (it = _lst.begin(); it != _lst.end(); it++) {
-		//	docbook_item* dbi = *it;
-		//	dbi->write(writer);
-		//}
 		writer.endElement("", _tag, "");
 	}
 protected:
@@ -102,7 +97,6 @@ protected:
 		std::list< Doc_Item >::iterator it;
 		for (it = _lst.begin(); it != _lst.end(); it++) {
 			Doc_Item dbi = *it;
-			//docbook_item* dbi = *it;
 			dbi->write(writer);
 		}
 	}
@@ -182,15 +176,10 @@ public:
 		Poco::XML::XMLWriter writer(ofs, Poco::XML::XMLWriter::WRITE_XML_DECLARATION | Poco::XML::XMLWriter::PRETTY_PRINT);
 		writer.setNewLine("\n");
 		writer.startDocument();
-		writer.startDTD("article", "-//OASIS//DTD DocBook XML V4.5//IT\" \"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd", "");
+		writer.startDTD("article", "-//OASIS//DTD DocBook XML V4.5//EN\" \"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd", "");
 		writer.endDTD();
 		/// write the item list
 		_write(writer);
-		//std::list< Doc_Item >::iterator it;
-		//for (it = _lst.begin(); it != _lst.end(); it++) {
-		//	docbook_item* dbi = *it;
-		//	dbi->write(writer);
-		//}
 		writer.endDocument();
 	}
 private:
