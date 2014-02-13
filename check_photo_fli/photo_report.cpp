@@ -42,7 +42,9 @@ void photo_exec::_init_document()
 	doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
 	_dbook.set_name(doc_file.toString());	
 
-	_article = _dbook.add_item("article");
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "lang", "", "it");
+	_article = _dbook.add_item("article", attr);
 	_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
 
 	Doc_Item sec = _article->add_item("section");
@@ -54,8 +56,13 @@ void photo_exec::_init_document()
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
 	std::string head = rs[0];
-	if ( !head.empty() ) {
-		sec->add_item("para")->append(head);
+	std::string head1;
+	for ( int i = 0; i < head.size(); i++) {
+		if ( head[i] == 10 ) {
+			sec->add_item("para")->append(head1);
+			head1.clear();
+		} else
+			head1.push_back(head[i]);
 	}
 
 	Poco::DateTime dt;

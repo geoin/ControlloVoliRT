@@ -28,7 +28,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={#MyOutDir}\plugins
 DefaultGroupName=ControlloVoliRT\{#MyAppName}
 OutputDir={#MyBaseDir}\setup
-OutputBaseFilename={MyAppExeName}_setup
+OutputBaseFilename={#MyAppExeName}_setup
 SetupIconFile={#MyBaseDir}\icon\ControlloVoliRT.ico
 Compression=lzma
 SolidCompression=yes
@@ -85,6 +85,7 @@ Source: "{#MyIconDir}\tria.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
 Source: "D:\docbook\docbook-xsl-1.78.1\*"; DestDir: "{#MyDocbookDir}/docbook-xsl-1.78.1"; Flags: recursesubdirs
 Source: "D:\docbook\fop-1.0\*"; DestDir: "{#MyDocbookDir}/fop-1.0"; Flags: recursesubdirs
 Source: "D:\docbook\lib\*"; DestDir: "{#MyDocbookDir}\lib"; Flags: recursesubdirs
+Source: "D:\docbook\docbookx.dtd"; DestDir: "{#MyDocbookDir}"; Flags: recursesubdirs
 Source: "{#vcfiles}\msvcp90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit
 Source: "{#vcfiles}\msvcr90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit
 
