@@ -378,7 +378,7 @@
 
       <listitem>
         <para>Rinex aereo, richiede i file delle osservazioni come coppia di
-        .*o e.*n, o compressi nel formato zip.</para>
+        .*o e.*n oppure compressi nel formato zip.</para>
       </listitem>
 
       <listitem>
