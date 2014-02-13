@@ -168,10 +168,10 @@ Doc_Item ta_exec::_initpg1()
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
 	ss << "Tolleranza planimetrica " << _TP_PA << " m";
-	itl->add_item("listitem")->append(ss.str());
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 	std::stringstream ss1;
 	ss1 << "Tolleranza altimetrica " << _TA_PA << " m";
-	itl->add_item("listitem")->append(ss1.str());
+	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 	
 	Doc_Item tab = sec->add_item("table");
 	tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
@@ -204,13 +204,13 @@ Doc_Item ta_exec::_initpg2()
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
 	ss << "Massima differenza tra ciascuna coordinata dei centri di presa " << _T_CP << " m";
-	itl->add_item("listitem")->append(ss.str());
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 	std::stringstream ss1;
 	ss1 << "Massima differenza tra i valori di pitch e roll " << _T_PR << " mdeg";
-	itl->add_item("listitem")->append(ss1.str());
+	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 	std::stringstream ss2;
 	ss2 << "Massima differenza tra i valori ddellheading " << _T_PR << " mdeg";
-	itl->add_item("listitem")->append(ss2.str());
+	itl->add_item("listitem")->add_item("para")->append(ss2.str());
 
 	Doc_Item tab = sec->add_item("table");
 	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
@@ -481,12 +481,12 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 		sec->add_item("para")->append(ss.str());
 	} else {
 		std::stringstream ss;
-		ss << "I seguenti punti risultano fuori dalle toleranze";
+		ss << "I seguenti punti risultano fuori dalle tolleranze";
 		sec->add_item("para")->append(ss.str());
 		Doc_Item itl = sec->add_item("itemizedlist");
 		std::list<std::string>::iterator it;
 		for (it = _cpt_out_tol.begin(); it != _cpt_out_tol.end(); it++) {
-			itl->add_item("listitem")->append(*it);
+			itl->add_item("listitem")->add_item("para")->append(*it);
 		}
 	}
 	return true;
@@ -618,7 +618,7 @@ bool ta_exec::_check_differences()
 			Doc_Item itl = sec->add_item("itemizedlist");
 			std::list<std::string>::iterator it;
 			for (it = _tria_out_tol.begin(); it != _tria_out_tol.end(); it++) {
-				itl->add_item("listitem")->append(*it);
+				itl->add_item("listitem")->add_item("para")->append(*it);
 			}
 		}
 	} catch(std::exception &e) {

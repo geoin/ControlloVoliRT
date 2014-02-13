@@ -106,16 +106,16 @@ void photo_exec::_gps_report()
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
 	ss << "Minimo numero di satelli con angolo sull'orizzonte superiore a " << _MIN_SAT_ANG << " deg non inferiore a " << _MIN_SAT;
-	itl->add_item("listitem")->append(ss.str());
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 	std::stringstream ss1;
 	ss1 << "Massimo PDOP non superiore a " << _MAX_PDOP;
-	itl->add_item("listitem")->append(ss1.str());
+	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 	std::stringstream ss2;
 	ss2 << "Minimo numero di stazioni permanenti entro " << _MAX_DIST / 1000 << " km non inferiore a " << _NBASI;
-	itl->add_item("listitem")->append(ss2.str());
+	itl->add_item("listitem")->add_item("para")->append(ss2.str());
 	std::stringstream ss3;
 	ss3 << "Minimo angolo del sole rispetto all'orizzonte al momento del rilievo " << _MIN_ANG_SOL << " deg";
-	itl->add_item("listitem")->append(ss3.str());
+	itl->add_item("listitem")->add_item("para")->append(ss3.str());
 
 	// check finale
 	std::string assi = ASSI_VOLO + std::string("V");
@@ -184,10 +184,10 @@ bool photo_exec::_strip_report()
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
 	ss << "Ricoprimento Trasversale compreso tra " << v1 << "% e " << v2 << "%";
-	itl->add_item("listitem")->append(ss.str());
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 	std::stringstream ss1;
 	ss1 << "Massima lunghezza strisciate minore di " << _MAX_STRIP_LENGTH << " km";
-	itl->add_item("listitem")->append(ss1.str());
+	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 
 	// Strip verification
 	std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
@@ -251,10 +251,10 @@ bool photo_exec::_foto_report()
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
 	ss << "GSD compreso tra " << v1 << " m e " << v2 << " m";
-	itl->add_item("listitem")->append(ss.str());
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 	std::stringstream ss1;
 	ss1 << "angoli di pitch e roll minori di " << _MAX_ANG << " deg";
-	itl->add_item("listitem")->append(ss1.str());
+	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 
 	// verifica della dimensione del pixel e dei valori di picth e roll
 	std::stringstream sql;
@@ -315,13 +315,13 @@ bool photo_exec::_model_report()
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
 	ss << "Ricoprimento longitudinale compreso tra " << v1 << "% e " << v2 << "%";
-	itl->add_item("listitem")->append(ss.str());
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 	std::stringstream ss1;
 	ss1 << "Ricoprimento trasversale maggiore di " << _MODEL_OVERLAP_T << "%";
-	itl->add_item("listitem")->append(ss1.str());
+	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 	std::stringstream ss2;
 	ss2 << "Differenza di heading tra i fotogrammi minori di " << _MAX_HEADING_DIFF << " deg";
-	itl->add_item("listitem")->append(ss2.str());
+	itl->add_item("listitem")->add_item("para")->append(ss2.str());
 
 	// Check the photos
 	std::string table = std::string(Z_MODEL) + (_type == Prj_type ? "P" : "V");
