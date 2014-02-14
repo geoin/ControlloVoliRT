@@ -3,10 +3,12 @@
 # Project created by QtCreator 2013-10-10T17:26:24
 #
 #-------------------------------------------------
-CONFIG += staticlib
+CONFIG += sharedlib
 QT       -= core gui
 TARGET = dem_interpolate
 TEMPLATE = lib
+
+QMAKE_CXXFLAGS += -fPIC
 
 win32 {
         LIBS += -L"../../ControlloVoliRT_Tools/lib"
