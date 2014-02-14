@@ -52,6 +52,15 @@ bool CVShapeLayer::persist() {
 		return false;
 	} 
 
+	if (_rows) {
+		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+		e->control = controlType();  
+		e->object = type();
+		e->uri = _shp;
+		e->db = uri();
+		Core::CVJournal::add(e);
+	}
+
 	return load();
 }
 

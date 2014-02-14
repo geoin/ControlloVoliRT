@@ -26,7 +26,7 @@ struct CVJournalEntry {
 class CVJournal {
 public:
 	static void add(CVJournalEntry::Entry);
-	static CVJournalEntry::EntryList last(const QStringList& filters, const QVariantList& binds, int num = 1);
+	static CVJournalEntry::EntryList last(const QString& db, const QStringList& filters, const QVariantList& binds, int num = 1);
 };
 
 } // namespace Core

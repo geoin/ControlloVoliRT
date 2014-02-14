@@ -66,7 +66,8 @@ SOURCES += main.cpp \
     gui/details/cvdemdetail.cpp \
     gui/details/cvcontourdetail.cpp \
     gui/details/cvbasedetail.cpp \
-    gui/details/cvareadetail.cpp
+    gui/details/cvareadetail.cpp \
+    core/categories/cvcontrol.cpp
 
 HEADERS  += \
     gui/cvmainwindow.h \

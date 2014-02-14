@@ -16,11 +16,11 @@ CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBa
     addTab(axis, "");
     setTabToolTip(0, tr("Assi di volo"));*/
 
-	CVAreaDetail* area = new CVAreaDetail(p, c->at(1));
+	CVAreaDetail* area = new CVAreaDetail(p, c->at(1), c->type());
     addTab(area, "");
     setTabToolTip(1, tr("Aree da cartografare"));
     
-	CVDemDetail* dem = new CVDemDetail(p, c->at(2));
+	CVDemDetail* dem = new CVDemDetail(p, c->at(2), c->type());
 	addTab(dem, "");
     setTabToolTip(2, tr("DEM"));
 

@@ -8,9 +8,7 @@ namespace CV {
 namespace GUI {
 
 CVStatusBar::CVStatusBar(QWidget *parent) : QStatusBar(parent) {
-    setSizeGripEnabled(false);
-
-    addPermanentWidget(new QWidget(this), 1);
+    //setSizeGripEnabled(true);
 
     //QProgressBar* progress = new QProgressBar(this);
     //progress->setMinimumWidth(160);

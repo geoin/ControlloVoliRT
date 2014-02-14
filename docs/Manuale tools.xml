@@ -181,10 +181,10 @@
 
     <para>La voce "Nuovo" presenta una finestra di dialogo per la creazione di
     un progetto; deve essere inserito il nome, la tipologia (fotogrammetria o
-    lidar) e la cartella radice. Opzionale l'inserimento di una nota relativa
-    al progetto. La voce "Apri" richiede la selezione della cartella root
-    contenente un progetto creato precedentemente e presente nel
-    filesystem.</para>
+    lidar), la scala di riferimento per i controlli e la cartella radice.
+    Opzionale l'inserimento di una nota relativa al progetto. La voce "Apri"
+    richiede la selezione della cartella root contenente un progetto creato
+    precedentemente e presente nel filesystem.</para>
 
     <para>Al momento della conferma, l'applicativo presenta l'albero di
     navigazione del progetto.</para>
@@ -196,20 +196,34 @@
     </mediaobject>
 
     <para>Tramite l'albero di navigazione è possibile visualizzare il
-    dettaglio relativo a ciascun controllo. Selezionando ciascun controllo
-    nell'albero viene visualizzata la scheda di dettaglio corrispondente nel
-    corpo principale dell'applicazione, dove è possibile visualizzare ed
-    inserire i dati in ingresso.</para>
+    dettaglio relativo al progetto stesso o a ciascun controllo. Selezionando
+    un nodo nell'albero viene visualizzata la scheda di dettaglio
+    corrispondente nel corpo principale dell'applicazione, dove è possibile
+    visualizzare ed inserire i dati in ingresso.</para>
+
+    <para>Le informazioni generali del progetto sono visualizzate nel corpo al
+    momento del caricamento. La descrizione comprende il nome, il tipo, la
+    data di creazione e quella dell'ultima modifica. Le informazioni sulla
+    scala attiva e le note possono essere editate selezionando l'apposito
+    pulsante.</para>
+
+    <para/>
 
     <mediaobject>
       <imageobject>
-        <imagedata contentwidth="511" fileref="dettaglio.PNG"/>
+        <imagedata fileref="progetto.png"/>
       </imageobject>
     </mediaobject>
 
     <para>Ogni dettaglio è in generale composto da una scheda per ogni file di
     input; i tab laterali permettono la navigazione tra le varie
     schede.</para>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata contentwidth="511" fileref="dettaglio.PNG"/>
+      </imageobject>
+    </mediaobject>
 
     <para>Le schede sono tutte composte da:</para>
 
@@ -343,24 +357,28 @@
       </listitem>
 
       <listitem>
-        <para>Assi di volo, richiede un file shape. Vengono visualizzate al
-        momento dell'inserimento informazioni quali l'ente, il RID e il
-        DT.</para>
+        <para>Assi di volo, richiede un tema shape lineare che deve ricalcare
+        lo schema del db topografico. Il nome del file non è vincolante. I
+        campi obbligatori sono A_VOL_QT, AVOL_CS, A_VOL_NFI, A_VOL_NFF.
+        Vengono visualizzate al momento dell'inserimento informazioni quali
+        l'ente, il RID e il DT.</para>
       </listitem>
 
       <listitem>
-        <para>Aree da cartografare, richiede un file shape. L'unico campo
-        obbligatorio è la geometria, dunque viene visualizzato esclusivamente
-        il numero di record inseriti nel database di progetto.</para>
+        <para>Aree da cartografare, richiede un tema shape di tipo polygon.
+        L'unico campo obbligatorio è la geometria, dunque viene visualizzato
+        esclusivamente il numero di record inseriti nel database di
+        progetto.</para>
       </listitem>
 
       <listitem>
-        <para>Dem, richiede un file con estensione.asc. Viene visualizzato
-        l'header del file.</para>
+        <para>Dem, richiede un file nel formato ESRI ASCII GRID con estensione
+        .asc. Viene visualizzato l'header del file.</para>
       </listitem>
 
       <listitem>
-        <para>Rinex aereo, richiede uno zip o una coppia di .*n e.*o.</para>
+        <para>Rinex aereo, richiede i file delle osservazioni come coppia di
+        .*o e.*n oppure compressi nel formato zip.</para>
       </listitem>
 
       <listitem>
@@ -370,21 +388,22 @@
       </listitem>
 
       <listitem>
-        <para>Assetti di volo, prende in ingresso un file ASCII contentete i
-        dati relativi alle strisciate effettuatye durante il volo. Viene
-        visualizzato il numero delle strisciate inserite, insieme al numero di
-        fotogrammi.</para>
+        <para>Assetti di volo, prende in ingresso un file ASCII contentete 7
+        campi relativi alle strisciate effettuate durante il volo. Deve
+        contenere il campo testuale "foto" più 6 campi numerici: Xc, Yc, Zc,
+        Omega, Phi, Kappa. Viene visualizzato il numero delle strisciate
+        inserite, insieme al numero di fotogrammi.</para>
       </listitem>
 
       <listitem>
-        <para>Quadro di unione, richiede uno shape con i fogli relativi al
-        volo effettuato.</para>
+        <para>Quadro di unione, richiede uno shape di tipo poligonale con i
+        fogli relativi al volo effettuato.</para>
       </listitem>
 
       <listitem>
-        <para>Limiti amministrativi, prende in ingresso uno shape. Non avendo
-        un formato standardizzato, non viene visualizzata nessuna informazione
-        aggiuntiva.</para>
+        <para>Limiti amministrativi, prende in ingresso un tema shape di tipo
+        poligonale. Non avendo un formato standardizzato, non viene
+        visualizzata nessuna informazione aggiuntiva.</para>
       </listitem>
     </orderedlist>
   </chapter>

@@ -3,6 +3,8 @@
 
 #include "gui/helper/cvdetailsfactory.h"
 
+#include "gui/cvprojectoverviewdetail.h"
+
 #include <QHBoxLayout>
 #include <QStackedWidget>
 #include <QLabel>
@@ -30,19 +32,25 @@ void CVNodeDetails::onControlAdded(Core::CVControl::Type t, Core::CVControl* con
 
     QWidget* detail = Helper::CVDetailsFactory::build(_stack, t, controller);
 
-    _details.insert(t, detail);
-    _stack->addWidget(detail);
+	if (detail != NULL) {
+		_details.insert(t, detail);
+		_stack->addWidget(detail);
+	}
 }
 
 void CVNodeDetails::onProjectItemActivated(QTreeWidgetItem* item, int col) {
     Q_UNUSED(col)
 
     CVTreeNode* node = static_cast<CVTreeNode*>(item);
-	QMap<Core::CVControl::Type, QWidget*>::iterator iter = _details.find(node->info()->type());
-    if (iter != _details.end()) {
-        QWidget* widget = *iter;
-        _stack->setCurrentWidget(widget);
-    }
+	if (node->info()->isProjectRoot()) {
+        _stack->setCurrentWidget(_projDetail.data());
+	} else {
+		QMap<Core::CVControl::Type, QWidget*>::iterator iter = _details.find(node->info()->type());
+		if (iter != _details.end()) {
+			QWidget* widget = *iter;
+			_stack->setCurrentWidget(widget);
+		}
+	}
 }
 
 void CVNodeDetails::onClear() {
@@ -55,6 +63,13 @@ void CVNodeDetails::onClear() {
 		delete w;
 	}
 	_details.clear();
+    _projDetail.clear();
+}
+
+void CVNodeDetails::onProjectAdded(Core::CVProject* proj) {
+    Details::CVProjectOverviewDetail* d = new Details::CVProjectOverviewDetail(NULL, proj); //(CHECK) 0xOO.. already has reference counting if I set parent
+    _projDetail = QSharedPointer<QWidget>(d);
+    _stack->addWidget(d);
 }
 
 } // namespace GUI

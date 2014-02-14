@@ -21,7 +21,7 @@ class CVDemDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVDemDetail(QWidget *parent, Core::CVObject*);
+	CVDemDetail(QWidget *parent, Core::CVObject*, Core::CVControl::Type);
 	~CVDemDetail();
 
 	virtual void clearAll();
@@ -37,7 +37,9 @@ protected:
     virtual void dragLeaveEvent(QDragLeaveEvent*);
     virtual void dropEvent(QDropEvent*);
 	virtual void showEvent(QShowEvent* event) {
-		if (controller()->isValid()) {
+		Core::CVObject* ptr = controller();
+		if (ptr->isValid()) {
+			ptr->controlType(_control);
 			QStringList& data = file()->data();
 			for (int i = 0; i < data.size(); ++i) {
 				_labels.at(i)->setText(data.at(i));
@@ -49,6 +51,8 @@ private:
     QScopedPointer<QFileInfo> _file;
 	QString _uri;
 	QList<QLabel*> _labels;
+
+	Core::CVControl::Type _control;
 };
 
 } // namespace Details

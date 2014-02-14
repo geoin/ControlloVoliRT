@@ -52,10 +52,12 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
     split->setStretchFactor(0, 0);
     split->setStretchFactor(1, 1);
 
-    //connect(_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
-	connect(this, SIGNAL(controlAdded(CV::Core::CVControl::Type, Core::CVControl*)), _details, SLOT(onControlAdded(CV::Core::CVControl::Type, Core::CVControl*)));
-    connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertProject(Core::CVProject*)));
+	connect(&_prjManager, SIGNAL(addProject(Core::CVProject*)), this, SLOT(insertProject(Core::CVProject*)));
 
+	connect(this, SIGNAL(controlAdded(CV::Core::CVControl::Type, Core::CVControl*)), _details, SLOT(onControlAdded(CV::Core::CVControl::Type, Core::CVControl*)));
+	connect(this, SIGNAL(projectAdded(Core::CVProject*)), _details, SLOT(onProjectAdded(Core::CVProject*)));
+
+    //connect(_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
 	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
 	linker->add(Helper::ITEM_SELECTED, _tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)));
 	linker->on(Helper::ITEM_SELECTED, _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
@@ -65,9 +67,10 @@ void CVAppContainer::insertProject(Core::CVProject* proj) {
 	Helper::CVActionsLinker* linker = Helper::CVActionHandle::get();
 	linker->trig(Helper::CLOSE_PROJECT);
 		
-	CVTreeNode* root = _tree->insertProjectTree(proj->name, Core::CVProject::PHOTOGRAMMETRY);
-	emit controlAdded(root->info()->type());
+	CVTreeNode* root = _tree->insertProjectTree(proj->name, proj->type);
+	emit projectAdded(proj);
 
+	// should the manager emit the events? probably yes, but think about it
     CVTreeNode* node = NULL;
     node = _tree->insertNode(root, tr("Progetto di volo"), Core::CVControl::PLAN);
     emit controlAdded(node->info()->type(), proj->get(Core::CVControl::PLAN));
@@ -78,7 +81,6 @@ void CVAppContainer::insertProject(Core::CVProject* proj) {
     node = _tree->insertNode(root, tr("Volo effettuato"), Core::CVControl::FLY);
     emit controlAdded(node->info()->type(), proj->get(Core::CVControl::FLY));
 
-	
     node = _tree->insertNode(root, tr("Orto immagini"), Core::CVControl::ORTO);
     emit controlAdded(node->info()->type(), proj->get(Core::CVControl::ORTO));
 }
@@ -99,9 +101,9 @@ void CVAppContainer::link() {
 	projects->addSeparator();
 
 	QAction* closeProj = linker->add(Helper::CLOSE_PROJECT);
-    linker->on(Helper::CLOSE_PROJECT, &_prjManager, SLOT(onCloseProject()));
     linker->on(Helper::CLOSE_PROJECT, _tree, SLOT(onCloseProject()));
     linker->on(Helper::CLOSE_PROJECT, _details, SLOT(onClear()));
+    linker->on(Helper::CLOSE_PROJECT, &_prjManager, SLOT(onCloseProject()));
 	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(""), tr("Chiudi"));
 
 	//QAction* newMission = linker->add(Helper::NEW_MISSION);

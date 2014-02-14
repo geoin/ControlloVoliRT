@@ -22,7 +22,7 @@ namespace Details {
 
 //TODO: needs cleanup, all details should use the same hooks
 
-CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
+CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l, Core::CVControl::Type t) : CVBaseDetail(p, l), _control(t){
 	setAcceptDrops(true);
 
 	title(tr("Aree da cartografare"));

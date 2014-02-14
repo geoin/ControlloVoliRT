@@ -65,8 +65,9 @@ bool CVFileInput::persist() {
 		QFile::remove(_tmp);
 
 		CV::Util::Spatialite::Connection cnn;
+		QString db(uri() + QDir::separator() + SQL::database);
 		try {
-			cnn.open(QString(uri() + QDir::separator() + SQL::database).toStdString());
+			cnn.open(db.toStdString());
 		} catch (CV::Util::Spatialite::spatialite_error& err) {
 			Q_UNUSED(err)
 			return false;
@@ -79,7 +80,14 @@ bool CVFileInput::persist() {
 			QStringList() << "?1" << "?2" ,
 			QVariantList() << QUuid::createUuid().toString() << name
 		);
-		if (!ret) {
+		if (ret) {
+			Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+			e->control = Core::CVControl::PLAN;  //TODO: needs control check, multiple position
+			e->object = Core::CVObject::DEM;
+			e->uri = _target;
+			e->db = db;
+			Core::CVJournal::add(e);
+		} else {
 			return false;
 		}
 	}

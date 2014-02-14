@@ -46,8 +46,12 @@ namespace SQL {
 	}
 
 	bool Query::update(const QString& tab, const QStringList& values, const QStringList& where, const QVariantList& binds) {
-		QString query("UPDATE %1 SET %2 WHERE %3");
-		query = query.arg(tab, values.join(", "), where.join(" AND "));
+		QString query("UPDATE %1 SET %2");
+		query = query.arg(tab, values.join(", "));
+		if (where.length()) {
+			query += "WHERE %3";
+			query = query.arg(where.join(" AND "));
+		}
 		
 		try {
 			_stm.prepare(query.toStdString()); 
@@ -104,20 +108,24 @@ namespace SQL {
 		int limit) 
 	{
 		//catch outside
-		QString query("SELECT %1 FROM %2");
+		int i = 0;
+		QString query("SELECT %" + QString::number(++i));
+		query += QString(" FROM %" + QString::number(++i) + " ");
+		query = query.arg(what.join(", "), from.join(", "));
+
 		if (where.length()) {
-			query.append(" WHERE %3");
+			query.append(" WHERE %" + QString::number(++i));
+			query = query.arg(where.join(" AND "));
 		}
 
 		if (order.length()) {
-			query.append(" ORDER BY %4");
+			query.append(" ORDER BY %" + QString::number(++i));
+			query = query.arg(order.join(", "));
 		}
 
 		if (limit) {
 			query.append(" LIMIT " + QString::number(limit));
 		}
-
-		query = query.arg(what.join(", "), from.join(", "), where.join(" AND "), order.join(", "));
 
 		_stm.prepare(query.toStdString()); 
 		

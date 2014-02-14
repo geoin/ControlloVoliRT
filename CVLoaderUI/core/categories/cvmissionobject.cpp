@@ -50,8 +50,8 @@ bool CVMissionObject::persist() {
 	bool ret = false;
 
 	CV::Util::Spatialite::Connection cnn;
+	const QString& db = uri();
 	try {
-		const QString& db = uri();
 		cnn.open(db.toStdString()); 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
@@ -65,6 +65,15 @@ bool CVMissionObject::persist() {
 		QStringList() << "?1" << "?2" << "?3",
 		QVariantList() << id() << name() << '0'
 	);
+
+	if (ret) {
+		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+		e->control = Core::CVControl::GPS_DATA;  
+		e->object = Core::CVObject::MISSION;
+		e->uri = name();
+		e->db = db;
+		Core::CVJournal::add(e);
+	}
 
 	return ret; 
 }
