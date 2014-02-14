@@ -157,11 +157,14 @@ inline void docbook_item::add_instr(const std::string& target, const std::string
 }
 class docbook: public docbook_item {
 public:
-	docbook() {}
-	docbook(const std::string& name): _name(name) {}
+	docbook(): _dtd_url("http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd") {}
+	docbook(const std::string& name): _name(name), _dtd_url("http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd") {}
 	/// set the name of the output xml file
 	void set_name(const std::string& name) {
 		_name = name;
+	}
+	void set_dtd(const std::string& dtd) {
+		_dtd_url = dtd;
 	}
 	std::string name(void) const { return _name; }
 	/// write the document
@@ -176,7 +179,10 @@ public:
 		Poco::XML::XMLWriter writer(ofs, Poco::XML::XMLWriter::WRITE_XML_DECLARATION | Poco::XML::XMLWriter::PRETTY_PRINT);
 		writer.setNewLine("\n");
 		writer.startDocument();
-		writer.startDTD("article", "-//OASIS//DTD DocBook XML V4.5//EN\" \"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd", "");
+		std::stringstream ss;
+		ss << "-//OASIS//DTD DocBook XML V4.5//EN\" ";
+		ss << "\"" << _dtd_url;
+		writer.startDTD("article", ss.str(), ""); //"-//OASIS//DTD DocBook XML V4.5//EN\" \"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd", "");
 		writer.endDTD();
 		/// write the item list
 		_write(writer);
@@ -184,5 +190,6 @@ public:
 	}
 private:
 	std::string _name;
+	std::string _dtd_url;
 };
 #endif

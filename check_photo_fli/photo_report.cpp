@@ -29,48 +29,47 @@
 #include "Poco/DateTime.h"
 #include <iostream>
 
-#define OUT_DOCV "check_photoV.xml"
-#define OUT_DOCP "check_photoP.xml"
-
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 using Poco::Path;
 
-void photo_exec::_init_document()
-{
-	Path doc_file(_proj_dir, "*");
-	doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
-	_dbook.set_name(doc_file.toString());	
-
-	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "lang", "", "it");
-	_article = _dbook.add_item("article", attr);
-	_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
-
-	Doc_Item sec = _article->add_item("section");
-	sec->add_item("title")->append("Intestazione");
-
-	std::stringstream sql;
-	sql << "SELECT NOTE from JOURNAL where CONTROL=1";
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-	std::string head = rs[0];
-	std::string head1;
-	for ( int i = 0; i < head.size(); i++) {
-		if ( head[i] == 10 ) {
-			sec->add_item("para")->append(head1);
-			head1.clear();
-		} else
-			head1.push_back(head[i]);
-	}
-
-	Poco::DateTime dt;
-	dt.makeLocal(+2);
-	std::stringstream ss;
-	ss << "Data: " << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
-	sec->add_item("para")->append(ss.str());
-}
+//void photo_exec::_init_document(const std::string& nome, const std::string& title)
+//{
+//	//Path doc_file(_proj_dir, "*");
+//	//doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
+//	//_dbook.set_name(doc_file.toString());	
+//	_dbook.set_name(nome);	
+//
+//	Poco::XML::AttributesImpl attr;
+//	attr.addAttribute("", "", "lang", "", "it");
+//	_article = _dbook.add_item("article", attr);
+//	_article->add_item("title")->append(title);
+//	//_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
+//
+//	Doc_Item sec = _article->add_item("section");
+//	sec->add_item("title")->append("Intestazione");
+//
+//	std::stringstream sql;
+//	sql << "SELECT NOTE from JOURNAL where CONTROL=1";
+//	Statement stm(cnn);
+//	stm.prepare(sql.str());
+//	Recordset rs = stm.recordset();
+//	std::string head = rs[0];
+//	std::string head1;
+//	for ( int i = 0; i < head.size(); i++) {
+//		if ( head[i] == 10 ) {
+//			sec->add_item("para")->append(head1);
+//			head1.clear();
+//		} else
+//			head1.push_back(head[i]);
+//	}
+//
+//	Poco::DateTime dt;
+//	dt.makeLocal(+2);
+//	std::stringstream ss;
+//	ss << "Data: " << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
+//	sec->add_item("para")->append(ss.str());
+//}
 
 void photo_exec::_final_report()
 {

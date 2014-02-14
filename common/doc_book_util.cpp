@@ -1,4 +1,6 @@
 #include "common/util.h"
+#include "Poco/DateTime.h"
+using namespace CV::Util::Spatialite;
 
 bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2)
 {
@@ -24,4 +26,42 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 	} else
 		row->add_item("entry", attr)->append(val);
 	return rv;
+}
+
+void init_document(docbook& dbook, CV::Util::Spatialite::Connection& cnn, const std::string& nome, const std::string& title)
+{
+	//Path doc_file(_proj_dir, "*");
+	//doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
+	//_dbook.set_name(doc_file.toString());	
+	dbook.set_name(nome);	
+
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "lang", "", "it");
+	Doc_Item article = dbook.add_item("article", attr);
+	article->add_item("title")->append(title);
+	//_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
+
+	Doc_Item sec = article->add_item("section");
+	sec->add_item("title")->append("Intestazione");
+
+	std::stringstream sql;
+	sql << "SELECT NOTE from JOURNAL where CONTROL=1";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	std::string head = rs[0];
+	std::string head1;
+	for ( int i = 0; i < head.size(); i++) {
+		if ( head[i] == 10 ) {
+			sec->add_item("para")->append(head1);
+			head1.clear();
+		} else
+			head1.push_back(head[i]);
+	}
+
+	Poco::DateTime dt;
+	dt.makeLocal(+2);
+	std::stringstream ss;
+	ss << "Data: " << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
+	sec->add_item("para")->append(ss.str());
 }
