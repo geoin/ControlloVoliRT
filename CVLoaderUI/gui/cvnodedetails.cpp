@@ -43,7 +43,7 @@ void CVNodeDetails::onProjectItemActivated(QTreeWidgetItem* item, int col) {
 
     CVTreeNode* node = static_cast<CVTreeNode*>(item);
 	if (node->info()->isProjectRoot()) {
-		_stack->setCurrentWidget(_projDetail.data());
+        _stack->setCurrentWidget(_projDetail.data());
 	} else {
 		QMap<Core::CVControl::Type, QWidget*>::iterator iter = _details.find(node->info()->type());
 		if (iter != _details.end()) {
@@ -63,13 +63,13 @@ void CVNodeDetails::onClear() {
 		delete w;
 	}
 	_details.clear();
-	_projDetail.clear();
+    _projDetail.clear();
 }
 
-void CVNodeDetails::onProjectAdded(Core::CVProject* proj) { 
-	Details::CVProjectOverviewDetail* d = new Details::CVProjectOverviewDetail(_stack, proj);
+void CVNodeDetails::onProjectAdded(Core::CVProject* proj) {
+    Details::CVProjectOverviewDetail* d = new Details::CVProjectOverviewDetail(NULL, proj); //(CHECK) 0xOO.. already has reference counting if I set parent
+    _projDetail = QSharedPointer<QWidget>(d);
     _stack->addWidget(d);
-	_projDetail = QSharedPointer<QWidget>(d);
 }
 
 } // namespace GUI

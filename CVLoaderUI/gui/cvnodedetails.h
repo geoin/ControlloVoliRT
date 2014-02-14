@@ -33,7 +33,7 @@ public slots:
 private:
     QStackedWidget* _stack;
     QMap<Core::CVControl::Type, QWidget*> _details;
-	QSharedPointer<QWidget> _projDetail;
+    QSharedPointer<QWidget> _projDetail;
 };
 
 } // namespace GUI
