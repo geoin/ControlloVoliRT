@@ -9,6 +9,8 @@
 #include <QTextBlock>
 #include <QComboBox>
 
+#include "gui/cvgui_utils.h"
+
 namespace CV {
 namespace GUI {
 namespace Details {
@@ -83,8 +85,9 @@ void CVProjectOverviewDetail::addNotesEditor(QVBoxLayout* l) {
 	toolbar->setLayout(tBox);
 
 	QPushButton* edit = new QPushButton("", this);
-	edit->setMaximumSize(QSize(28, 28));
-	edit->setMinimumSize(QSize(28, 28));
+	edit->setMaximumSize(QSize(36, 28));
+	edit->setMinimumSize(QSize(36, 28));
+	edit->setToolTip(tr("Modifica"));
 	edit->setCheckable(true);
 	
 	connect(edit, SIGNAL(toggled(bool)), this, SLOT(onEditProject(bool)));
@@ -93,9 +96,10 @@ void CVProjectOverviewDetail::addNotesEditor(QVBoxLayout* l) {
 	tBox->addStretch(2);
 	
 	QPushButton* btn = new QPushButton("", this);
-	btn->setMaximumSize(QSize(28, 28));
-	btn->setMinimumSize(QSize(28, 28));
+	btn->setMaximumSize(QSize(36, 28));
+	btn->setMinimumSize(QSize(36, 28));
 	btn->setVisible(false);
+	btn->setToolTip(tr("Salva"));
 	tBox->addWidget(btn);
 
 	connect(btn, SIGNAL(clicked()), this, SLOT(onSaveProject()));
@@ -131,6 +135,8 @@ void CVProjectOverviewDetail::onEditProject(bool b) {
 	if (b) {
 		_notes->setStyleSheet("");
 	} else {
+		GUI::CVScopedCursor c;
+
 		_lastModified->setText(_controller->lastModificationDate().toString());
 
 		emit updateNotes(_controller->notes);
