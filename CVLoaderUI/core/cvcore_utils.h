@@ -56,9 +56,14 @@ public:
 		int tot = 0;
 		std::ofstream out(outZip.c_str(), std::ios::binary);
 		Poco::Zip::Compress c(out, true);
-		foreach (const std::string& file, files) {
-			Poco::Path p(file);
-			c.addFile(p, p.getFileName());
+		try {
+			foreach (const std::string& file, files) {
+				Poco::Path p(file);
+				c.addFile(p, p.getFileName());
+			}
+		} catch (const std::exception& e) {
+			Q_UNUSED(e);
+			//TODO remove file
 		}
 		c.close();
 		out.close();
