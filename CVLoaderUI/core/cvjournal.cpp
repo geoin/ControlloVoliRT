@@ -61,8 +61,8 @@ CVJournalEntry::EntryList CVJournal::last(const QString& db, const QStringList& 
 			CVJournalEntry::Entry e(new CVJournalEntry);
 			e->id = set[0].toString().c_str();
 			e->date = QDateTime::fromMSecsSinceEpoch(set[1].toInt64());
-			e->uri = set[0].toString().c_str();
-			e->note = set[0].toString().c_str();
+			e->uri = set[2].toString().c_str();
+			e->note = set[3].toString().c_str();
 			
 			list.append(e);
 			set.next();

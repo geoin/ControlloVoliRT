@@ -46,6 +46,8 @@
 #define CAMERA "camera.xml"
 #define ASSETTI "assetti"
 #define DEM "dem"
+#define OUT_DOCV "check_photoV.xml"
+#define OUT_DOCP "check_photoP.xml"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -116,7 +118,15 @@ bool photo_exec::run()
 			throw std::runtime_error("Modello numerico non trovato");
 
 		// initialize docbook xml file
-		_init_document();
+		std::string title =_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica";
+		Path doc_file(_proj_dir, "*");
+		doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
+
+		init_document(_dbook, cnn, doc_file.toString(), title);
+		char* dtd_ = getenv("DOCBOOKRT");
+		std::string dtd( ( dtd_ == NULL ) ? "" : dtd_);
+		_dbook.set_dtd(dtd);
+		_article = _dbook.get_item("article");
 
 		// produce photos feature
 		_process_photos();

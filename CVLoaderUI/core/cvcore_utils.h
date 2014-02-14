@@ -5,6 +5,7 @@
 #include <QSettings>
 #include <QFileInfo>
 #include <QVariant>
+#include <QUuid>
 
 #include <Poco/Zip/Compress.h>
 #include <Poco/Zip/Decompress.h>
@@ -17,7 +18,7 @@ namespace Core {
 class CVScopedTmpDir {
 public:
 	CVScopedTmpDir(const QString& base) {
-		_base = base + QDir::separator() + "tmp";
+		_base = base + QDir::separator() + QUuid::createUuid().toString();
 		_d.mkpath(_base);
 		bool cd = _d.cd(_base);
 		if (!cd) {
@@ -26,6 +27,7 @@ public:
 	}
 
 	~CVScopedTmpDir() {
+		//TODO, must be recursive
 		if (_base.isEmpty()) {
 			return;
 		}
@@ -52,26 +54,37 @@ private:
 //zip handling
 class CVZip {
 public:
-	static int zip(const std::vector<std::string> files, const std::string& outZip) {
-		int tot = 0;
-		std::ofstream out(outZip.c_str(), std::ios::binary);
+	static bool zip(const std::vector<std::string> files, const std::string& outZip) { 
+		std::ofstream out(outZip.c_str(), std::ios::binary); 
 		Poco::Zip::Compress c(out, true);
-		foreach (const std::string& file, files) {
-			Poco::Path p(file);
-			c.addFile(p, p.getFileName());
+		int i = 0;
+		try {
+			foreach (const std::string& file, files) {
+				Poco::Path p(file);
+				c.addFile(p, p.getFileName());
+				i++;
+			}
+		} catch (const std::exception& e) { //TODO: handle permissions
+			Q_UNUSED(e);
+			QFile::remove(outZip.c_str());
+			return false;
 		}
 		c.close();
 		out.close();
-		return tot;
+		return files.size() == i;
 	}
 
-	static int unzip(const std::string& origin, const std::string& folder) {
-		int tot = 0;
-		std::ifstream in(origin.c_str(), std::ios::binary);
-		Poco::Zip::Decompress dec(in, Poco::Path(folder)); 
-		dec.decompressAllFiles();
-		in.close();
-		return tot;
+	static bool unzip(const std::string& origin, const std::string& folder) {
+		try {
+			std::ifstream in(origin.c_str(), std::ios::binary);
+			Poco::Zip::Decompress dec(in, Poco::Path(folder)); 
+			dec.decompressAllFiles();
+			in.close();
+			return true;
+		} catch (const std::exception& e) {
+			Q_UNUSED(e);
+			return false;
+		}
 	}
 };
 
