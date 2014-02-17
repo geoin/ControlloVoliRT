@@ -91,12 +91,12 @@ void check_ta::defineOptions(OptionSet& options)
 			.argument("value")
 			.callback(OptionCallback<check_ta>(this, &check_ta::handleObs)));
 
-	options.addOption(
-		Option("scale", "s", "Specifica la scala di lavoro")
-			.required(false)
-			.repeatable(false)
-			.argument("value")
-			.callback(OptionCallback<check_ta>(this, &check_ta::handleScale)));
+	//options.addOption(
+	//	Option("scale", "s", "Specifica la scala di lavoro")
+	//		.required(false)
+	//		.repeatable(false)
+	//		.argument("value")
+	//		.callback(OptionCallback<check_ta>(this, &check_ta::handleScale)));
 }
 void check_ta::handleHelp(const std::string& name, const std::string& value) 
 {
@@ -121,10 +121,10 @@ void check_ta::handleObs(const std::string& name, const std::string& value)
 {
 	_tae.set_obs_name(value);
 }
-void check_ta::handleScale(const std::string& name, const std::string& value)
-{
-	_tae.set_ref_scale(value);
-}
+//void check_ta::handleScale(const std::string& name, const std::string& value)
+//{
+//	_tae.set_ref_scale(value);
+//}
 	
 void check_ta::displayHelp()
 {

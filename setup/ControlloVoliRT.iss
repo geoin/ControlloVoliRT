@@ -12,7 +12,6 @@
 #define MyLibDir "C:\ControlloVoliRT\lib"
 #define MyIconDir "C:\ControlloVoliRT\icon"
 #define MyOutDir "C:\OSGeo4W\apps\qgis"
-#define MyDocbookDir "C:\pippo"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -52,10 +51,6 @@ Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "Spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
-[Registry]
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{#MyDocbookDir}\lib"; Check: NeedsAddPath('{#MyDocbookDir}\lib')
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{#MyDocbookDir}\fop-1.0"; Check: NeedsAddPath('{#MyDocbookDir}\fop-1.0') 
-
 [Files]
 Source: "{#MyLibDir}\PocoFoundation.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyLibDir}\PocoXML.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -71,7 +66,6 @@ Source: "{#MyBinDir}\check_photo.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_gps.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_ta.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_ortho.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyBinDir}\run.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyIconDir}\gps.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
 Source: "{#MyIconDir}\lidar.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
 Source: "{#MyIconDir}\Ortho.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
@@ -82,12 +76,12 @@ Source: "{#MyIconDir}\voloL.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
 Source: "{#MyIconDir}\voloP.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
 Source: "{#MyIconDir}\voloPL.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
 Source: "{#MyIconDir}\tria.png"; DestDir: "{app}/../icon"; Flags: ignoreversion
-Source: "D:\docbook\docbook-xsl-1.78.1\*"; DestDir: "{#MyDocbookDir}/docbook-xsl-1.78.1"; Flags: recursesubdirs
-Source: "D:\docbook\fop-1.0\*"; DestDir: "{#MyDocbookDir}/fop-1.0"; Flags: recursesubdirs
-Source: "D:\docbook\lib\*"; DestDir: "{#MyDocbookDir}\lib"; Flags: recursesubdirs
-Source: "D:\docbook\docbookx.dtd"; DestDir: "{#MyDocbookDir}"; Flags: recursesubdirs
+Source: "{#MyBaseDir}\setup\DocBookRT_setup.exe"; DestDir: "{tmp}"; Flags: ignoreversion
 Source: "{#vcfiles}\msvcp90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit
 Source: "{#vcfiles}\msvcr90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit
+
+[Run]
+Filename: "{tmp}\DocBookRT_setup.exe"; Flags: waituntilterminated
 
 [Code]
 
@@ -106,5 +100,24 @@ begin
   // Pos() returns 0 if not found
   Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
 end;
+
+procedure DeinitializeSetup();
+var
+  fileName : string;
+  path : string;
+  lines : TArrayOfString;
+begin
+  //fileName := ExpandConstant('{app}\run.bat');
+  fileName :=   ExpandConstant('{sd}');
+  path := FileSearch('hiberfil.sys', filename);
+  SetArrayLength(lines, 3);
+  lines[0] := 'cd %1';
+  lines[1] := 'xsltproc path %2.xml > tmp.fo';
+  lines[2] := 'fop tmp.fo %2.pdf';
+  //SaveStringsToFile(filename,lines,true);
+  exit;
+end;
+
+
 
 

@@ -88,12 +88,12 @@ void check_photo::defineOptions(OptionSet& options)
 			.repeatable(false)
 			.callback(OptionCallback<check_photo>(this, &check_photo::handleProject)));
 
-	options.addOption(
-		Option("scale", "s", "Specifica la scala di lavoro")
-			.required(false)
-			.repeatable(false)
-			.argument("value")
-			.callback(OptionCallback<check_photo>(this, &check_photo::handleScale)));
+	//options.addOption(
+	//	Option("scale", "s", "Specifica la scala di lavoro")
+	//		.required(false)
+	//		.repeatable(false)
+	//		.argument("value")
+	//		.callback(OptionCallback<check_photo>(this, &check_photo::handleScale)));
 }
 void check_photo::handleHelp(const std::string& name, const std::string& value)
 {
@@ -113,10 +113,10 @@ void check_photo::handleProject(const std::string& name, const std::string& valu
 {
 	_phe.set_checkType(photo_exec::Prj_type);
 }
-void check_photo::handleScale(const std::string& name, const std::string& value)
-{
-	_phe.set_ref_scale(value);
-}
+//void check_photo::handleScale(const std::string& name, const std::string& value)
+//{
+//	_phe.set_ref_scale(value);
+//}
 void check_photo::displayHelp()
 {
 	HelpFormatter helpFormatter(options());

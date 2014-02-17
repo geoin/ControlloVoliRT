@@ -70,7 +70,113 @@ void add_column(Connection& cnn, const std::string& table, const std::string& co
 		catch(std::exception e) {
 	}
 }
+std::string _set_ref_scale(const std::string& nome)
+{
+	if ( nome  == "1000" )
+		return "RefScale_1000";
+	else if ( nome  == "2000" )
+		return "RefScale_2000";
+	else if ( nome  == "5000" )
+		return "RefScale_5000";
+	else if ( nome  == "10000" )
+		return "RefScale_10000";
+	return "";
+}
+bool GetProjData(Connection& cnn, std::string& note, std::string& scale)
+{
+	std::stringstream sql;
+	sql << "SELECT NOTE, SCALE from PROJECT";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	std::string head = rs[0];
+	if ( rs.eof() )
+		return false;
+	note = rs[0];
+	scale = _set_ref_scale(rs[1]);
+	return true;
+}
+void read_planned_cam(Connection& cnn, Camera& cam)
+{
+	std::stringstream sql;
+	sql << "SELECT * from " << Z_CAMERA << " where PLANNING = 1";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	if ( rs.eof() )
+		throw std::runtime_error("fotocamera di progetto non assegnata");
 
+	cam.foc = rs["FOC"];
+	cam.dimx = rs["DIMX"];
+	cam.dimy = rs["DIMY"];
+	cam.dpix = rs["DPIX"];
+	cam.xp = rs["XP"];
+	cam.yp = rs["YP"];
+	cam.serial = rs["SERIAL_NUMBER"];
+	cam.id = rs["ID"];
+}
+
+void read_cams(Connection& cnn, std::map<std::string, Camera>& map_strip_cam)
+{
+	std::stringstream sql;
+	sql << "SELECT * from " << Z_CAMERA;
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	
+	std::map<std::string, Camera> cams;
+	Camera cam_plan;
+
+	// mappa delle camere usate compresa quella di progetto
+	while ( !rs.eof() ) {
+		Camera cam;
+		cam.foc = rs["FOC"];
+		cam.dimx = rs["DIMX"];
+		cam.dimy = rs["DIMY"];
+		cam.dpix = rs["DPIX"];
+		cam.xp = rs["XP"];
+		cam.yp = rs["YP"];
+		cam.serial = rs["SERIAL_NUMBER"];
+		cam.id = rs["ID"];
+		int plan = rs["PLANNING"];
+		cam.planning = plan == 1;
+		rs.next();
+		cams[cam.id] = cam;
+		if ( cam.planning )
+			cams["progetto"] = cam;
+	}
+	// get the camera - mission association
+	std::string table = "MISSION";
+	std::stringstream sql1;
+	sql1 << "SELECT ID_CAMERA, NAME from " << table;
+	stm.prepare(sql1.str());
+	rs = stm.recordset();
+
+	std::map<std::string, std::string> map_mission_cam;
+
+	while ( !rs.eof() ) {
+		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
+		rs.next();
+	}
+
+	// get the mission associated to each strip
+	table = std::string(ASSI_VOLO) + "V";
+	std::stringstream sql2;
+	sql2 << "SELECT A_VOL_CS, MISSION from " << table;
+	stm = Statement(cnn);
+	stm.prepare(sql2.str());
+	rs = stm.recordset();
+	while ( !rs.eof() ) {
+		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
+		std::string mission = rs["MISSION"];
+		std::string cam_id = map_mission_cam[mission]; // camera id for mission
+		if ( cams.find(cam_id) != cams.end() )
+			map_strip_cam[strip] = cams[cam_id];
+		else
+			map_strip_cam[strip] = cams["progetto"];
+		rs.next();
+	}
+}
 std::string get_strip(const std::string& nome)
 {
 	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);

@@ -71,14 +71,19 @@ bool photo_exec::run()
 {
 	if ( _proj_dir.empty() )
 		throw std::runtime_error("cartella di lavoro non impostata");
-	if ( _refscale.empty() )
-		throw std::runtime_error("scala di lavoro non impostata");
+	//if ( _refscale.empty() )
+	//	throw std::runtime_error("scala di lavoro non impostata");
 
 	try {
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
 		cnn.create(db_path.toString());
 		cnn.initialize_metdata();
+
+		if ( !GetProjData(cnn, _note, _refscale) )
+			throw std::runtime_error("dati progetto incompleti");
+		if ( _refscale.empty() )
+			throw std::runtime_error("Scala di lavoro non impostata");
 
 		//_cam_name = Path(_proj_dir, CAMERA).toString();
 		std::string assetti = std::string(ASSETTI) + (_type == Prj_type ? "P" : "V") + ".txt";
@@ -93,10 +98,6 @@ bool photo_exec::run()
 		// Read reference values
 		_read_ref_val();
 
-		// read camera data
-		if ( !_read_cam() )
-			throw std::runtime_error("Fotocamera non trovata");
-		
 		// read planned photo position and attitude
 		if ( _type == fli_type ) {
 
@@ -122,7 +123,7 @@ bool photo_exec::run()
 		Path doc_file(_proj_dir, "*");
 		doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
 
-		init_document(_dbook, cnn, doc_file.toString(), title);
+		init_document(_dbook, doc_file.toString(), title, _note);
 		char* dtd_ = getenv("DOCBOOKRT");
 		std::string dtd( ( dtd_ == NULL ) ? "" : dtd_);
 		_dbook.set_dtd(dtd);
@@ -155,17 +156,17 @@ void photo_exec::set_checkType(Check_Type t)
 {
 	_type = t;
 }
-void photo_exec::set_ref_scale(const std::string& nome)
-{
-	if ( nome  == "1000" )
-		_refscale = "RefScale_1000";
-	else if ( nome  == "2000" )
-		_refscale = "RefScale_2000";
-	else if ( nome  == "5000" )
-		_refscale = "RefScale_5000";
-	else if ( nome  == "10000" )
-		_refscale = "RefScale_10000";
-}
+//void photo_exec::set_ref_scale(const std::string& nome)
+//{
+//	if ( nome  == "1000" )
+//		_refscale = "RefScale_1000";
+//	else if ( nome  == "2000" )
+//		_refscale = "RefScale_2000";
+//	else if ( nome  == "5000" )
+//		_refscale = "RefScale_5000";
+//	else if ( nome  == "10000" )
+//		_refscale = "RefScale_10000";
+//}
 bool photo_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
@@ -286,82 +287,82 @@ bool photo_exec::_uncovered(OGRGeomPtr& vs)
 	cnn.commit_transaction();
 	return false;
 }
-bool photo_exec::_read_cam()
-{
-	std::stringstream sql;
-	sql << "SELECT * from " << Z_CAMERA; // << " where planning=1";
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-	while ( !rs.eof() ) {
-		Camera cam;
-		cam.foc = rs["FOC"];
-		cam.dimx = rs["DIMX"];
-		cam.dimy = rs["DIMY"];
-		cam.dpix = rs["DPIX"];
-		cam.xp = rs["XP"];
-		cam.yp = rs["YP"];
-		cam.serial = rs["SERIAL_NUMBER"];
-		cam.id = rs["ID"];
-		int plan = rs["PLANNING"];
-		cam.planning = plan == 1;
-		rs.next();
-		_cams[cam.id] = cam;
-		if ( cam.planning )
-			_cam_plan = cam;
-	}
-	return true;
+//bool photo_exec::_read_cam()
+//{
+//	std::stringstream sql;
+//	sql << "SELECT * from " << Z_CAMERA; // << " where planning=1";
+//	Statement stm(cnn);
+//	stm.prepare(sql.str());
+//	Recordset rs = stm.recordset();
+//	while ( !rs.eof() ) {
+//		Camera cam;
+//		cam.foc = rs["FOC"];
+//		cam.dimx = rs["DIMX"];
+//		cam.dimy = rs["DIMY"];
+//		cam.dpix = rs["DPIX"];
+//		cam.xp = rs["XP"];
+//		cam.yp = rs["YP"];
+//		cam.serial = rs["SERIAL_NUMBER"];
+//		cam.id = rs["ID"];
+//		int plan = rs["PLANNING"];
+//		cam.planning = plan == 1;
+//		rs.next();
+//		_cams[cam.id] = cam;
+//		if ( cam.planning )
+//			_cam_plan = cam;
+//	}
+//	return true;
+//
+//	//AutoPtr<XMLConfiguration> pConf;
+//	//try {
+//	//	pConf = new XMLConfiguration(_cam_name);
+//	//	_cam.foc = atof(pConf->getString("FOC").c_str());
+//	//	_cam.dimx = atof(pConf->getString("DIMX").c_str());
+//	//	_cam.dimy = atof(pConf->getString("DIMY").c_str());
+//	//	_cam.dpix = atof(pConf->getString("DPIX").c_str());
+//	//	_cam.xp = atof(pConf->getString("XP", "0").c_str());
+//	//	_cam.yp = atof(pConf->getString("YP", "0").c_str());
+//	//} catch (...) {
+//	//	return false;
+//	//}
+//	//return true;
+//}
 
-	//AutoPtr<XMLConfiguration> pConf;
-	//try {
-	//	pConf = new XMLConfiguration(_cam_name);
-	//	_cam.foc = atof(pConf->getString("FOC").c_str());
-	//	_cam.dimx = atof(pConf->getString("DIMX").c_str());
-	//	_cam.dimy = atof(pConf->getString("DIMY").c_str());
-	//	_cam.dpix = atof(pConf->getString("DPIX").c_str());
-	//	_cam.xp = atof(pConf->getString("XP", "0").c_str());
-	//	_cam.yp = atof(pConf->getString("YP", "0").c_str());
-	//} catch (...) {
-	//	return false;
-	//}
-	//return true;
-}
-
-bool photo_exec::_strip_cam()
-{
-	// get the camera associated to each mission
-	std::string table = "MISSION";
-	std::stringstream sql;
-	sql << "SELECT ID_CAMERA, NAME from " << table;
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-
-	std::map<std::string, std::string> map_mission_cam;
-
-	while ( !rs.eof() ) {
-		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
-		rs.next();
-	}
-	// get the mission associated to each strip
-	table = std::string(ASSI_VOLO) + "V";
-	std::stringstream sql1;
-	sql1 << "SELECT A_VOL_CS, MISSION from " << table;
-	stm = Statement(cnn);
-	stm.prepare(sql1.str());
-	rs = stm.recordset();
-	while ( !rs.eof() ) {
-		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
-		std::string mission = rs["MISSION"];
-		std::string cam_id = map_mission_cam[mission]; // camera id for mission
-		if ( _cams.find(cam_id) != _cams.end() )
-			_map_strip_cam[strip] = _cams[cam_id];
-		else
-			_map_strip_cam[strip] = _cam_plan;
-		rs.next();
-	}
-	return true;
-}
+//bool photo_exec::_strip_cam()
+//{
+//	// get the camera associated to each mission
+//	std::string table = "MISSION";
+//	std::stringstream sql;
+//	sql << "SELECT ID_CAMERA, NAME from " << table;
+//	Statement stm(cnn);
+//	stm.prepare(sql.str());
+//	Recordset rs = stm.recordset();
+//
+//	std::map<std::string, std::string> map_mission_cam;
+//
+//	while ( !rs.eof() ) {
+//		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
+//		rs.next();
+//	}
+//	// get the mission associated to each strip
+//	table = std::string(ASSI_VOLO) + "V";
+//	std::stringstream sql1;
+//	sql1 << "SELECT A_VOL_CS, MISSION from " << table;
+//	stm = Statement(cnn);
+//	stm.prepare(sql1.str());
+//	rs = stm.recordset();
+//	while ( !rs.eof() ) {
+//		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
+//		std::string mission = rs["MISSION"];
+//		std::string cam_id = map_mission_cam[mission]; // camera id for mission
+//		if ( _cams.find(cam_id) != _cams.end() )
+//			_map_strip_cam[strip] = _cams[cam_id];
+//		else
+//			_map_strip_cam[strip] = _cam_plan;
+//		rs.next();
+//	}
+//	return true;
+//}
 
 void photo_exec::_assi_from_vdp(std::map<std::string, VDP>& vdps)
 {
@@ -468,6 +469,7 @@ void photo_exec::_assi_from_vdp(std::map<std::string, VDP>& vdps)
 
 	cnn.commit_transaction();
 }
+// read attitude data for photo flight
 bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 {
 	std::string table = std::string(ASSETTI);
@@ -485,10 +487,14 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 		vdps[vdp.nome] = vdp;
 		rs.next();
 	}
+	// create the axis theme from attitude data
 	_assi_from_vdp(vdps);
+	// update axis with gps data
 	_update_assi_volo();
-	_strip_cam();
+	// read camera data
+	read_cams(cnn, _map_strip_cam);
 
+	// update inner orientation data
 	std::map<std::string, VDP>::iterator it;
 	for ( it = vdps.begin(); it !=vdps.end(); it++) {
 		std::string strip = get_strip(it->first);
@@ -496,13 +502,13 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
 			cam = _map_strip_cam[strip];
 		else
-			cam = _cam_plan;
+			cam = _map_strip_cam["progetto"]; //_cam_plan;
 		it->second.InitIor(cam);
 	}
 	return true;
 }
 
-// build attitude file from planned flight lines 
+// build attitude data from planned flight lines 
 bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 {
 	// read from the flight line table
@@ -515,10 +521,11 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 
 	std::cout << "Layer:" << table << std::endl;
 
+	Camera cam_plan;
+	read_planned_cam(cnn, cam_plan);
+
 	while ( !rs.eof() ) {
 		OGRGeomPtr pol = (Blob) rs["geom"];
-		//OGRPoint* p0 = NULL;
-		//OGRPoint* p1 = NULL;
 
 		OGRGeometry* og = (OGRGeometry*) pol;
 		OGRLineString* ls = (OGRLineString*)og;
@@ -534,9 +541,6 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 		int first = rs[2]; // number of first photo in the strip
 		int last = rs[3]; // number of last photo in the strip
 
-		double dx = pt0.x - pt1.x;
-		double dy = pt0.y - pt1.y;
-		//double alfa = atan2(dy, dx); //pt1.angdir(pt0); // plane heading
 		double alfa = pt0.angdir2(pt1);
 
 		double len = pt1.dist2D(pt0); // strip length
@@ -546,7 +550,7 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 			int k = i;
 			char nomef[256];
 			sprintf(nomef, "%s_%04d", strip.c_str(), k);
-			VDP vdp(_cam_plan, nomef); // cam is the camera used for planning the flight
+			VDP vdp(cam_plan, nomef); // cam is the camera used for planning the flight
 			DPOINT pt(pt0.x + (i - first) * step * cos(alfa), pt0.y + (i - first) * step * sin(alfa), z);
 			vdp.Init(pt, 0, 0, RAD_DEG(alfa));
 			vdps[vdp.nome] = vdp;
@@ -574,7 +578,6 @@ bool photo_exec::_read_dem()
 			return false;
 		if ( !_df->Open(_dem_name, false) )
 			return false;
-		DSM* ds = _df->GetDsm();
 		return true;
 	}
 	return false;
@@ -607,7 +610,7 @@ void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 		for (int i = 0; i < n; i++)
 			mbr.Extend(GetMbr(or->getGeometryRef(i), po, ka));
 	} else {
-		OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
+		//OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
 		mbr.Extend(GetMbr(fv, po, ka));
 	}
 	//OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();

@@ -48,19 +48,19 @@ public:
 	void set_vdp_name(const std::string& nome);
 	void set_vdp_name2(const std::string& nome);
 	void set_obs_name(const std::string& nome);
-	void set_ref_scale(const std::string& nomevalue);
+	//void set_ref_scale(const std::string& nomevalue);
 
 private:
-	bool _read_cam(void);
-	bool _strip_cam(void);
-	bool _read_vdp(const std::string& nome, VDP_MAP& vdps);
+	//bool _read_cam(void);
+	//bool _strip_cam(void);
+	void _read_vdp(const std::string& nome, VDP_MAP& vdps);
 	bool _read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts);
 	bool _read_cont_pat(CPT_MAP& pm); 
 	bool _check_differences(void);
 	bool _check_cpt(void);
 	bool _read_ref_val(void);
 	bool _calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts);
-	void _init_document(void);
+	//void _init_document(void);
 	Doc_Item _initpg1(void);
 	Doc_Item _initpg2(void);
 	void _resume(void);
@@ -76,8 +76,8 @@ private:
 	std::string _obs_name;
 	std::string _proj_dir;
 
-	Camera	_cam_plan; // camera for planned flight
-	std::map<std::string, Camera> _cams;
+	//Camera	_cam_plan; // camera for planned flight
+	//std::map<std::string, Camera> _cams;
 	std::map<std::string, Camera> _map_strip_cam;
 	docbook _dbook;
 	Doc_Item _article;
@@ -88,6 +88,7 @@ private:
 	double _TP_PA;
 	double _TA_PA;
 	std::string _refscale;
+	std::string _note;
 
 	std::list<std::string> _cpt_out_tol;
 	std::list<std::string> _tria_out_tol;
@@ -112,7 +113,7 @@ private:
 	void handleRef(const std::string& name, const std::string& value);
 	void handleComp(const std::string& name, const std::string& value);
 	void handleObs(const std::string& name, const std::string& value);
-	void handleScale(const std::string& name, const std::string& value);
+	//void handleScale(const std::string& name, const std::string& value);
 	void handleHelp(const std::string& name, const std::string& value);
 	bool _helpRequested;
 

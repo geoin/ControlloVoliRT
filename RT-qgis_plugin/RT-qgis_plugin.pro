@@ -19,10 +19,11 @@ win32 {
 
     DEFINES += WIN32
 }
-
+unix {
 INCLUDEPATH +=          \
-    /usr/include/gdal        \
+    /usr/include/gdal   \
     /usr/include/qgis
+}
 
 DEFINES += GUI_EXPORT=""
 DEFINES += CORE_EXPORT=""

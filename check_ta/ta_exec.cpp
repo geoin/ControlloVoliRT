@@ -60,47 +60,68 @@ ta_exec::~ta_exec()
 }
 bool ta_exec::run()
 {
-	std::cout << "check_ta" << std::endl; 
-	// initialize spatial lite connection
-	Poco::Path db_path(_proj_dir, DB_NAME);
-	cnn.open(db_path.toString());
+	if ( _proj_dir.empty() )
+		throw std::runtime_error("cartella di lavoro non impostata");
 
-	if ( _refscale.empty() )
-		throw std::runtime_error("scala di lavoro non impostata");
-	if ( _vdp_name.empty() )
-		throw std::runtime_error("File degli assetti non impostato nessuna operazione può essere fatta");
+	try {
+		// initialize spatial lite connection
+		Poco::Path db_path(_proj_dir, DB_NAME);
+		cnn.open(db_path.toString());
 
-	// Read the reference values
-	_read_ref_val();
+		if ( !GetProjData(cnn, _note, _refscale) )
+			throw std::runtime_error("dati progetto incompleti");
 
-	// initialize docbook xml file
-	_init_document();
-	std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+		if ( _refscale.empty() )
+			throw std::runtime_error("scala di lavoro non impostata");
+		if ( _vdp_name.empty() )
+			throw std::runtime_error("File degli assetti non impostato nessuna operazione può essere fatta");
 
+		// Read the reference values
+		_read_ref_val();
 
-	// che on control points
-	_check_cpt();
+		// initialize docbook xml file
+		std::string title = "Collaudo triangolazione aerea";
+		Path doc_file(_proj_dir, "*");
+		doc_file.setFileName(OUT_DOC);
 
-	// check the differences on two results
-	_check_differences();
+		init_document(_dbook, doc_file.toString(), title, _note);
+		char* dtd_ = getenv("DOCBOOKRT");
+		std::string dtd( ( dtd_ == NULL ) ? "" : dtd_);
+		_dbook.set_dtd(dtd);
+		_article = _dbook.get_item("article");
+		
+		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
 
-	// write the result on the docbook report
-	_dbook.write();
-    std::cout << "Procedura terminata correttamente" << std::endl;
+		// read camera data and assign to strips
+		read_cams(cnn, _map_strip_cam);
+
+		// check on control points
+		_check_cpt();
+
+		// check the differences on two results
+		_check_differences();
+
+		// write the result on the docbook report
+		_dbook.write();
+		std::cout << "Procedura terminata correttamente" << std::endl;
+	}
+    catch(std::exception &e) {
+        std::cout << std::string(e.what()) << std::endl;
+    }
 
 	return true;
 }
-void ta_exec::set_ref_scale(const std::string& nome)
-{
-	if ( nome  == "1000" )
-		_refscale = "RefScale_1000";
-	else if ( nome  == "2000" )
-		_refscale = "RefScale_2000";
-	else if ( nome  == "5000" )
-		_refscale = "RefScale_5000";
-	else if ( nome  == "10000" )
-		_refscale = "RefScale_10000";
-}
+//void ta_exec::set_ref_scale(const std::string& nome)
+//{
+//	if ( nome  == "1000" )
+//		_refscale = "RefScale_1000";
+//	else if ( nome  == "2000" )
+//		_refscale = "RefScale_2000";
+//	else if ( nome  == "5000" )
+//		_refscale = "RefScale_5000";
+//	else if ( nome  == "10000" )
+//		_refscale = "RefScale_10000";
+//}
 void ta_exec::_resume()
 {
 }
@@ -150,15 +171,15 @@ bool ta_exec::_read_ref_val()
 	}
 	return true;
 }
-void ta_exec::_init_document()
-{
-	Path doc_file(_proj_dir, "*");
-	doc_file.setFileName(OUT_DOC);
-	_dbook.set_name(doc_file.toString());
-	
-	_article = _dbook.add_item("article");
-	_article->add_item("title")->append("Collaudo triangolazione aerea");
-}
+//void ta_exec::_init_document()
+//{
+//	Path doc_file(_proj_dir, "*");
+//	doc_file.setFileName(OUT_DOC);
+//	_dbook.set_name(doc_file.toString());
+//	
+//	_article = _dbook.add_item("article");
+//	_article->add_item("title")->append("Collaudo triangolazione aerea");
+//}
 Doc_Item ta_exec::_initpg1()
 {
 	Doc_Item sec = _article->add_item("section");
@@ -282,68 +303,104 @@ bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const 
 		b &= print_item(row, attrr, sc.z, abs_less_ty, _TA_PA);
 	return b;
 }
-bool ta_exec::_read_cam()
-{
-	std::stringstream sql;
-	sql << "SELECT * from " << Z_CAMERA; // << " where planning=1";
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-	while ( !rs.eof() ) {
-		Camera cam;
-		cam.foc = rs["FOC"];
-		cam.dimx = rs["DIMX"];
-		cam.dimy = rs["DIMY"];
-		cam.dpix = rs["DPIX"];
-		cam.xp = rs["XP"];
-		cam.yp = rs["YP"];
-		cam.serial = rs["SERIAL_NUMBER"];
-		cam.id = rs["ID"];
-		int plan = rs["PLANNING"];
-		cam.planning = plan == 1;
-		rs.next();
-		_cams[cam.id] = cam;
-		if ( cam.planning )
-			_cam_plan = cam;
-	}
-	return true;
-}
-bool ta_exec::_strip_cam()
-{
-	// get the camera associated to each mission
-	std::string table = "MISSION";
-	std::stringstream sql;
-	sql << "SELECT ID_CAMERA, NAME from " << table;
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-
-	std::map<std::string, std::string> map_mission_cam;
-
-	while ( !rs.eof() ) {
-		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
-		rs.next();
-	}
-	// get the mission associated to each strip
-	table = std::string(ASSI_VOLO) + "V";
-	std::stringstream sql1;
-	sql1 << "SELECT A_VOL_CS, MISSION from " << table;
-	stm = Statement(cnn);
-	stm.prepare(sql1.str());
-	rs = stm.recordset();
-	while ( !rs.eof() ) {
-		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
-		std::string mission = rs["MISSION"];
-		std::string cam_id = map_mission_cam[mission]; // camera id for mission
-		if ( _cams.find(cam_id) != _cams.end() )
-			_map_strip_cam[strip] = _cams[cam_id];
-		else
-			_map_strip_cam[strip] = _cam_plan;
-		rs.next();
-	}
-	return true;
-}
-bool ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
+//bool ta_exec::_read_cam(std::map<std::string, Camera>& map_strip_cam)
+//{
+//	std::stringstream sql;
+//	sql << "SELECT * from " << Z_CAMERA;
+//	Statement stm(cnn);
+//	stm.prepare(sql.str());
+//	Recordset rs = stm.recordset();
+//	
+//	std::map<std::string, Camera> cams;
+//	Camera cam_plan;
+//
+//	// mappa delle camere usate compresa quella di progetto
+//	while ( !rs.eof() ) {
+//		Camera cam;
+//		cam.foc = rs["FOC"];
+//		cam.dimx = rs["DIMX"];
+//		cam.dimy = rs["DIMY"];
+//		cam.dpix = rs["DPIX"];
+//		cam.xp = rs["XP"];
+//		cam.yp = rs["YP"];
+//		cam.serial = rs["SERIAL_NUMBER"];
+//		cam.id = rs["ID"];
+//		int plan = rs["PLANNING"];
+//		cam.planning = plan == 1;
+//		rs.next();
+//		cams[cam.id] = cam;
+//		if ( cam.planning )
+//			cams["progetto"] = cam;
+//	}
+//	// get the camera associated to each mission
+//	std::string table = "MISSION";
+//	std::stringstream sql1;
+//	sql1 << "SELECT ID_CAMERA, NAME from " << table;
+//	stm.prepare(sql1.str());
+//	rs = stm.recordset();
+//
+//	std::map<std::string, std::string> map_mission_cam;
+//
+//	while ( !rs.eof() ) {
+//		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
+//		rs.next();
+//	}
+//
+//	// get the mission associated to each strip
+//	table = std::string(ASSI_VOLO) + "V";
+//	std::stringstream sql2;
+//	sql2 << "SELECT A_VOL_CS, MISSION from " << table;
+//	stm = Statement(cnn);
+//	stm.prepare(sql2.str());
+//	rs = stm.recordset();
+//	while ( !rs.eof() ) {
+//		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
+//		std::string mission = rs["MISSION"];
+//		std::string cam_id = map_mission_cam[mission]; // camera id for mission
+//		if ( _cams.find(cam_id) != cams.end() )
+//			map_strip_cam[strip] = cams[cam_id];
+//		else
+//			map_strip_cam[strip] = cams["progetto"];
+//		rs.next();
+//	}
+//	return true;
+//}
+//bool ta_exec::_strip_cam()
+//{
+//	// get the camera associated to each mission
+//	std::string table = "MISSION";
+//	std::stringstream sql;
+//	sql << "SELECT ID_CAMERA, NAME from " << table;
+//	Statement stm(cnn);
+//	stm.prepare(sql.str());
+//	Recordset rs = stm.recordset();
+//
+//	std::map<std::string, std::string> map_mission_cam;
+//
+//	while ( !rs.eof() ) {
+//		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
+//		rs.next();
+//	}
+//	// get the mission associated to each strip
+//	table = std::string(ASSI_VOLO) + "V";
+//	std::stringstream sql1;
+//	sql1 << "SELECT A_VOL_CS, MISSION from " << table;
+//	stm = Statement(cnn);
+//	stm.prepare(sql1.str());
+//	rs = stm.recordset();
+//	while ( !rs.eof() ) {
+//		std::string strip = rs["A_VOL_CS"]; // strip name - mission name
+//		std::string mission = rs["MISSION"];
+//		std::string cam_id = map_mission_cam[mission]; // camera id for mission
+//		if ( _cams.find(cam_id) != _cams.end() )
+//			_map_strip_cam[strip] = _cams[cam_id];
+//		else
+//			_map_strip_cam[strip] = _cam_plan;
+//		rs.next();
+//	}
+//	return true;
+//}
+void ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
 {
 	std::ifstream fvdp(nome.c_str(), std::ifstream::in);
 	if ( !fvdp.is_open() ) {
@@ -367,8 +424,6 @@ bool ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
 		vdp.Init(DPOINT(atof(tok[1].c_str()), atof(tok[2].c_str()), atof(tok[3].c_str())), atof(tok[4].c_str()), atof(tok[5].c_str()), atof(tok[6].c_str()));
 	}
 
-	_strip_cam();
-
 	std::map<std::string, VDPC>::iterator it;
 	for ( it = vdps.begin(); it != vdps.end(); it++) {
 		std::string strip = get_strip(it->first);
@@ -376,10 +431,9 @@ bool ta_exec::_read_vdp(const std::string& nome, VDP_MAP& vdps)
 		if ( _map_strip_cam.find(strip) != _map_strip_cam.end() )
 			cam = _map_strip_cam[strip];
 		else
-			cam = _cam_plan;
+			throw std::runtime_error("Strip senza fotocamera");
 		it->second.InitIor(cam);
 	}
-	return true;
 }
 bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts) 
 {
@@ -564,9 +618,8 @@ bool ta_exec::_check_cpt()
 		CPT_MAP pm; // mappa nome punto, coordinate
 		CPT_VDP pts; // mappa nome punto fotogrammi in cui è stato osservato
 
-		_cam_name = Path(_proj_dir, CAMERA).toString();
+		//_cam_name = Path(_proj_dir, CAMERA).toString();
 
-		_read_cam();
 		_read_vdp(_vdp_name, vdps);
 		_read_cont_pat(pm);
 		_read_image_pat(vdps, pm, pts);
@@ -586,7 +639,8 @@ bool ta_exec::_check_differences()
 	try {
 		Doc_Item row = _initpg2();
 
-		_read_cam();
+		//read_cams(cnn, _map_strip_cam);
+
 		VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
 		VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
 		_read_vdp(_vdp_name, vdps1);

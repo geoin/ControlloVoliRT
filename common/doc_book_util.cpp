@@ -28,7 +28,7 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 	return rv;
 }
 
-void init_document(docbook& dbook, CV::Util::Spatialite::Connection& cnn, const std::string& nome, const std::string& title)
+void init_document(docbook& dbook, const std::string& nome, const std::string& title, const std::string& note)
 {
 	//Path doc_file(_proj_dir, "*");
 	//doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
@@ -44,23 +44,19 @@ void init_document(docbook& dbook, CV::Util::Spatialite::Connection& cnn, const 
 	Doc_Item sec = article->add_item("section");
 	sec->add_item("title")->append("Intestazione");
 
-	std::stringstream sql;
-	sql << "SELECT NOTE from JOURNAL where CONTROL=1";
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-	Recordset rs = stm.recordset();
-	std::string head = rs[0];
 	std::string head1;
-	for ( int i = 0; i < head.size(); i++) {
-		if ( head[i] == 10 ) {
+	for ( int i = 0; i < note.size(); i++) {
+		if ( note[i] == 10 ) {
 			sec->add_item("para")->append(head1);
 			head1.clear();
 		} else
-			head1.push_back(head[i]);
+			head1.push_back(note[i]);
 	}
+	if ( !head1.empty() )
+		sec->add_item("para")->append(head1);
 
 	Poco::DateTime dt;
-	dt.makeLocal(+2);
+	dt.makeLocal(+1);
 	std::stringstream ss;
 	ss << "Data: " << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
 	sec->add_item("para")->append(ss.str());

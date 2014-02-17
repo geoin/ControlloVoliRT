@@ -52,12 +52,12 @@ public:
 	void set_checkType(Check_Type t);
 	void set_ref_scale(const std::string& nome);
 private:
-	bool _read_cam(void);
+	//bool _read_cam(void);
 	bool _read_vdp(std::map<std::string, VDP>& vdps);
 	bool _calc_vdp(std::map<std::string, VDP>& vdps);
 	void _assi_from_vdp(std::map<std::string, VDP>& vdps);
 
-	bool _strip_cam(void); // strip camera association
+	//bool _strip_cam(void); // strip camera association
 	bool _read_dem(void);
 	std::string _get_key(const std::string& val);
 
@@ -85,7 +85,7 @@ private:
 	bool _read_ref_val(void);
 
 	bool _get_photo(void);
-	std::string _cam_name;
+	//std::string _cam_name;
 	std::string _vdp_name;
 	std::string _vdp_name_proj;
 	std::string _dem_name;
@@ -103,9 +103,9 @@ private:
 
 	std::map<std::string, VDP> _vdps; // map photo name  - photo attitude
 	std::map<std::string, VDP> _vdps_plan; // same but for planned
-	std::map<std::string, Camera> _cams;
+	//std::map<std::string, Camera> _cams;
 	std::map<std::string, Camera> _map_strip_cam;
-	Camera	_cam_plan; // camera for planned flight
+	//Camera	_cam_plan; // camera for planned flight
 	DSM_Factory* _df;
 
 	double _GSD, _MAX_GSD;
@@ -124,6 +124,7 @@ private:
 	double _MAX_GPS_GAP;
 
 	std::string _refscale;
+	std::string _note;
 };
 
 class check_photo: public Poco::Util::Application {

@@ -273,8 +273,8 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 
     // prepare the parameters
     _args << QString("/d="); // project dir
-    _args << "/p";  // type of check (p = project /f = flight
-    _args << "/s=1000";
+    _args << "/p";  // type of check (p = project /f = flight)
+   // _args << "/s=1000";
 
     if ( type == 1 )
         _args[1] = "/f";
@@ -288,7 +288,7 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
-    QLabel* l2 = new QLabel("Scala di lavoro:");
+    /*QLabel* l2 = new QLabel("Scala di lavoro:");
     QComboBox* cmb = new QComboBox;
     cmb->addItem("1:1000");
     cmb->addItem("1:2000");
@@ -299,11 +299,11 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
     QHBoxLayout* hl2 = new QHBoxLayout;
     hl2->addWidget(l2);
     hl2->addWidget(cmb);
-    qvb->addLayout(hl2);
+    qvb->addLayout(hl2);*/
 
     _init(qvb);
 }
-void Check_photo::_optype(int index)
+/*void Check_photo::_optype(int index)
 {
     switch ( index ) {
     case 0:
@@ -319,7 +319,7 @@ void Check_photo::_optype(int index)
         _args[2] = "/s=10000";
         break;
     }
-}
+}*/
 /*******************************************/
 Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 {
@@ -369,7 +369,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     _args << "/r="; // first results file
     _args << "/c="; // second results file
     _args << "/o="; // observation file
-    _args << "/s=1000";
+    //_args << "/s=1000";
 
     QString name = _check_name + ".exe";
     QFileInfo qf(_plugin_dir, name);
@@ -430,7 +430,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     hl2->addWidget(b3);
     qvb->addLayout(hl3);
 
-    QLabel* l4 = new QLabel("Scala di lavoro:");
+    /*QLabel* l4 = new QLabel("Scala di lavoro:");
     QComboBox* cmb = new QComboBox;
     cmb->addItem("1:1000");
     cmb->addItem("1:2000");
@@ -441,7 +441,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QHBoxLayout* hl4 = new QHBoxLayout;
      hl4->addWidget(l4);
      hl4->addWidget(cmb);
-     qvb->addLayout(hl4);
+     qvb->addLayout(hl4);*/
 
      _init(qvb);
 }
@@ -500,7 +500,7 @@ bool Check_ta::_dirlist3(bool)
     }
     return true;
 }
-void Check_ta::_optype(int index)
+/*void Check_ta::_optype(int index)
 {
     switch ( index ) {
     case 0:
@@ -516,7 +516,7 @@ void Check_ta::_optype(int index)
         _args[4] = "/s=10000";
         break;
     }
-}
+}*/
 Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 {
     setWindowTitle("Controllo orto immagini");
@@ -524,7 +524,7 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 
     _args << QString("/d="); // project dir
     _args << "/i";  // image folder
-    _args << "/s=1000"; // reference scale
+    //_args << "/s=1000"; // reference scale
 
     QString name = _check_name + ".exe";
     QFileInfo qf(_plugin_dir, name);

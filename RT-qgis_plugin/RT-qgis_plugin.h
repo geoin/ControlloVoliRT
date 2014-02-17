@@ -28,7 +28,7 @@
 #ifndef RT_QGSPLUGIN_H
 #define RT_QGSPLUGIN_H
 
-#include <qgis/qgisplugin.h>
+#include <qgisplugin.h>
 #include <QObject>
 #include <QDialog>
 #include <QProcess>
@@ -113,8 +113,8 @@ class Check_photo: public dbox {
     Q_OBJECT
 public:
     Check_photo(QgisInterface* mi, int type);
-protected slots:
-    void _optype(int index);
+//protected slots:
+    //void _optype(int index);
 private:
 };
 class Check_ta: public dbox {
@@ -125,7 +125,7 @@ protected slots:
     bool _dirlist1(bool);
     bool _dirlist2(bool);
     bool _dirlist3(bool);
-    void _optype(int index);
+    //void _optype(int index);
 private:
     QLineEdit* _f1;
     QLineEdit* _f2;
