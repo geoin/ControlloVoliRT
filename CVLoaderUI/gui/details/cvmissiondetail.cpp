@@ -14,12 +14,15 @@ CVMissionDetail::CVMissionDetail(QWidget* p, Core::CVMissionObject* mission, Tab
 
 	addTab(new CVCameraDetail(this, _mission->at(0)), "");
     setTabToolTip(0, tr("Fotocamera"));
+	setTabIcon(0, QIcon(":/graphics/icons/plan/camera.png"));
 
     addTab(new CVRinexDetail(this, _mission->at(1)), "");
     setTabToolTip(1, tr("Rinex"));
+	setTabIcon(1, QIcon(":/graphics/icons/gps/fly_rinex.png"));
 
     addTab(new CVStationsDetail(this, _mission->at(2)), "");
     setTabToolTip(2, tr("Stazioni permanenti"));
+	setTabIcon(2, QIcon(":/graphics/icons/gps/station.png"));
 }
 
 } // namespace Details

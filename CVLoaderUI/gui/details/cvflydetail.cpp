@@ -11,22 +11,24 @@ namespace GUI {
 namespace Details {
 
 CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
-	//TODO
-	/*CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(0));
-    addTab(axis, "");
-    setTabToolTip(0, tr("Assi di volo"));*/
-
 	CVAreaDetail* area = new CVAreaDetail(p, c->at(1), c->type());
     addTab(area, "");
-    setTabToolTip(1, tr("Aree da cartografare"));
+    setTabToolTip(0, tr("Aree da cartografare"));
+	setTabIcon(0, QIcon(":/graphics/icons/plan/areas.png"));
     
 	CVDemDetail* dem = new CVDemDetail(p, c->at(2), c->type());
 	addTab(dem, "");
-    setTabToolTip(2, tr("DEM"));
+    setTabToolTip(1, tr("DEM"));
+	setTabIcon(1, QIcon(":/graphics/icons/plan/dem.png"));
 
 	CVFlyAttitudeDetail* fs = new CVFlyAttitudeDetail(p, static_cast<Core::CVFlyAttitude*>(c->at(3)));
 	addTab(fs, "");
-    setTabToolTip(3, tr("File degli assetti"));
+    setTabToolTip(2, tr("File degli assetti"));
+	setTabIcon(2, QIcon(":/graphics/icons/fly/attitude.png"));
+	
+	/*CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(0));
+    addTab(axis, "");
+    setTabToolTip(4, tr("Assi di volo"));*/
 
 	_control = c;
 }

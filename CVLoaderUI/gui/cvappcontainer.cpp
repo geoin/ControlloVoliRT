@@ -86,17 +86,18 @@ void CVAppContainer::insertProject(Core::CVProject* proj) {
 }
 
 void CVAppContainer::link() {
-    QMenu* projects = _menu->add(tr("Progetti"));
+    QMenu* projects = _menu->add(tr("Progetto"));
+	projects->setMinimumWidth(100);
 
 	Helper::CVActionsLinker* linker = Helper::CVActionHandle::get();
 
 	QAction* newProj = linker->add(Helper::NEW_PROJECT);
     linker->on(Helper::NEW_PROJECT, &_prjManager, SLOT(onNewProject()));
-	_addToMenuAndToolbar(newProj, projects, _toolbar, QIcon(""), tr("Nuovo"));
+	_addToMenuAndToolbar(newProj, projects, _toolbar, QIcon(":/graphics/icons/new_proj.png"), tr("Nuovo"));
 	
 	QAction* loadProj = linker->add(Helper::LOAD_PROJECT);
     linker->on(Helper::LOAD_PROJECT, &_prjManager, SLOT(onLoadProject()));
-	_addToMenuAndToolbar(loadProj, projects, _toolbar, QIcon(""), tr("Apri"));
+	_addToMenuAndToolbar(loadProj, projects, _toolbar, QIcon(":/graphics/icons/open_proj.png"), tr("Apri"));
 
 	projects->addSeparator();
 
@@ -104,7 +105,7 @@ void CVAppContainer::link() {
     linker->on(Helper::CLOSE_PROJECT, _tree, SLOT(onCloseProject()));
     linker->on(Helper::CLOSE_PROJECT, _details, SLOT(onClear()));
     linker->on(Helper::CLOSE_PROJECT, &_prjManager, SLOT(onCloseProject()));
-	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(""), tr("Chiudi"));
+	_addToMenuAndToolbar(closeProj, projects, _toolbar, QIcon(":/graphics/icons/close_proj.png"), tr("Chiudi"));
 
 	//QAction* newMission = linker->add(Helper::NEW_MISSION);
     //linker->on(Helper::NEW_MISSION, &_prjManager, SLOT(onCreateMission()));
@@ -112,13 +113,14 @@ void CVAppContainer::link() {
 
 void CVAppContainer::_addToMenuAndToolbar(QAction* a, QMenu* m, QToolBar* t, QIcon icon, QString name) {
 	a->setText(name);
-    a->setIcon(icon);
 
     m->insertAction(NULL, a);
     t->insertAction(NULL, a);
 
     QWidget* w = t->widgetForAction(a); //WORK_AROUND(TO FIX): icon only in toolbar
-    static_cast<QPushButton*>(w)->setText("");
+    QPushButton* btn = static_cast<QPushButton*>(w);
+	btn->setText("");
+    btn->setIcon(icon);
 }
 
 QMenuBar* CVAppContainer::menu() const { return _menu; }
