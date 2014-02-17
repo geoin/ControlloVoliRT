@@ -28,7 +28,7 @@
 #ifndef DOCKBOOK_H
 #define DOCKBOOK_H
 
-#include "Poco/Xml/XMLWriter.h"
+#include "Poco/XML/XMLWriter.h"
 #include "Poco/SAX/AttributesImpl.h"
 #include "Poco/SharedPtr.h"
 #include <fstream>

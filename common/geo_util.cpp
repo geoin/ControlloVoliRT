@@ -1,5 +1,5 @@
 #include "common/util.h"
-#include "Poco/stringtokenizer.h"
+#include "Poco/StringTokenizer.h"
 
 using namespace CV::Util::Geometry;
 using namespace CV::Util::Spatialite;
@@ -35,13 +35,13 @@ void get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 	if ( fv0->Centroid(&po) != OGRERR_NONE )
 		return;
 	OGRGeometry* fv = fv0;
-	OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
+    OGRLinearRing* geom = ((OGRPolygon*) fv)->getExteriorRing();
 	double xm = 1.e20, ym = 1.e20;
 	double xM = -1.e20, yM = -1.e20;
 
-	for (int i = 0; i < or->getNumPoints(); i++) {
-		double x = or->getX(i) - po.getX();
-		double y = or->getY(i) - po.getY();
+    for (int i = 0; i < geom->getNumPoints(); i++) {
+        double x = geom->getX(i) - po.getX();
+        double y = geom->getY(i) - po.getY();
 		double x1 = x * cos(ka) + y * sin(ka);
 		double y1 = -x * sin(ka) + y * cos(ka);
 		xm = std::min(xm, x1);
@@ -92,7 +92,7 @@ bool GetProjData(Connection& cnn, std::string& note, std::string& scale)
 	std::string head = rs[0];
 	if ( rs.eof() )
 		return false;
-	note = rs[0];
+    note = rs[0].toString();
 	scale = _set_ref_scale(rs[1]);
 	return true;
 }
@@ -112,8 +112,8 @@ void read_planned_cam(Connection& cnn, Camera& cam)
 	cam.dpix = rs["DPIX"];
 	cam.xp = rs["XP"];
 	cam.yp = rs["YP"];
-	cam.serial = rs["SERIAL_NUMBER"];
-	cam.id = rs["ID"];
+    cam.serial = rs["SERIAL_NUMBER"].toString();
+    cam.id = rs["ID"].toString();
 }
 
 void read_cams(Connection& cnn, std::map<std::string, Camera>& map_strip_cam)
@@ -136,8 +136,8 @@ void read_cams(Connection& cnn, std::map<std::string, Camera>& map_strip_cam)
 		cam.dpix = rs["DPIX"];
 		cam.xp = rs["XP"];
 		cam.yp = rs["YP"];
-		cam.serial = rs["SERIAL_NUMBER"];
-		cam.id = rs["ID"];
+        cam.serial = rs["SERIAL_NUMBER"].toString();
+        cam.id = rs["ID"].toString();
 		int plan = rs["PLANNING"];
 		cam.planning = plan == 1;
 		rs.next();
@@ -155,7 +155,7 @@ void read_cams(Connection& cnn, std::map<std::string, Camera>& map_strip_cam)
 	std::map<std::string, std::string> map_mission_cam;
 
 	while ( !rs.eof() ) {
-		map_mission_cam[ rs["NAME"] ] = rs["ID_CAMERA"]; // mission name camera id
+        map_mission_cam[ rs["NAME"].toString() ] = rs["ID_CAMERA"].toString(); // mission name camera id
 		rs.next();
 	}
 

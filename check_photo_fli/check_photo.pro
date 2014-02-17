@@ -11,26 +11,24 @@ TARGET = check_photo
 
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib"
+        LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
         DEFINES += NOMINMAX
+        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
+        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+}
+unix {
+        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
 }
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtild -lphoto_utild -ldem_interpolated -lspatialite4 -lsqlite3_i -lCVutild -lgdald_i
+        LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoUtil -lphoto_util -ldem_interpolate -lspatialite4 -lsqlite3_i -lCVutil -lgdal_i
-}
-
-win32 {
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
-}
-macx {
-        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+        LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
 }
 
 DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
@@ -39,10 +37,10 @@ SOURCES += \
     check_photo.cpp \
     photo_exec.cpp \
     photo_report.cpp \
-    ..\common\geo_util.cpp \
-    ..\common\doc_book_util.cpp
+    ../common/geo_util.cpp \
+    ../common/doc_book_util.cpp
 
 HEADERS +=\
     check_photo.h
 
-DESTDIR = C:\OSGeo4W\apps\qgis\plugins
+DESTDIR = ../bin

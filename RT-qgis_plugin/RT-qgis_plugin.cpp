@@ -52,14 +52,20 @@
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
+
+#define PARAM_PREFIX QString("/") + QString(d) + QString("=")
+
 #else
 #define QGISEXTERN extern "C"
+
+#define PARAM_PREFIX(d) QString("-") + QString(d) + QString(" ")
+
 #endif
 
 dbox::dbox(QgisInterface* mi): _mi(mi)
 {
     // get plugin folder
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
     _plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
 
     // get settings folder
@@ -130,7 +136,7 @@ void dbox::_init(QVBoxLayout* qv)
         bok->setEnabled(false);
     }
 
-    _args[0] = QString("/d=") + _prj->text();
+    _args[0] = QString(PARAM_PREFIX("d")) + _prj->text();
 }
 bool dbox::_dirlist(bool)
 {
@@ -139,7 +145,7 @@ bool dbox::_dirlist(bool)
     dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
     if ( !dirName.isEmpty() ) {
         _prj->setText(dirName);
-        _args[0] = QString("/d=") + dirName;
+        _args[0] = QString(PARAM_PREFIX("d")) + dirName;
     }
     //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
     return true;
@@ -224,7 +230,7 @@ void dbox::_report(bool b)
 
     QStringList args;
     QString exe = "cmd.exe";
-    args << "/c";
+    args << PARAM_PREFIX("c");
     QByteArray p = qgetenv( "DOCBOOKRT" );
     QFileInfo qf(QFileInfo(p).path(), "pdf_convert.bat");
 
@@ -276,14 +282,14 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
     _check_name = "check_photo";
 
     // prepare the parameters
-    _args << QString("/d="); // project dir
-    _args << "/p";  // type of check (p = project /f = flight)
+    _args << QString(PARAM_PREFIX("d")); // project dir
+    _args << PARAM_PREFIX("p");  // type of check (p = project /f = flight)
    // _args << "/s=1000";
 
     if ( type == 1 )
         _args[1] = "/f";
 
-    QString name = _check_name + ".exe";
+    QString name = _check_name;// + ".exe";
 
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
@@ -330,8 +336,8 @@ Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
     setWindowTitle("Controllo dati gps");
     _check_name = "check_gps";
 
-    _args << QString("/d="); // project folder
-    _args << "/p"; // check type /p = photogrammetry /l = lidar
+    _args << QString(PARAM_PREFIX("d")); // project folder
+    _args << PARAM_PREFIX("p"); // check type /p = photogrammetry /l = lidar
 
     QString name = _check_name + ".exe";
     QFileInfo qf(_plugin_dir, name);
@@ -589,7 +595,7 @@ QgsRTtoolsPlugin::~QgsRTtoolsPlugin()
 }
 void QgsRTtoolsPlugin::initGui()
 {
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
     icon_path = QDir::cleanPath(QString(p.data()) + QDir::separator() + "icons");
 
     // get the main menu of QGIS
@@ -663,16 +669,13 @@ void QgsRTtoolsPlugin::unload()
 void QgsRTtoolsPlugin::set_prj()
 {
     QString name = "CVloader"; //"CVloader_ui.exe";
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
-#ifdef WIN32
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
+
     QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
-#else
-    QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "lib/qgis/plugins");
-#endif
 
     QFileInfo qf(plugin_dir, name);
 
-    //QMessageBox::information(NULL, "starting...", qf.filePath(), QMessageBox::Ok);
+    QMessageBox::information(NULL, "starting...", qf.filePath(), QMessageBox::Ok);
     QProcess::startDetached(qf.filePath());
 }
 void QgsRTtoolsPlugin::ver_gps()
@@ -724,7 +727,7 @@ QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
 }
 QGISEXTERN QString icon()
 {
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
     icon_path = QDir::cleanPath(QString(p.data()) + QDir::separator() + "icons");
 
 

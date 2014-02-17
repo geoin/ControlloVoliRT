@@ -13,13 +13,19 @@ QMAKE_CXXFLAGS += -std=c++11
 TARGET = ControlloVoli
 TEMPLATE = app
 
-CV_INCL = ..\include
-CV_TOOLS_INCL = D:\projects\RT\tools\ControlloVoliRT_Tools\include
+CV_INCL = ../include
+CV_TOOLS_INCL = ../../ControlloVoliRT_Tools/include
+OUT_DIR = ../bin
 
-INCLUDEPATH += /home/geoin/projects/ControlloVoliRT/include
+
+INCLUDEPATH += $${CV_INCL}
 
 win32 {
     INCLUDEPATH += $${CV_TOOLS_INCL}
+}
+
+unix {
+
 }
 
 SOURCES += main.cpp \
@@ -126,3 +132,5 @@ OTHER_FILES += \
     data/db.sql
 
 LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3
+
+DESTDIR = $${OUT_DIR}
