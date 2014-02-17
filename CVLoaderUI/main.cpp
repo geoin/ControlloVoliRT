@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 
     //QApplication::setStyle(QStyleFactory::create("fusion"));
     QApplication app(argc, argv);
+	app.setWindowIcon(QIcon(":graphics/icons/logo.png"));
 
     CVMainWindow w;
 	QResource style(":/style/style.qss");

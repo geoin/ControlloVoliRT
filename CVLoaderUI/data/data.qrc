@@ -6,4 +6,18 @@
     <qresource prefix="/style">
         <file>style.qss</file>
     </qresource>
+    <qresource prefix="/graphics">
+        <file>icons/close_proj.png</file>
+        <file>icons/logo.png</file>
+        <file>icons/new_proj.png</file>
+        <file>icons/open_proj.png</file>
+        <file>icons/plan/areas.png</file>
+        <file>icons/plan/axis.png</file>
+        <file>icons/plan/camera.png</file>
+        <file>icons/plan/dem.png</file>
+        <file>icons/gps/fly_rinex.png</file>
+        <file>icons/gps/station.png</file>
+        <file>icons/fly/attitude.png</file>
+        <file>icons/logo.png</file>
+    </qresource>
 </RCC>

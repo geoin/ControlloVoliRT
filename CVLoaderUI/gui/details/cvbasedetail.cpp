@@ -31,7 +31,7 @@ CVBaseDetail::CVBaseDetail(QWidget* p, Core::CVObject* c) : QWidget(p), _control
 
     QPushButton* menuBtn = new QPushButton(tr(""), this);
 
-    menuBtn->setMaximumSize(20, 26);
+    menuBtn->setMaximumSize(26, 26);
     _menu = new QMenu(this);
     menuBtn->setMenu(_menu);
     hLayout->addWidget(menuBtn);
