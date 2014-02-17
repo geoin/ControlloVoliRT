@@ -131,7 +131,13 @@ void CVStationsDetail::importAll(QStringList& uri) {
 
 	//new zip creation
 	QString z(tmp + QDir::separator() + _station + ".zip");
-	Core::CVZip::zip(files, z.toStdString());
+	bool ok = Core::CVZip::zip(files, z.toStdString());
+	if (!ok) {
+		uri.clear();
+		_base = QString();
+		_station = QString();
+		return; // TODO: warning
+	}
 
 	//update view
 	QFileInfo info(z);
@@ -143,6 +149,9 @@ void CVStationsDetail::importAll(QStringList& uri) {
 	r->origin(info.absoluteFilePath());
 	r->uri(stations()->uri());
 	if (!r->persist()) {
+		uri.clear();
+		_base = QString();
+		_station = QString();
 		return;
 	}
 

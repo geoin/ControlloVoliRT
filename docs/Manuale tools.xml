@@ -177,14 +177,13 @@
     verifica.</para>
 
     <para>Tramite il menù applicativo e la barra degli strumenti è possibile
-    creare o caricare un progetto.</para>
-
-    <para>La voce "Nuovo" presenta una finestra di dialogo per la creazione di
-    un progetto; deve essere inserito il nome, la tipologia (fotogrammetria o
-    lidar), la scala di riferimento per i controlli e la cartella radice.
-    Opzionale l'inserimento di una nota relativa al progetto. La voce "Apri"
-    richiede la selezione della cartella root contenente un progetto creato
-    precedentemente e presente nel filesystem.</para>
+    creare o caricare un progetto. La voce "Nuovo" presenta una finestra di
+    dialogo per la creazione di un progetto; deve essere inserito il nome, la
+    tipologia (fotogrammetria o lidar), la scala di riferimento per i
+    controlli e la cartella radice. Opzionale l'inserimento di una nota
+    relativa al progetto. La voce "Apri" richiede la selezione della cartella
+    root contenente un progetto creato precedentemente e presente nel
+    filesystem.</para>
 
     <para>Al momento della conferma, l'applicativo presenta l'albero di
     navigazione del progetto.</para>
@@ -201,11 +200,11 @@
     corrispondente nel corpo principale dell'applicazione, dove è possibile
     visualizzare ed inserire i dati in ingresso.</para>
 
-    <para>Le informazioni generali del progetto sono visualizzate nel corpo al
-    momento del caricamento. La descrizione comprende il nome, il tipo, la
-    data di creazione e quella dell'ultima modifica. Le informazioni sulla
-    scala attiva e le note possono essere editate selezionando l'apposito
-    pulsante.</para>
+    <para>Le informazioni generali del progetto vengono visualizzate nel
+    pannello centrale al momento del caricamento. La descrizione comprende il
+    nome, il tipo, la data di creazione e quella dell'ultima modifica. Le
+    informazioni sulla scala attiva e le note possono essere editate
+    selezionando l'apposito pulsante.</para>
 
     <para/>
 
@@ -215,9 +214,12 @@
       </imageobject>
     </mediaobject>
 
-    <para>Ogni dettaglio è in generale composto da una scheda per ogni file di
-    input; i tab laterali permettono la navigazione tra le varie
-    schede.</para>
+    <para>L'espansione dell'albero di progetto permette di visualizzare la
+    lista dei controlli che richiedono dati in ingresso. Il pannello di
+    dettaglio corrispondente a ciascun controllo è composto in generale da una
+    scheda per ogni file di input; le tab, posizionate sul lato destro del
+    pannello, permettono la navigazione tra le varie schede, anche durante il
+    drag di un file. </para>
 
     <mediaobject>
       <imageobject>
@@ -225,11 +227,11 @@
       </imageobject>
     </mediaobject>
 
-    <para>Le schede sono tutte composte da:</para>
+    <para>Le schede descrittive degli oggetti sono composte da:</para>
 
     <itemizedlist>
       <listitem>
-        <para>un'intestazione contente il menù di dettaglio seguito dal
+        <para>un'intestazione contente il menù di dettaglio, seguito dal
         nome;</para>
       </listitem>
 
@@ -240,21 +242,21 @@
     </itemizedlist>
 
     <para>L'inserimento o la modifica dei dati avviene tramite drag&amp;drop
-    di uno o più file nell'area visualizzata, oppute selezionando i file
+    di uno o più file nell'area visualizzata, oppure selezionando i file
     dall'apposita finestra di dialogo attivabile nel menù dell'oggetto in
     esame, raggiungibile tramite il pulsante posizionato alla sinistra del
     nome. Il menù di dettaglio consente inoltre la rimozione dei dati
     precedentemente inseriti nel progetto.</para>
 
     <para>L'interfaccia del controllo GPS si differenzia leggermente;
-    comprende infatti un numero variabile di missioni, ciascuna avente il
-    proprio dettaglio, con la medesima struttura descritta
+    comprende un numero variabile di missioni, ciascuna avente il proprio
+    pannello di dettaglio, con la medesima struttura descritta
     precedentemente.</para>
 
     <para>Le missioni vengono create dinamicamente partendo dal menù
     contestuale in figura; la navigazione avviene tramite gli appositi bottoni
-    o selezionando la voce di menù relativa a ciascuna missione. La
-    metodologia di inserimento dei dati resta la stessa degli altri
+    o selezionando la voce di menù relativa a ciascuna missione nel medesimo
+    menù. La metodologia di inserimento dei dati resta la stessa degli altri
     controlli.</para>
 
     <mediaobject>
@@ -263,8 +265,7 @@
       </imageobject>
     </mediaobject>
 
-    <para>Gli oggetti gestiti, sono divisi per controllo. In
-    particolare:</para>
+    <para>Gli oggetti gestiti sono divisi per controllo.</para>
 
     <itemizedlist>
       <listitem>
@@ -344,7 +345,7 @@
     <para/>
 
     <para>Le aree da cartografare e il dem possono essere inseriti sia nel
-    contesto del progetto di volo che del volo effettuato; la modifica nella
+    contesto del progetto di volo che del volo effettivo; la modifica nella
     relativa scheda di ciascun controllo sarà riportata correttamente in tutte
     le schede di dettaglio collegate alla stessa informazione.</para>
 
@@ -353,7 +354,18 @@
     <orderedlist>
       <listitem>
         <para>Fotocamera, richiede un file XML contenente i parametri della
-        fotocamera di progetto o di volo relativa ad ogni missione.</para>
+        fotocamera di progetto o di volo relativa ad ogni missione, deve avere
+        il seguente formato:</para>
+
+        <programlisting>&lt;CAMERA&gt;
+  &lt;FOC&gt;0.0&lt;/FOC&gt;
+  &lt;DIMX&gt;0.0&lt;/DIMX&gt;
+  &lt;DIMY&gt;0.0&lt;/DIMY&gt;
+  &lt;DPIX&gt;0.0&lt;/DPIX&gt;
+  &lt;XP&gt;0.0&lt;/XP&gt;
+  &lt;YP&gt;0.0&lt;/YP&gt; 
+  &lt;DESCR&gt;descrizione&lt;/DESCR&gt;
+&lt;/CAMERA&gt;</programlisting>
       </listitem>
 
       <listitem>
@@ -366,7 +378,7 @@
 
       <listitem>
         <para>Aree da cartografare, richiede un tema shape di tipo polygon.
-        L'unico campo obbligatorio è la geometria, dunque viene visualizzato
+        L'unico campo obbligatorio è la geometria, viene visualizzato
         esclusivamente il numero di record inseriti nel database di
         progetto.</para>
       </listitem>

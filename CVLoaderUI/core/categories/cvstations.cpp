@@ -151,6 +151,7 @@ bool CVStations::remove() {
 		QVariantList() << mission()
 	);
 
+	_ps.clear();
 	return ret;
 }
 
