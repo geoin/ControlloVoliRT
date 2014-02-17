@@ -225,7 +225,11 @@ void dbox::_report(bool b)
     QStringList args;
     QString exe = "cmd.exe";
     args << "/c";
-    QFileInfo qf(_plugin_dir, "run.bat");
+    QByteArray p = qgetenv( "DOCBOOKRT" );
+    QFileInfo qf(QFileInfo(p).path(), "pdf_convert.bat");
+
+    //QFileInfo qf(_plugin_dir, "run.bat");
+    //QFileInfo qf("pdf_convert.bat");
     args << qf.filePath();
     args << _prj->text();
     args << _check_name;

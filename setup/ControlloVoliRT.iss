@@ -83,40 +83,8 @@ Source: "{#vcfiles}\msvcr90.dll";  DestDir: "{sys}"; Flags: restartreplace unins
 [Run]
 Filename: "{tmp}\DocBookRT_setup.exe"; Flags: waituntilterminated
 
-[Code]
 
-function NeedsAddPath(Param: string): boolean;
-var
-  OrigPath: string;
-begin
-  if not RegQueryStringValue(HKEY_LOCAL_MACHINE,
-    'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
-    'Path', OrigPath)
-  then begin
-    Result := True;
-    exit;
-  end;
-  // look for the path with leading and trailing semicolon
-  // Pos() returns 0 if not found
-  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
-end;
 
-procedure DeinitializeSetup();
-var
-  fileName : string;
-  path : string;
-  lines : TArrayOfString;
-begin
-  //fileName := ExpandConstant('{app}\run.bat');
-  fileName :=   ExpandConstant('{sd}');
-  path := FileSearch('hiberfil.sys', filename);
-  SetArrayLength(lines, 3);
-  lines[0] := 'cd %1';
-  lines[1] := 'xsltproc path %2.xml > tmp.fo';
-  lines[2] := 'fop tmp.fo %2.pdf';
-  //SaveStringsToFile(filename,lines,true);
-  exit;
-end;
 
 
 

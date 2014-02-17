@@ -53,9 +53,9 @@
           verificare che la pianificazione proposta permetta di realizzare
           quanto richiesto; in particolare si verifica che tutta l'area
           oggetto del rilievo risulti acquisita mediante modelli
-          stereoscopici, aventi il ricoprimento richiesto, che il GSD
-          (impronta del pixel al suolo) abbia i valori richiesti, che le
-          strisciate non siano troppo lunghe</para>
+          stereoscopici, aventi il ricoprimento, longitudinale e trasversale,
+          richiesto, che il GSD (impronta del pixel al suolo) abbia i valori
+          richiesti, che le strisciate non siano troppo lunghe</para>
         </listitem>
 
         <listitem>
@@ -63,9 +63,9 @@
           acquisiti dal GPS di bordo durante la ripresa siano idonei a
           garantire la geo referenziazione dei fotogrammi. In particolare la
           traccia viene ricalcolata sulla base delle stazioni di terra
-          indicate verificando che la traccia sia continua e che i valori di
-          PDOP, scarto quadratico della soluzione, numero di satelliti e
-          numero di stazioni a terra sia conforme con quanto richiesto.</para>
+          indicate verificando che questa sia continua e che i valori di PDOP,
+          scarto quadratico della soluzione, numero di satelliti e numero di
+          stazioni a terra sia conforme con quanto richiesto.</para>
         </listitem>
 
         <listitem>
@@ -84,7 +84,7 @@
           variando la quantità e la disposizione dei punti noti ed
           introducendo dei punti di verifica. Quando gli indicatori numerici
           del nuovo risultato segnalano la sua correttezza occorre verificare
-          anche che le due soluzioni siano tra loro equivalenti confrontando
+          anche che le due soluzioni siano tra loro equivalenti, confrontando
           gli assetti di ciascun fotogramma. Inoltre si fornisce un ulteriore
           controllo atto a verificare che i punti noti, riletti in un singolo
           modello producano scarti non eccedenti i valori attesi.</para>
@@ -128,10 +128,14 @@
         </listitem>
 
         <listitem>
+          <para>Controllo dei dati grezzi lidar;</para>
+        </listitem>
+
+        <listitem>
           <para>Controllo degli elaborati prodotti. Ha lo scopo di verificare
           che i prodotti derivati ( modelli di superficie e del terreno) siano
-          stati prodotti concordemente con i prodotti grezzi e che il taglio
-          la nomenclatura e la consistenza sia completa</para>
+          stati prodotti concordemente con i corrispondenti dati grezzi e che
+          il taglio la nomenclatura e la consistenza sia completa</para>
         </listitem>
       </orderedlist>
     </section>
@@ -219,7 +223,7 @@
     dettaglio corrispondente a ciascun controllo è composto in generale da una
     scheda per ogni file di input; le tab, posizionate sul lato destro del
     pannello, permettono la navigazione tra le varie schede, anche durante il
-    drag di un file. </para>
+    drag di un file.</para>
 
     <mediaobject>
       <imageobject>

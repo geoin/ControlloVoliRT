@@ -27,11 +27,23 @@
 
 #include <QApplication>
 #include "dropwindow.h"
+#include <QFileInfo>
+#include <QDir>
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     DropWindow window;
     window.show();
+
+    QByteArray p = qgetenv( "DOCKBOOKRT" );
+	QDir dir = QFileInfo(p).path();
+    QFileInfo qf(dir, "pdf_convert.bat");
+
+    //QFileInfo qf(_plugin_dir, "run.bat");
+    //QFileInfo qf("pdf_convert.bat");
+	QString qs = qf.filePath();
+
+
     return app.exec();
 }

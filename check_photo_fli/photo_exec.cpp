@@ -125,7 +125,9 @@ bool photo_exec::run()
 
 		init_document(_dbook, doc_file.toString(), title, _note);
 		char* dtd_ = getenv("DOCBOOKRT");
-		std::string dtd( ( dtd_ == NULL ) ? "" : dtd_);
+		std::string dtd;
+		if ( dtd_ != NULL )
+			dtd = std::string("file:") + dtd_;
 		_dbook.set_dtd(dtd);
 		_article = _dbook.get_item("article");
 
