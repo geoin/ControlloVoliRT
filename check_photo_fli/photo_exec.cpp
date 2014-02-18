@@ -987,7 +987,7 @@ void photo_exec::_process_block()
 
 	OGRGeomPtr blk;
 	bool first = true;
-	while ( !rs.eof() ) { //for every strip
+    while ( !rs.eof() ) { //for every strip
 		mstrp s;
         s.strip = rs[0].toString();
         s.first = rs[1].toString();
@@ -1002,25 +1002,25 @@ void photo_exec::_process_block()
 		}
 		vs.push_back(s);
 		rs.next();
-	}
+    }
 	OGRGeomPtr blk1 = blk;
 
 	std::string tableb = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
-	cnn.remove_layer(tableb);
-	std::cout << "Layer:" << tableb << std::endl;
+    cnn.remove_layer(tableb);
+    std::cout << "Layer:" << tableb << std::endl;
 
 	std::stringstream sqla;
 	sqla << "CREATE TABLE " << tableb << 
-		"(Z_BLOCK_ID TEXT NOT NULL)";	// sigla del lavoro
-	cnn.execute_immediate(sqla.str());
+        "(Z_BLOCK_ID TEXT NOT NULL)";	// sigla del lavoro
+    cnn.execute_immediate(sqla.str());
 	// add the geometry column
 	std::stringstream sqlb;
 	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'" << get_typestring(blk) << "'," <<
-		"'XY')";
-	cnn.execute_immediate(sqlb.str());
+        "'" << get_typestring(blk) << "'," <<
+        "'XY')";
+    cnn.execute_immediate(sqlb.str());
 	std::stringstream sqlc;
 	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	Statement stm0(cnn);
@@ -1029,8 +1029,8 @@ void photo_exec::_process_block()
 	stm0[1] = SIGLA_PRJ;
 	stm0[2].fromBlob(blk);
 	stm0.execute();
-	stm0.reset();
-	cnn.commit_transaction();
+    stm0.reset();
+    cnn.commit_transaction();
 	_get_carto(blk1);
 
 	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");

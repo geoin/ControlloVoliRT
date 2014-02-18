@@ -375,10 +375,10 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     setWindowTitle("Controllo triangolazione aerea");
     _check_name = "check_ta";
 
-    _args << QString("/d="); // project dir
-    _args << "/r="; // first results file
-    _args << "/c="; // second results file
-    _args << "/o="; // observation file
+    _args << PARAM_PREFIX("d"); // project dir
+    _args << PARAM_PREFIX("r"); // first results file
+    _args << PARAM_PREFIX("c"); // second results file
+    _args << "";//PARAM_PREFIX("o"); // observation file
     //_args << "/s=1000";
 
     QString name = _check_name;
@@ -396,7 +396,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QString q1 = qs.value("TA_REF", "").toString();
     _f1->setText(q1);
     if ( !q1.isEmpty() )
-         _args[1] = QString("/r=") + q1;
+         _args[1] = QString(PARAM_PREFIX("r")) + q1;
 
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
@@ -412,7 +412,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QString q2 = qs.value("TA_CFG", "").toString();
     _f2->setText(q2);
     if ( !q2.isEmpty() )
-        _args[2] = QString("/c=") + q2;
+        _args[2] = QString(PARAM_PREFIX("c")) + q2;
 
     QPushButton* b2 = new QPushButton("...");
     b2->setFixedWidth(20);
@@ -428,7 +428,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QString q3 = qs.value("TA_OBS", "").toString();
     _f3->setText(q3);
     if ( !q3.isEmpty() )
-        _args[3] = QString("/o=") + q3;
+        _args[3] = QString(PARAM_PREFIX("o")) + q3;
 
 
     QPushButton* b3 = new QPushButton("...");
@@ -469,7 +469,7 @@ bool Check_ta::_dirlist1(bool)
     fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti di riferimento:", fileName, "*.txt");
     if ( !fileName.isEmpty() ) {
         _f1->setText(fileName);
-        _args[1] = QString("/r=") + fileName;
+        _args[1] = QString(PARAM_PREFIX("r")) + fileName;
         qs.setValue("TA_REF", fileName) ;
     }
     return true;
@@ -487,7 +487,7 @@ bool Check_ta::_dirlist2(bool)
     fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti da confrontare:", fileName);
     if ( !fileName.isEmpty() ) {
         _f2->setText(fileName);
-        _args[2] = QString("/c=") + fileName;
+        _args[2] = QString(PARAM_PREFIX("c")) + fileName;
         qs.setValue("TA_CFG", fileName) ;
     }
     return true;
@@ -505,7 +505,7 @@ bool Check_ta::_dirlist3(bool)
     fileName = qf.getOpenFileName(this, "Selezionare il file con le osservazioni:", fileName);
     if ( !fileName.isEmpty() ) {
         _f3->setText(fileName);
-        _args[3] = QString("/o=") + fileName;
+        _args[3] = QString(PARAM_PREFIX("o")) + fileName;
         qs.setValue("TA_OBS", fileName) ;
     }
     return true;
@@ -612,7 +612,7 @@ void QgsRTtoolsPlugin::initGui()
     connect(mAction[k], SIGNAL(activated()), this, SLOT(set_prj()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/volop.png";
+    icon = icon_path + "/voloP.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica Progetto volo aerofotogrammetrico");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_proj_volo()));
     qtb->addAction(mAction[k]);
@@ -632,7 +632,7 @@ void QgsRTtoolsPlugin::initGui()
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_tria()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/ortho.png";
+    icon = icon_path + "/Ortho.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica orto immagini");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_ortho()));
     qtb->addAction(mAction[k]);
@@ -647,12 +647,12 @@ void QgsRTtoolsPlugin::initGui()
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_lidar()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/Lidar.png";
+    icon = icon_path + "/lidar.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica dati grezzi LIDAR");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_raw_lidar()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/Lidar1.png";
+    icon = icon_path + "/lidar1.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica elaborati LIDAR");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_prod_lidar()));
     qtb->addAction(mAction[k]);
@@ -675,7 +675,7 @@ void QgsRTtoolsPlugin::set_prj()
 
     QFileInfo qf(plugin_dir, name);
 
-    QMessageBox::information(NULL, "starting...", qf.filePath(), QMessageBox::Ok);
+    //QMessageBox::information(NULL, "starting...", qf.filePath(), QMessageBox::Ok);
     QProcess::startDetached(qf.filePath());
 }
 void QgsRTtoolsPlugin::ver_gps()
@@ -731,7 +731,7 @@ QGISEXTERN QString icon()
     icon_path = QDir::cleanPath(QString(p.data()) + QDir::separator() + "icons");
 
 
-    QString icon = icon_path + "/regione.png";
+    QString icon = icon_path + "/Regione.png";
     return icon.toStdString().c_str(); //"C:/Google Drive/Regione Toscana Tools/icons/regione.png";
 }
 QGISEXTERN QString name()

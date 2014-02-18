@@ -467,8 +467,6 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		stm[9].fromBlob(gp_); 
 		stm.execute();
         stm.reset();
-
-        std::cout << "time " << time << std::endl;
 	}
 	cnn.commit_transaction();
 	return true;
