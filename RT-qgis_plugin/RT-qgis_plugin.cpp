@@ -58,7 +58,7 @@
 #else
 #define QGISEXTERN extern "C"
 
-#define PARAM_PREFIX(d) QString("-") + QString(d) + QString(" ")
+#define PARAM_PREFIX(d) QString("-") + QString(d)
 
 #endif
 
@@ -339,7 +339,7 @@ Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
     _args << QString(PARAM_PREFIX("d")); // project folder
     _args << PARAM_PREFIX("p"); // check type /p = photogrammetry /l = lidar
 
-    QString name = _check_name + ".exe";
+    QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
@@ -381,7 +381,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     _args << "/o="; // observation file
     //_args << "/s=1000";
 
-    QString name = _check_name + ".exe";
+    QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 

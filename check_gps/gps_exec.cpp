@@ -26,7 +26,7 @@
 */
 
 #include "check_gps.h"
-#include "Poco/stringtokenizer.h"
+#include "Poco/StringTokenizer.h"
 #include "Poco/File.h"
 #include "Poco/Path.h"
 #include "Poco/DateTime.h"
@@ -291,27 +291,17 @@ bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 }
 bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::SharedPtr<vGPS> >& vvg, MBR* mbr)
 {
-	typedef struct {
-		std::string data;
-		DPOINT pos;
-		int nsat;
-		double pdop;
-		double rms;
-		int id_base;
-		double dist;
-	} GRX;
-
 	std::vector<DPOINT> basi;
 
 	std::multimap<std::string, GRX> mmap;
 	std::set<std::string> smap;
 
 	std::string actdate;
-	std::string mintime, maxtime;
+    std::string mintime, maxtime;
 	// for every base used
 	for (size_t l = 0; l < vvg.size(); l++) {
 		vGPS& vg = *vvg[l];
-		DPOINT pbase;
+        DPOINT pbase;
 
 		// for every epoch
 		for ( size_t i = 0; i < vg.size(); i++ ) {
@@ -324,8 +314,9 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 				basi.push_back(pbase);
 				continue;
 			}
-			if ( mbr != NULL && !mbr->IsInside(vg[i].pos.x,  vg[i].pos.y) )
+            if ( mbr != NULL && !mbr->IsInside(vg[i].pos.x,  vg[i].pos.y) ) {
 				continue;
+            }
 
 			GRX gr;
 			gr.pos = DPOINT(x, y, z);
@@ -339,7 +330,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 				Poco::StringTokenizer tok1(tok[0], " "); // tok 0 is date - time
 				if ( tok1.count() == 2 ) {
 					gr.data = tok1[0]; // split it in date and time
-					time = tok1[1];	
+                    time = tok1[1];
 
 					if ( actdate.empty() )
 						actdate = gr.data;
@@ -359,11 +350,11 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 				gr.nsat = atoi(tok[1].c_str()); // token 1 is number of sat
 				gr.pdop = atof(tok[2].c_str());	// token 2 is pdop
 				if ( tok.count() >= 5 ) {
-                    gr.rms = max(atof(tok[3].c_str()), atof(tok[4].c_str())); // token 3 and 4 are rmsx and rmsy
+                    gr.rms = std::max(atof(tok[3].c_str()), atof(tok[4].c_str())); // token 3 and 4 are rmsx and rmsy
 				}
 				gr.id_base = (int) l;
 
-				// insert the data in a multi map with time as key
+                // insert the data in a multi map with time as key
 				mmap.insert(std::pair<std::string, GRX>(time, gr));
 				smap.insert(time);
 			}
@@ -446,9 +437,9 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 			p += (gr.pos * pi); // weigth the point with the reciprocal of the distance to the base
 
 			data = gr.data;
-            nsat = max(nsat, gr.nsat);
-            pdop = min(pdop, gr.pdop);
-            rms = max(rms, gr.rms);
+            nsat = std::max(nsat, gr.nsat);
+            pdop = std::min(pdop, gr.pdop);
+            rms = std::max(rms, gr.rms);
 		}
 
 		// the epoch is discarted because no base are available
@@ -465,7 +456,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
 		*gp = OGRPoint(p.x, p.y);
 
-		stm[1] = id++;
+        stm[1].fromInt64(id++);
 		stm[2] = data;
 		stm[3] = time;
 		stm[4] = nsat;
@@ -475,7 +466,9 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		stm[8] = mission;
 		stm[9].fromBlob(gp_); 
 		stm.execute();
-		stm.reset();
+        stm.reset();
+
+        std::cout << "time " << time << std::endl;
 	}
 	cnn.commit_transaction();
 	return true;
@@ -491,7 +484,8 @@ bool gps_exec::_create_gps_track()
 	_gps_opt.min_sat_angle = _MIN_SAT_ANG;
 
 	Poco::Path fn(_proj_dir);
-	fn.append(MISSIONI);
+    fn.append(MISSIONI);
+    Poco::File(fn).createDirectories();
 
 	cnn.remove_layer(BASI);
 	cnn.remove_layer(GPS);
@@ -501,14 +495,14 @@ bool gps_exec::_create_gps_track()
 	CV::Util::Spatialite::Statement st(cnn, q.str());
 	CV::Util::Spatialite::Recordset rec = st.recordset();
 	while (!rec.eof()) {
-		std::string mission = rec[0].toString();
+        std::string mission = rec[0].toString();
 		std::string name = rec[1].toString();
-		std::vector<unsigned char> rinex = rec[2].toBlob();
+        std::vector<unsigned char> rinex = rec[2].toBlob();
 
 		Poco::Path p(fn);
 		p.append(mission);
 
-		Poco::File(p).createDirectories();
+        Poco::File(p).createDirectories();
 
 		std::stringstream f;
 		f << p.toString() << Path::separator() << name << ".zip";
@@ -516,7 +510,7 @@ bool gps_exec::_create_gps_track()
 
 		const char* ptr = reinterpret_cast<const char*>(&rinex[0]);
 		blob.write(ptr, rinex.size());
-		blob.close();
+        blob.close();
 
 		std::string missionID = rec[3].toString();
 		std::stringstream stat;
@@ -528,7 +522,7 @@ bool gps_exec::_create_gps_track()
 		CV::Util::Spatialite::Recordset stations = mStat.recordset();
 		while (!stations.eof()) {
 			std::string station = stations[0].toString();
-			std::vector<unsigned char> blob = stations[1].toBlob();
+            std::vector<unsigned char> blob = stations[1].toBlob();
 
 			Poco::Path statPath(p);
 			statPath.append(station);
@@ -545,28 +539,33 @@ bool gps_exec::_create_gps_track()
 			stations.next();
 		}
 		rec.next();
-	}
+    }
 
 	// every folder is a different mission
 	Poco::File dircnt(fn);
 	std::vector<std::string> files;
-	dircnt.list(files);
+    dircnt.list(files);
 
-	int count = 0;
-	for (size_t i = 0; i < files.size(); i++) {
-		Poco::Path fn(fn.toString(), files[i]);
-		Poco::File fl(fn);
-		if ( fl.isDirectory() )
-			count++;
+    int count = 0;
+
+    for (size_t i = 0; i < files.size(); i++) {
+        Poco::Path ms(fn.toString());
+        ms.append(files[i]);
+        Poco::File fl(ms);
+        if ( fl.isDirectory() ) {
+            count++;
+        }
 	}
 
 	std::cout << "Elaborazione di " << (int) count << " missioni" << std::endl;
 
 	for (size_t i = 0; i < files.size(); i++) {
-		Poco::Path fn(fn.toString(), files[i]);
+        Poco::Path ms(fn.toString());
+        ms.append(files[i]);
 		Poco::File fl(fn);
-		if ( fl.isDirectory() )
-			_mission_process(fn.toString());
+        if ( fl.isDirectory() ) {
+            _mission_process(ms.toString());
+        }
 	}
 	return true;
 }

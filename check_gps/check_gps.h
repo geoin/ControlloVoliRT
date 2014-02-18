@@ -33,6 +33,16 @@
 #include "CVUtil/ogrgeomptr.h"
 #include "docbook/docbook.h"
 
+typedef struct {
+    std::string data;
+    DPOINT pos;
+    int nsat;
+    double pdop;
+    double rms;
+    int id_base;
+    double dist;
+} GRX;
+
 class gps_exec {
 public:
 	enum gps_type {

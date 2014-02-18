@@ -12,25 +12,28 @@ TARGET = check_gps
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
         LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
-}
-macx {
-        LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
+
+        CONFIG(debug, debug|release) {
+                LIBS += -lPocoUtild -lPocoZipd -lphoto_utild -lZipLibd -lrtklibd -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
+                TARGET = $$join(TARGET,,,d)
+        }
+        else {
+                LIBS += -lPocoUtil -lPocoZip -lrtklib -lphoto_util -lziplib -lspatialite4 -lsqlite3_i -lCVUtil -lgdal_i
+        }
 }
 
-CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtild -lPocoZipd -lphoto_utild -lZipLibd -lrtklibd -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
-        TARGET = $$join(TARGET,,,d)
-}
-else {
-        LIBS += -lPocoUtil -lPocoZip -lrtklib -lphoto_util -lziplib -lspatialite4 -lsqlite3_i -lCVUtil -lgdal_i
+unix: {
+    CONFIG(debug, debug|release) {
+            LIBS += -lPocoUtild -lPocoZipd -lphoto_utild -lziplibd -lrtklibd -lCVUtild -lspatialite -lsqlite3 -lgdald
+            TARGET = $$join(TARGET,,,d)
+    }
+    else {
+            LIBS += -lPocoFoundation -lPocoXML -lPocoUtil -lPocoZip -lrtklib -lphoto_util -lziplib -lCVUtil -lspatialite -lsqlite3 -lgdal
+    }
 }
 
-win32 {
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-}
-macx {
-        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
-}
+INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+
 
 DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
 
@@ -43,4 +46,4 @@ HEADERS +=\
     check_gps.h \
     gps.h
 
-#DESTDIR = C:/OSGeo4W/apps/qgis/plugins
+DESTDIR = ../bin

@@ -26,12 +26,8 @@ else {
 }
 
 
-win32 {
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
-}
-macx {
-        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
-}
+INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+
 
 DEFINES +=ZIPLIB_LIBRARY
 

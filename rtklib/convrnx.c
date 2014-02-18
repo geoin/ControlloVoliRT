@@ -1035,7 +1035,7 @@ int raw2rnx(const char* nfile, const char* ext, char** of)
     //}
     for (i = 0; i < 3; i++) 
 		rnxopt.antdel[i] = 0;
-    strnset(rnxopt.rcvopt, 0, 255);
+    memset(rnxopt.rcvopt, 0, 255);
     rnxopt.navsys = NSYS;//NavSys;
     rnxopt.obstype = OBSTYPE_ALL;//ObsType;
     rnxopt.freqtype = 3;//FreqType;

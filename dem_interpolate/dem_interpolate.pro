@@ -25,16 +25,12 @@ CONFIG(debug, debug|release) {
         LIBS += -lPocoFoundationd -lPocoZipd -llaslib
         #TARGET = $$join(TARGET,,,d)
 }
-
-LIBS += -lPocoFoundationd -lPocoZipd -llaslib
-
+CONFIG(release, debug|release) {
+    LIBS += -lPocoFoundation -lPocoZip -llaslib
+}
 
 
 INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-
-macx {
-        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
-}
 
 DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS
 
@@ -56,3 +52,5 @@ HEADERS +=\
 incl.path = ../include/dem_interpolate
 incl.files = ../dem_interpolate/geom.h ../dem_interpolate/dsm.h
 INSTALLS += incl
+
+DESTDIR = ../lib

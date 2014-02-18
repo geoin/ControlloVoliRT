@@ -1129,7 +1129,7 @@ void photo_exec::_update_assi_volo()
 	// query to associate to the first and last point of each flight line the nearest point of the gps track
 	std::stringstream sql;
 	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
-		table << " a, gps b group by strip";
+        table << " a, GPS b group by strip";
 
 	Statement stm(cnn);
 	stm.prepare(sql.str());

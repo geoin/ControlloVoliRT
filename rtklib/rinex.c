@@ -68,8 +68,12 @@ static const char rcsid[]="$Id:$";
 
 #ifdef WIN32
 #define int64 __int64
+#define F_SEEK_I64 _fseeki64
+#define F_TELL_I64 _ftelli64
 #else
 #define int64 int64_t
+#define F_SEEK_I64 fseeko64
+#define F_TELL_I64 ftello64
 #endif
 
 
@@ -651,15 +655,15 @@ static int readrnxobs(FILE *fp, gtime_t ts, gtime_t te, double tint, int rcv,
     if ( !obs || rcv > MAXRCV ) 
 		return 0;
 
-	pos = _ftelli64(fp);
-	_fseeki64(fp, 0, SEEK_END);
-	sz = _ftelli64(fp);
-	_fseeki64(fp, pos, SEEK_SET);
+    pos = F_TELL_I64(fp);
+    F_SEEK_I64(fp, 0, SEEK_END);
+    sz = F_TELL_I64(fp);
+    F_SEEK_I64(fp, pos, SEEK_SET);
 	pk = (long) (sz / (100 * MAXRNXLEN));
     
 	while ( fgets(buff, MAXRNXLEN, fp) ) {
 		if ( ++kk > pk ) {
-			double ps = (double) 100 * _ftelli64(fp) / sz;
+            double ps = (double) 100 * F_TELL_I64(fp) / sz;
 			setread(ps);
 			kk = 0;
 		}
