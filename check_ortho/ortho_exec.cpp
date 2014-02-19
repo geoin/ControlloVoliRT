@@ -424,6 +424,7 @@ bool ortho_exec::_final_report()
 		Doc_Item itl = sec->add_item("itemizedlist");
 		while ( !rs.eof() ) {
 			itl->add_item("listitem")->append(rs["FOGLIO"].toString());
+            rs.next();
 		}
 	}
 
