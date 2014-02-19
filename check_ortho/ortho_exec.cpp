@@ -318,19 +318,24 @@ bool ortho_exec::_process_imgs()
 	File dircnt(tfw);
 	std::vector<std::string> df;
 	dircnt.list(df);
-	std::vector<std::string> files;
+	std::map<std::string, std::string> files;
 	for (size_t i = 0; i < df.size(); i++) {
 		Poco::Path fn(_img_dir, df[i]);
-		std::string ext = Poco::toLower(fn.getExtension());
-		if ( ext == "tfw" )
-			files.push_back(fn.toString());
+		std::string ext = fn.getExtension();
+		if ( Poco::toLower(ext) == "tfw" ) {
+			files[fn.getBaseName()] = ext;
+		}
 	}
 	std::vector<TFW> vtfw;
-	for (size_t i = 0; i < files.size(); i++) {
-		TFW tf(files[i]);
-		Poco::Path fn(files[i]);
-		fn.setExtension("tif");
-		vtfw.push_back(tf);
+	for (size_t i = 0; i < df.size(); i++) {
+		Poco::Path fn(_img_dir, df[i]);
+		std::string ext = fn.getExtension();
+		std::map<std::string, std::string>::iterator it = files.find(fn.getBaseName());
+		if ( Poco::toLower(ext) == "tif" && it != files.end() ) {
+			fn.setExtension(it->second);
+			TFW tf(fn.toString(), ext);
+			vtfw.push_back(tf);
+		}
 	}
 
 	std::string table("Z_QUADRO");

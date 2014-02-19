@@ -36,7 +36,7 @@
 class TFW {
 public:
 	TFW(): _dimx(0), _dimy(0) {}
-	TFW(const std::string& nm);
+	TFW(const std::string& nm, const std::string& ext = "tif");
 	DPOINT ter_img(const DPOINT& ter) const;
 	DPOINT img_ter(const DPOINT& pix) const;
 	bool read(const std::string& nome);
@@ -47,7 +47,7 @@ public:
 private:
 	MatOri _pix_ter;
 	MatOri _ter_pix;
-	std::string _nome;
+	std::string _nome, _ext;
 	long _dimx, _dimy;
 };
 class rgb {
