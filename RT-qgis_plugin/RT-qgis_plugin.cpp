@@ -54,11 +54,13 @@
 #define QGISEXTERN extern "C" __declspec( dllexport )
 
 #define PARAM_PREFIX(d) QString("/") + QString(d) + QString("=")
+#define FLAG_PREFIX(d) QString("/") + QString(d)
 
 #else
 #define QGISEXTERN extern "C"
 
 #define PARAM_PREFIX(d) QString("-") + QString(d)
+#define FLAG_PREFIX(d) QString("-") + QString(d)
 
 #endif
 
@@ -129,6 +131,9 @@ void dbox::_init(QVBoxLayout* qv)
     connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
     connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
 
+ #ifdef WIN32
+       _executable += ".exe";
+ #endif
     QFileInfo qf(_executable);
     if ( !qf.exists() ) {
         // if executable does not exists disable the excute button
@@ -230,7 +235,7 @@ void dbox::_report(bool b)
 
     QStringList args;
     QString exe = "cmd.exe";
-    args << PARAM_PREFIX("c");
+    args << FLAG_PREFIX("c");
     QByteArray p = qgetenv( "DOCBOOKRT" );
     QFileInfo qf(QFileInfo(p).path(), "pdf_convert.bat");
 
@@ -249,10 +254,13 @@ void dbox::_exec(bool b)
     _esegui(_executable, _args);
 }
 
-void dbox::_esegui(const QString& exe, const QStringList& args)
+void dbox::_esegui(const QString& exec, const QStringList& args)
 {
     _out->clear();
     _layers.clear();
+
+    QString exe(exec);
+
     QString qs(exe);
     for (int i = 0; i < args.size(); i++)
         qs += QString(" ") + args[i];
@@ -283,7 +291,7 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 
     // prepare the parameters
     _args << QString(PARAM_PREFIX("d")); // project dir
-    _args << PARAM_PREFIX("p");  // type of check (p = project /f = flight)
+    _args << FLAG_PREFIX("p");  // type of check (p = project /f = flight)
    // _args << "/s=1000";
 
     if ( type == 1 )
@@ -337,7 +345,7 @@ Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
     _check_name = "check_gps";
 
     _args << QString(PARAM_PREFIX("d")); // project folder
-    _args << PARAM_PREFIX("p"); // check type /p = photogrammetry /l = lidar
+    _args << FLAG_PREFIX("p"); // check type /p = photogrammetry /l = lidar
 
     QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
@@ -536,7 +544,7 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
     _args << "/i";  // image folder
     //_args << "/s=1000"; // reference scale
 
-    QString name = _check_name + ".exe";
+    QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
