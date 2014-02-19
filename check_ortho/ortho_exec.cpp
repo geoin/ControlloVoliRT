@@ -27,16 +27,16 @@
 #include "tiff_util.h"
 #include "check_ortho.h"
 #include "Poco/Util/XMLConfiguration.h"
-#include "Poco/stringtokenizer.h"
+#include "Poco/StringTokenizer.h"
 #include "Poco/AutoPtr.h"
-#include "Poco/sharedPtr.h"
+#include "Poco/SharedPtr.h"
 #include "Poco/File.h"
 #include "Poco/Path.h"
-#include "Poco/string.h"
+#include "Poco/String.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "ogr_geometry.h"
+#include "gdal/ogr_geometry.h"
 #include "common/util.h"
 
 #define SRID 32632
@@ -424,6 +424,7 @@ bool ortho_exec::_final_report()
 		Doc_Item itl = sec->add_item("itemizedlist");
 		while ( !rs.eof() ) {
 			itl->add_item("listitem")->append(rs["FOGLIO"].toString());
+            rs.next();
 		}
 	}
 
@@ -452,8 +453,9 @@ bool ortho_exec::_final_report()
 
 	std::vector<OGRGeomPtr> vp;
 	while ( !rs.eof() ) {
-		// Get the first photo geometry
-		OGRGeomPtr pol = (Blob) rs[0];
+        // Get the first photo geometry
+        Blob blob = rs[0].toBlob();
+        OGRGeomPtr pol = blob;
 		vp.push_back(pol);
 		rs.next();
 	}
@@ -466,7 +468,8 @@ bool ortho_exec::_final_report()
 	std::vector<std::string> v1, v2;
 	while ( !rs.eof() ) {
 		// Get the first photo geometry
-		OGRGeomPtr pol = (Blob) rs[1];
+        Blob blob = rs[1].toBlob();
+        OGRGeomPtr pol = blob;
 		std::string foglio = rs[0];
 
 		for ( size_t i = 0; i < vp.size(); i++) {

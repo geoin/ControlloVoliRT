@@ -105,12 +105,11 @@ CV_image::~CV_image()
 bool CV_image::open(const std::string& nome)
 {
 	//img->_tfWrite = false;
-
 	_tif = TIFFOpen(nome.c_str(), "rm");
 	if ( _tif == NULL ) {
 		return false;
 	}
-	
+
 	TIFFGetField(_tif, TIFFTAG_IMAGEWIDTH, &_dimx);
 	TIFFGetField(_tif, TIFFTAG_IMAGELENGTH, &_dimy);
 

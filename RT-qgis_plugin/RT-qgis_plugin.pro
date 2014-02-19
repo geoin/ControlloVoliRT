@@ -18,13 +18,14 @@ win32 {
     $$OSGEO4W_DIR/include
 
     DEFINES += WIN32
+    DESTDIR = ../lib
 }
 unix {
 INCLUDEPATH +=          \
     /usr/include/gdal   \
     /usr/include/qgis
 
-    QGIS_DIR = /usr/lib/qgis
+    DESTDIR = /usr/lib/qgis/plugins
 }
 
 DEFINES += GUI_EXPORT=""
@@ -33,4 +34,3 @@ DEFINES += CORE_EXPORT=""
 SOURCES = RT-qgis_plugin.cpp
 HEADERS = RT-qgis_plugin.h
 
-DESTDIR = ../lib

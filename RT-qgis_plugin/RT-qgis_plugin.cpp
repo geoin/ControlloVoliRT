@@ -540,8 +540,8 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
     setWindowTitle("Controllo orto immagini");
     _check_name = "check_ortho";
 
-    _args << QString("/d="); // project dir
-    _args << "/i";  // image folder
+    _args << QString(PARAM_PREFIX("d")); // project dir
+    _args << FLAG_PREFIX("i");  // image folder
     //_args << "/s=1000"; // reference scale
 
     QString name = _check_name;
@@ -559,7 +559,7 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
     QString q1 = qs.value("ORTHO_IDIR", "").toString();
     _idir->setText(q1);
     if ( !q1.isEmpty() )
-         _args[1] = QString("/i=") + q1;
+         _args[1] = QString(PARAM_PREFIX("i")) + q1;
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
     connect(b1, SIGNAL(clicked(bool)), this, SLOT(_img_dir(bool)));
@@ -585,7 +585,7 @@ bool Check_ortho::_img_dir(bool)
     dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
     if ( !dirName.isEmpty() ) {
         _idir->setText(dirName);
-        _args[1] = QString("/i=") + dirName;
+        _args[1] = QString(PARAM_PREFIX("i")) + dirName;
         qs.setValue("ORTHO_IDIR", dirName) ;
     }
     return true;

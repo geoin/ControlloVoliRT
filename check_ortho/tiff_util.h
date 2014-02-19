@@ -28,8 +28,8 @@
 #define TIFF_UTIL_H
 
 #include "dem_interpolate/geom.h"
-#include "tifflib/xtiffio.h"
-#include "tifflib/geotiffio.h"
+#include "geotiff/xtiffio.h"
+#include "geotiff/geotiffio.h"
 #include <string>
 #include <vector>
 
@@ -79,7 +79,7 @@ public:
 		ty_palette = 3,
 		ty_notsupported = -1
 };
-	CV_image(): _tif(NULL), col(NULL), bf(NULL) {
+    CV_image(): _tif(NULL), col(NULL), bf(NULL), _dimx(0), _dimy(0) {
 		_prevW = TIFFSetWarningHandler(NULL);
 		_prevE = TIFFSetErrorHandler(NULL);
 	}
