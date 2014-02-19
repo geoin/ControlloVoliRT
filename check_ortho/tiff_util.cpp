@@ -35,7 +35,7 @@
 using Poco::Path;
 #define	EPS 1.e-4
 
-TFW::TFW(const std::string& nm): _dimx(0), _dimy(0) {
+TFW::TFW(const std::string& nm, const std::string& ext): _dimx(0), _dimy(0), _ext(ext) {
 	read(nm);
 	Path fn(nm);
 	fn.setExtension("");
@@ -72,7 +72,7 @@ bool TFW::read(const std::string& nome)
 	_ter_pix = _pix_ter.Invert();
 	
 	Path fn(nome);
-	fn.setExtension("tif");
+	fn.setExtension(_ext);
 	CV_image ci;
 	if ( ci.open(fn.toString()) ) {
 		_dimx = ci.dimx();
