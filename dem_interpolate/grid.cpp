@@ -408,7 +408,7 @@ bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 	// acquisisce i parametri del grid
 	if ( !GetProperties(nome) )
 		return false;
-	FILE* fp = fopen(nome.c_str(), "r");
+    FILE* fp = fopen(nome.c_str(), "rb");
 	if ( fp == NULL )
 		return false;
     fseek(fp, (long) _pos, SEEK_SET);
@@ -425,12 +425,12 @@ bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 		char* cl = bf1.begin() + nr + of;
 		char* cp = c1;
 		of = 0;
-		while ( c1 < cl ) {
-			if ( *c1 == ' ' || *c1 == '\n' ) {
+        while ( c1 < cl ) {
+            if ( *c1 == ' ' || *c1 == '\r' || *c1 == '\n') {
 				*c1 = '\0';
-				if ( c1 != cp && *cp != '\0' ) {
+                if ( c1 != cp && *cp != '\0' && *c1 != '\r' && *c1 != '\n') {
 					double z = atof(cp);
-					quote.push_back( (float) z);
+                    quote.push_back( (float) z);
 					if ( z != _z0 ) {
 						zmin = std::min(zmin, z);
 						zmax = std::max(zmax, z);
@@ -451,7 +451,9 @@ bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
 
 	fclose(fp);
 
-	if ( _nx * _ny != quote.size() ) {
+    int actual = quote.size();
+    int wanted = _nx * _ny;
+    if ( wanted != actual ) {
 		Close();
 		return false;
 	}

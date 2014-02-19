@@ -27,9 +27,9 @@
 #include "check_photo.h"
 #include "dem_interpolate/dsm.h"
 #include "Poco/Util/XMLConfiguration.h"
-#include "Poco/stringtokenizer.h"
+#include "Poco/StringTokenizer.h"
 #include "Poco/AutoPtr.h"
-#include "Poco/sharedPtr.h"
+#include "Poco/SharedPtr.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -237,11 +237,13 @@ bool photo_exec::_get_carto(OGRGeomPtr& blk)
 	long count = 0;
 	while ( !rs.eof() ) { //for every strip
 		++count;
+        Blob blob = rs[0];
 		if ( first ) {
-			first = false;
-			carto = (Blob) rs[0];
+            first = false;
+            carto = blob;
 		} else {
-			OGRGeomPtr pol = (Blob) rs[0];
+            Blob b = rs[0];
+            OGRGeomPtr pol = blob;
 			carto = carto->Union(pol);
 		}
 		rs.next();
@@ -527,7 +529,8 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 	read_planned_cam(cnn, cam_plan);
 
 	while ( !rs.eof() ) {
-		OGRGeomPtr pol = (Blob) rs["geom"];
+        Blob blob = rs["geom"];
+        OGRGeomPtr pol = blob;
 
 		OGRGeometry* og = (OGRGeometry*) pol;
 		OGRLineString* ls = (OGRLineString*)og;
@@ -584,19 +587,18 @@ bool photo_exec::_read_dem()
 	}
 	return false;
 }
-MBR GetMbr(const OGRGeometry* fv, const OGRPoint& po, double ka)
+void GetMbr(const OGRGeometry* fv, const OGRPoint& po, double ka, MBR& mbr)
 {
-	MBR mbr;
-	OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
+    const OGRPolygon* polygon = static_cast<const OGRPolygon*>(fv);
+    const OGRLinearRing* linearRing = polygon->getExteriorRing();
 
-	for (int i = 0; i < or->getNumPoints(); i++) {
-		double x = or->getX(i) - po.getX();
-		double y = or->getY(i) - po.getY();
+    for (int i = 0; i < linearRing->getNumPoints(); i++) {
+        double x = linearRing->getX(i) - po.getX();
+        double y = linearRing->getY(i) - po.getY();
 		double x1 = x * cos(ka) + y * sin(ka);
 		double y1 = -x * sin(ka) + y * cos(ka);
 		mbr.Update(x1, y1);
-	}
-	return mbr;
+    }
 }
 void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 {
@@ -605,15 +607,20 @@ void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 		return;
 	MBR mbr;
 
-	OGRGeometry* fv = fv0;
+    const OGRGeometry* fv = fv0;
 	if ( fv0->getGeometryType() == wkbMultiPolygon ) {
-		OGRGeometryCollection* or = (OGRGeometryCollection*) fv;
-		int n = or->getNumGeometries();
-		for (int i = 0; i < n; i++)
-			mbr.Extend(GetMbr(or->getGeometryRef(i), po, ka));
+        const OGRGeometryCollection* geom = (OGRGeometryCollection*) fv;
+        int n = geom->getNumGeometries();
+        for (int i = 0; i < n; i++) {
+            MBR b;
+            GetMbr(geom->getGeometryRef(i), po, ka, b);
+            mbr.Extend(b);
+        }
 	} else {
 		//OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
-		mbr.Extend(GetMbr(fv, po, ka));
+        MBR b;
+        GetMbr(fv, po, ka, b);
+        mbr.Extend(b);
 	}
 	//OGRLinearRing* or = ((OGRPolygon*) fv)->getExteriorRing();
 	//double xm = 1.e20, ym = 1.e20;
@@ -802,17 +809,19 @@ void photo_exec::_process_models()
 		while ( !rs1.eof() ) {
 			if ( first ) {
 				first = false;
-				id = rs1["Z_FOTO_ID"];
-				strip = rs1["Z_FOTO_CS"];
-				nomeleft = rs1["Z_FOTO_NF"];
+                id = rs1["Z_FOTO_ID"].toString();
+                strip = rs1["Z_FOTO_CS"].toString();
+                nomeleft = rs1["Z_FOTO_NF"].toString();
 
 				// Get the first photo geometry
-				pol1 = (Blob) rs1[6];
+                Blob blob = rs1[6].toBlob();
+                pol1 = blob;
 			} else {
 				std::string nomeright = rs1["Z_FOTO_NF"];
 
 				// get the next photo geometry
-				OGRGeomPtr pol2 = (Blob) rs1[6];
+                Blob blob = rs1[6];
+                OGRGeomPtr pol2 = blob;
 				// the model is the intersection of two photos
 				OGRGeomPtr mod = pol1->Intersection(pol2);
 		
@@ -910,15 +919,17 @@ void photo_exec::_process_strips()
 		int count = 1;
 		while ( !rs1.eof() ) {
 			if ( first ) {
-				id = rs1["Z_MODEL_ID"];
-				strip = rs1["Z_MODEL_CS"];
-				firstname = rs1["Z_MODEL_LEFT"];
-				first = false;
-				pol = (Blob) rs1[4];
+                id = rs1["Z_MODEL_ID"].toString();
+                strip = rs1["Z_MODEL_CS"].toString();
+                firstname = rs1["Z_MODEL_LEFT"].toString();
+                first = false;
+                Blob blob = rs1[4].toBlob();
+                pol = blob;
 			} else {
-				lastname = rs1["Z_MODEL_RIGHT"];
+                lastname = rs1["Z_MODEL_RIGHT"].toString();
 				// joins all the models
-				OGRGeomPtr pol2 = (Blob) rs1[4];
+                Blob blob = rs1[4].toBlob();
+                OGRGeomPtr pol2 = blob;
 				pol = pol->Union(pol2);
 			}
 			count++;
@@ -976,12 +987,13 @@ void photo_exec::_process_block()
 
 	OGRGeomPtr blk;
 	bool first = true;
-	while ( !rs.eof() ) { //for every strip
+    while ( !rs.eof() ) { //for every strip
 		mstrp s;
-		s.strip = rs[0];
-		s.first = rs[1];
-		s.last = rs[2];
-		s.geo = (Blob) rs[3];
+        s.strip = rs[0].toString();
+        s.first = rs[1].toString();
+        s.last = rs[2].toString();
+        Blob blob = rs[3].toBlob();
+        s.geo = blob;
 		if ( first ) {
 			blk = s.geo;
 			first = false;
@@ -990,25 +1002,25 @@ void photo_exec::_process_block()
 		}
 		vs.push_back(s);
 		rs.next();
-	}
+    }
 	OGRGeomPtr blk1 = blk;
 
 	std::string tableb = std::string(Z_BLOCK) + (_type == Prj_type ? "P" : "V");
-	cnn.remove_layer(tableb);
-	std::cout << "Layer:" << tableb << std::endl;
+    cnn.remove_layer(tableb);
+    std::cout << "Layer:" << tableb << std::endl;
 
 	std::stringstream sqla;
 	sqla << "CREATE TABLE " << tableb << 
-		"(Z_BLOCK_ID TEXT NOT NULL)";	// sigla del lavoro
-	cnn.execute_immediate(sqla.str());
+        "(Z_BLOCK_ID TEXT NOT NULL)";	// sigla del lavoro
+    cnn.execute_immediate(sqla.str());
 	// add the geometry column
 	std::stringstream sqlb;
 	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'" << get_typestring(blk) << "'," <<
-		"'XY')";
-	cnn.execute_immediate(sqlb.str());
+        "'" << get_typestring(blk) << "'," <<
+        "'XY')";
+    cnn.execute_immediate(sqlb.str());
 	std::stringstream sqlc;
 	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	Statement stm0(cnn);
@@ -1017,8 +1029,8 @@ void photo_exec::_process_block()
 	stm0[1] = SIGLA_PRJ;
 	stm0[2].fromBlob(blk);
 	stm0.execute();
-	stm0.reset();
-	cnn.commit_transaction();
+    stm0.reset();
+    cnn.commit_transaction();
 	_get_carto(blk1);
 
 	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
@@ -1117,7 +1129,7 @@ void photo_exec::_update_assi_volo()
 	// query to associate to the first and last point of each flight line the nearest point of the gps track
 	std::stringstream sql;
 	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
-		table << " a, gps b group by strip";
+        table << " a, GPS b group by strip";
 
 	Statement stm(cnn);
 	stm.prepare(sql.str());
@@ -1129,14 +1141,15 @@ void photo_exec::_update_assi_volo()
 	std::vector<feature> ft1;
 	while ( !rs.eof() ) {
 		feature f;
-		f.strip = rs["strip"];
-		f.mission = rs["MISSION"];
-		f.time = rs["TIME"];
-		f.date = rs["DATE"];
-		f.nsat = rs["NSAT"];
-		f.nbasi = rs["NBASI"];
-		f.pdop = rs["PDOP"];
-		f.pt = (Blob) rs["geo"];
+        f.strip = rs["strip"].toString();
+        f.mission = rs["MISSION"].toString();
+        f.time = rs["TIME"].toString();
+        f.date = rs["DATE"].toString();
+        f.nsat = rs["NSAT"].toInt();
+        f.nbasi = rs["NBASI"].toInt();
+        f.pdop = rs["PDOP"].toDouble();
+        Blob blob = rs["geo"].toBlob();
+        f.pt = blob;
 		ft1.push_back(f);
 		rs.next();
 	}
@@ -1148,14 +1161,15 @@ void photo_exec::_update_assi_volo()
 	std::vector<feature> ft2;
 	while ( !rs.eof() ) {
 		feature f;
-		f.strip = rs["strip"];
-		f.mission = rs["MISSION"];
-		f.time = rs["TIME"];
-		f.date = rs["DATE"];
-		f.nsat = rs["NSAT"];
-		f.nbasi = rs["NBASI"];
-		f.pdop = rs["PDOP"];
-		f.pt = (Blob) rs["geo"];
+        f.strip = rs["strip"].toString();
+        f.mission = rs["MISSION"].toString();
+        f.time = rs["TIME"].toString();
+        f.date = rs["DATE"].toString();
+        f.nsat = rs["NSAT"].toInt();
+        f.nbasi = rs["NBASI"].toInt();
+        f.pdop = rs["PDOP"].toDouble();
+        Blob blob = rs["geo"].toBlob();
+        f.pt = blob;
 		ft2.push_back(f);
 		rs.next();
 	}

@@ -18,6 +18,5 @@
         <file>icons/gps/fly_rinex.png</file>
         <file>icons/gps/station.png</file>
         <file>icons/fly/attitude.png</file>
-        <file>icons/logo.png</file>
     </qresource>
 </RCC>

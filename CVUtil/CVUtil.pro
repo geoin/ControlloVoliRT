@@ -39,5 +39,5 @@ incl.files += ../CVUtil/cvspatialite.h
 incl.files += ../CVUtil/ogrgeomptr.h
 INSTALLS += incl
 
-LIBS += -lPocoFoundation
+LIBS += -lPocoFoundation -lspatialite -lsqlite3
 

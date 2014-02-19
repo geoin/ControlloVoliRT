@@ -14,27 +14,23 @@ win32 {
         LIBS += -L"../../ControlloVoliRT_Tools/lib"
         DEFINES += DLL_EXPORTS
 }
-linux{
-    LIBS += -L"/usr/local/lib"
+unix{
+    LIBS += -L"/usr/lib"
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib"
 }
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoZipd -llaslibd
-        TARGET = $$join(TARGET,,,d)
+        LIBS += -lPocoFoundationd -lPocoZipd -llaslib
+        #TARGET = $$join(TARGET,,,d)
 }
-else {
-        LIBS += -lPocoFoundation -lPocoZip -llaslib
+CONFIG(release, debug|release) {
+    LIBS += -lPocoFoundation -lPocoZip -llaslib
 }
 
 
 INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-
-macx {
-        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
-}
 
 DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS
 
@@ -51,8 +47,10 @@ HEADERS +=\
     triangle.h
 
 
-DESTDIR = ../lib
+#DESTDIR = ../lib
 
 incl.path = ../include/dem_interpolate
 incl.files = ../dem_interpolate/geom.h ../dem_interpolate/dsm.h
 INSTALLS += incl
+
+DESTDIR = ../lib

@@ -18,10 +18,13 @@ CONFIG(debug, debug|release) {
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
         QMAKE_CFLAGS -= -Zc:wchar_t-
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
+        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
 }
 macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+}
+unix {
+    INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
 }
 
 DEFINES += DLL_EXPORTS RTKLIB_LIBRARY

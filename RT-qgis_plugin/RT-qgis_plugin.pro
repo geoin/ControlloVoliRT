@@ -23,6 +23,8 @@ unix {
 INCLUDEPATH +=          \
     /usr/include/gdal   \
     /usr/include/qgis
+
+    QGIS_DIR = /usr/lib/qgis
 }
 
 DEFINES += GUI_EXPORT=""
@@ -31,4 +33,4 @@ DEFINES += CORE_EXPORT=""
 SOURCES = RT-qgis_plugin.cpp
 HEADERS = RT-qgis_plugin.h
 
-#DESTDIR = $$QGIS_DIR/plugins
+DESTDIR = $$QGIS_DIR/plugins

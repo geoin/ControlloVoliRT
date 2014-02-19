@@ -52,14 +52,20 @@
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
+
+#define PARAM_PREFIX QString("/") + QString(d) + QString("=")
+
 #else
 #define QGISEXTERN extern "C"
+
+#define PARAM_PREFIX(d) QString("-") + QString(d)
+
 #endif
 
 dbox::dbox(QgisInterface* mi): _mi(mi)
 {
     // get plugin folder
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
     _plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
 
     // get settings folder
@@ -130,7 +136,7 @@ void dbox::_init(QVBoxLayout* qv)
         bok->setEnabled(false);
     }
 
-    _args[0] = QString("/d=") + _prj->text();
+    _args[0] = QString(PARAM_PREFIX("d")) + _prj->text();
 }
 bool dbox::_dirlist(bool)
 {
@@ -139,7 +145,7 @@ bool dbox::_dirlist(bool)
     dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
     if ( !dirName.isEmpty() ) {
         _prj->setText(dirName);
-        _args[0] = QString("/d=") + dirName;
+        _args[0] = QString(PARAM_PREFIX("d")) + dirName;
     }
     //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
     return true;
@@ -224,7 +230,7 @@ void dbox::_report(bool b)
 
     QStringList args;
     QString exe = "cmd.exe";
-    args << "/c";
+    args << PARAM_PREFIX("c");
     QByteArray p = qgetenv( "DOCBOOKRT" );
     QFileInfo qf(QFileInfo(p).path(), "pdf_convert.bat");
 
@@ -276,14 +282,14 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
     _check_name = "check_photo";
 
     // prepare the parameters
-    _args << QString("/d="); // project dir
-    _args << "/p";  // type of check (p = project /f = flight)
+    _args << QString(PARAM_PREFIX("d")); // project dir
+    _args << PARAM_PREFIX("p");  // type of check (p = project /f = flight)
    // _args << "/s=1000";
 
     if ( type == 1 )
         _args[1] = "/f";
 
-    QString name = _check_name + ".exe";
+    QString name = _check_name;// + ".exe";
 
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
@@ -330,10 +336,10 @@ Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
     setWindowTitle("Controllo dati gps");
     _check_name = "check_gps";
 
-    _args << QString("/d="); // project folder
-    _args << "/p"; // check type /p = photogrammetry /l = lidar
+    _args << QString(PARAM_PREFIX("d")); // project folder
+    _args << PARAM_PREFIX("p"); // check type /p = photogrammetry /l = lidar
 
-    QString name = _check_name + ".exe";
+    QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
@@ -369,13 +375,13 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     setWindowTitle("Controllo triangolazione aerea");
     _check_name = "check_ta";
 
-    _args << QString("/d="); // project dir
-    _args << "/r="; // first results file
-    _args << "/c="; // second results file
-    _args << "/o="; // observation file
+    _args << PARAM_PREFIX("d"); // project dir
+    _args << PARAM_PREFIX("r"); // first results file
+    _args << PARAM_PREFIX("c"); // second results file
+    _args << "";//PARAM_PREFIX("o"); // observation file
     //_args << "/s=1000";
 
-    QString name = _check_name + ".exe";
+    QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
@@ -390,7 +396,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QString q1 = qs.value("TA_REF", "").toString();
     _f1->setText(q1);
     if ( !q1.isEmpty() )
-         _args[1] = QString("/r=") + q1;
+         _args[1] = QString(PARAM_PREFIX("r")) + q1;
 
     QPushButton* b1 = new QPushButton("...");
     b1->setFixedWidth(20);
@@ -406,7 +412,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QString q2 = qs.value("TA_CFG", "").toString();
     _f2->setText(q2);
     if ( !q2.isEmpty() )
-        _args[2] = QString("/c=") + q2;
+        _args[2] = QString(PARAM_PREFIX("c")) + q2;
 
     QPushButton* b2 = new QPushButton("...");
     b2->setFixedWidth(20);
@@ -422,7 +428,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QString q3 = qs.value("TA_OBS", "").toString();
     _f3->setText(q3);
     if ( !q3.isEmpty() )
-        _args[3] = QString("/o=") + q3;
+        _args[3] = QString(PARAM_PREFIX("o")) + q3;
 
 
     QPushButton* b3 = new QPushButton("...");
@@ -463,7 +469,7 @@ bool Check_ta::_dirlist1(bool)
     fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti di riferimento:", fileName, "*.txt");
     if ( !fileName.isEmpty() ) {
         _f1->setText(fileName);
-        _args[1] = QString("/r=") + fileName;
+        _args[1] = QString(PARAM_PREFIX("r")) + fileName;
         qs.setValue("TA_REF", fileName) ;
     }
     return true;
@@ -481,7 +487,7 @@ bool Check_ta::_dirlist2(bool)
     fileName = qf.getOpenFileName(this, "Selezionare il file con gli assetti da confrontare:", fileName);
     if ( !fileName.isEmpty() ) {
         _f2->setText(fileName);
-        _args[2] = QString("/c=") + fileName;
+        _args[2] = QString(PARAM_PREFIX("c")) + fileName;
         qs.setValue("TA_CFG", fileName) ;
     }
     return true;
@@ -499,7 +505,7 @@ bool Check_ta::_dirlist3(bool)
     fileName = qf.getOpenFileName(this, "Selezionare il file con le osservazioni:", fileName);
     if ( !fileName.isEmpty() ) {
         _f3->setText(fileName);
-        _args[3] = QString("/o=") + fileName;
+        _args[3] = QString(PARAM_PREFIX("o")) + fileName;
         qs.setValue("TA_OBS", fileName) ;
     }
     return true;
@@ -589,7 +595,7 @@ QgsRTtoolsPlugin::~QgsRTtoolsPlugin()
 }
 void QgsRTtoolsPlugin::initGui()
 {
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
     icon_path = QDir::cleanPath(QString(p.data()) + QDir::separator() + "icons");
 
     // get the main menu of QGIS
@@ -606,7 +612,7 @@ void QgsRTtoolsPlugin::initGui()
     connect(mAction[k], SIGNAL(activated()), this, SLOT(set_prj()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/volop.png";
+    icon = icon_path + "/voloP.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica Progetto volo aerofotogrammetrico");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_proj_volo()));
     qtb->addAction(mAction[k]);
@@ -626,7 +632,7 @@ void QgsRTtoolsPlugin::initGui()
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_tria()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/ortho.png";
+    icon = icon_path + "/Ortho.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica orto immagini");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_ortho()));
     qtb->addAction(mAction[k]);
@@ -641,12 +647,12 @@ void QgsRTtoolsPlugin::initGui()
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_lidar()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/Lidar.png";
+    icon = icon_path + "/lidar.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica dati grezzi LIDAR");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_raw_lidar()));
     qtb->addAction(mAction[k]);
 
-    icon = icon_path + "/Lidar1.png";
+    icon = icon_path + "/lidar1.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica elaborati LIDAR");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_prod_lidar()));
     qtb->addAction(mAction[k]);
@@ -663,12 +669,9 @@ void QgsRTtoolsPlugin::unload()
 void QgsRTtoolsPlugin::set_prj()
 {
     QString name = "CVloader"; //"CVloader_ui.exe";
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
-#ifdef WIN32
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
+
     QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
-#else
-    QString plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "lib/qgis/plugins");
-#endif
 
     QFileInfo qf(plugin_dir, name);
 
@@ -724,11 +727,11 @@ QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
 }
 QGISEXTERN QString icon()
 {
-    QByteArray p = qgetenv( "QGIS_PREFIX_PATH" );
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
     icon_path = QDir::cleanPath(QString(p.data()) + QDir::separator() + "icons");
 
 
-    QString icon = icon_path + "/regione.png";
+    QString icon = icon_path + "/Regione.png";
     return icon.toStdString().c_str(); //"C:/Google Drive/Regione Toscana Tools/icons/regione.png";
 }
 QGISEXTERN QString name()
