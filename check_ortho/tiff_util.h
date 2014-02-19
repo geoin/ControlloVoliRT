@@ -28,8 +28,8 @@
 #define TIFF_UTIL_H
 
 #include "dem_interpolate/geom.h"
-#include "tifflib/xtiffio.h"
-#include "tifflib/geotiffio.h"
+#include "geotiff/xtiffio.h"
+#include "geotiff/geotiffio.h"
 #include <string>
 #include <vector>
 
