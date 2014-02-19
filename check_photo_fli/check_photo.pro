@@ -14,6 +14,14 @@ win32 {
         LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
         DEFINES += NOMINMAX
         INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+
+        CONFIG(debug, debug|release) {
+                LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3_i -lgdal_i
+                TARGET = $$join(TARGET,,,d)
+        }
+        else {
+                LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3_i -lgdal_i
+        }
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
@@ -21,8 +29,6 @@ macx {
 }
 unix {
         INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-}
-
 CONFIG(debug, debug|release) {
         LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
         TARGET = $$join(TARGET,,,d)
@@ -30,6 +36,9 @@ CONFIG(debug, debug|release) {
 else {
         LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
 }
+}
+
+
 
 DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
 

@@ -48,7 +48,7 @@ void VDP::operator=(const VDP& vdp)
     nome = vdp.nome;
 	
 	exec = vdp.exec;								
-	_ior = vdp._ior;
+    _ior = vdp._ior;
 }
 
 void VDP::Reset()

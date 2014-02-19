@@ -33,4 +33,4 @@ DEFINES += CORE_EXPORT=""
 SOURCES = RT-qgis_plugin.cpp
 HEADERS = RT-qgis_plugin.h
 
-DESTDIR = $$QGIS_DIR/plugins
+DESTDIR = ../lib

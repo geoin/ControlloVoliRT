@@ -53,7 +53,7 @@
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
 
-#define PARAM_PREFIX QString("/") + QString(d) + QString("=")
+#define PARAM_PREFIX(d) QString("/") + QString(d) + QString("=")
 
 #else
 #define QGISEXTERN extern "C"

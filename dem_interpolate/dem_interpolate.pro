@@ -4,17 +4,16 @@
 #
 #-------------------------------------------------
 CONFIG += sharedlib
-QT       -= core gui
+QT       -= core gui qt
 TARGET = dem_interpolate
-TEMPLATE = lib
-
-QMAKE_CXXFLAGS += -fPIC
+#TEMPLATE = lib
 
 win32 {
         LIBS += -L"../../ControlloVoliRT_Tools/lib"
         DEFINES += DLL_EXPORTS
 }
 unix{
+QMAKE_CXXFLAGS += -fPIC
     LIBS += -L"/usr/lib"
 }
 macx {
@@ -30,7 +29,8 @@ CONFIG(release, debug|release) {
 }
 
 
-INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+INCLUDEPATH += ../../ControlloVoliRT_Tools/include \
+    ../include/dem_interpolate
 
 DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS
 
@@ -41,16 +41,16 @@ SOURCES += \
     ../common/parser.cpp
 
 HEADERS +=\
-    pslg.h \
-    dsm.h \
-    geom.h \
+    ../include/dem_interpolate/pslg.h \
+    ../include/dem_interpolate/dsm.h \
+    ../include/dem_interpolate/geom.h \
     triangle.h
 
 
 #DESTDIR = ../lib
 
-incl.path = ../include/dem_interpolate
-incl.files = ../dem_interpolate/geom.h ../dem_interpolate/dsm.h
-INSTALLS += incl
+#incl.path = ../include/dem_interpolate
+#incl.files = ../dem_interpolate/geom.h ../dem_interpolate/dsm.h
+#INSTALLS += incl
 
 DESTDIR = ../lib

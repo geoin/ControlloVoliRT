@@ -29,14 +29,14 @@ RETTA RETTA::X1PointPar(const DPOINT& p1)
 	RETTA rt1;
 	rt1.a = a;
 	rt1.b = b;
-	rt1.c = -rt1.a * p1.x - rt1.b * p1.y;
+    rt1.c = -rt1.a * p1.x - rt1.b * p1.y;
 	return rt1;
 }
 void RETTA::X1PointNor(const DPOINT& p1, const RETTA& rtA)
 {
 	a = rtA.b;
 	b = -rtA.a;
-	c = -a * p1.x - b * p1.y;
+    c = -a * p1.x - b * p1.y;
 }
 double RETTA::val(const DPOINT& p) 
 {
