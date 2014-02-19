@@ -32,7 +32,7 @@
 #include "CVUtil/cvspatialite.h"
 #include "CVUtil/ogrgeomptr.h"
 #include "docbook/docbook.h"
-
+#include "dem_interpolate/geom.h"
 
 class ortho_exec {
 public:
@@ -42,17 +42,18 @@ public:
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
 	void set_img_dir(const std::string& nome);
-	void set_ref_scale(const std::string& nome);
+	//void set_ref_scale(const std::string& nome);
 private:
 	bool _process_imgs(void);
 	bool _process_borders(void);
-	bool _process_img_border(const std::string& foglio, CV::Util::Geometry::OGRGeomPtr& pol);
+	//bool _process_img_border(const std::string& foglio, CV::Util::Geometry::OGRGeomPtr& pol);
+	bool _process_img_border(const std::string& foglio, std::vector<DPOINT>& pt);
 
 	bool _read_tfw(const std::string& nome);
 	bool _final_report(void);
 
 	bool _read_ref_val(void);
-	void _init_document(void);
+	//void _init_document(void);
 
 	std::string _proj_dir;
 	std::string _img_dir;
@@ -64,6 +65,7 @@ private:
 	docbook _dbook;
 	Doc_Item _article;
 	std::string _refscale;
+	std::string _note;
 };
 
 class check_ortho: public Poco::Util::Application {
@@ -81,7 +83,7 @@ protected:
 private:
 	void handleHelp(const std::string& name, const std::string& value);
 	void handlePrjDir(const std::string& name, const std::string & value);
-	void handleScale(const std::string& name, const std::string & value);
+	//void handleScale(const std::string& name, const std::string & value);
 	void handleImgDir(const std::string& name, const std::string & value);
 
 	void handleDefine(const std::string& name, const std::string& value);

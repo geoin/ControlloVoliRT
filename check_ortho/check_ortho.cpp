@@ -82,12 +82,12 @@ void check_ortho::defineOptions(OptionSet& options)
 			.argument("value")
 			.callback(OptionCallback<check_ortho>(this, &check_ortho::handleImgDir)));
 	
-	options.addOption(
-		Option("scale", "s", "Specifica la scala di lavoro")
-			.required(false)
-			.repeatable(false)
-			.argument("value")
-			.callback(OptionCallback<check_ortho>(this, &check_ortho::handleScale)));
+	//options.addOption(
+	//	Option("scale", "s", "Specifica la scala di lavoro")
+	//		.required(false)
+	//		.repeatable(false)
+	//		.argument("value")
+	//		.callback(OptionCallback<check_ortho>(this, &check_ortho::handleScale)));
 }
 void check_ortho::handleImgDir(const std::string& name, const std::string & value)
 {
@@ -97,10 +97,10 @@ void check_ortho::handlePrjDir(const std::string& name, const std::string& value
 {
 	_otx.set_proj_dir(value);
 }
-void check_ortho::handleScale(const std::string& name, const std::string& value)
-{
-	_otx.set_ref_scale(value);
-}
+//void check_ortho::handleScale(const std::string& name, const std::string& value)
+//{
+//	_otx.set_ref_scale(value);
+//}
 
 void check_ortho::handleHelp(const std::string& name, const std::string& value)
 {

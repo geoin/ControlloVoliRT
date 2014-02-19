@@ -37,11 +37,11 @@
 #include <sstream>
 #include <iostream>
 #include "ogr_geometry.h"
-
+#include "common/util.h"
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
-#define SHAPE_CHAR_SET "CP1252"
+//#define SHAPE_CHAR_SET "CP1252"
 #define REFSCALE "RefScale_2000"
 #define QUADRO_RT "Quadro_RT"
 #define QUADRO "Z_Quadro"
@@ -60,56 +60,56 @@ using Poco::File;
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 /**************************************************************/
-enum CHECK_TYPE {
-	less_ty = 0,
-	great_ty = 1,
-	abs_less_ty = 2,
-	between_ty =3
-};
-bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-{
-	bool rv = true;
-	switch ( ty ) {
-		case less_ty:
-			rv = val < tol1;
-			break;
-		case great_ty:
-			rv = val > tol1;
-			break;
-		case abs_less_ty:
-			rv = fabs(val) < tol1;
-			break;
-		case between_ty:
-			rv = val > tol1 && val < tol2;
-			break;
-	}
-	if ( !rv ) {
-		Doc_Item r = row->add_item("entry", attr);
-		r->add_instr("dbfo", "bgcolor=\"red\"");
-		r->append(val);
-	} else
-		row->add_item("entry", attr)->append(val);
-	return rv;
-}
-std::string get_key(const std::string& val)
-{
-	return std::string(REFSCALE) + "." + val;
-}
-std::string get_strip(const std::string& nome)
-{
-	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[0];
-}
-std::string get_nome(const std::string& nome)
-{
-	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[1];
-}
-typedef std::vector<unsigned char> Blob;
+//enum CHECK_TYPE {
+//	less_ty = 0,
+//	great_ty = 1,
+//	abs_less_ty = 2,
+//	between_ty =3
+//};
+//bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
+//{
+//	bool rv = true;
+//	switch ( ty ) {
+//		case less_ty:
+//			rv = val < tol1;
+//			break;
+//		case great_ty:
+//			rv = val > tol1;
+//			break;
+//		case abs_less_ty:
+//			rv = fabs(val) < tol1;
+//			break;
+//		case between_ty:
+//			rv = val > tol1 && val < tol2;
+//			break;
+//	}
+//	if ( !rv ) {
+//		Doc_Item r = row->add_item("entry", attr);
+//		r->add_instr("dbfo", "bgcolor=\"red\"");
+//		r->append(val);
+//	} else
+//		row->add_item("entry", attr)->append(val);
+//	return rv;
+//}
+//std::string get_key(const std::string& val)
+//{
+//	return std::string(REFSCALE) + "." + val;
+//}
+//std::string get_strip(const std::string& nome)
+//{
+//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+//	if ( tok.count() != 2 )
+//		return "";
+//	return tok[0];
+//}
+//std::string get_nome(const std::string& nome)
+//{
+//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+//	if ( tok.count() != 2 )
+//		return "";
+//	return tok[1];
+//}
+//typedef std::vector<unsigned char> Blob;
 /**************************************************************/
 
 /*****************************************************/
@@ -117,45 +117,32 @@ typedef std::vector<unsigned char> Blob;
 ortho_exec::~ortho_exec() 
 {
 }
-void ortho_exec::_init_document()
-{
-	Path doc_file(_proj_dir, "*");
-	doc_file.setFileName(OUT_DOC);
-	_dbook.set_name(doc_file.toString());	
-
-	_article = _dbook.add_item("article");
-	_article->add_item("title")->append("Collaudo ortho immagini");
-}
+//void ortho_exec::_init_document()
+//{
+//	Path doc_file(_proj_dir, "*");
+//	doc_file.setFileName(OUT_DOC);
+//	_dbook.set_name(doc_file.toString());	
+//
+//	_article = _dbook.add_item("article");
+//	_article->add_item("title")->append("Collaudo ortho immagini");
+//}
 
 bool ortho_exec::run()
 {
+	if ( _proj_dir.empty() )
+		throw std::runtime_error("cartella di lavoro non impostata");
+
 	try {
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
-		cnn.create(db_path.toString());
+		cnn.open(db_path.toString());
 		cnn.initialize_metdata();
 
-		int nrows;
-		// loads the reference union table
-		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Quadro/qu-ofc-cast_pescaia-scarlino-etrf89",
-		//   QUADRO_RT,
-		//   SHAPE_CHAR_SET,
-		//   SRID,
-		//   "geom",
-		//   true,
-		//   false,
-		//   false);
-		
-		// loads the region borders
-		//nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/Contorno regione/ContornoRT",
-		//   CONTORNO_RT,
-		//   SHAPE_CHAR_SET,
-		//   SRID,
-		//   "geom",
-		//   true,
-		//   false,
-		//   false);
-
+		if ( !GetProjData(cnn, _note, _refscale) )
+			throw std::runtime_error("dati progetto incompleti");
+		if ( _refscale.empty() )
+			throw std::runtime_error("Scala di lavoro non impostata");
+	
 		// Read reference values
 		_read_ref_val();
 
@@ -168,9 +155,16 @@ bool ortho_exec::run()
 		if ( !_process_borders() )
 			return false;
 
-
 		// initialize docbook xml file
-		_init_document();
+		std::string title = "Collaudo ortho immagini";
+		Path doc_file(_proj_dir, OUT_DOC);
+		init_document(_dbook, doc_file.toString(), title, _note);
+		char* dtd_ = getenv("DOCBOOKRT");
+		std::string dtd;
+		if ( dtd_ != NULL )
+			dtd = std::string("file:") + dtd_;
+		_dbook.set_dtd(dtd);
+		_article = _dbook.get_item("article");
 
 		// performs all the checks
 		_final_report();
@@ -192,17 +186,17 @@ void ortho_exec::set_img_dir(const std::string& nome)
 {
 	_img_dir = nome;
 }
-void ortho_exec::set_ref_scale(const std::string& nome)
-{
-	if ( nome  == "1000" )
-		_refscale = "RefScale_1000";
-	else if ( nome  == "2000" )
-		_refscale = "RefScale_2000";
-	else if ( nome  == "5000" )
-		_refscale = "RefScale_5000";
-	else if ( nome  == "10000" )
-		_refscale = "RefScale_10000";
-}
+//void ortho_exec::set_ref_scale(const std::string& nome)
+//{
+//	if ( nome  == "1000" )
+//		_refscale = "RefScale_1000";
+//	else if ( nome  == "2000" )
+//		_refscale = "RefScale_2000";
+//	else if ( nome  == "5000" )
+//		_refscale = "RefScale_5000";
+//	else if ( nome  == "10000" )
+//		_refscale = "RefScale_10000";
+//}
 bool ortho_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
@@ -222,45 +216,31 @@ bool ortho_exec::_read_ref_val()
 	}
 	return true;
 }
-bool ortho_exec::_process_img_border(const std::string& foglio, OGRGeomPtr& pol)
+bool ortho_exec::_process_img_border(const std::string& foglio, std::vector<DPOINT>& pt)
 {
-	std::vector<DPOINT> pt;
-
 	Poco::Path img_name(_img_dir, foglio);
 	img_name.setExtension("tif");
 	BorderLine bl;
 	//std::cout << "Elaborazione bordo di " << foglio << std::endl;
-	bl.Evaluate(img_name.toString(), pt);
 
-	OGRGeometryFactory gf;
-	pol = gf.createGeometry(wkbPolygon);
-	if ( pt.size() > 3 ) {
-		OGRSpatialReference sr;
-		sr.importFromEPSG(SRID);
-		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
-		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
-		gp->setCoordinateDimension(2);
-		gp->assignSpatialReference(&sr);
-
+	std::vector<DPOINT> pt1;
+	bl.Evaluate(img_name.toString(), pt1);
+	pt.clear();
+	if ( pt1.size() > 3 ) {
 		img_name.setExtension("tfw");
 		TFW tf(img_name.toString());
 		DPOINT p0;
-		for ( size_t i = 0; i < pt.size(); i++) {
-			pt[i] = tf.img_ter(pt[i]);
+		for ( size_t i = 0; i < pt1.size(); i++) {
+			pt1[i] = tf.img_ter(pt1[i]);
 			if ( i > 0 ) {
-				double d = pt[i].dist2D(p0);
+				double d = pt1[i].dist2D(p0);
 				if ( d > 1 )
-					gp->addPoint(pt[i].x, pt[i].y);
+					pt.push_back(pt1[i]);
 			} else 
-				gp->addPoint(pt[i].x, pt[i].y);
-			p0 = pt[i];
+				pt.push_back(pt1[i]);
+			p0 = pt1[i];
 		}
-		gp->closeRings();
-		OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) pol);
-		p->setCoordinateDimension(2);
-		p->assignSpatialReference(&sr);
-		p->addRing(gp);
-		return true;
+		return pt.size() >= 3;
 	}
 	return false;
 }
@@ -268,7 +248,6 @@ bool ortho_exec::_process_borders()
 {
 	std::string table(BORDERS);
 	std::cout << "Layer:" << table << std::endl;
-	//return true;
 
 	cnn.remove_layer(table);
 
@@ -294,16 +273,34 @@ bool ortho_exec::_process_borders()
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
 
-	for ( size_t i = 0; i < _fogli.size(); i++) {
-		
+	int nf = _fogli.size();
+	OGRSpatialReference sr;
+	sr.importFromEPSG(SRID);
+	for ( size_t i = 0; i < nf; i++) {
 		std::string foglio(_fogli[i]);
 		std::cout << "Elaborazione bordo di " << foglio << " " << 
-			i + 1 << " di " << (int) _fogli.size() << std::endl;
-		//if ( foglio != "07I28" )
-		//	continue;
+			i + 1 << " di " << nf << std::endl;
 
-		OGRGeomPtr pol;
-		if ( _process_img_border(foglio, pol) ) {
+		std::vector<DPOINT> pt;
+		OGRGeometryFactory gf;
+		if ( _process_img_border(foglio, pt) ) {
+			OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
+			OGRLinearRing* lr = (OGRLinearRing*) ((OGRGeometry*) gp_);
+			lr->setCoordinateDimension(2);
+			lr->assignSpatialReference(&sr);
+			for ( size_t i = 0; i < pt.size(); i++)
+				lr->addPoint(pt[i].x, pt[i].y);
+			lr->closeRings();
+			if ( !lr->IsValid() )
+				std::cout << "geometria non valida" << std::endl;
+
+			OGRGeomPtr pol = gf.createGeometry(wkbPolygon);
+			OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) pol);
+
+			p->setCoordinateDimension(2);
+			p->assignSpatialReference(&sr);
+			p->addRing(lr);
+
 			stm[1] = foglio;
 			stm[2].fromBlob(pol);
 
