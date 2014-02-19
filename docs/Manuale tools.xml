@@ -148,8 +148,8 @@
     li elabora per graficizzare gli aspetti oggetto della verifica. Oltre al
     report in formato testuale e tabellare, le evidenze degli elaborati sono
     visibili attraverso Qgis in modo da dare maggior risalto alle eventuali
-    non conformità che potranno quindi essere utilizzate per contestare
-    l'operato della ditta esecutrice.</para>
+    non conformità che potranno essere utilizzate per contestare l'operato
+    della ditta esecutrice.</para>
 
     <para>Per rendere più semplice ed intuitiva l'integrazione con Qgis e
     l'attivazione dei moduli è stato realizzato un opportuno plugin. Una volta
@@ -166,10 +166,9 @@
     i dati ed i risultati afferenti ad un progetto possano essere contenuti in
     un unico file strutturato.</para>
 
-    <para>Al termine di ogni elaborazione viene avviata automaticamente la
-    produzione del report di uscita in formato PDF. tale file che ha un nome
-    fisso per ogni controllo viene registrato nella cartella del
-    progetto.</para>
+    <para>Al termine di ogni elaborazione può essere richiesta la produzione
+    del report in formato PDF. Il nome di questo file è fisso per ogni
+    controllo e viene registrato nella cartella del progetto.</para>
   </chapter>
 
   <chapter>
@@ -252,8 +251,8 @@
     nome. Il menù di dettaglio consente inoltre la rimozione dei dati
     precedentemente inseriti nel progetto.</para>
 
-    <para>L'interfaccia del controllo GPS si differenzia leggermente;
-    comprende un numero variabile di missioni, ciascuna avente il proprio
+    <para>L'interfaccia del controllo GPS si differenzia leggermente perché
+    può comprende un numero variabile di missioni, ciascuna avente il proprio
     pannello di dettaglio, con la medesima struttura descritta
     precedentemente.</para>
 
@@ -300,7 +299,7 @@
 
         <itemizedlist>
           <listitem>
-            <para>fotocamera di missione,</para>
+            <para>fotocamera utilizzata nella missione,</para>
           </listitem>
 
           <listitem>
@@ -326,7 +325,7 @@
           </listitem>
 
           <listitem>
-            <para>assetti di volo.</para>
+            <para>assetti dei fotogrammi.</para>
           </listitem>
         </itemizedlist>
       </listitem>
@@ -370,14 +369,22 @@
   &lt;YP&gt;0.0&lt;/YP&gt; 
   &lt;DESCR&gt;descrizione&lt;/DESCR&gt;
 &lt;/CAMERA&gt;</programlisting>
+
+        <para>I dati, tutti espressi in millimetri, sono la lunghezza focale,
+        la dimensione orizzontale e verticale del sensore, lo spostamento del
+        punto principale rispetto al centro dell'immagine, un testo libero che
+        consenta di individuare la fotocamera ( ad esempio marca, modello e
+        numero di serie)</para>
       </listitem>
 
       <listitem>
         <para>Assi di volo, richiede un tema shape lineare che deve ricalcare
         lo schema del db topografico. Il nome del file non è vincolante. I
-        campi obbligatori sono A_VOL_QT, AVOL_CS, A_VOL_NFI, A_VOL_NFF.
-        Vengono visualizzate al momento dell'inserimento informazioni quali
-        l'ente, il RID e il DT.</para>
+        campi obbligatori sono A_VOL_QT (quota di volo), AVOL_CS (nome
+        attribuito alla strisciata), A_VOL_NFI ( numero del primo fotogramma),
+        A_VOL_NFF (numero dell'ultimo fotogramma). Vengono visualizzate al
+        momento dell'inserimento informazioni quali l'ente, il RID e il
+        DT.</para>
       </listitem>
 
       <listitem>
@@ -399,15 +406,16 @@
 
       <listitem>
         <para>Stazioni permanenti, consente l'inserimento dei .*n e .*o di
-        ciascuna stazione permantente, anche in formato zip. La selezione di
+        ciascuna stazione permanente, anche in formato zip. La selezione di
         una stazione consente di visualizzare tutti i file inseriti.</para>
       </listitem>
 
       <listitem>
-        <para>Assetti di volo, prende in ingresso un file ASCII contentete 7
-        campi relativi alle strisciate effettuate durante il volo. Deve
+        <para>Assetti di volo, prende in ingresso un file ASCII contenente 7
+        campi relativi alle strisciate acquisite durante il volo. Deve
         contenere il campo testuale "foto" più 6 campi numerici: Xc, Yc, Zc,
-        Omega, Phi, Kappa. Viene visualizzato il numero delle strisciate
+        (coordinate del centro di presa) Omega, Phi, Kappa (roll pitch e yaw
+        espressi in deg). Viene visualizzato il numero delle strisciate
         inserite, insieme al numero di fotogrammi.</para>
       </listitem>
 
@@ -453,29 +461,24 @@
 
     <itemizedlist>
       <listitem>
-        <para>Il tema (puntuale) degli assetti in cui ogni fotogramma è
-        rappresentato dalla posizione del suo centro di presa</para>
-      </listitem>
-
-      <listitem>
         <para>Il tema areale dei fotogrammi (ottenuto proiettando questi sul
-        modello numerico)</para>
+        modello numerico) Z_FOTOP</para>
       </listitem>
 
       <listitem>
-        <para>Il tema areale degli stereo modelli</para>
+        <para>Il tema areale degli stereo modelli Z_MODELP</para>
       </listitem>
 
       <listitem>
-        <para>Il tema areale delle strisciate</para>
+        <para>Il tema areale delle strisciate Z_STRIPP</para>
       </listitem>
 
       <listitem>
-        <para>Il tema areale del blocco</para>
+        <para>Il tema areale del blocco Z_BLOCKP</para>
       </listitem>
 
       <listitem>
-        <para>Il tema areale delle zone scoperte</para>
+        <para>Il tema areale delle zone scoperte Z_UNCOVERP</para>
       </listitem>
     </itemizedlist>
 
@@ -486,20 +489,43 @@
       <listitem>
         <para>La cartella del progetto</para>
       </listitem>
-
-      <listitem>
-        <para>la scala a cui fa riferimento il progetto</para>
-      </listitem>
     </itemizedlist>
 
     <para>Il modulo può essere avviato anche da linea di comando
     digitando:</para>
 
-    <para>check_photo /d path_progetto /fscala /p</para>
+    <para>check_photo /d path_progetto /p</para>
 
     <para>Se avviato dal plugin al termine dell'elaborazione vengono inseriti
     nella mappa corrente i temi prodotti, contemporaneamente viene prodotto e
     visualizzato il report in formato pdf.</para>
+
+    <para>Il report conterrà:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>L'intestazione con la data di esecuzione del collaudo</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla copertura delle aree da
+        cartografare</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla verifica del GSD</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla verifica degli stereo modelli
+        (ricoprimento trasversale e longitudinale)</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla verifica delle strisciate ( lunghezza e
+        ricoprimento trasversale)</para>
+      </listitem>
+    </itemizedlist>
   </chapter>
 
   <chapter>
@@ -526,7 +552,10 @@
 
       <listitem>
         <para>File rinex delle stazioni permanenti che vanno utilizzate per il
-        controllo differenziale. E' p</para>
+        controllo differenziale. Occorre fornire sia i file delle osservazioni
+        che quelli della navigazione. E' possibile fornire più file (quando ad
+        esempio i dati della stazione permanente vengono forniti tagliati per
+        fasce orarie).</para>
       </listitem>
 
       <listitem>
@@ -534,6 +563,10 @@
         missione</para>
       </listitem>
     </itemizedlist>
+
+    <para>Questo controllo non produce alcun report ma solo la traccia grafica
+    del volo calcolata compensando i dati del gps dell'aereo con quelli delle
+    stazioni permanenti.</para>
   </chapter>
 
   <chapter>
@@ -556,7 +589,7 @@
 
       <listitem>
         <para>Il tema con gli assi di volo che sono stati proposti ( se
-        presenti per il confronto col progetto</para>
+        presenti per il confronto col progetto)</para>
       </listitem>
 
       <listitem>
@@ -575,29 +608,29 @@
     <itemizedlist>
       <listitem>
         <para>Il tema (lineare) degli assi di volo derivante dal file degli
-        assetti</para>
+        assetti AVOLOV</para>
       </listitem>
 
       <listitem>
         <para>Il tema areale dei fotogrammi (ottenuto proiettando questi sul
-        modello numerico)</para>
+        modello numerico) Z_FOTOV</para>
       </listitem>
 
       <listitem>
-        <para>Il tema areale degli stereo modelli</para>
+        <para>Il tema areale degli stereo modelli Z_MODELV</para>
       </listitem>
 
       <listitem>
-        <para>Il tema areale delle strisciate</para>
+        <para>Il tema areale delle strisciate Z_STRIPV</para>
       </listitem>
 
       <listitem>
-        <para>Il tema areale del blocco</para>
+        <para>Il tema areale del blocco Z_BLOCKV</para>
       </listitem>
 
       <listitem>
         <para>Il tema areale delle zone scoperte ( presente solo se tali aree
-        esistono</para>
+        esistono) Z_UNCOVERV</para>
       </listitem>
     </itemizedlist>
 
@@ -608,25 +641,95 @@
       <listitem>
         <para>La cartella del progetto</para>
       </listitem>
-
-      <listitem>
-        <para>la scala a cui fa riferimento il progetto</para>
-      </listitem>
     </itemizedlist>
 
     <para>Il modulo può essere avviato anche da linea di comando
     digitando:</para>
 
-    <para>check_photo /d path_progetto /fscala /f</para>
+    <para>check_photo /d path_progetto /f</para>
 
     <para>Se avviato dal plugin al termine dell'elaborazione vengono inseriti
     nella mappa corrente i temi prodotti, contemporaneamente viene prodotto e
     visualizzato il report in formato pdf.</para>
+
+    <para>Il report conterrà</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>L'intestazione con la data di esecuzione del collaudo</para>
+      </listitem>
+
+      <listitem>
+        <para>Una tabella di confronto tra le strisciate progettate e quelle
+        volate</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla copertura delle aree da
+        cartografare</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sul gps ( per ogni strisciata vengono mostrati
+        i valori di pdop, numero di stazioni permanenti utilizzate, numero di
+        satelli visibili, angolo del sole sull'orizzonte)</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla verifica del GSD e degli angoli di
+        assetto</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla verifica degli stereo modelli
+        (ricoprimento trasversale e longitudinale)</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito del test sulla verifica delle strisciate ( lunghezza e
+        ricoprimento trasversale)</para>
+      </listitem>
+    </itemizedlist>
   </chapter>
 
   <chapter>
     <title>Il controllo della triangolazione aerea</title>
 
-    <para/>
+    <para>Questo controllo richiede solo che la cartella del progetto, gli
+    altri dati vengono acquisiti come parametri e sono</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Il file con gli assetti assunto come riferimento</para>
+      </listitem>
+
+      <listitem>
+        <para>Il file con gli assetti da confrontare</para>
+      </listitem>
+
+      <listitem>
+        <para>Il file con i dati delle osservazioni</para>
+      </listitem>
+    </itemizedlist>
+
+    <para> check_ta /d=path_progetto /r=path_assetti di riferimento
+    /c=path_assetti_da_confrontare /o=path_osservazioni</para>
+
+    <para>Vengono eseguiti due controlli distinti:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>la concordanza tra i risultati di due calcoli di
+        compensazione</para>
+      </listitem>
+
+      <listitem>
+        <para>Lo scarto sui punti noti derivante</para>
+      </listitem>
+
+      <listitem>
+        <para/>
+      </listitem>
+    </itemizedlist>
   </chapter>
 </book>
