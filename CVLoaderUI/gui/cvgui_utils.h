@@ -21,7 +21,7 @@ public:
 
 class CVProgressDialog : public QProgressDialog {
 public:
-	CVProgressDialog(QWidget* parent = NULL, Qt::WindowFlags f = 0) {
+    CVProgressDialog(QWidget* p = NULL, Qt::WindowFlags f = 0) : QProgressDialog(p, f) {
 		//TODO: add window flags
 		setWindowModality(Qt::WindowModal);
 		setCancelButton(NULL);
