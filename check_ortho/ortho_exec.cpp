@@ -60,72 +60,10 @@ using Poco::File;
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 /**************************************************************/
-//enum CHECK_TYPE {
-//	less_ty = 0,
-//	great_ty = 1,
-//	abs_less_ty = 2,
-//	between_ty =3
-//};
-//bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2 = 0)
-//{
-//	bool rv = true;
-//	switch ( ty ) {
-//		case less_ty:
-//			rv = val < tol1;
-//			break;
-//		case great_ty:
-//			rv = val > tol1;
-//			break;
-//		case abs_less_ty:
-//			rv = fabs(val) < tol1;
-//			break;
-//		case between_ty:
-//			rv = val > tol1 && val < tol2;
-//			break;
-//	}
-//	if ( !rv ) {
-//		Doc_Item r = row->add_item("entry", attr);
-//		r->add_instr("dbfo", "bgcolor=\"red\"");
-//		r->append(val);
-//	} else
-//		row->add_item("entry", attr)->append(val);
-//	return rv;
-//}
-//std::string get_key(const std::string& val)
-//{
-//	return std::string(REFSCALE) + "." + val;
-//}
-//std::string get_strip(const std::string& nome)
-//{
-//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-//	if ( tok.count() != 2 )
-//		return "";
-//	return tok[0];
-//}
-//std::string get_nome(const std::string& nome)
-//{
-//	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-//	if ( tok.count() != 2 )
-//		return "";
-//	return tok[1];
-//}
-//typedef std::vector<unsigned char> Blob;
-/**************************************************************/
-
-/*****************************************************/
 
 ortho_exec::~ortho_exec() 
 {
 }
-//void ortho_exec::_init_document()
-//{
-//	Path doc_file(_proj_dir, "*");
-//	doc_file.setFileName(OUT_DOC);
-//	_dbook.set_name(doc_file.toString());	
-//
-//	_article = _dbook.add_item("article");
-//	_article->add_item("title")->append("Collaudo ortho immagini");
-//}
 
 bool ortho_exec::run()
 {
@@ -224,7 +162,12 @@ bool ortho_exec::_process_img_border(const std::string& foglio, std::vector<DPOI
 	//std::cout << "Elaborazione bordo di " << foglio << std::endl;
 
 	std::vector<DPOINT> pt1;
-	bl.Evaluate(img_name.toString(), pt1);
+	if ( !bl.Evaluate(img_name.toString(), pt1) ) {
+		std::stringstream ss;
+		ss << "impossibile aprire " << foglio << std::endl;
+		throw std::runtime_error(ss.str());
+	}
+
 	pt.clear();
 	if ( pt1.size() > 3 ) {
 		img_name.setExtension("tfw");
@@ -291,8 +234,6 @@ bool ortho_exec::_process_borders()
 			for ( size_t i = 0; i < pt.size(); i++)
 				lr->addPoint(pt[i].x, pt[i].y);
 			lr->closeRings();
-			if ( !lr->IsValid() )
-				std::cout << "geometria non valida" << std::endl;
 
 			OGRGeomPtr pol = gf.createGeometry(wkbPolygon);
 			OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) pol);
@@ -300,6 +241,8 @@ bool ortho_exec::_process_borders()
 			p->setCoordinateDimension(2);
 			p->assignSpatialReference(&sr);
 			p->addRing(lr);
+			if ( !pol->IsValid() )
+				std::cout << "geometria non valida" << std::endl;
 
 			stm[1] = foglio;
 			stm[2].fromBlob(pol);
@@ -451,7 +394,7 @@ bool ortho_exec::_final_report()
 	stm2.prepare(sql2.str());
 	rs = stm2.recordset();
 
-	std::vector<OGRGeomPtr> vp;
+	std::vector<OGRGeomPtr> vp; // vettore geometrie blocco
 	while ( !rs.eof() ) {
         // Get the first photo geometry
         Blob blob = rs[0].toBlob();
@@ -459,11 +402,27 @@ bool ortho_exec::_final_report()
 		vp.push_back(pol);
 		rs.next();
 	}
+
 	std::stringstream sql3;
-	sql3 << "select Foglio, AsBinary(geom) from " << BORDERS;
+	sql3 << "select foglio, AsBinary(geom) from " << QUADRO_RT ;
 	Statement stm3(cnn);
 	stm3.prepare(sql3.str());
 	rs = stm3.recordset();
+
+	std::map<std::string, OGRGeomPtr> vq; // vettore geometrie quadro
+	while ( !rs.eof() ) {
+        // Get the first photo geometry
+        Blob blob = rs[1].toBlob();
+        OGRGeomPtr pol = blob;
+		vq[ rs[0] ] = pol;
+		rs.next();
+	}
+
+	std::stringstream sql4;
+	sql4 << "select Foglio, AsBinary(geom) from " << BORDERS;
+	Statement stm4(cnn);
+	stm4.prepare(sql4.str());
+	rs = stm4.recordset();
 	bool ok = true;
 	std::vector<std::string> v1, v2;
 	while ( !rs.eof() ) {
@@ -474,11 +433,11 @@ bool ortho_exec::_final_report()
 
 		for ( size_t i = 0; i < vp.size(); i++) {
 			if ( vp[i]->Intersect(pol) ) {
-				OGRPolygon* p1 = (OGRPolygon*) ((OGRGeometry*) vp[i]);
+				OGRPolygon* p1 = (OGRPolygon*) ((OGRGeometry*) vp[i]); // il blocco
 				double a1 = p1->get_Area();
-				OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) pol);
+				OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) pol); // il foglio
 				double a2 = p2->get_Area();
-				OGRGeomPtr dif = p2->Difference(p1);
+				OGRGeomPtr dif = p2->Difference(p1); // foglio - blocco
 				OGRPolygon* p3 = (OGRPolygon*) ((OGRGeometry*) dif);
 				if ( p3 != NULL ) {
 					//double a3 = p3->get_Area();
@@ -491,7 +450,9 @@ bool ortho_exec::_final_report()
 				} else {
 					int a = 1;
 				}
-				OGRGeomPtr inter = p1->Intersection(p2);
+
+				// occorre prendere tavola intersezione limiti e confrontarlo col bordo
+				OGRGeomPtr inter = p1->Intersection(p2); // blocco intersezione foglio
 				OGRPolygon* p4 = (OGRPolygon*) ((OGRGeometry*) inter);
 				if ( p4 != NULL ) {
 					double a4 = p4->get_Area();

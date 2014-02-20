@@ -404,9 +404,10 @@ bool BorderLine::_getBorderLine(std::vector<DPOINT>& pt)
 	}
 	return !pt.empty();
 }
-void BorderLine::Evaluate(const std::string& nome, std::vector<DPOINT>& pt)
+bool BorderLine::Evaluate(const std::string& nome, std::vector<DPOINT>& pt)
 {
-	_img.open(nome);
+	if ( !_img.open(nome) )
+		return false;
 
 	bool ret = false;
 	if ( (_background = _getBackGround()) >= 0 ) {
@@ -419,4 +420,5 @@ void BorderLine::Evaluate(const std::string& nome, std::vector<DPOINT>& pt)
 			pt.push_back(DPOINT(x, y));
 		}
 	}
+	return true;
 }

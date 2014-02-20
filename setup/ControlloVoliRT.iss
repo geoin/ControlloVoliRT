@@ -11,7 +11,7 @@
 #define MyBinDir "C:\ControlloVoliRT\bin"
 #define MyLibDir "C:\ControlloVoliRT\lib"
 #define MyIconDir "C:\ControlloVoliRT\icon"
-#define MyOutDir "C:\OSGeo4W\apps\qgis"
+#define MyOutDir "C:\OSGeo4W\apps\qgis\"
 #define Qgis GetEnv('QGIS_PREFIX_PATH')
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -24,7 +24,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={#MyOutDir}\plugins
+DefaultDirName={#MyOutDir}
 DefaultGroupName=ControlloVoliRT\{#MyAppName}
 OutputDir={#MyBaseDir}\setup
 OutputBaseFilename={#MyAppExeName}_setup
@@ -52,33 +52,35 @@ Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "Spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Registry]
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "CV_QGIS_PREFIX_PATH"; ValueData: {app}
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "CV_QGIS_PREFIX_PATH"; ValueData: {app}\
 
 [Files]
-Source: "{#MyLibDir}\PocoFoundation.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\PocoXML.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\PocoUtil.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\PocoZip.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\ziplib.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\rtklib.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\dem_interpolate.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\photo_util.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyBinDir}\CVLoader.exe"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyLibDir}\RT-qgis_plugin.dll"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyBinDir}\check_photo.exe"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyBinDir}\check_gps.exe"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyBinDir}\check_ta.exe"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyBinDir}\check_ortho.exe"; DestDir: "{app}/setup"; Flags: ignoreversion
-Source: "{#MyIconDir}\gps.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\lidar.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\Ortho.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\lidar1.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\Regione.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\volo.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\voloL.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\voloP.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\voloPL.png"; DestDir: "{app}/icon"; Flags: ignoreversion
-Source: "{#MyIconDir}\tria.png"; DestDir: "{app}/icon"; Flags: ignoreversion
+Source: "{#MyLibDir}\PocoFoundation.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\PocoXML.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\PocoUtil.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\PocoZip.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\gdal.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\ziplib.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\rtklib.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\dem_interpolate.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\photo_util.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\CVLoader.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyLibDir}\RT-qgis_plugin.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\check_photo.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\check_gps.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\check_ta.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\check_ortho.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyIconDir}\gps.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\lidar.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\Ortho.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\lidar1.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\Regione.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\volo.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\voloL.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\voloP.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\voloPL.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\tria.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\projects.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyBaseDir}\setup\DocBookRT_setup.exe"; DestDir: "{tmp}"; Flags: ignoreversion
 Source: "{#vcfiles}\msvcp90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit
 Source: "{#vcfiles}\msvcr90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit

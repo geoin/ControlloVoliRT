@@ -238,12 +238,13 @@ void dbox::_report(bool b)
     args << FLAG_PREFIX("c");
     QByteArray p = qgetenv( "DOCBOOKRT" );
     QFileInfo qf(QFileInfo(p).path(), "pdf_convert.bat");
+    QFileInfo qf1(_prj->text(), _check_name);
 
     //QFileInfo qf(_plugin_dir, "run.bat");
     //QFileInfo qf("pdf_convert.bat");
     args << qf.filePath();
-    args << _prj->text();
-    args << _check_name;
+    args << qf1.filePath(); //_prj->text();
+    //args << _check_name;
 
     _esegui(exe, args);
 }

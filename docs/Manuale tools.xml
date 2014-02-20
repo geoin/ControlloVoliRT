@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<book>
+<book lang="it">
   <bookinfo>
     <title/>
 
@@ -712,7 +712,7 @@
       </listitem>
     </itemizedlist>
 
-    <para> check_ta /d=path_progetto /r=path_assetti di riferimento
+    <para>check_ta /d=path_progetto /r=path_assetti di riferimento
     /c=path_assetti_da_confrontare /o=path_osservazioni</para>
 
     <para>Vengono eseguiti due controlli distinti:</para>
@@ -724,12 +724,89 @@
       </listitem>
 
       <listitem>
-        <para>Lo scarto sui punti noti derivante</para>
+        <para>Lo scarto sui punti noti derivante dalla loro rilettura basata
+        sull'assetto assunto come riferimento</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Il primo parametro è obbligatorio</para>
+
+    <para>Se viene omesso il secondo verrà eseguito solo il controllo sui
+    punti noti</para>
+
+    <para>Se viene omesso il terzo parametro verrà verrà effettuato solo il
+    confronto tra due assetti.</para>
+
+    <para>Per quanto riguarda il formato dei file degli assetti è lo stesso
+    descritto a riguardo del controllo della ripresa aerofotogrammetrica
+    (record con 7 campi: nome immagine x y z omega fi kappa)</para>
+
+    <para>I file delle osservazioni devono essere nel formato prodotto da
+    PatB. Per avviarlo da riga di comando occorre digitareSi tratta di due
+    file</para>
+
+    <para>xxx_cont.pat (file dei punti di appoggio) è composto da due sezioni
+    separate da una riga con "-99". La prima contiene i punti planimetrici (
+    nome_punto x y), la seconda contiene i punti altimetrici (nome_punto z). I
+    punti completoi compaiono con lo stesso nome in entrambe le
+    sezioni.</para>
+
+    <para>xxx_image.pat (file delle osservazioni sulle immagini) E' composte
+    da tante sezioni quante sono le immagini coinvolte. La fine di una sezione
+    è indicata da una riga contenente "-99". Ogni sezione inizia con una riga
+    d'intestazione contenente il nome dell'immagine e la corrispondente
+    focale, seguite da una riga per ogni osservazione (nome del punto x y). x
+    ed y sono le coordinate riferite sull'immagine, riferite al punto
+    principale ed espresse nella stessa unità di misura della focale.</para>
+
+    <para>Il report conterrà</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>L'intestazione con la data di esecuzione del collaudo</para>
       </listitem>
 
       <listitem>
-        <para/>
+        <para>L'esito della verifica sui punti di appoggio ( per ogni punto
+        viene indicato il nome del punto, il nome dei fotogrammi in cui è
+        stato osservato e gli scarti tra il valore nominale (letto dal file
+        xxx_cont.pat) e quello ricalcolato sulla base degli assetti di
+        riferimento e delle collimazioni rilette da xxx_image.pat.)</para>
+      </listitem>
+
+      <listitem>
+        <para>L'esito della verifica del confronto tra i due assetti Per ogni
+        immagine vengono mostrati le differenze di X y Z omega fi e kappa
+        evidenziando con sfondo rosso i valori anomali.</para>
       </listitem>
     </itemizedlist>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo delle orto immagini</title>
+
+    <para>Richiede che siano stati caricati nel progetto:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Un tema shape con il quadro d'unione dei fogli richiesti (è
+        necessario un campo testuale di nome "foglio")</para>
+      </listitem>
+
+      <listitem>
+        <para>un tema areale con i limiti amministrativi regionali</para>
+      </listitem>
+
+      <listitem>
+        <para>Il tema areale del blocco (Z_BLOCK) generato in fase di verifica
+        della ripresa aerofotogrammetrica</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Per avviarlo da riga di comando digitare:</para>
+
+    <para>check_ortho /d=path_progetto /i=cartella_ortoimmagini</para>
+
+    <para/>
   </chapter>
 </book>
