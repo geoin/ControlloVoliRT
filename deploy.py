@@ -20,7 +20,7 @@ def buildList(l):
         ret = subprocess.call([make])
         os.chdir("..")
 
-        stat[mod] = ret
+        stat[mod] = "OK" if ret == 0 else "KO"
     return
 
 def addToZip(path, zip):
@@ -45,7 +45,9 @@ print stat
 with zipfile.ZipFile('deploy.zip', 'w') as testzip:
     addToZip("lib", testzip)
     addToZip("bin", testzip)
+    addToZip("icons", testzip)
     addToZip("script", testzip)
+    addToZip("docbookrt", testzip)
 
 with zipfile.ZipFile('deploy.zip', 'r') as testzip:
     testzip.extractall("deploy")

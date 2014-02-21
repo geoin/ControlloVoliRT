@@ -44,7 +44,7 @@ subprocess.call(["chmod", "+x", env + "/rt_env.sh"])
 dest = "/etc/profile.d"
 copyAllFiles(env, dest)
 
-plugins = installDir + "/plugins"
+plugins = installDir + "/bin"
 dest = "/usr/lib/qgis/plugins"
 copyAllFiles(plugins, dest)
 reportDir = "/opt/docbookrt"
