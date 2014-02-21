@@ -20,6 +20,7 @@ win32 {
     DEFINES += WIN32
 }
 unix {
+    LIBS += -L../lib
     INCLUDEPATH +=          \
     /usr/include/gdal   \
     /usr/include/qgis

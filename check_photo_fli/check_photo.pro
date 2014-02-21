@@ -28,6 +28,7 @@ macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
 }
 unix {
+        LIBS += -L"../lib"
         INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
         CONFIG(debug, debug|release) {
                 LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal

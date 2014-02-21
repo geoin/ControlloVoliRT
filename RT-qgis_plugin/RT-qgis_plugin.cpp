@@ -305,7 +305,7 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
    // _args << "/s=1000";
 
     if ( type == 1 )
-        _args[1] = "/f";
+        _args[1] = FLAG_PREFIX("f");
 
     QString name = _check_name;// + ".exe";
 
