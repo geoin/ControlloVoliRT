@@ -6,7 +6,7 @@
 CONFIG += sharedlib
 QT       -= core gui qt
 TARGET = dem_interpolate
-#TEMPLATE = lib
+TEMPLATE = lib
 
 win32 {
         LIBS += -L"../../ControlloVoliRT_Tools/lib"
@@ -30,7 +30,8 @@ CONFIG(release, debug|release) {
 
 
 INCLUDEPATH += ../../ControlloVoliRT_Tools/include \
-    ../include/dem_interpolate
+    ../include/dem_interpolate\
+    ../include
 
 DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS
 
