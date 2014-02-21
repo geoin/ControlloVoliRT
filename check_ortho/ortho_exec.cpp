@@ -249,7 +249,7 @@ bool ortho_exec::_process_borders()
 	std::string table(BORDERS);
 	std::cout << "Layer:" << table << std::endl;
 
-	cnn.remove_layer(table);
+    cnn.remove_layer(table);
 
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
@@ -339,7 +339,7 @@ bool ortho_exec::_process_imgs()
 	}
 
 	std::string table("Z_QUADRO");
-	cnn.remove_layer(table);
+    cnn.remove_layer(table);
 
 	// create the union table
 	std::stringstream sql;

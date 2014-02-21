@@ -29,16 +29,14 @@ macx {
 }
 unix {
         INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
-        TARGET = $$join(TARGET,,,d)
+        CONFIG(debug, debug|release) {
+                LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
+                TARGET = $$join(TARGET,,,d)
+        }
+        else {
+                LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
+        }
 }
-else {
-        LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
-}
-}
-
-
 
 DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
 

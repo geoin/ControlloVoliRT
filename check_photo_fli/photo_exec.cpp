@@ -77,8 +77,8 @@ bool photo_exec::run()
 	try {
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
-		cnn.create(db_path.toString());
-		cnn.initialize_metdata();
+        cnn.open(db_path.toString());
+        //cnn.initialize_metdata();
 
 		if ( !GetProjData(cnn, _note, _refscale) )
 			throw std::runtime_error("dati progetto incompleti");
@@ -654,7 +654,7 @@ void photo_exec::_process_photos()
 	std::cout << "Elaborazione dei fotogrammi" << std::endl;
 
 	std::string table = std::string(Z_FOTO) + (_type == Prj_type ? "P" : "V");
-	cnn.remove_layer(table);
+    cnn.remove_layer(table);
 
 	std::cout << "Layer:" << table << std::endl;
 

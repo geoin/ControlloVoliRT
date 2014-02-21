@@ -84,8 +84,8 @@ bool gps_exec::run()
 	try {
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
-		cnn.create(db_path.toString());
-		cnn.initialize_metdata();
+        cnn.open(db_path.toString());
+        //cnn.initialize_metdata();
 
 		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
 		//   ASSI_VOLO,
