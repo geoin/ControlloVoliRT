@@ -39,10 +39,10 @@ libs = installDir + "/lib"
 dest = "/usr/local/lib"
 copyAllFiles(libs, dest)
 
-env = installDir + "/env"
-subprocess.call(["chmod", "+x", env + "/rt_env.sh"])
+env = installDir + "/script/rt_env.sh"
+subprocess.call(["chmod", "+x", env])
 dest = "/etc/profile.d"
-copyAllFiles(env, dest)
+shutil.copy(env, dest)
 
 plugins = installDir + "/bin"
 dest = "/usr/lib/qgis/plugins"
@@ -56,6 +56,7 @@ except:
 
 docb = installDir + "/docbookrt"
 copyAllFiles(docb, reportDir)
+shutil.copy(installDir + "/script/report.py", dest)
 
 iconsDir = "/usr/lib/qgis/icons"
 try:
