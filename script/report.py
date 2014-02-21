@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-# -*- coding: iso-8859-15 -*-
+# -*- coding: UTF-8 -*-
 
 import os, sys, subprocess
 
