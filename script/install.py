@@ -3,6 +3,8 @@
 
 import sys, os, subprocess, shutil
 
+os.chdir(os.path.dirname(sys.path[0]))
+
 def copyAllFiles(src, dest):
         "Copy all files from src to dest"
         files = os.listdir(src)

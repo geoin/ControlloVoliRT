@@ -239,20 +239,11 @@ void dbox::_report(bool b)
     QString launcher = "pdf_convert.bat";
     args << FLAG_PREFIX("c");
 
-	/*QFileInfo qf1(_prj->text(), _check_name);
-
-    //QFileInfo qf(_plugin_dir, "run.bat");
-    //QFileInfo qf("pdf_convert.bat");
-    args << qf.filePath();
-    args << qf1.filePath(); //_prj->text();
-    //args << _check_name;*/
-
 #else
     QString exe = "python";
     QString launcher = "report.py";
 #endif
     QByteArray p = qgetenv( "DOCBOOKRT" );
-    QFileInfo qf(QFileInfo(p).path(), "pdf_convert.bat");
     QFileInfo qf1(_prj->text(), _check_name);
     QString path(p);
     QDir dir(path);

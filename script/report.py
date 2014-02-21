@@ -16,7 +16,9 @@ xslPath = "/usr/share/xml/docbook/stylesheet/docbook-xsl-ns/fo/docbook.xsl"
 
 os.chdir(projPath)
 
-f = open("tmp.fo", "w")
+tmp = "tmp.fo"
+f = open(tmp, "w")
 subprocess.call(["xsltproc", xslPath, outFile + ".xml"], stdout=f)
 f.close()
-subprocess.call(["fop", "tmp.fo", outFile + ".pdf"])
+subprocess.call(["fop", tmp, outFile + ".pdf"])
+os.remove(tmp)
