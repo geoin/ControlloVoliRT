@@ -5,8 +5,8 @@ import os, sys, subprocess
 
 args = sys.argv
 if len(args) < 3:
-	print "Error, missing parameters."
-	sys.exit()
+    print "Error, missing parameters."
+    sys.exit()
 
 print args
 
