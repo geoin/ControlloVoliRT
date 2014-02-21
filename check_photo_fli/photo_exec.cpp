@@ -131,6 +131,7 @@ bool photo_exec::run()
 		_dbook.set_dtd(dtd);
 		_article = _dbook.get_item("article");
 
+		_get_carto(_carto);
 		// produce photos feature
 		_process_photos();
 		_process_models();
@@ -158,17 +159,7 @@ void photo_exec::set_checkType(Check_Type t)
 {
 	_type = t;
 }
-//void photo_exec::set_ref_scale(const std::string& nome)
-//{
-//	if ( nome  == "1000" )
-//		_refscale = "RefScale_1000";
-//	else if ( nome  == "2000" )
-//		_refscale = "RefScale_2000";
-//	else if ( nome  == "5000" )
-//		_refscale = "RefScale_5000";
-//	else if ( nome  == "10000" )
-//		_refscale = "RefScale_10000";
-//}
+
 bool photo_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
@@ -201,27 +192,8 @@ bool photo_exec::_read_ref_val()
 	}
 	return true;
 }
-//OGRGeomPtr photo_exec::_get_dif(const OGRGeometry* cart, std::vector<OGRGeomPtr>& blocks)
-//{
-//	// detetect the difference between the carto polygon
-//	// and the liest of blocks
-//	OGRGeomPtr dif;
-//	for ( size_t i = 0; i < blocks.size(); i++) {
-//		if ( cart->Intersect(blocks[i]) ) {
-//			dif =  cart->Difference(blocks[i]);
-//			OGRPolygon* p1 = (OGRPolygon*) cart;
-//			OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
-//			//double a1 = p1->get_Area();
-//			//double a2 = p2->get_Area();
-//			if ( fabs(p1->get_Area() - p2->get_Area()) > 5 ) {
-//				break;
-//			}
-//		} else 
-//			dif = cart->Intersection(cart);
-//	}
-//	return dif;
-//}
-bool photo_exec::_get_carto(OGRGeomPtr& blk)
+
+bool photo_exec::_get_carto(OGRGeomPtr& carto)
 {
 	std::string table(CARTO);
 
@@ -232,7 +204,7 @@ bool photo_exec::_get_carto(OGRGeomPtr& blk)
 	Recordset rs = stm.recordset();
 	
 	bool first = true;
-	OGRGeomPtr carto;
+	//OGRGeomPtr carto;
 
 	long count = 0;
 	while ( !rs.eof() ) { //for every strip
@@ -250,8 +222,8 @@ bool photo_exec::_get_carto(OGRGeomPtr& blk)
 	}
 	if ( !carto->IsValid() )
 		throw std::runtime_error("Geometria delle aree da cartografare no valide");
-	OGRGeomPtr dif = carto->Difference(blk);
-	return _uncovered(dif);
+
+	return true;
 }
 bool photo_exec::_uncovered(OGRGeomPtr& vs)
 {
@@ -649,6 +621,54 @@ void photo_exec::_get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 	}
 }
 
+void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
+{
+	std::string table = std::string("_ZGSD") + (_type == Prj_type ? "P" : "V");
+	cnn.remove_layer(table);
+
+	std::cout << "Layer:" << table << std::endl;
+
+	// create the photo table
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(Z_FOTO_ID TEXT NOT NULL, " <<		// photo id
+		"Z_GSD DOUBLE NOT NULL)";		//  gsd value
+	cnn.execute_immediate(sql.str());
+	// add the geom column
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'geom'," <<
+		SRID << "," <<
+		"'POINT'," <<
+		"'XY')";
+	cnn.execute_immediate(sql1.str());
+
+	// create the insertion query
+	std::stringstream sql2;
+	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_GSD, geom) \
+		VALUES (?1, ?2, ST_GeomFromWKB(:geom, " << SRID << ") )";
+
+	Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());
+	OGRSpatialReference sr;
+	sr.importFromEPSG(SRIDGEO);
+	for (size_t i = 0; i < vgsd.size(); i++) {
+		OGRGeometryFactory gf;
+		OGRGeomPtr gp_ = gf.createGeometry(wkbPoint);
+		gp_->setCoordinateDimension(2);
+		gp_->assignSpatialReference(&sr);
+		OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
+		*gp = OGRPoint(vgsd[i].pt.x, vgsd[i].pt.y);
+		stm[1] = vgsd[i].foto;
+		stm[2] = vgsd[i].dpix;
+		stm[3].fromBlob(gp_); 
+		stm.execute();
+        stm.reset();
+	}
+	cnn.commit_transaction();
+}
+
 void photo_exec::_process_photos()
 {
 	std::cout << "Elaborazione dei fotogrammi" << std::endl;
@@ -688,6 +708,8 @@ void photo_exec::_process_photos()
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
+
+	std::vector<GSD> vgsd;
 		
 	OGRSpatialReference sr;
 	sr.importFromEPSG(SRID);
@@ -712,6 +734,9 @@ void photo_exec::_process_photos()
 					throw std::runtime_error(ss.str());
 				}
 			}
+			double dp = vdp.pix() * (vdp.Pc.z - pt.z) / vdp.foc();
+			vgsd.push_back(GSD(pt, it->first, dp));
+
 			dt += vdp.Pc.z - pt.z;
 			dpol.push_back(pt);
 		}
@@ -747,6 +772,7 @@ void photo_exec::_process_photos()
 		stm.reset();
 	}
 	cnn.commit_transaction();
+	_process_gsd(vgsd);
 }
 
 
@@ -824,6 +850,10 @@ void photo_exec::_process_models()
                 OGRGeomPtr pol2 = blob;
 				// the model is the intersection of two photos
 				OGRGeomPtr mod = pol1->Intersection(pol2);
+				if ( !mod->Intersect(_carto) ) {
+					std::string mod = nomeleft + " - " + nomeright;
+					_useless_models.push_back(mod);
+				}
 		
 				double dh = _vdps[nomeleft].ka - _vdps[nomeright].ka;
 				if ( dh > M_PI ) {
@@ -1031,7 +1061,10 @@ void photo_exec::_process_block()
 	stm0.execute();
     stm0.reset();
     cnn.commit_transaction();
-	_get_carto(blk1);
+
+	OGRGeomPtr dif = _carto->Difference(blk1);
+	_uncovered(dif);
+	//_get_carto(blk1);
 
 	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);

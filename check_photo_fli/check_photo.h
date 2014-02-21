@@ -39,6 +39,15 @@ class OGRGeometry;
 class CV::Util::Spatialite::QueryField;
 class CV::Util::Spatialite::BindField;
 
+class GSD {
+public:
+	GSD() {}
+	GSD(const DPOINT& p, const std::string& f, double dp): pt(p), foto(f), dpix(dp) { }
+	DPOINT pt;
+	std::string foto;
+	double dpix;
+};
+
 class photo_exec {
 public:
 	enum Check_Type {
@@ -64,6 +73,7 @@ private:
 	void _process_models(void);
 	void _process_strips(void);
 	void _process_photos(void);
+	void _process_gsd(std::vector<GSD>& vgsd);
 	void _process_block(void);
 	void _update_assi_volo(void);
 
@@ -89,6 +99,7 @@ private:
 	std::string _vdp_name;
 	std::string _vdp_name_proj;
 	std::string _dem_name;
+	CV::Util::Geometry::OGRGeomPtr _carto;
 
 	Check_Type _type;
 
@@ -106,6 +117,7 @@ private:
 	//std::map<std::string, Camera> _cams;
 	std::map<std::string, Camera> _map_strip_cam;
 	//Camera	_cam_plan; // camera for planned flight
+	std::vector<std::string> _useless_models;
 	DSM_Factory* _df;
 
 	double _GSD, _MAX_GSD;

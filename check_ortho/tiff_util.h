@@ -132,7 +132,7 @@ public:
 class BorderLine {
 public:
 	BorderLine(void): _background(0) {}
-	void Evaluate(const std::string& nome, std::vector<DPOINT>& pt);
+	bool Evaluate(const std::string& nome, std::vector<DPOINT>& pt);
 private:
 	int _getBackGround(void);
 	bool _nextPtInChain(std::vector<Border>& chain, Border* prev, unsigned int *index);

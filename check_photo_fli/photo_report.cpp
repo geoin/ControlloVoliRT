@@ -337,46 +337,57 @@ bool photo_exec::_model_report()
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
+
+	bool ret = false;
 	if ( rs.fields_count() == 0 ) {
 		sec->add_item("para")->append("In tutti i modelli i parametri verificati rientrano nei range previsti");
-		return true;
-	}
-	sec->add_item("para")->append("Nei seguenti modelli i parametri verificati non rientrano nei range previsti");
-	
-	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("modelli con parametri fuori range");
-
-	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "cols", "", "5");
-	tab = tab->add_item("tgroup", attr);
-
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-
-	attr.clear();
-	attr.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attr)->append("Foto Sx");
-	row->add_item("entry", attr)->append("Foto Dx");
-	row->add_item("entry", attr)->append("Ric. long.");
-	row->add_item("entry", attr)->append("Ric. trasv.");
-	row->add_item("entry", attr)->append("Dif. head.");
-
-	Doc_Item tbody = tab->add_item("tbody");
-
-	Poco::XML::AttributesImpl attrr;
-	attrr.addAttribute("", "", "align", "", "right");
-	while ( !rs.eof() ) {
-		row = tbody->add_item("row");
-
-		row->add_item("entry", attr)->append(rs[0].toString());
-		row->add_item("entry", attr)->append(rs[1].toString());
+		ret = true;
+	} else {
+		sec->add_item("para")->append("Nei seguenti modelli i parametri verificati non rientrano nei range previsti");
 		
-		print_item(row, attrr, rs[2], between_ty, v1, v2);
-		print_item(row, attrr, rs[3], great_ty, _MODEL_OVERLAP_T);
-		print_item(row, attrr, rs[4], abs_less_ty, _MAX_HEADING_DIFF);
-		rs.next();
+		Doc_Item tab = sec->add_item("table");
+		tab->add_item("title")->append("modelli con parametri fuori range");
+
+		Poco::XML::AttributesImpl attr;
+		attr.addAttribute("", "", "cols", "", "5");
+		tab = tab->add_item("tgroup", attr);
+
+		Doc_Item thead = tab->add_item("thead");
+		Doc_Item row = thead->add_item("row");
+
+		attr.clear();
+		attr.addAttribute("", "", "align", "", "center");
+		row->add_item("entry", attr)->append("Foto Sx");
+		row->add_item("entry", attr)->append("Foto Dx");
+		row->add_item("entry", attr)->append("Ric. long.");
+		row->add_item("entry", attr)->append("Ric. trasv.");
+		row->add_item("entry", attr)->append("Dif. head.");
+
+		Doc_Item tbody = tab->add_item("tbody");
+
+		Poco::XML::AttributesImpl attrr;
+		attrr.addAttribute("", "", "align", "", "right");
+		while ( !rs.eof() ) {
+			row = tbody->add_item("row");
+
+			row->add_item("entry", attr)->append(rs[0].toString());
+			row->add_item("entry", attr)->append(rs[1].toString());
+			
+			print_item(row, attrr, rs[2], between_ty, v1, v2);
+			print_item(row, attrr, rs[3], great_ty, _MODEL_OVERLAP_T);
+			print_item(row, attrr, rs[4], abs_less_ty, _MAX_HEADING_DIFF);
+			rs.next();
+		}
 	}
-	return false;
+	if ( !_useless_models.empty() ) {
+		sec->add_item("para")->append("I seguenti modelli non ricoprono le aree da cartografare:");
+		Doc_Item itl = sec->add_item("itemizedlist");
+		std::stringstream ss;
+		for ( size_t i = 0; i < _useless_models.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(_useless_models[i]);
+		}
+	}
+	return ret;
 }
 class strip_desc {
 public:
