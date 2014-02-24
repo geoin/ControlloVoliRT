@@ -3,7 +3,10 @@
 
 import sys, os, subprocess, shutil
 
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
+scriptPath = os.path.dirname(os.path.realpath(sys.argv[0]));
+print scriptPath
+os.chdir(scriptPath)
+os.chdir("..")
 
 def copyAllFiles(src, dest):
     "Copy all files from src to dest"
@@ -11,9 +14,14 @@ def copyAllFiles(src, dest):
     count = 0;
     for name in files:
         fullName = os.path.join(src, name)
-        if (os.path.isfile(fullName)):
+	if os.path.islink(fullName):
+            linkto = os.readlink(fullName)
+            destName = os.path.join(dest, name)
+	    if not os.path.lexists(destName):
+                os.symlink(linkto, destName)
+        else:
             shutil.copy(fullName, dest)
-            count += 1
+        count += 1
     return count
 
 ret = raw_input("\nAggiungere il repository ubuntu-gis e installare qgis?\n[sì (y/Y)] [no (n/N)]\n")
@@ -35,18 +43,23 @@ if ret != 0:
 installDir = os.getcwd()
 print "\nCartella di lavoro: " + installDir
 
+#Put library in local/lib
 libs = installDir + "/lib"
 dest = "/usr/local/lib"
 copyAllFiles(libs, dest)
 
-env = installDir + "/env"
-subprocess.call(["chmod", "+x", env + "/rt_env.sh"])
+#Setting env
+env = installDir + "/script/rt_env.sh"
+subprocess.call(["chmod", "+x", env])
 dest = "/etc/profile.d"
-copyAllFiles(env, dest)
+shutil.copy(env, dest)
 
-plugins = installDir + "/plugins"
+#Copy plugin binaries
+plugins = installDir + "/bin"
 dest = "/usr/lib/qgis/plugins"
 copyAllFiles(plugins, dest)
+
+#Docbook stuff
 reportDir = "/opt/docbookrt"
 try:
     os.mkdir(reportDir)
@@ -56,7 +69,9 @@ except:
 
 docb = installDir + "/docbookrt"
 copyAllFiles(docb, reportDir)
+shutil.copy(installDir + "/script/report.py", reportDir)
 
+#icons
 iconsDir = "/usr/lib/qgis/icons"
 try:
     os.mkdir(iconsDir)
@@ -66,8 +81,4 @@ except:
 
 ico = installDir + "/icons"
 copyAllFiles(ico, iconsDir)
-
-
-
-
 

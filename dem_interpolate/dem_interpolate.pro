@@ -13,8 +13,7 @@ win32 {
         DEFINES += DLL_EXPORTS
 }
 unix{
-QMAKE_CXXFLAGS += -fPIC
-    LIBS += -L"/usr/lib"
+    QMAKE_CXXFLAGS += -fPIC
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib"

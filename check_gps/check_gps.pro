@@ -23,8 +23,9 @@ win32 {
 }
 
 unix: {
+    LIBS += -L"../lib"
     CONFIG(debug, debug|release) {
-            LIBS += -lPocoUtild -lPocoZipd -lphoto_utild -lziplibd -lrtklibd -lCVUtild -lspatialite -lsqlite3 -lgdald
+            LIBS += -lPocoUtil -lPocoZip -lphoto_util -lziplib -lrtklib -lCVUtil -lspatialite -lsqlite3 -lgdal
             TARGET = $$join(TARGET,,,d)
     }
     else {

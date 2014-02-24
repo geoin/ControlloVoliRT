@@ -23,7 +23,7 @@ win32 {
 unix {
         INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
         CONFIG(debug, debug|release) {
-                LIBS += -lPocoFoundationd -lPocoUtild -lPocoXMLd -lphoto_util -ldem_interpolate -lCVUtil -lsqlite3 -lspatialite -lgdal -ltiff
+                LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lsqlite3 -lspatialite -lgdal -ltiff
                 TARGET = $$join(TARGET,,,d)
         }
         else {
