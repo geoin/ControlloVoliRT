@@ -386,22 +386,53 @@ bool ortho_exec::_final_report()
 			itl->add_item("listitem")->append(rs["FOGLIO"].toString());
 		}
 	}
-	std::cout << "Layer:" << BLOCCO << std::endl;
 
+	std::cout << "Layer:" << BLOCCO << std::endl;
 	std::stringstream sql2;
 	sql2 << "select AsBinary(geom) from " << BLOCCO ;
 	Statement stm2(cnn);
 	stm2.prepare(sql2.str());
 	rs = stm2.recordset();
-
-	std::vector<OGRGeomPtr> vp; // vettore geometrie blocco
+	OGRGeomPtr Block; // vettore geometrie blocco
+	bool first = true;
 	while ( !rs.eof() ) {
         // Get the first photo geometry
         Blob blob = rs[0].toBlob();
-        OGRGeomPtr pol = blob;
-		vp.push_back(pol);
+		if ( first ) {
+			Block = blob;
+			first = false;
+		} else {
+			OGRGeomPtr pol = blob;
+			Block = Block->Union(pol);
+		}
 		rs.next();
 	}
+	if ( Block->IsEmpty() )
+		throw std::runtime_error("Blocco fotogrammi non tovato");
+	
+	std::cout << "Layer:" << CONTORNO_RT << std::endl;
+	std::stringstream sql5;
+	sql5 << "select AsBinary(geom) from " << CONTORNO_RT;
+	Statement stm5(cnn);
+	stm5.prepare(sql5.str());
+	rs = stm5.recordset();
+
+	OGRGeomPtr Contorno; // vettore geometrie limite regione
+	first = true;
+	while ( !rs.eof() ) {
+		Blob blob = rs[0].toBlob();
+        // Get the first photo geometry
+		if ( first ) {
+			Contorno = blob;
+			first = false;
+		} else {
+			OGRGeomPtr pol = blob;
+			Contorno = Contorno->Union(pol);
+		}
+		rs.next();
+	}
+	if ( Contorno->IsEmpty() )
+		throw std::runtime_error("Limiti amministrativi non tovati");
 
 	std::stringstream sql3;
 	sql3 << "select foglio, AsBinary(geom) from " << QUADRO_RT ;
@@ -414,6 +445,7 @@ bool ortho_exec::_final_report()
         // Get the first photo geometry
         Blob blob = rs[1].toBlob();
         OGRGeomPtr pol = blob;
+		pol = pol->Intersection(Contorno);
 		vq[ rs[0] ] = pol;
 		rs.next();
 	}
@@ -431,39 +463,49 @@ bool ortho_exec::_final_report()
         OGRGeomPtr pol = blob;
 		std::string foglio = rs[0];
 
-		for ( size_t i = 0; i < vp.size(); i++) {
-			if ( vp[i]->Intersect(pol) ) {
-				OGRPolygon* p1 = (OGRPolygon*) ((OGRGeometry*) vp[i]); // il blocco
-				double a1 = p1->get_Area();
-				OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) pol); // il foglio
-				double a2 = p2->get_Area();
-				OGRGeomPtr dif = p2->Difference(p1); // foglio - blocco
-				OGRPolygon* p3 = (OGRPolygon*) ((OGRGeometry*) dif);
-				if ( p3 != NULL ) {
-					//double a3 = p3->get_Area();
-				
-					if ( !dif->IsEmpty() ) {
-						//std::cout << "Il foglio " << foglio <<  " è stato realizzato usando materiale extra" << std::endl;
-						v1.push_back(foglio);
-						ok = false;
-					}
-				} else {
-					int a = 1;
-				}
+		if ( !Block->Intersect(pol) ) {
+			std::stringstream ss;
+			ss << "il foglio " << foglio << " non interseca il blocco dei fotogrammi" << std::endl;
+			continue;
+		}
 
-				// occorre prendere tavola intersezione limiti e confrontarlo col bordo
-				OGRGeomPtr inter = p1->Intersection(p2); // blocco intersezione foglio
-				OGRPolygon* p4 = (OGRPolygon*) ((OGRGeometry*) inter);
-				if ( p4 != NULL ) {
-					double a4 = p4->get_Area();
-					if ( fabs(a2 - a4) > 0.1 * a2 ) {
-						//std::cout << "Il foglio " << foglio <<  " non è stato realizzato completamente" << std::endl;
-						v1.push_back(foglio);
-						ok = false;
-					}
-				} else {
-					int a = 1;
-				}
+		// check uso materiale extra
+		OGRPolygon* blk = (OGRPolygon*) ((OGRGeometry*) Block); // il blocco
+		double a1 = blk->get_Area();
+		OGRPolygon* brd = (OGRPolygon*) ((OGRGeometry*) pol); // il foglio
+		double a2 = brd->get_Area();
+		OGRGeomPtr dif = brd->Difference(Block); // foglio - blocco
+		OGRPolygon* p3 = (OGRPolygon*) ((OGRGeometry*) dif);
+		if ( p3 != NULL ) {
+			//double a3 = p3->get_Area();
+		
+			if ( !dif->IsEmpty() ) {
+				//std::cout << "Il foglio " << foglio <<  " è stato realizzato usando materiale extra" << std::endl;
+				v1.push_back(foglio);
+				ok = false;
+			}
+		}
+
+		if ( vq.find(foglio) == vq.end() ) {
+			// tavola non richiesta
+			std::cout << "Il foglio " << foglio <<  " è stato realizzato ma non era rchiesto" << std::endl;
+			continue;
+		}
+		OGRGeomPtr tav = vq[foglio];
+		OGRPolygon* ptav = (OGRPolygon*) ((OGRGeometry*) tav);
+
+		double area_tav = ptav->get_Area();
+			
+		// check completezza tavole
+		OGRGeomPtr inter = tav->Difference(brd); // blocco intersezione foglio
+		if ( inter != NULL ) {
+			OGRPolygon* p4 = (OGRPolygon*) ((OGRGeometry*) inter);
+			if ( !p4->IsEmpty() ) {
+			//double a4 = p4->get_Area();
+			//if ( a2 < a4 fabs(a2 - a4) > 0.1 * a2 ) {
+				//std::cout << "Il foglio " << foglio <<  " non è stato realizzato completamente" << std::endl;
+				v2.push_back(foglio);
+				ok = false;
 			}
 		}
 		rs.next();
