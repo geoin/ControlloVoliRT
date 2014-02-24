@@ -463,6 +463,10 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 		vdps[vdp.nome] = vdp;
 		rs.next();
 	}
+
+    if (vdps.empty()) {
+        return false;
+    }
 	// create the axis theme from attitude data
 	_assi_from_vdp(vdps);
 	// update axis with gps data

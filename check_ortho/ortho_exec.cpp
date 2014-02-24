@@ -65,6 +65,34 @@ ortho_exec::~ortho_exec()
 {
 }
 
+
+bool ortho_exec::get_filename_from_ext(const Poco::Path& dir, const std::string& target, const std::string& ext, Poco::Path& out) {
+#ifdef WIN32
+    out = dir;
+    out.append(target);
+    out.setExtension(ext);
+    return Poco::File(out).exists();
+#else
+    Poco::File fd(dir);
+
+    std::vector<std::string> list;
+    fd.list(list);
+
+    std::vector<std::string>::const_iterator it = list.begin();
+    std::vector<std::string>::const_iterator end = list.end();
+    for (; it != end; it++) {
+        Poco::Path file(*it);
+        if (file.getBaseName() == target && Poco::toLower(file.getExtension()) == Poco::toLower(ext)) {
+            out = dir;
+            out.append(file);
+            return true;
+        }
+    }
+#endif
+
+    return false;
+}
+
 bool ortho_exec::run()
 {
 	if ( _proj_dir.empty() )
@@ -74,7 +102,7 @@ bool ortho_exec::run()
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
 		cnn.open(db_path.toString());
-		cnn.initialize_metdata();
+        //cnn.initialize_metdata();
 
 		if ( !GetProjData(cnn, _note, _refscale) )
 			throw std::runtime_error("dati progetto incompleti");
@@ -156,8 +184,14 @@ bool ortho_exec::_read_ref_val()
 }
 bool ortho_exec::_process_img_border(const std::string& foglio, std::vector<DPOINT>& pt)
 {
-	Poco::Path img_name(_img_dir, foglio);
-	img_name.setExtension("tif");
+    Poco::Path img_dir(_img_dir);//, foglio);
+    //img_name.setExtension("tif");
+
+    Poco::Path img_name;
+    if (!get_filename_from_ext(img_dir, foglio, "tif", img_name)) {
+        return false;
+    }
+
 	BorderLine bl;
 	//std::cout << "Elaborazione bordo di " << foglio << std::endl;
 
@@ -170,8 +204,12 @@ bool ortho_exec::_process_img_border(const std::string& foglio, std::vector<DPOI
 
 	pt.clear();
 	if ( pt1.size() > 3 ) {
-		img_name.setExtension("tfw");
-		TFW tf(img_name.toString());
+        Poco::Path tfw_path;
+        if (!get_filename_from_ext(img_dir, foglio, "tfw", tfw_path)) {
+            return false;
+        }
+
+        TFW tf(tfw_path.toString());
 		DPOINT p0;
 		for ( size_t i = 0; i < pt1.size(); i++) {
 			pt1[i] = tf.img_ter(pt1[i]);

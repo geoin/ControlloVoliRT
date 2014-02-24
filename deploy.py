@@ -26,7 +26,16 @@ def buildList(l):
 def addToZip(path, zip):
     for root, dirs, files in os.walk(path):
         for file in files:
-            zip.write(os.path.join(root, file))
+	    absFile = os.path.join(root, file)
+            if os.path.islink(absFile): #symlinks in zip
+            	linkto = os.readlink(absFile)
+                a = zipfile.ZipInfo(absFile)
+                a.filename = absFile
+                a.create_system = 3
+                a.external_attr = 2716663808L
+                zip.writestr(a, linkto)
+            else:
+                zip.write(absFile)
         for dir in dirs:
             addToZip(dir, zip)
             
@@ -49,5 +58,5 @@ with zipfile.ZipFile('deploy.zip', 'w') as testzip:
     addToZip("script", testzip)
     addToZip("docbookrt", testzip)
 
-with zipfile.ZipFile('deploy.zip', 'r') as testzip:
-    testzip.extractall("deploy")
+#with zipfile.ZipFile('deploy.zip', 'r') as testzip:
+#    testzip.extractall("deploy")
