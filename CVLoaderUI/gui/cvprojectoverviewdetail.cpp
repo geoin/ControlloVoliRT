@@ -89,6 +89,7 @@ void CVProjectOverviewDetail::addNotesEditor(QVBoxLayout* l) {
 	edit->setMinimumSize(QSize(36, 28));
 	edit->setToolTip(tr("Modifica"));
 	edit->setCheckable(true);
+    edit->setIcon(QIcon(":/graphics/icons/edit.png"));
 	
 	connect(edit, SIGNAL(toggled(bool)), this, SLOT(onEditProject(bool)));
 
@@ -100,6 +101,7 @@ void CVProjectOverviewDetail::addNotesEditor(QVBoxLayout* l) {
 	btn->setMinimumSize(QSize(36, 28));
 	btn->setVisible(false);
 	btn->setToolTip(tr("Salva"));
+    btn->setIcon(QIcon(":/graphics/icons/save.png"));
 	tBox->addWidget(btn);
 
 	connect(btn, SIGNAL(clicked()), this, SLOT(onSaveProject()));

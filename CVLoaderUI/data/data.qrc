@@ -18,5 +18,12 @@
         <file>icons/gps/fly_rinex.png</file>
         <file>icons/gps/station.png</file>
         <file>icons/fly/attitude.png</file>
+        <file>icons/orto/contour.png</file>
+        <file>icons/orto/quadro.png</file>
+        <file>icons/edit.png</file>
+        <file>icons/menu.png</file>
+        <file>icons/next.png</file>
+        <file>icons/prev.png</file>
+        <file>icons/save.png</file>
     </qresource>
 </RCC>
