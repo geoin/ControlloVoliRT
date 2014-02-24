@@ -13,7 +13,7 @@ CONFIG += staticlib
 INCLUDEPATH += ../include
 
 win32 {
-         ../../ControlloVoliRT_Tools/include
+        INCLUDEPATH += ../../ControlloVoliRT_Tools/include
 }
 macx {
         INCLUDEPATH += ../../SwTools/include
