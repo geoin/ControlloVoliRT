@@ -1,4 +1,4 @@
-#include "gui/cvtoolbar.h"
+#include "cvtoolbar.h"
 
 namespace CV {
 namespace GUI {

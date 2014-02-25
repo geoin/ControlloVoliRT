@@ -107,20 +107,25 @@ bool CVFileInput::load() {
 			Q_UNUSED(err)
 			return false;
 		}
-
-		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-		CV::Util::Spatialite::Recordset set = q->select(
-			QStringList() << "ID" << "URI",
-			QStringList() << "DEM", 
-			QStringList(),
-			QVariantList(),
-			QStringList(),
-			1
-		);
-		if (!set.eof()) {
-			QString name(set[1].toString().c_str());
-			target(uri() + QDir::separator() + name);
-		} else {
+	
+		try {
+			Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+			CV::Util::Spatialite::Recordset set = q->select(
+				QStringList() << "ID" << "URI",
+				QStringList() << "DEM", 
+				QStringList(),
+				QVariantList(),
+				QStringList(),
+				1
+			);
+			if (!set.eof()) {
+				QString name(set[1].toString().c_str());
+				target(uri() + QDir::separator() + name);
+			} else {
+				return false;
+			}
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
 			return false;
 		}
 	}

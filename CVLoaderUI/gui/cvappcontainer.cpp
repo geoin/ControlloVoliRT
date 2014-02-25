@@ -1,4 +1,4 @@
-#include "gui/cvappcontainer.h"
+#include "cvappcontainer.h"
 #include "gui/cvtreewidget.h"
 #include "gui/cvtreenode.h"
 #include "gui/cvnodedetails.h"
@@ -71,18 +71,24 @@ void CVAppContainer::insertProject(Core::CVProject* proj) {
 	emit projectAdded(proj);
 
 	// should the manager emit the events? probably yes, but think about it
-    CVTreeNode* node = NULL;
-    node = _tree->insertNode(root, tr("Progetto di volo"), Core::CVControl::PLAN);
-    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::PLAN));
 
-    node = _tree->insertNode(root, tr("Dati GPS"), Core::CVControl::GPS_DATA);
-    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::GPS_DATA));
+	CVTreeNode* node = NULL;
+	if (proj->type == Core::CVProject::PHOTOGRAMMETRY) {
+		node = _tree->insertNode(root, tr("Progetto di volo"), Core::CVControl::PLAN);
+		emit controlAdded(node->info()->type(), proj->get(Core::CVControl::PLAN));
 
-    node = _tree->insertNode(root, tr("Volo effettuato"), Core::CVControl::FLY);
-    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::FLY));
+		node = _tree->insertNode(root, tr("Dati GPS"), Core::CVControl::GPS_DATA);
+		emit controlAdded(node->info()->type(), proj->get(Core::CVControl::GPS_DATA));
 
-    node = _tree->insertNode(root, tr("Orto immagini"), Core::CVControl::ORTO);
-    emit controlAdded(node->info()->type(), proj->get(Core::CVControl::ORTO));
+		node = _tree->insertNode(root, tr("Volo effettuato"), Core::CVControl::FLY);
+		emit controlAdded(node->info()->type(), proj->get(Core::CVControl::FLY));
+
+		node = _tree->insertNode(root, tr("Orto immagini"), Core::CVControl::ORTO);
+		emit controlAdded(node->info()->type(), proj->get(Core::CVControl::ORTO));
+	} else {
+		node = _tree->insertNode(root, tr("Progetto di volo"), Core::CVControl::LIDAR_PLAN);
+		//emit controlAdded(node->info()->type(), proj->get(Core::CVControl::LIDAR_PLAN));
+	}
 }
 
 void CVAppContainer::link() {

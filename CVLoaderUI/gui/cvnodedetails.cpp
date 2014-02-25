@@ -1,6 +1,6 @@
-#include "gui/cvnodedetails.h"
-#include "gui/cvtreenode.h"
+#include "cvnodedetails.h"
 
+#include "gui/cvtreenode.h"
 #include "gui/helper/cvdetailsfactory.h"
 
 #include "gui/cvprojectoverviewdetail.h"

@@ -43,6 +43,8 @@ public:
     Type type;
 
 private:
+	bool _addResource(const QString& res, CV::Util::Spatialite::Connection&);
+
 	QMap<CVControl::Type, CVControl*> _controls;
 	QString _db;
 };

@@ -15,7 +15,7 @@ class CVObject;
 class CVControl : public QObject {
     Q_OBJECT
 public:
-	enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO };
+	enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO, LIDAR_PLAN };
 
 	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}
 
@@ -59,7 +59,8 @@ public:
 		AVOLOV,
 		ATTITUDE,
 		QUADRO,
-		CONTOUR
+		CONTOUR,
+		SENSOR
 	};
 
 	explicit CVObject(QObject* p) : QObject(p) {}
@@ -67,7 +68,6 @@ public:
 
 	inline void type(Type t) { _type = t; }
 	inline Type type() const { return _type; }
-
 	
 	inline void controlType(CVControl::Type t) { _controlType = t; }
 	inline CVControl::Type controlType() const { return _controlType; }

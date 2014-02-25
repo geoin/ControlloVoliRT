@@ -25,8 +25,8 @@ QString CVProject::loadFrom(const QDir& dir) {
 		CV::Util::Spatialite::Recordset set = q->select(
 			QStringList() << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL",
 			QStringList() << "JOURNAL", 
-			QStringList() << "CONTROL = ?1",
-			QVariantList() << 1
+			QStringList() << "CONTROL < ?1",
+			QVariantList() << CVProject::LIDAR + 1
 		);
 		
 		if (!set.eof()) {
@@ -55,6 +55,30 @@ QString CVProject::loadFrom(const QDir& dir) {
 		Q_UNUSED(err)
 		return QString();
 	}
+}
+
+bool CVProject::_addResource(const QString& res, CV::Util::Spatialite::Connection& cnn) {
+	QResource sql(":/sql/db.sql");
+	QFile res(sql.absoluteFilePath());
+	if (!res.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		return false;
+	}
+	QTextStream str(&res);
+	QString query = str.readAll();
+
+	QStringList tables = query.split(";", QString::SkipEmptyParts);
+	foreach(QString t, tables) {
+		try {
+			if (!t.isEmpty()) {
+				cnn.execute_immediate(t.simplified().toStdString());
+			}
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			cnn.rollback_transaction();
+			return false;
+		}
+	}
+	return true;
 }
 
 bool CVProject::create(const QString& d) {
