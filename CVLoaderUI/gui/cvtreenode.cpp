@@ -1,4 +1,4 @@
-#include "gui/cvtreenode.h"
+#include "cvtreenode.h"
 #include "gui/cvtreenodedelegate.h"
 
 namespace CV {

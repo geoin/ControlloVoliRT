@@ -1,4 +1,4 @@
-#include "gui/cvtreenodedelegate.h"
+#include "cvtreenodedelegate.h"
 
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>

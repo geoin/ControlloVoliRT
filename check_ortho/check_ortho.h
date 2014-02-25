@@ -42,6 +42,9 @@ public:
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
 	void set_img_dir(const std::string& nome);
+
+    static bool get_filename_from_ext(const Poco::Path&, const std::string& target, const std::string& ext, Poco::Path&);
+
 	//void set_ref_scale(const std::string& nome);
 private:
 	bool _process_imgs(void);

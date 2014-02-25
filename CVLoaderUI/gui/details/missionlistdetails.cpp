@@ -19,19 +19,22 @@ namespace GUI {
 namespace Details {
 
 CVMissionListToolbar::CVMissionListToolbar(QWidget* p) : QWidget(p) {
-   _back = new QPushButton("<", this);
+   _back = new QPushButton("", this);
+   _back->setIcon(QIcon(":/graphics/icons/prev.png"));
    _back->setMaximumSize(28, 28);
    _back->setDisabled(true);
    connect(_back, SIGNAL(pressed()), this, SIGNAL(viewPrevious()));
 
-   _next = new QPushButton(">", this);
+   _next = new QPushButton("", this);
+   _next->setIcon(QIcon(":/graphics/icons/next.png"));
    _next->setMaximumSize(28, 28);
    _next->setDisabled(true);
    connect(_next, SIGNAL(pressed()), this, SIGNAL(viewNext()));
 
    QMenu* menu = new QMenu(this);
    _menu = new QPushButton(tr(""), this);
-   _menu->setMaximumSize(28, 28);
+	_menu->setIcon(QIcon(":/graphics/icons/menu.png"));
+   _menu->setFixedSize(60, 28);
    _menu->setMenu(menu);
 
    _title = new QLabel(tr("Nessuna missione attiva"), this);
