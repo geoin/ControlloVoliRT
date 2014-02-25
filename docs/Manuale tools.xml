@@ -433,6 +433,139 @@
   </chapter>
 
   <chapter>
+    <title>Il file dei valori di riferimento</title>
+
+    <para>Tutti i controlli producono un report in cui alcuni valori misurati
+    vengono confrontati con dei valori di riferimento. Questi valori sono
+    memorizzati in un file xml il cui nome fisso è <emphasis
+    role="bold">Regione_Toscana_RefVal.xml</emphasis> che deve trovarsi nella
+    cartella padre rispetto a quella del progetto. Ad esempio se operiamo sul
+    progetto Firenze che si trova nella cartella (c:\lavori ovvero
+    /user/regione/lavori) il file andrà caricato nella cartella c:/lavori
+    ovvero /user/regione/lavori.</para>
+
+    <para>Il file si compone di due sezioni una relativa alla parte
+    fotogrammetrica ed una relativa alla parte Lidar. Essendo i due controlli
+    mutuamente esclusi per un controllo di tipo fotogrammetrico non è
+    indispensabile sia presente la sezione lidar e viceversa.</para>
+
+    <para>La sezione fotogrammetria è individuata dal tag
+    &lt;FOTOGRAMMETRIA&gt;. Al suo interno si trovano più sezioni, ciascuna
+    relativa ad una scala di lavoro. I tag per le varie scale sono:
+    &lt;RefScale_xxxx&gt; dove xxxx indica la scala (es 1000, 2000 ecc.). I
+    tag che indicano la grandezza che viene definita sono gli stessi per tutte
+    le scale. Di seguito viene riportato lo spezzone di file relativo alla
+    scala 1:2000</para>
+
+    <para>&lt;Regione_Toscana&gt;</para>
+
+    <para> &lt;Fotogrammetria&gt;</para>
+
+    <para> &lt;RefScale_2000&gt;</para>
+
+    <para> &lt;GSD descr="Dimensione del pixel al suolo"
+    unimis="m"&gt;0.15&lt;/GSD&gt; </para>
+
+    <para> &lt;MAX_GSD descr="max scarto dal valore di riferimento"
+    unimis="perc"&gt;10&lt;/MAX_GSD&gt;</para>
+
+    <para> &lt;TP_PP descr ="Toll. plan. punti di passaggio"
+    unimis="m"&gt;0.2&lt;/TP_PP&gt;</para>
+
+    <para> &lt;TA_TP descr="Toll. alt. punti di passaggio"
+    unimis="m"&gt;0.3&lt;/TA_TP&gt;</para>
+
+    <para> &lt;T_CP descr="Toll. dei centri di presa"
+    unimis="m"&gt;0.3&lt;/T_CP&gt;</para>
+
+    <para> &lt;T_PR descr="Toll. angoli di pitch e roll"
+    unimis="mdeg"&gt;6.0&lt;/T_PR&gt;</para>
+
+    <para> &lt;T_H descr="Toll. angolo di heading"
+    unimis="mdeg"&gt;8.0&lt;/T_H&gt;</para>
+
+    <para> &lt;TP_PA descr="Toll. plan. punti di appoggio"
+    unimis="m"&gt;0.2&lt;/TP_PA&gt;</para>
+
+    <para> &lt;TA_PA descr="Toll. alt. punti di appoggio"
+    unimis="m"&gt;0.25&lt;/TA_PA&gt;</para>
+
+    <para> &lt;TP_PC descr="Toll plan. punti di controllo"
+    unimis="m"&gt;0.4&lt;/TP_PC&gt;</para>
+
+    <para> &lt;TA_PC descr="Toll alt. punti di controllo"
+    unimis="m"&gt;0.5&lt;/TA_PC&gt;</para>
+
+    <para> &lt;DTM_ST descr="paso griglia"
+    unimis="m"&gt;5&lt;/DTM_ST&gt;</para>
+
+    <para> &lt;DTM_TP descr="accuratezza plan."
+    unimis="m"&gt;0.3&lt;/DTM_TP&gt;</para>
+
+    <para> &lt;DTM_TA descr="accuratezza altimetrica campo aperto"
+    unimis="m"&gt;0.3&lt;/DTM_TA&gt;</para>
+
+    <para> &lt;DTM_BRK descr="dislivello per il quale sono richieste break
+    lines" unimis="m"&gt;0.6&lt;/DTM_BRK&gt;</para>
+
+    <para> &lt;O_PIX descr="Dimensine del pixel sul terreno"
+    unimis="m"&gt;0.2&lt;/O_PIX&gt;</para>
+
+    <para> &lt;O_TPS descr="accuratezza plan. punti al asuolo"
+    unimis="m"&gt;0.4&lt;/O_TPS&gt;</para>
+
+    <para> &lt;O_TPA descr="accuratezza plan. oggetti sopraelelati"
+    unimis="m"&gt;1.2&lt;/O_TPA&gt;</para>
+
+    <para> &lt;MODEL_OVERLAP descr="ricoprimento longitudinale foto"
+    unimis="perc"&gt;60&lt;/MODEL_OVERLAP&gt;</para>
+
+    <para> &lt;MODEL_OVERLAP_RANGE descr="range di variabilità"
+    unimis="perc"&gt;10&lt;/MODEL_OVERLAP_RANGE&gt;</para>
+
+    <para> &lt;MODEL_OVERLAP_T descr="minimo ricoprimento trasversale foto"
+    unimis="perc"&gt;90&lt;/MODEL_OVERLAP_T&gt;</para>
+
+    <para> &lt;STRIP_OVERLAP descr="ricoprimento tra strip. adiacenti"
+    unimis="perc"&gt;20&lt;/STRIP_OVERLAP&gt;</para>
+
+    <para> &lt;STRIP_OVERLAP_RANGE descr="range di variabilità"
+    unimis="perc"&gt;10&lt;/STRIP_OVERLAP_RANGE&gt;</para>
+
+    <para> &lt;MAX_STRIP_LENGTH descr="massima lunghezza strip"
+    unimis="km"&gt;15&lt;/MAX_STRIP_LENGTH&gt;</para>
+
+    <para> &lt;MAX_PDOP descr="massimo PDOP"
+    unimis="num"&gt;5&lt;/MAX_PDOP&gt;</para>
+
+    <para> &lt;MIN_SAT descr="Minimo numero di satelliti"
+    unimis="num"&gt;5&lt;/MIN_SAT&gt;</para>
+
+    <para> &lt;MAX_DIST descr="massima distanza basi"
+    unimis="km"&gt;50&lt;/MAX_DIST&gt;</para>
+
+    <para> &lt;MIN_SAT_ANG descr="minimo angolo elevazione satelliti"
+    unimis="num"&gt;15&lt;/MIN_SAT_ANG&gt;</para>
+
+    <para> &lt;NBASI descr="minimo numero di basi da usare"
+    unimis="num"&gt;2&lt;/NBASI&gt;</para>
+
+    <para> &lt;MAX_ANG descr="max. valore per gli angoli di pitch e roll"
+    unimis="deg"&gt;5&lt;/MAX_ANG&gt;</para>
+
+    <para> &lt;MAX_HEADING_DIFF descr="max. diff. angolo heading tra
+    fotogrammi adiacenti" unimis="deg"&gt;5&lt;/MAX_HEADING_DIFF&gt;
+    &lt;MIN_ANG_SOL descr="min. angolo sole sull'orizzonte"
+    unimis="deg"&gt;30&lt;/MIN_ANG_SOL&gt;</para>
+
+    <para> &lt;/RefScale_2000&gt;</para>
+
+    <para>Per facilitare la compilazione del file per ogni grandezza viene
+    indicato che cosa rappresenta (attributo descrizione) e l'unità di misura
+    in cui la grandezza deve essere espressa</para>
+  </chapter>
+
+  <chapter>
     <title>Il controllo del progetto di volo per ripresa
     aerofotogrammetica</title>
 
@@ -807,6 +940,22 @@
 
     <para>check_ortho /d=path_progetto /i=cartella_ortoimmagini</para>
 
-    <para/>
+    <para>Vengono eseguiti i seguenti controlli:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Che tutte le tavole richieste siano state prodotte</para>
+      </listitem>
+
+      <listitem>
+        <para>Che a tutte le tavole prodotte sia stato assegnato il nome
+        corretto e che la loro geo referenziazione sia corretta</para>
+      </listitem>
+
+      <listitem>
+        <para>Che le tavole prodotte abbiano utilizzato tutto e solo il
+        materiale del volo di riferimento</para>
+      </listitem>
+    </itemizedlist>
   </chapter>
 </book>
