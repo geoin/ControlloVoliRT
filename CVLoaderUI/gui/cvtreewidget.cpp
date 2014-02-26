@@ -1,4 +1,5 @@
-#include "gui/cvtreewidget.h"
+#include "cvtreewidget.h"
+
 #include "gui/cvtreenode.h"
 #include "gui/cvtreenodedelegate.h"
 

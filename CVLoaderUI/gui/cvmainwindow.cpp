@@ -1,5 +1,5 @@
-#include "gui/cvmainwindow.h"
-#include "gui/cvappcontainer.h"
+#include "cvmainwindow.h"
+#include "cvappcontainer.h"
 
 #include <QPalette>
 

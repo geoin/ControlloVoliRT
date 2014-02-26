@@ -7,6 +7,7 @@
 #include "core/sql/querybuilder.h"
 
 #include "core/categories/cvcamera.h"
+#include "core/categories/cvsensor.h"
 #include "core/categories/cvflyattitude.h"
 #include "core/categories/cvshapelayer.h"
 #include "core/categories/cvfileinput.h"
@@ -75,6 +76,9 @@ void CVProjectManager::onLoadProject() {
 	if (dir.exists(SQL::database)) {
 		CVProject* proj = new CVProject(this);
 		QString db = proj->loadFrom(dir.absolutePath());
+		if (db.isEmpty()) {
+			return;
+		}
 
 		// Init controls
 		CVControl* ctrl = NULL;
@@ -88,7 +92,7 @@ void CVProjectManager::onLoadProject() {
 
 		QStringList ids;
 		proj->missionList(ids);
-		foreach(const QString& id, ids) {
+		foreach (const QString& id, ids) {
 			ctrl->insert(new CVMissionObject(ctrl, id));
 		}
 		ctrl->load();
@@ -140,8 +144,14 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	ctrl->uri(proj->db());
 
 	// Init camera
-	CVCamera* cam = new CVCamera(ctrl);
-	ctrl->insert(cam);
+	if (proj->type == CVProject::PHOTOGRAMMETRY) {
+		CVCamera* cam = new CVCamera(ctrl);
+		ctrl->insert(cam);
+	} else {
+		//TODO
+		CVSensor* sensor = new CVSensor(ctrl);
+		ctrl->insert(sensor);
+	}
 	
 	CVShapeLayer* layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList() << "count(*)" << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
