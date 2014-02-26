@@ -41,6 +41,10 @@
 #define REFSCALE "RefScale_2000"
 #define GEO_DB_NAME "geo.sqlite"
 #define SIGLA_PRJ "CSTP"
+#define LIDAR "Lidar"
+
+#define OUT_DOCV "check_lidarV.xml"
+#define OUT_DOCP "check_lidarP.xml"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -54,78 +58,80 @@ typedef std::vector<unsigned char> Blob;
 
 std::string get_key(const std::string& val)
 {
-	return std::string(REFSCALE) + "." + val;
+	return std::string(LIDAR) + "." + val;
 }
-/*std::string get_strip(const std::string& nome)
-{
-	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[0];
-}*/
+
 /***************************************************************************************/
 lidar_exec::~lidar_exec() 
 {
 }
 bool lidar_exec::run()
 {
-	// Read the reference values
-	_read_ref_val();
+	try {
+		if ( _proj_dir.empty() ) {
+			throw std::runtime_error("cartella di lavoro non impostata");
+		}
 
-	// initialize docbook xml file
-	_init_document();
+		Path geodb(_proj_dir, GEO_DB_NAME);
+		cnn.open( geodb.toString() ); // Create or open spatialite db
 
-    Path geodb(_proj_dir, GEO_DB_NAME);
-    cnn.open( geodb.toString() ); // Create or open spatialite db
+		// Read the reference values
+		std::string norefscale;
+		if ( !GetProjData(cnn, _note, norefscale) ) {
+			throw std::runtime_error("dati progetto incompleti");
+		}
 
-    /*Path avolo(_proj_dir, "assi volo");
-    avolo = Path(avolo.toString(), "lvolo");
-    int nrows = cnn.load_shapefile(avolo.toString(),
-        "lvolop",
-               "CP1252",
-               32632,
-               "geom",
-               true,
-               false,
-               false);
+		_read_ref_val();
 
-    Path carto(_proj_dir, "aree da cartografare");
-    carto = Path(carto.toString(), "new1mas-car");
-    nrows = cnn.load_shapefile(carto.toString(),
-        "carto",
-               "CP1252",
-               32632,
-               "geom",
-               true,
-               false,
-               false);*/
+		// initialize docbook xml file
+		std::string title =_type == fli_type ? "Collaudo rilievo lidar" : "Collaudo progetto di rilievo lidar";
+		Path doc_file(_proj_dir, "*");
+		doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
 
+		init_document(_dbook, doc_file.toString(), title, _note);
+		char* dtd_ = getenv("DOCBOOKRT");
+		std::string dtd;
+		if ( dtd_ != NULL )
+			dtd = std::string("file:") + dtd_;
+		_dbook.set_dtd(dtd);
+		_article = _dbook.get_item("article");
 
-	// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
-	_read_lidar();
-    // read digital terrain model
-    //_dem_name = Path(_proj_dir, DEM).toString();
-	if ( !_read_dem() )
-		throw std::runtime_error("Modello numerico non trovato");
+		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
+		_read_lidar();
+		// read digital terrain model
+		//_dem_name = Path(_proj_dir, DEM).toString();
+		if ( !_read_dem() )
+			throw std::runtime_error("Modello numerico non trovato");
 
-	_process_strips();
-	_process_block();
+		_process_strips();
+		_process_block();
 
-	// se volo lidar confronta gli assi progettati con quelli effettivi
+		// se volo lidar confronta gli assi progettati con quelli effettivi
 
-	// verifica che le strip ricoprano l'area da cartografare
+		// verifica che le strip ricoprano l'area da cartografare
 
-	// determina il ricoprimento tra strisciate e la loro lunghezza, li confronta con i valori di riferimento
+		// determina il ricoprimento tra strisciate e la loro lunghezza, li confronta con i valori di riferimento
 
-	// se disponibile la velocità calcola la densità media dei pt
+		// se disponibile la velocità calcola la densità media dei pt
 
-	// per il volo verifica i punti dell'area di test
+		// per il volo verifica i punti dell'area di test
 
 
-	// write the result on the docbook report
-	_dbook.write();
+		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+		_final_report();
 
-	return true;
+		// write the result on the docbook report
+		_dbook.write();
+		std::cout << "Procedura terminata:" << std::endl;
+
+		return true;
+	} catch(const std::exception& ex) {
+		return false; //TODO
+	}
+}
+
+void lidar_exec::_final_report() {
+
 }
 
 void lidar_exec::set_proj_dir(const std::string& nome)
@@ -144,7 +150,9 @@ bool lidar_exec::_read_ref_val()
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
-		// toll of projection center
+		STRIP_OVERLAP = pConf->getInt(get_key("STRIP_OVERLAP"));
+		STRIP_OVERLAP_RANGE = pConf->getInt(get_key("STRIP_OVERLAP_RANGE"));
+		MAX_STRIP_LENGTH = pConf->getInt(get_key("MAX_STRIP_LENGTH"));
 		//_T_CP = pConf->getDouble(get_key("T_CP"));
 
 	} catch (...) {
@@ -266,6 +274,7 @@ void lidar_exec::_process_strips()
 	sql << "CREATE TABLE " << table << 
 		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
 		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
+		"Z_STRIP_YAW FLOAT NOT NULL, " <<		// angolo
 		"Z_MISSION TEXT NOT NULL)";	// overlap longitudinale
 	cnn.execute_immediate(sql.str());
 
@@ -279,8 +288,8 @@ void lidar_exec::_process_strips()
 	cnn.execute_immediate(sql1.str());
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, geom) \
-		VALUES (?1, ?2, ?3, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, geom) \
+		VALUES (?1, ?2, ?3, ?4, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -356,7 +365,8 @@ void lidar_exec::_process_strips()
 		stm[1] = SIGLA_PRJ;
 		stm[2] = strip;
 		stm[3] = mission;
-		stm[4].fromBlob(rg);
+		stm[4] = RAD_DEG(-k);
+		stm[5].fromBlob(rg);
 		stm.execute();
 		stm.reset();
 
@@ -370,7 +380,7 @@ void lidar_exec::_process_block()
 	// select data from flight lines
 	std::string table = std::string("STRIP") + (_type == Prj_type ? "P" : "V");
 	std::stringstream sql1;
-	sql1 << "SELECT AsBinary(geom) geom from " << table;
+	sql1 << "SELECT AsBinary(geom) geom, Z_STRIP_YAW, Z_STRIP_CS from " << table;
 	Statement stm1(cnn);
 	stm1.prepare(sql1.str());
 	Recordset rs = stm1.recordset();
@@ -379,13 +389,19 @@ void lidar_exec::_process_block()
 
 	OGRGeomPtr blk;
 	bool first = true;
+	std::map<std::string, StripRec> rec;
 	while ( !rs.eof() ) {
-		OGRGeomPtr pol = (Blob) rs["geom"];
+		StripRec r;
+		r.geom = (Blob) rs["geom"];
+		r.yaw = rs["Z_STRIP_YAW"].toDouble();
+		r.name = rs["Z_STRIP_CS"].toString();
+		rec.insert(std::pair<std::string, StripRec>(r.name, r));
 		if ( first ) {
-			blk = pol;
+			blk = r.geom;
 			first = false;
-		} else 
-			blk = blk->Union(pol);
+		} else {
+			blk = blk->Union(r.geom);
+		}
 		rs.next();
 	}
 	std::string tableb = std::string("BLOCK") + (_type == Prj_type ? "P" : "V");

@@ -78,7 +78,6 @@ bool photo_exec::run()
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
         cnn.open(db_path.toString());
-        //cnn.initialize_metdata();
 
 		if ( !GetProjData(cnn, _note, _refscale) )
 			throw std::runtime_error("dati progetto incompleti");

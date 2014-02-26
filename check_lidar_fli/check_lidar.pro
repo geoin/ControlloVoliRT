@@ -52,7 +52,8 @@ DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 SOURCES += \
     check_lidar.cpp \
     lidar_exec.cpp \
-    ../common/geo_util.cpp
+    ../common/geo_util.cpp \
+    ../common/doc_book_util.cpp
 
 HEADERS +=\
     check_lidar.h

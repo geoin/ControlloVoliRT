@@ -23,9 +23,9 @@ public:
 	inline void isPlanning(bool b) { _sensor.planning = b; }
 
 	struct SensorData {
-		SensorData() : fov(0), ifov(0), freq(0), scan_rate(0), planning(false) {}
+		SensorData() : fov(0.0f), ifov(0.0f), freq(0.0f), scan_rate(0.0f), planning(false) {}
 
-		unsigned short fov, ifov, freq, scan_rate;
+		float fov, ifov, freq, scan_rate;
 		bool planning;
 		QString id;
 	};

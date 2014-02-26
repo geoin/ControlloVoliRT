@@ -68,20 +68,20 @@ void CVSensorDetail::searchFile() {
 
 void CVSensorDetail::save() { 
 	Core::CVSensor::SensorData& s = sensor()->data();
-	s.fov = _params.value("FOV")->text().toInt();
-	s.ifov = _params.value("IFOV")->text().toInt();
-	s.freq = _params.value("FREQ")->text().toInt();
-	s.scan_rate = _params.value("SCAN_RATE")->text().toInt();
+	s.fov = _params.value("FOV")->text().toDouble();
+	s.ifov = _params.value("IFOV")->text().toDouble();
+	s.freq = _params.value("FREQ")->text().toDouble();
+	s.scan_rate = _params.value("SCAN_RATE")->text().toDouble();
 
 	controller()->persist();
 }
 
 void CVSensorDetail::view() {
 	Core::CVSensor::SensorData& s = sensor()->data();
-	_params.value("FOV")->setText(QString::number(s.fov));
-	_params.value("IFOV")->setText(QString::number(s.ifov));
-	_params.value("FREQ")->setText(QString::number(s.freq));
-	_params.value("SCAN_RATE")->setText(QString::number(s.scan_rate));
+	_params.value("FOV")->setText(QString::number(s.fov, 'f', 2));
+	_params.value("IFOV")->setText(QString::number(s.ifov, 'f', 2));
+	_params.value("FREQ")->setText(QString::number(s.freq, 'f', 2));
+	_params.value("SCAN_RATE")->setText(QString::number(s.scan_rate, 'f', 2));
 }
 
 void CVSensorDetail::importAll(QStringList& uri) {

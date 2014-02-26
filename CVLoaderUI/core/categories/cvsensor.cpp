@@ -101,10 +101,10 @@ bool CVSensor::load() {
 		if (!set.eof()) {
 			int i = 0;
 			_sensor.id = set[i].toString().c_str();
-			_sensor.fov = set[++i].toInt();
-			_sensor.ifov = set[++i].toInt();
-			_sensor.freq = set[++i].toInt();
-			_sensor.scan_rate = set[++i].toInt();
+			_sensor.fov = set[++i].toDouble();
+			_sensor.ifov = set[++i].toDouble();
+			_sensor.freq = set[++i].toDouble();
+			_sensor.scan_rate = set[++i].toDouble();
 			
 			_isValid = true;
 		} 
