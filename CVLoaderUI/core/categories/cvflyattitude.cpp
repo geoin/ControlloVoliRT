@@ -69,6 +69,7 @@ bool CVFlyAttitude::persist() {
 		Q_UNUSED(err)
 		return false;
 	}
+	cnn.begin_transaction();
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 
 	QStringList rec;
@@ -111,14 +112,19 @@ bool CVFlyAttitude::persist() {
 		if (!ok) { continue; }
 
 		assert(rec.size() == ph.size() && rec.size() == data.size());
-		q->insert(
-			"ASSETTI",
-			rec,
-			ph,
-			data
-		);
+		if (!q->insert(
+				"ASSETTI",
+				rec,
+				ph,
+				data
+			)) {
+		} {
+			cnn.rollback_transaction();
+		}
 		
 	}
+
+	cnn.commit_transaction();
 
 	int num = 0;
 	foreach(int i, attData) {

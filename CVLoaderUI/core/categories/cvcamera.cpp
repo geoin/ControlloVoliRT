@@ -16,6 +16,7 @@ namespace Core {
 
 CVCamera::CVCamera(QObject* p) : CVObject(p) {
 	_isValid = false;
+	_isPlanning = false;
 }
 
 CVCamera::~CVCamera() {

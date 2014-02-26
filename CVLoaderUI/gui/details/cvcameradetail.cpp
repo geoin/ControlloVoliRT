@@ -52,7 +52,7 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
     body(form);
 
 	if (cam) {
-		bool plan = camera()->isPlanning(); 
+		bool plan = camera()->isPlanning(); //TODO: ??remove
 		camera()->data().planning = plan;
 		
 		description(tr(plan ? "Fotocamera di progetto" : "Fotocamera di missione"));
@@ -103,6 +103,7 @@ void CVCameraDetail::importAll(QStringList& uri) {
         return;
     }
     QXmlStreamReader xml(&file);
+	int i = 0;
     while(!xml.atEnd()) {
         QXmlStreamReader::TokenType token = xml.readNext();
         if(token == QXmlStreamReader::StartDocument) { //TODO: check
@@ -123,11 +124,10 @@ void CVCameraDetail::importAll(QStringList& uri) {
             }
         }
     }
-    if(xml.hasError()) {
-
-    }
-
-	save();
+    
+	if(i == _params.size()) {
+		save();
+	}
 }
 
 void CVCameraDetail::save() {

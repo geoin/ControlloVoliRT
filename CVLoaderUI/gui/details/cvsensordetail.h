@@ -24,6 +24,9 @@ public:
 
 	inline Core::CVSensor* sensor() const { return static_cast<Core::CVSensor*>(controller()); }
 
+	void save();
+	void view();
+
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
     virtual void dragMoveEvent(QDragMoveEvent*);
