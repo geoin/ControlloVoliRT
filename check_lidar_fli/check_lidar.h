@@ -32,7 +32,7 @@
 #include "docbook/docbook.h"
 #include "CVUtil/cvspatialite.h"
 #include "CVUtil/ogrgeomptr.h"
-#include "geom.h"
+#include "dem_interpolate/geom.h"
 
 class DSM_Factory;
 

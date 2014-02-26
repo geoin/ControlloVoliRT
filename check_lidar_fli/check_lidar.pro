@@ -10,30 +10,44 @@ TARGET = check_lidar
 #TEMPLATE = app
 
 win32 {
-        QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib"
-}
-macx {
-        LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
+    QMAKE_CXXFLAGS -= -Zc:wchar_t-
+    LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
+    INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+    LIBS += -lspatialite_i
+    CONFIG(debug, debug|release) {
+            LIBS += -lPocoUtild -lphoto_utild -lsqlite3_i
+            TARGET = $$join(TARGET,,,d)
+    }
+    else {
+            LIBS += -lPocoUtil -lphoto_utild
+    }
 }
 
-LIBS += -lspatialite_i
-CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtild -lphoto_utild -lsqlite3_i
+macx {
+    LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
+    INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+    LIBS += -lspatialite_i
+    CONFIG(debug, debug|release) {
+            LIBS += -lPocoUtild -lphoto_utild -lsqlite3_i
+            TARGET = $$join(TARGET,,,d)
+    }
+    else {
+            LIBS += -lPocoUtil -lphoto_utild
+    }
+}
+
+unix {
+    INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+    CONFIG(debug, debug|release) {
+        LIBS += -lPocoUtild -lphoto_utild -CVUtild -lsqlite3 -lspatialite
         TARGET = $$join(TARGET,,,d)
-}
-else {
-        LIBS += -lPocoUtil -lphoto_utild
-}
-
-win32 {
-        INCLUDEPATH += C:/ControlloVoliRT_Tools/include C:/ControlloVoliRT/include
-}
-macx {
-        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+    }
+    else {
+        LIBS += -lPocoUtil -lphoto_util -CVUtil -lsqlite3 -lspatialite
+    }
 }
 
-DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
+DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     check_lidar.cpp \
