@@ -13,13 +13,13 @@ win32 {
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
     LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
     INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-    LIBS += -lspatialite_i
+    LIBS += -lspatialite4
     CONFIG(debug, debug|release) {
-            LIBS += -lPocoUtild -lphoto_utild -lsqlite3_i
+            LIBS += -lPocoUtild -lphoto_utild -lCVUtild -lsqlite3_i -lgdald_i -ldem_interpolated
             TARGET = $$join(TARGET,,,d)
     }
     else {
-            LIBS += -lPocoUtil -lphoto_utild
+            LIBS += -lPocoUtil -lphoto_util -lCVUtil -lsqlite3_i -lgdal_i -ldem_interpolate
     }
 }
 
@@ -51,7 +51,8 @@ DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     check_lidar.cpp \
-    lidar_exec.cpp
+    lidar_exec.cpp \
+    ../common/geo_util.cpp
 
 HEADERS +=\
     check_lidar.h

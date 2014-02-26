@@ -40,8 +40,6 @@
 #define SIGLA_PRJ "CSTP"
 #define REFSCALE "RefScale_2000"
 #define GEO_DB_NAME "geo.sqlite"
-#define DEM "dem.asc"
-#define ASSI_VOLO "lvolo"
 #define SIGLA_PRJ "CSTP"
 
 using Poco::Util::XMLConfiguration;
@@ -58,13 +56,13 @@ std::string get_key(const std::string& val)
 {
 	return std::string(REFSCALE) + "." + val;
 }
-std::string get_strip(const std::string& nome)
+/*std::string get_strip(const std::string& nome)
 {
 	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
 	if ( tok.count() != 2 )
 		return "";
 	return tok[0];
-}
+}*/
 /***************************************************************************************/
 lidar_exec::~lidar_exec() 
 {
@@ -77,38 +75,36 @@ bool lidar_exec::run()
 	// initialize docbook xml file
 	_init_document();
 
-		Path geodb(_proj_dir, GEO_DB_NAME);
-		cnn.create( geodb.toString() ); // Create or open spatialite db
-		if ( cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA )
-			cnn.initialize_metdata(); // Initialize metadata (if already initialized noop)
+    Path geodb(_proj_dir, GEO_DB_NAME);
+    cnn.open( geodb.toString() ); // Create or open spatialite db
 
-		Path avolo(_proj_dir, "assi volo");
-		avolo = Path(avolo.toString(), "lvolo");
-		int nrows = cnn.load_shapefile(avolo.toString(),
-			"lvolop",
-                   "CP1252",
-                   32632,
-                   "geom",
-                   true,
-                   false,
-                   false);
+    /*Path avolo(_proj_dir, "assi volo");
+    avolo = Path(avolo.toString(), "lvolo");
+    int nrows = cnn.load_shapefile(avolo.toString(),
+        "lvolop",
+               "CP1252",
+               32632,
+               "geom",
+               true,
+               false,
+               false);
 
-		Path carto(_proj_dir, "aree da cartografare");
-		carto = Path(carto.toString(), "new1mas-car");
-		nrows = cnn.load_shapefile(carto.toString(),
-			"carto",
-                   "CP1252",
-                   32632,
-                   "geom",
-                   true,
-                   false,
-                   false);
+    Path carto(_proj_dir, "aree da cartografare");
+    carto = Path(carto.toString(), "new1mas-car");
+    nrows = cnn.load_shapefile(carto.toString(),
+        "carto",
+               "CP1252",
+               32632,
+               "geom",
+               true,
+               false,
+               false);*/
 
 
 	// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 	_read_lidar();
-	// read digital terrain model
-	_dem_name = Path(_proj_dir, DEM).toString();
+    // read digital terrain model
+    //_dem_name = Path(_proj_dir, DEM).toString();
 	if ( !_read_dem() )
 		throw std::runtime_error("Modello numerico non trovato");
 
@@ -205,7 +201,7 @@ Doc_Item lidar_exec::_initpg1()
 
 bool lidar_exec::_read_lidar()
 {
-	std::string lidar_name = Path(_proj_dir, "lidar.xml").toString();
+    /*std::string lidar_name = Path(_proj_dir, "lidar.xml").toString();
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(lidar_name);
@@ -216,10 +212,43 @@ bool lidar_exec::_read_lidar()
 	} catch (...) {
 		return false;
 	}
-	return true;
+    return true;*/
+
+    try {
+        CV::Util::Spatialite::Statement stm(cnn);
+
+        std::stringstream query;
+        query << "select FOV, IFOV, FREQ, SCAN_RATE from SENSOR where PLANNING = ?1";
+        stm.prepare(query.str());
+		stm[1] = 1;
+        CV::Util::Spatialite::Recordset set = stm.recordset();
+        if (set.eof()) {
+            return false;
+        }
+        _lidar.fov = set[0].toDouble();
+        _lidar.ifov = set[1].toDouble();
+        _lidar.freq = set[2].toDouble();
+        _lidar.scan = set[3].toDouble();
+     } catch (CV::Util::Spatialite::spatialite_error& err) {
+        (void*)&err;
+        return false;
+     }
+
+    return true;
 }
-bool lidar_exec::_read_dem()
-{
+
+bool lidar_exec::_read_dem() {
+    CV::Util::Spatialite::Statement stm(cnn);
+
+    std::stringstream query;
+    query << "select URI from DEM";
+    stm.prepare(query.str());
+    CV::Util::Spatialite::Recordset set = stm.recordset();
+    if (set.eof()) {
+        return false;
+    }
+    _dem_name = Path(_proj_dir, set[0].toString()).toString();
+
 	_df = new DSM_Factory;
 	if ( !_df->Open(_dem_name, false) )
 		return false;
@@ -403,15 +432,15 @@ void lidar_exec::_get_dif()
 	std::cout << "Layer:" << table << std::endl;
 
 	// buid a unique feature
-	OGRGeomPtr blk;
+    OGRGeomPtr carto;
 	bool first = true;
 	while ( !rs.eof() ) {
 		OGRGeomPtr pol = (Blob) rs["geom"];
 		if ( first ) {
-			blk = pol;
+            carto = pol;
 			first = false;
 		} else 
-			blk = blk->Union(pol);
+            carto = carto->Union(pol);
 		rs.next();
 	}
 
@@ -422,13 +451,20 @@ void lidar_exec::_get_dif()
 	Statement stm2(cnn);
 	stm2.prepare(sql2.str());
 	rs = stm2.recordset();
-	OGRGeomPtr cart = (Blob) rs["geom"];
+    OGRGeomPtr block = (Blob) rs["geom"];
 
-	if ( !cart->Intersect(blk) )
+    if ( !block->Intersect(carto) ) {
 		return;
-	OGRPolygon* p2 = (OGRPolygon*) ((OGRGeometry*) dif);
+    }
 
-	std::string tabled = std::string("DIFF") + (_type == Prj_type ? "P" : "V");
+    OGRGeomPtr dif = carto->Difference(block);
+    if (dif->IsEmpty()) { //tutte le aree sono coperte
+        return;
+    }
+
+    //OGRPolygon* diffPolygon = (OGRPolygon*) ((OGRGeometry*) dif);
+
+    std::string tabled = std::string("UNCOVERED_AREA") + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(tabled);
 	std::cout << "Layer:" << tabled << std::endl;
 
