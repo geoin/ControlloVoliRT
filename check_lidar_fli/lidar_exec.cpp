@@ -26,10 +26,10 @@
 */
 #include "check_lidar.h"
 #include "Poco/Util/XMLConfiguration.h"
-#include "Poco/stringtokenizer.h"
+#include "Poco/StringTokenizer.h"
 #include "Poco/AutoPtr.h"
 #include "Poco/Path.h"
-#include "Poco/sharedPtr.h"
+#include "Poco/SharedPtr.h"
 #include <fstream>
 #include <sstream>
 #include "ogr_geometry.h"
