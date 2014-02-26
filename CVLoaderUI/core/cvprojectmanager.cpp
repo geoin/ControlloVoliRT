@@ -41,15 +41,17 @@ void CVProjectManager::onNewProject() {
 		CVControl* ctrl = _plan(proj, false);
 		proj->insert(ctrl);
 		
-		ctrl = new CVControl(CVControl::GPS_DATA, proj);
-		ctrl->uri(db);
-		proj->insert(ctrl);
+		if (proj->type == CVProject::PHOTOGRAMMETRY) {
+			ctrl = new CVControl(CVControl::GPS_DATA, proj);
+			ctrl->uri(db);
+			proj->insert(ctrl);
 
-		ctrl = _fly(proj, false);
-		proj->insert(ctrl);
+			ctrl = _fly(proj, false);
+			proj->insert(ctrl);
 
-		ctrl = _orto(proj, false);
-		proj->insert(ctrl);
+			ctrl = _orto(proj, false);
+			proj->insert(ctrl);
+		}
 
 		emit addProject(proj);
 		_projects.append(CVProject::Ptr(proj));
@@ -86,22 +88,24 @@ void CVProjectManager::onLoadProject() {
 		ctrl = _plan(proj, true);
 		proj->insert(ctrl);
 
-		ctrl = new CVControl(CVControl::GPS_DATA, proj);
-		ctrl->uri(db);
-		proj->insert(ctrl);
+		if (proj->type == CVProject::PHOTOGRAMMETRY) {
+			ctrl = new CVControl(CVControl::GPS_DATA, proj);
+			ctrl->uri(db);
+			proj->insert(ctrl);
 
-		QStringList ids;
-		proj->missionList(ids);
-		foreach (const QString& id, ids) {
-			ctrl->insert(new CVMissionObject(ctrl, id));
+			QStringList ids;
+			proj->missionList(ids);
+			foreach (const QString& id, ids) {
+				ctrl->insert(new CVMissionObject(ctrl, id));
+			}
+			ctrl->load();
+			
+			ctrl = _fly(proj, true);
+			proj->insert(ctrl);
+
+			ctrl = _orto(proj, true);
+			proj->insert(ctrl);
 		}
-		ctrl->load();
-		
-		ctrl = _fly(proj, true);
-		proj->insert(ctrl);
-
-		ctrl = _orto(proj, true);
-		proj->insert(ctrl);
 		
 		emit addProject(proj);
 		_projects.append(CVProject::Ptr(proj));
@@ -140,15 +144,17 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 }
 
 CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
-	CVControl* ctrl = new CVControl(CVControl::PLAN, proj);
-	ctrl->uri(proj->db());
+	CVControl* ctrl = NULL;
 
 	// Init camera
 	if (proj->type == CVProject::PHOTOGRAMMETRY) {
+		ctrl = new CVControl(CVControl::PLAN, proj);
+		ctrl->uri(proj->db());
 		CVCamera* cam = new CVCamera(ctrl);
 		ctrl->insert(cam);
 	} else {
-		//TODO
+		ctrl = new CVControl(CVControl::LIDAR_PLAN, proj);
+		ctrl->uri(proj->db());
 		CVSensor* sensor = new CVSensor(ctrl);
 		ctrl->insert(sensor);
 	}

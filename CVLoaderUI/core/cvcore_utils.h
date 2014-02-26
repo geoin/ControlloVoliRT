@@ -94,9 +94,10 @@ public:
 		QSettings().setValue(k, value);
 	}
 
-	static QVariant get(const QString& k) {
-		return QSettings().value(k, QVariant());
+	static QVariant get(const QString& k, const QVariant& v = QVariant()) {
+		return QSettings().value(k, v);
 	}
+
 };
 
 }

@@ -21,8 +21,6 @@ class CVCameraDetail : public CVBaseDetail {
     Q_OBJECT
 public:
     explicit CVCameraDetail(QWidget *parent, Core::CVObject*);
-
-    QLineEdit* lineEdit(QWidget* p, const QPalette&);
 	
 	virtual void clearAll();
 	virtual void searchFile();
@@ -32,9 +30,6 @@ public:
 	void view();
 
 	inline Core::CVCamera* camera() const { return static_cast<Core::CVCamera*>(controller()); }
-
-signals:
-    void cameraInput(const QString& uri);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

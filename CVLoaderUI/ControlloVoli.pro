@@ -13,16 +13,25 @@ TEMPLATE = app
 
 CV_INCL = ../include
 CV_TOOLS_INCL = ../../ControlloVoliRT_Tools/include
-OUT_DIR = ../bin
+OUT_DIR = $$_PRO_FILE_PWD_/../bin
 
+DEFINES += NOMINMAX
 
 INCLUDEPATH += $${CV_INCL}
 
 win32 {
-    INCLUDEPATH += $${CV_TOOLS_INCL}
+    INCLUDEPATH += $${CV_TOOLS_INCL} $$_PRO_FILE_PWD_
+    LIBS += -L$$_PRO_FILE_PWD_"/../lib" -L$$_PRO_FILE_PWD_"/../../ControlloVoliRT_Tools/lib"
+    CONFIG(debug, debug|release) {
+         LIBS += -lCVUtild -lPocoZipd -lspatialite -lPocoFoundationd -lsqlite3_i
+         TARGET = $$join(TARGET,,,d)
+    } else {
+         LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3_i
+    }
 }
 
 unix {
+    LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3
 
 }
 
@@ -128,7 +137,5 @@ RESOURCES += \
 OTHER_FILES += \
     data/update.sql \
     data/db.sql
-
-LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3
 
 DESTDIR = $${OUT_DIR}

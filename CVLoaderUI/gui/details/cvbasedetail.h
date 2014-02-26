@@ -9,6 +9,9 @@
 #include <QFileDialog>
 
 #include "core/categories/cvcontrol.h"
+#include "core/cvcore_utils.h"
+
+class QLineEdit;
 
 namespace CV {
 namespace GUI {
@@ -18,6 +21,7 @@ class CVBaseDetail : public QWidget {
     Q_OBJECT
 public:
 	explicit CVBaseDetail(QWidget* p, Core::CVObject*);
+	virtual ~CVBaseDetail() {}
 
 	inline void title(const QString& title) { _title->setText(title); }
 	inline QString title() const { return _title->text(); }
@@ -29,6 +33,8 @@ public:
 	inline QMenu* detailMenu() const { return _menu; }
 
 	void createRow(QWidget* parent, const QString&, QLabel*& lab, QLabel*& info);
+	
+    QLineEdit* lineEdit(QWidget* p, const QPalette&);
 
 protected:
 	inline Core::CVObject* controller() const { return _controller; }

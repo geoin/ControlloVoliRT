@@ -2,6 +2,8 @@
     <qresource prefix="/sql">
         <file>db.sql</file>
         <file>update.sql</file>
+        <file>lidar.sql</file>
+        <file>photogrammetry.sql</file>
     </qresource>
     <qresource prefix="/style">
         <file>style.qss</file>

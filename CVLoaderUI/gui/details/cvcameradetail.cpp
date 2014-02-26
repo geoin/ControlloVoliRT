@@ -1,7 +1,6 @@
 #include "cvcameradetail.h"
 
 #include "gui/helper/cvactionslinker.h"
-#include "core/cvcore_utils.h"
 
 #include <QLabel>
 #include <QLineEdit>
@@ -28,9 +27,7 @@ namespace Details {
 
 CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p, cam) {
     setAcceptDrops(true);
-
-    //QAction* editCam = menu->addAction(QIcon(""), tr("Modifica"));
-    //connect(editCam, SIGNAL(triggered()), this, SLOT(onEditCamParameters()));
+	title(tr("Fotocamera"));
 
     QFormLayout* form = new QFormLayout;
 
@@ -48,8 +45,6 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 		i->setMaximumHeight(26);
     }
 
-	title(tr("Fotocamera"));
-
 	QLabel* descr = new QLabel(tr("Descrizione:"), this);
     _note = new QPlainTextEdit(this);
     _note->setReadOnly(true);
@@ -66,17 +61,6 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 			view();
 		}
 	}
-}
-
-QLineEdit* CVCameraDetail::lineEdit(QWidget* p, const QPalette& pal) {
-    QBrush back = pal.foreground();
-    const QColor& color = back.color();
-    QLineEdit* line = new QLineEdit("", p);
-    line->setContextMenuPolicy(Qt::NoContextMenu);
-    line->setAlignment(Qt::AlignRight);
-    line->setReadOnly(true);
-    line->setStyleSheet(QString("background-color: rgba(%1, %2, %3, %3)").arg(QString::number(color.red() + 6), QString::number(color.green() + 6), QString::number(color.blue() + 6)));
-    return line;
 }
 
 void CVCameraDetail::dragEnterEvent(QDragEnterEvent* ev) {

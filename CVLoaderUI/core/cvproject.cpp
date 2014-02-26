@@ -2,8 +2,6 @@
 #include "core/sql/querybuilder.h"
 #include "core/cvjournal.h"
 
-#include "CVUtil/cvspatialite.h"
-
 namespace CV {
 namespace Core {
 
@@ -25,7 +23,7 @@ QString CVProject::loadFrom(const QDir& dir) {
 		CV::Util::Spatialite::Recordset set = q->select(
 			QStringList() << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL",
 			QStringList() << "JOURNAL", 
-			QStringList() << "CONTROL < ?1",
+			QStringList() << "CONTROL < ?1", //TODO: change this
 			QVariantList() << CVProject::LIDAR + 1
 		);
 		
@@ -57,8 +55,8 @@ QString CVProject::loadFrom(const QDir& dir) {
 	}
 }
 
-bool CVProject::_addResource(const QString& res, CV::Util::Spatialite::Connection& cnn) {
-	QResource sql(":/sql/db.sql");
+bool CVProject::_addResource(const QString& resource, CV::Util::Spatialite::Connection& cnn) {
+	QResource sql(resource);
 	QFile res(sql.absoluteFilePath());
 	if (!res.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		return false;
@@ -69,8 +67,9 @@ bool CVProject::_addResource(const QString& res, CV::Util::Spatialite::Connectio
 	QStringList tables = query.split(";", QString::SkipEmptyParts);
 	foreach(QString t, tables) {
 		try {
-			if (!t.isEmpty()) {
-				cnn.execute_immediate(t.simplified().toStdString());
+			QString q = t.simplified().trimmed();
+			if (!q.isEmpty()) {
+				cnn.execute_immediate(q.toStdString());
 			}
 		} catch (CV::Util::Spatialite::spatialite_error& err) {
 			Q_UNUSED(err)
@@ -109,54 +108,22 @@ bool CVProject::create(const QString& d) {
 
 	cnn.begin_transaction();
 
-	QResource sql(":/sql/db.sql");
-	QFile res(sql.absoluteFilePath());
-	if (!res.open(QIODevice::ReadOnly | QIODevice::Text)) {
-		return false;
-	}
-	QTextStream str(&res);
-	QString query = str.readAll();
-
-	QStringList tables = query.split(";", QString::SkipEmptyParts);
-	foreach(QString t, tables) {
-		try {
-			if (!t.isEmpty()) {
-				cnn.execute_immediate(t.simplified().toStdString());
-			}
-		} catch (CV::Util::Spatialite::spatialite_error& err) {
-			Q_UNUSED(err)
-			cnn.rollback_transaction();
-			return false;
-		}
-	}
-
-	res.close();
-
-	QResource udpSql(":/sql/update.sql");
-	QFile upd(udpSql.absoluteFilePath());
-	if (!upd.open(QIODevice::ReadOnly | QIODevice::Text)) {
+	if (!_addResource(":/sql/db.sql", cnn)) {
 		return false;
 	}
 
-	str.setDevice(&upd);
-	query = str.readAll();
+	if (!_addResource(":/sql/update.sql", cnn)) {
+		return false;
+	}
 
-	tables = query.split(";", QString::SkipEmptyParts);
-	foreach(QString t, tables) {
-		try {
-			if (!t.isEmpty()) {
-				cnn.execute_immediate(t.simplified().toStdString());
-			}
-		} catch (CV::Util::Spatialite::spatialite_error& err) {
-			Q_UNUSED(err)
-			cnn.rollback_transaction();
-			return false;
-		}
+	bool projSpec = false;
+	if (type == PHOTOGRAMMETRY) {
+		_addResource(":/sql/photogrammetry.sql", cnn);
+	} else {
+		_addResource(":/sql/lidar.sql", cnn);
 	}
 
 	cnn.commit_transaction();
-
-	upd.close();
 
 	id = QUuid::createUuid().toString();
 
@@ -234,7 +201,7 @@ QDateTime CVProject::creationDate() {
 			QStringList() << "DATE",
 			QStringList() << "JOURNAL", 
 			QStringList() << "CONTROL=?1",
-			QVariantList() << 1,
+			QVariantList() << type,
 			QStringList() << "DATE ASC",
 			1
 		);
