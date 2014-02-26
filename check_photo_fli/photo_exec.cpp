@@ -1108,7 +1108,7 @@ void photo_exec::_process_block()
 					double d1, d2, d3, d4;
 					_get_elong(g1, k1, &d1, &d2);
 					OGRGeomPtr inter = g1->Intersection(g2);
-					if ( inter->getGeometryType() == wkbPolygon ) {
+					//if ( inter->getGeometryType() == wkbPolygon ) {
 						_get_elong(inter, k1, &d3, &d4);
 						double dt = (int) 100 * (d3 / d1);
 						stm2[1] = (int) k++;
@@ -1117,7 +1117,7 @@ void photo_exec::_process_block()
 						stm2[4] = dt;
 						stm2.execute();
 						stm2.reset();
-					}
+					//}
 				}
 			}
 		}
