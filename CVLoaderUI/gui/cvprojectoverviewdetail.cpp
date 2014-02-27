@@ -1,5 +1,7 @@
 #include "cvprojectoverviewdetail.h"
 
+#include "gui/dialogs/cvreferenceviewer.h"
+
 #include <QPlainTextEdit>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -16,6 +18,8 @@ namespace GUI {
 namespace Details {
 
 CVProjectOverviewDetail::CVProjectOverviewDetail(QWidget* p, Core::CVProject* c) : QWidget(p), _controller(c) {
+	_scale = NULL;
+
 	QVBoxLayout* l = new QVBoxLayout;
 	setLayout(l);
 
@@ -33,7 +37,9 @@ void CVProjectOverviewDetail::addProjectInformations(QVBoxLayout* l) {
 	_addDescr(info, tr("Data creazione"), _controller->creationDate().toString());
 	_lastModified = _addDescr(info, tr("Ultima modifica"), _controller->lastModificationDate().toString());
 
-	_addScaleCombo(info);
+	if (_controller->type == Core::CVProject::PHOTOGRAMMETRY) {
+		_addScaleCombo(info);
+	} 
 
 	l->addWidget(form);
 }
@@ -49,6 +55,7 @@ void CVProjectOverviewDetail::_addScaleCombo(QFormLayout* form) {
 	}
 	_scale->setDisabled(true);
 	form->addRow(tr("Scala"), _scale);
+	connect(this, SIGNAL(updateScale(int)), _scale, SLOT(setCurrentIndex(int)));
 }
 
 QLabel* CVProjectOverviewDetail::_addDescr(QFormLayout* form, QString label, QString descr) {
@@ -84,21 +91,26 @@ void CVProjectOverviewDetail::addNotesEditor(QVBoxLayout* l) {
 	tBox->setContentsMargins(0, 0, 0, 0);
 	toolbar->setLayout(tBox);
 
+	QPushButton* showConf = new QPushButton("Valori di riferimento", this);
+	showConf->setFixedHeight(28);
+	showConf->setToolTip(tr("Visualizza valori di riferimento"));
+    showConf->setIcon(QIcon(":/graphics/icons/edit.png"));
+	connect(showConf, SIGNAL(clicked()), this, SLOT(showReferenceValues()));
+
 	QPushButton* edit = new QPushButton("", this);
-	edit->setMaximumSize(QSize(36, 28));
-	edit->setMinimumSize(QSize(36, 28));
+	edit->setFixedSize(QSize(36, 28));
 	edit->setToolTip(tr("Modifica"));
 	edit->setCheckable(true);
     edit->setIcon(QIcon(":/graphics/icons/edit.png"));
 	
 	connect(edit, SIGNAL(toggled(bool)), this, SLOT(onEditProject(bool)));
 
+	tBox->addWidget(showConf);
 	tBox->addWidget(edit);
 	tBox->addStretch(2);
 	
 	QPushButton* btn = new QPushButton("", this);
-	btn->setMaximumSize(QSize(36, 28));
-	btn->setMinimumSize(QSize(36, 28));
+	btn->setFixedSize(QSize(36, 28));
 	btn->setVisible(false);
 	btn->setToolTip(tr("Salva"));
     btn->setIcon(QIcon(":/graphics/icons/save.png"));
@@ -113,7 +125,12 @@ void CVProjectOverviewDetail::addNotesEditor(QVBoxLayout* l) {
 	l->addWidget(container);
 
 	connect(this, SIGNAL(updateNotes(const QString&)), _notes, SLOT(setPlainText(const QString&)));
-	connect(this, SIGNAL(updateScale(int)), _scale, SLOT(setCurrentIndex(int)));
+}
+
+void CVProjectOverviewDetail::showReferenceValues() {
+	Dialogs::CVReferenceViewer viewer(this);
+	viewer.updateFrom(*_controller);
+	viewer.exec();
 }
 
 void CVProjectOverviewDetail::onSaveProject() {
@@ -123,7 +140,9 @@ void CVProjectOverviewDetail::onSaveProject() {
          l << it.text();
 	}
 	_controller->notes = l.join("\n");
-	_controller->scale = _scale->currentText();
+	if (_scale) {
+		_controller->scale = _scale->currentText();
+	}
 	_controller->persist();
 }
 
@@ -133,7 +152,9 @@ void CVProjectOverviewDetail::showEvent(QShowEvent* ev) {
 
 void CVProjectOverviewDetail::onEditProject(bool b) {
 	_notes->setReadOnly(!b);
-	_scale->setDisabled(!b);
+	if (_scale) {
+		_scale->setDisabled(!b);
+	}
 	if (b) {
 		_notes->setStyleSheet("");
 	} else {

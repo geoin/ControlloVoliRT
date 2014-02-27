@@ -32,7 +32,16 @@ void CVProjectManager::onNewProject() {
 	GUI::CVScopedCursor c;
 
     Core::CVProject* proj = new Core::CVProject(this);
-    dialog.getInput(*proj);
+	if (!dialog.getInput(*proj)) {
+		return;
+	}
+	if (!proj->refPath.isEmpty()) {
+		QString target = proj->path + QDir::separator() + "refval.xml";
+		if (QFile::exists(target)) {
+			QFile::remove(target);
+		}
+		QFile::copy(proj->refPath, target);
+	}
 
 	bool ret = proj->create(SQL::database);
 	if (ret) {

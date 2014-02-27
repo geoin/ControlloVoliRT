@@ -40,7 +40,7 @@ public:
 	QDateTime lastModificationDate();
 	QString projectNotes();
 
-    QString id, name, path, notes, scale; //TODO, to be private
+    QString id, name, path, notes, scale, refPath; //TODO, to be private
 	long long timestamp;
     Type type;
 

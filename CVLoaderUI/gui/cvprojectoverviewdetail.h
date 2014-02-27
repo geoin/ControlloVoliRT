@@ -30,6 +30,7 @@ signals:
 public slots:
 	void onSaveProject();
 	void onEditProject(bool);
+	void showReferenceValues();
 
 protected:
 	virtual void showEvent(QShowEvent* event);

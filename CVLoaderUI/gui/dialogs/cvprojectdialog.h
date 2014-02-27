@@ -18,14 +18,15 @@ class CVProjectDialog : public QDialog {
 public:
     explicit CVProjectDialog(QWidget *parent = 0);
 
-    void getInput(Core::CVProject& proj);
+    bool getInput(Core::CVProject& proj);
 
 public slots:
+    void selectConfiguration();
     void selectProjectFolder();
 	void changeProjectType(int);
 
 private:
-    QLineEdit* _name, *_path;
+    QLineEdit* _name, *_path, *_conf;
     QPlainTextEdit* _note;
     QComboBox* _type, * _scale;
 };

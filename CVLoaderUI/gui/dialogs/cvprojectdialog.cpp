@@ -37,6 +37,7 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
 
     _name = new QLineEdit(this);
     _path = new QLineEdit(this);
+    _conf = new QLineEdit(this);
     _note = new QPlainTextEdit(this);
     _type = new QComboBox(this);
     _type->addItem(tr("Fotogrammetria"));
@@ -58,17 +59,37 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
     fbox->setContentsMargins(0, 0, 0, 0);
     filePicker->setLayout(fbox);
 
+    connect(fileBtn, SIGNAL(clicked()), this, SLOT(selectProjectFolder()));
+
+	QWidget* confPicker = new QWidget(this);
+    fbox = new QHBoxLayout;
+    fbox->addWidget(_conf, 2);
+    fileBtn = new QPushButton(this);
+    fbox->addWidget(fileBtn);
+    fbox->setContentsMargins(0, 0, 0, 0);
+    confPicker->setLayout(fbox);
+
+    connect(fileBtn, SIGNAL(clicked()), this, SLOT(selectConfiguration()));
+
     form->addRow(tr("Cartella"), filePicker);
+    form->addRow(tr("Configurazione"), confPicker);
     form->addRow(tr("Tipo"), _type);
     form->addRow(tr("Scala"), _scale);
     form->addRow(tr("Note"), _note);
     w->setLayout(form);
-
-    connect(fileBtn, SIGNAL(clicked()), this, SLOT(selectProjectFolder()));
 }
 
 void CVProjectDialog::changeProjectType(int idx) {
 	_scale->setDisabled(idx != 0);
+}
+
+void CVProjectDialog::selectConfiguration() {
+	QString ref = QFileDialog::getOpenFileName(this, 
+		tr("Importa valori di riferimento"), 
+		Core::CVSettings::get("/paths/project").toString(),
+		tr("*.xml")
+	);
+	_conf->setText(ref);
 }
 
 void CVProjectDialog::selectProjectFolder() {
@@ -85,11 +106,14 @@ void CVProjectDialog::selectProjectFolder() {
 	}
 }
 
-void CVProjectDialog::getInput(Core::CVProject& proj) {
+bool CVProjectDialog::getInput(Core::CVProject& proj) {
     proj.name = _name->text();
 	proj.path = _path->text() + QDir::separator() + proj.name;
     proj.type = _type->currentIndex() == 0 ? Core::CVProject::PHOTOGRAMMETRY : Core::CVProject::LIDAR;
-    proj.scale = _scale->currentText();
+	proj.refPath = _conf->text();
+	if (proj.type == Core::CVProject::PHOTOGRAMMETRY) {
+		proj.scale = _scale->currentText();
+	}
 
 	QTextDocument* doc = _note->document();
 	QStringList l;
@@ -97,6 +121,7 @@ void CVProjectDialog::getInput(Core::CVProject& proj) {
          l << it.text();
 	}
 	proj.notes = l.join("\n");
+	return !proj.name.isEmpty() && !proj.path.isEmpty();
 }
 
 } // namespace Dialogs
