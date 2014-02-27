@@ -41,6 +41,7 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
     _type = new QComboBox(this);
     _type->addItem(tr("Fotogrammetria"));
     _type->addItem(tr("Lidar"));
+	connect(_type, SIGNAL(currentIndexChanged(int)), this, SLOT(changeProjectType(int)));
 
 	_scale = new QComboBox(this);
 	_scale->addItem(tr("2000"));
@@ -64,6 +65,10 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
     w->setLayout(form);
 
     connect(fileBtn, SIGNAL(clicked()), this, SLOT(selectProjectFolder()));
+}
+
+void CVProjectDialog::changeProjectType(int idx) {
+	_scale->setDisabled(idx != 0);
 }
 
 void CVProjectDialog::selectProjectFolder() {

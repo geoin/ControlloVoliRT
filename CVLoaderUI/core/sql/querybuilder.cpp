@@ -49,7 +49,7 @@ namespace SQL {
 		QString query("UPDATE %1 SET %2");
 		query = query.arg(tab, values.join(", "));
 		if (where.length()) {
-			query += "WHERE %3";
+			query += " WHERE %3 ";
 			query = query.arg(where.join(" AND "));
 		}
 		
