@@ -32,7 +32,7 @@
 #include "Poco/SharedPtr.h"
 #include <fstream>
 #include <sstream>
-#include "ogr_geometry.h"
+#include "gdal/ogr_geometry.h"
 #include "dem_interpolate/dsm.h"
 #include "common/util.h"
 
@@ -482,10 +482,10 @@ void lidar_exec::_get_overlaps(const std::map<std::string, StripRec>& rec) {
 						OGRGeomPtr intersection = sourceGeom->Intersection(targetGeom);
 						if (intersection->getGeometryType() == wkbPolygon) {
 							double srcMajorAxis, srcMinorAxis;
-							get_elong(sourceGeom, source.yaw, &srcMajorAxis, &srcMinorAxis);
+							get_elong(sourceGeom, DEG_RAD(source.yaw), &srcMajorAxis, &srcMinorAxis);
 							
 							double targetMajorAxis, targetMinorAxis;
-							get_elong(targetGeom, target.yaw, &targetMajorAxis, &targetMinorAxis);
+							get_elong(intersection, DEG_RAD(target.yaw), &targetMajorAxis, &targetMinorAxis);
 
 							double dt = (int) 100 * (targetMajorAxis / srcMajorAxis);
 							stm[1] = ++k;
@@ -547,6 +547,7 @@ void lidar_exec::_get_dif()
     if (dif->IsEmpty()) { //tutte le aree sono coperte
         return;
     }
+	stm2.reset();
 
     //OGRPolygon* diffPolygon = (OGRPolygon*) ((OGRGeometry*) dif);
     std::string tabled = std::string("UNCOVERED_AREA") + (_type == Prj_type ? "P" : "V");
