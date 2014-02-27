@@ -4,6 +4,7 @@
 #include "gui/details/plandetail.h"
 #include "gui/details/cvflydetail.h"
 #include "gui/details/cvortodetail.h"
+#include "gui/details/cvlidarplandetail.h"
 
 #include "core/categories/cvcontrol.h"
 
@@ -27,6 +28,9 @@ QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::
            break;
         case Core::CVControl::ORTO:
 			detail = new Details::CVOrtoDetail(p, control);
+           break;
+		case Core::CVControl::LIDAR_PLAN:
+			detail = new Details::CVLidarPlanDetail(p, control);
            break;
         default:
             break;

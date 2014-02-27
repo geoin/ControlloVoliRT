@@ -85,7 +85,7 @@ QString dbox::get_last_prj()
     return last_prj;
 }
 
-void dbox::_init(QVBoxLayout* qv)
+void dbox::_init(QVBoxLayout* qv, bool is_report)
 {
     QString last_prj = get_last_prj();
 
@@ -109,19 +109,24 @@ void dbox::_init(QVBoxLayout* qv)
 
     // parte finale comune a tutti
     _out = new QTextEdit(this);
-     _out->setMinimumHeight(200);
-     _out->setMinimumWidth(400);
-     qvb->addWidget(_out);
+    _out->setMinimumHeight(200);
+    _out->setMinimumWidth(400);
+    qvb->addWidget(_out);
+
+    QHBoxLayout* hl2 = new QHBoxLayout;
 
     QPushButton* bok = new QPushButton("Esegui");
     connect(bok, SIGNAL(clicked(bool)), this, SLOT(_exec(bool)));
-    QPushButton* brep = new QPushButton("Report");
-    connect(brep, SIGNAL(clicked(bool)), this, SLOT(_report(bool)));
+    hl2->addWidget(bok);
+
+    if ( is_report ) {
+        QPushButton* brep = new QPushButton("Report");
+        connect(brep, SIGNAL(clicked(bool)), this, SLOT(_report(bool)));
+        hl2->addWidget(brep);
+    }
+
     QPushButton* bcanc = new QPushButton("Esci");
     connect(bcanc, SIGNAL(clicked(bool)), this, SLOT(_esci(bool)));
-    QHBoxLayout* hl2 = new QHBoxLayout;
-    hl2->addWidget(bok);
-    hl2->addWidget(brep);
     hl2->addWidget(bcanc);
 
     qvb->addLayout(hl2);
@@ -197,10 +202,12 @@ void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
     _qm->done(0);
     delete _qm;
     _qm = NULL;
+
+    _add_layers_to_legend();
     QMessageBox::information(0, tr("GEOIN PLUGIN"), tr("tool terminated "), QMessageBox::Ok);
     //_mi->getLayerRegistry();
 
-    _add_layers_to_legend();
+    //_add_layers_to_legend();
 }
 void dbox::_terminated1(int exitCode, QProcess::ExitStatus a)
 {
@@ -249,11 +256,8 @@ void dbox::_report(bool b)
     QDir dir(path);
     QFileInfo qf(dir, launcher);
 
-    //QFileInfo qf(_plugin_dir, "run.bat");
-    //QFileInfo qf("pdf_convert.bat");
     args << qf.filePath();
-    args << qf1.filePath(); //_prj->text();
-    //args << _check_name;
+    args << qf1.filePath();
 
     _esegui(exe, args);
 }
@@ -302,7 +306,6 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
     // prepare the parameters
     _args << QString(PARAM_PREFIX("d")); // project dir
     _args << FLAG_PREFIX("p");  // type of check (p = project /f = flight)
-   // _args << "/s=1000";
 
     if ( type == 1 )
         _args[1] = FLAG_PREFIX("f");
@@ -316,38 +319,9 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
-    /*QLabel* l2 = new QLabel("Scala di lavoro:");
-    QComboBox* cmb = new QComboBox;
-    cmb->addItem("1:1000");
-    cmb->addItem("1:2000");
-    cmb->addItem("1:5000");
-    cmb->addItem("1:10000");
-    cmb->setCurrentIndex(0);
-    connect(cmb, SIGNAL(currentIndexChanged(int)), this, SLOT(_optype(int)));
-    QHBoxLayout* hl2 = new QHBoxLayout;
-    hl2->addWidget(l2);
-    hl2->addWidget(cmb);
-    qvb->addLayout(hl2);*/
-
     _init(qvb);
 }
-/*void Check_photo::_optype(int index)
-{
-    switch ( index ) {
-    case 0:
-        _args[2] = "/s=1000";
-        break;
-    case 1:
-        _args[2] = "/s=2000";
-        break;
-    case 2:
-        _args[2] = "/s=5000";
-        break;
-    case 3:
-        _args[2] = "/s=10000";
-        break;
-    }
-}*/
+
 /*******************************************/
 Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 {
@@ -374,7 +348,7 @@ Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
     hl2->addWidget(cmb);
     qvb->addLayout(hl2);
 
-    _init(qvb);
+    _init(qvb, false);
 }
 void Check_gps::_optype(int index)
 {
@@ -396,8 +370,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     _args << PARAM_PREFIX("d"); // project dir
     _args << PARAM_PREFIX("r"); // first results file
     _args << PARAM_PREFIX("c"); // second results file
-    _args << "";//PARAM_PREFIX("o"); // observation file
-    //_args << "/s=1000";
+    _args << ""; // observation file
 
     QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
@@ -458,19 +431,6 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     hl2->addWidget(b3);
     qvb->addLayout(hl3);
 
-    /*QLabel* l4 = new QLabel("Scala di lavoro:");
-    QComboBox* cmb = new QComboBox;
-    cmb->addItem("1:1000");
-    cmb->addItem("1:2000");
-    cmb->addItem("1:5000");
-    cmb->addItem("1:10000");
-    cmb->setCurrentIndex(0);
-    connect(cmb, SIGNAL(currentIndexChanged(int)), this, SLOT(_optype(int)));
-    QHBoxLayout* hl4 = new QHBoxLayout;
-     hl4->addWidget(l4);
-     hl4->addWidget(cmb);
-     qvb->addLayout(hl4);*/
-
      _init(qvb);
 }
 
@@ -528,23 +488,7 @@ bool Check_ta::_dirlist3(bool)
     }
     return true;
 }
-/*void Check_ta::_optype(int index)
-{
-    switch ( index ) {
-    case 0:
-        _args[4] = "/s=1000";
-        break;
-    case 1:
-        _args[4] = "/s=2000";
-        break;
-    case 2:
-        _args[4] = "/s=5000";
-        break;
-    case 3:
-        _args[4] = "/s=10000";
-        break;
-    }
-}*/
+
 Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 {
     setWindowTitle("Controllo orto immagini");
@@ -552,7 +496,6 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 
     _args << QString(PARAM_PREFIX("d")); // project dir
     _args << FLAG_PREFIX("i");  // image folder
-    //_args << "/s=1000"; // reference scale
 
     QString name = _check_name;
     QFileInfo qf(_plugin_dir, name);
@@ -599,6 +542,30 @@ bool Check_ortho::_img_dir(bool)
         qs.setValue("ORTHO_IDIR", dirName) ;
     }
     return true;
+}
+/************************************************************/
+Check_lidar::Check_lidar(QgisInterface* mi, int type): dbox(mi)
+{
+    setWindowTitle(type == 0 ? "Controllo progetto di ripresa" : "Controllo della ripresa effettuata");
+    _check_name = "check_lidar";
+
+    // prepare the parameters
+    _args << QString(PARAM_PREFIX("d")); // project dir
+    _args << FLAG_PREFIX("p");  // type of check (p = project /f = flight)
+
+    if ( type == 1 )
+        _args[1] = FLAG_PREFIX("f");
+
+    QString name = _check_name;// + ".exe";
+
+    QFileInfo qf(_plugin_dir, name);
+    _executable = qf.filePath();
+
+    _check_name.append( type == 0 ? "P" : "V");
+
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    _init(qvb);
 }
 /*******************************************/
 QString icon_path; //("C:/Google Drive/Regione Toscana Tools/icons");
@@ -723,13 +690,13 @@ void QgsRTtoolsPlugin::ver_ortho()
 }
 void QgsRTtoolsPlugin::ver_proj_lidar()
 {
-   // QgsDataSourceURI uri;
-    //uri.setDatabase("C:/Google_drive/Regione Toscana Tools/Dati_test/scarlino/geo.sqlite");
-    //uri.setDataSource("", "AVOLOP", "geom"); // schema, nome layer, nome colonna geografica
-    //mIface->addVectorLayer(uri.uri(), "AVOLOP", "spatialite"); // uri, nome lnella legenda, nome provider
+    Check_lidar* db = new Check_lidar(mIface, 0);
+    db->open();
 }
 void QgsRTtoolsPlugin::ver_lidar()
 {
+    Check_lidar* db = new Check_lidar(mIface, 1);
+    db->open();
 }
 void QgsRTtoolsPlugin::ver_raw_lidar()
 {

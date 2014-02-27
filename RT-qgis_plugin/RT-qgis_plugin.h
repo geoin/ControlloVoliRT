@@ -84,7 +84,7 @@ protected slots:
     bool _dirlist(bool);
 protected:
     void _esegui(const QString& exe, const QStringList& args);
-    void _init(QVBoxLayout* qvb);
+    void _init(QVBoxLayout* qvb, bool is_report = true);
     void _add_layers_to_legend(void);
     QString get_last_prj(void);
     QString _plugin_dir;
@@ -113,8 +113,6 @@ class Check_photo: public dbox {
     Q_OBJECT
 public:
     Check_photo(QgisInterface* mi, int type);
-//protected slots:
-    //void _optype(int index);
 private:
 };
 class Check_ta: public dbox {
@@ -125,7 +123,6 @@ protected slots:
     bool _dirlist1(bool);
     bool _dirlist2(bool);
     bool _dirlist3(bool);
-    //void _optype(int index);
 private:
     QLineEdit* _f1;
     QLineEdit* _f2;
@@ -141,5 +138,10 @@ protected slots:
 private:
      QLineEdit* _idir;
 };
-
+class Check_lidar: public dbox {
+    Q_OBJECT
+public:
+    Check_lidar(QgisInterface* mi, int type);
+private:
+};
 #endif

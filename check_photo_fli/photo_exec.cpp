@@ -78,7 +78,6 @@ bool photo_exec::run()
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
         cnn.open(db_path.toString());
-        //cnn.initialize_metdata();
 
 		if ( !GetProjData(cnn, _note, _refscale) )
 			throw std::runtime_error("dati progetto incompleti");
@@ -870,8 +869,8 @@ void photo_exec::_process_models()
 				//dh /= 1000.;
 
 				double d1f, d2f, d1m, d2m;
-				_get_elong(pol1, _vdps[nomeleft].ka, &d1f, &d2f);
-				_get_elong(mod, _vdps[nomeleft].ka, &d1m, &d2m);
+				get_elong(pol1, _vdps[nomeleft].ka, &d1f, &d2f);
+				get_elong(mod, _vdps[nomeleft].ka, &d1m, &d2m);
 				double lo = 100 * d1m / d1f; // longitudinal overlap
 				double to = 100 * d2m / d2f; // trasversal overlap
 
@@ -1106,10 +1105,10 @@ void photo_exec::_process_block()
 				OGRGeomPtr g2 = vs[j].geo;
 				if ( g1->Intersect(g2) ) {
 					double d1, d2, d3, d4;
-					_get_elong(g1, k1, &d1, &d2);
+					get_elong(g1, k1, &d1, &d2);
 					OGRGeomPtr inter = g1->Intersection(g2);
 					//if ( inter->getGeometryType() == wkbPolygon ) {
-						_get_elong(inter, k1, &d3, &d4);
+						get_elong(inter, k1, &d3, &d4);
 						double dt = (int) 100 * (d3 / d1);
 						stm2[1] = (int) k++;
 						stm2[2] = vs[i].strip;

@@ -32,7 +32,7 @@
 #include "docbook/docbook.h"
 #include "CVUtil/cvspatialite.h"
 #include "CVUtil/ogrgeomptr.h"
-#include "geom.h"
+#include "dem_interpolate/geom.h"
 
 class DSM_Factory;
 
@@ -50,15 +50,27 @@ public:
 		Prj_type = 0,
 		fli_type = 1
 	};
-	lidar_exec() {}
+
+	lidar_exec() : STRIP_OVERLAP(0), STRIP_OVERLAP_RANGE(0), MAX_STRIP_LENGTH(0) { }
 	~lidar_exec();
+
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
 	void set_checkType(Check_Type t);
+
 private:
+	struct StripRec {
+		StripRec() : yaw(0.0f) {}
+		std::string name;
+		double yaw;
+		CV::Util::Geometry::OGRGeomPtr geom;
+	};
+
 	void _process_strips(void);
 	void _process_block(void);
 	void _get_dif(void);
+
+	void _get_overlaps(const std::map<std::string, StripRec>&);
 
 	bool _read_lidar(void);
 	bool _read_dem(void);
@@ -70,6 +82,7 @@ private:
 	Doc_Item _initpg1(void);
 	Doc_Item _initpg2(void);
 
+	void _final_report();
 
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
@@ -87,6 +100,9 @@ private:
 	docbook _dbook;
 	Doc_Item _article;
 	std::string _dem_name;
+	std::string _note;
+
+	int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
 };
 
 class check_lidar: public Poco::Util::Application {

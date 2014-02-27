@@ -3,6 +3,8 @@
 
 #include "core/categories/cvcontrol.h"
 
+#include "CVUtil/cvspatialite.h"
+
 #include <QMap>
 #include <QDir>
 #include <QFileDialog>
