@@ -22,6 +22,7 @@ public:
 
 public slots:
     void selectProjectFolder();
+	void changeProjectType(int);
 
 private:
     QLineEdit* _name, *_path;

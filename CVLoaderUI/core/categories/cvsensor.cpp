@@ -42,7 +42,7 @@ bool CVSensor::persist() {
 			ret = q->update( //TODO: real id
 				"SENSOR", 
 				QStringList() << "FOV=?1" << "IFOV=?2" << "FREQ=?3" << "SCAN_RATE=?4" << "PLANNING=?5",
-				QStringList() << "ID=?16",
+				QStringList() << "ID=?6",
 				QVariantList() << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << true << _sensor.id //TODO
 			);
 			
