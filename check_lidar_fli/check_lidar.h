@@ -59,9 +59,18 @@ public:
 	void set_checkType(Check_Type t);
 
 private:
+	struct StripRec {
+		StripRec() : yaw(0.0f) {}
+		std::string name;
+		double yaw;
+		CV::Util::Geometry::OGRGeomPtr geom;
+	};
+
 	void _process_strips(void);
 	void _process_block(void);
 	void _get_dif(void);
+
+	void _get_overlaps(const std::map<std::string, StripRec>&);
 
 	bool _read_lidar(void);
 	bool _read_dem(void);
@@ -94,13 +103,6 @@ private:
 	std::string _note;
 
 	int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
-
-	struct StripRec {
-		StripRec() : yaw(0.0f) {}
-		std::string name;
-		float yaw;
-		CV::Util::Geometry::OGRGeomPtr geom;
-	};
 };
 
 class check_lidar: public Poco::Util::Application {

@@ -126,6 +126,7 @@ bool lidar_exec::run()
 
 		return true;
 	} catch(const std::exception& ex) {
+		std::string msg = ex.what();
 		return false; //TODO
 	}
 }
@@ -404,6 +405,9 @@ void lidar_exec::_process_block()
 		}
 		rs.next();
 	}
+
+	_get_overlaps(rec);
+
 	std::string tableb = std::string("BLOCK") + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(tableb);
 	std::cout << "Layer:" << tableb << std::endl;
@@ -433,6 +437,73 @@ void lidar_exec::_process_block()
 	cnn.commit_transaction();
 
 	_get_dif();
+}
+
+void lidar_exec::_get_overlaps(const std::map<std::string, StripRec>& rec) {
+	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
+	cnn.remove_layer(table);
+
+	std::cout << "Calcolo sovrapposizione tra strisciate" << std::endl;
+
+	// create the strip overlap table
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
+		"Z_STRIP1 TEXT NOT NULL, " <<
+		"Z_STRIP2 TEXT NOT NULL, " <<
+		"Z_STRIP_T_OVERLAP INT NOT NULL)";  // overlap trasversale
+	cnn.execute_immediate(sql.str());
+
+	sql.str("");
+
+	sql << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP1, Z_STRIP2, Z_STRIP_T_OVERLAP) VALUES (?1, ?2, ?3, ?4)";
+	CV::Util::Spatialite::Statement stm(cnn);
+	cnn.begin_transaction();
+	try {
+		stm.prepare(sql.str());
+
+		std::map<std::string, StripRec>::const_iterator it = rec.begin();
+		std::map<std::string, StripRec>::const_iterator end = rec.end();
+		
+		int k = 0;
+		for (; it != end; it++) {
+			const StripRec& source = (*it).second;
+			std::map<std::string, StripRec>::const_iterator next = it;
+			for (next++; next != end; next++) {
+				const StripRec& target = (*next).second;
+				double diff = source.yaw - target.yaw;
+				if (diff > 180) {
+					diff = 360 - diff;
+				}
+				diff = fabs(diff);
+				if (diff < 10 || diff > 170) {
+					OGRGeomPtr sourceGeom = source.geom;
+					OGRGeomPtr targetGeom = target.geom;
+					if (sourceGeom->Intersect(targetGeom)) {
+						OGRGeomPtr intersection = sourceGeom->Intersection(targetGeom);
+						if (intersection->getGeometryType() == wkbPolygon) {
+							double srcMajorAxis, srcMinorAxis;
+							get_elong(sourceGeom, source.yaw, &srcMajorAxis, &srcMinorAxis);
+							
+							double targetMajorAxis, targetMinorAxis;
+							get_elong(targetGeom, target.yaw, &targetMajorAxis, &targetMinorAxis);
+
+							double dt = (int) 100 * (targetMajorAxis / srcMajorAxis);
+							stm[1] = ++k;
+							stm[2] = source.name;
+							stm[3] = target.name;
+							stm[4] = dt;
+							stm.execute();
+							stm.reset();
+						}
+					}
+				}
+			}
+		}
+	} catch (const std::exception& ex) {
+		cnn.rollback_transaction();
+	}
+	cnn.commit_transaction();
 }
 
 void lidar_exec::_get_dif()
@@ -479,7 +550,6 @@ void lidar_exec::_get_dif()
     }
 
     //OGRPolygon* diffPolygon = (OGRPolygon*) ((OGRGeometry*) dif);
-
     std::string tabled = std::string("UNCOVERED_AREA") + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(tabled);
 	std::cout << "Layer:" << tabled << std::endl;
