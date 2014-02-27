@@ -25,7 +25,7 @@ public:
 	struct SensorData {
 		SensorData() : fov(0.0f), ifov(0.0f), freq(0.0f), scan_rate(0.0f), planning(false) {}
 
-		float fov, ifov, freq, scan_rate;
+		double fov, ifov, freq, scan_rate;
 		bool planning;
 		QString id;
 	};
