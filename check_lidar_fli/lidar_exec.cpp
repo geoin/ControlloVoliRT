@@ -472,10 +472,9 @@ void lidar_exec::_get_overlaps(const std::map<std::string, StripRec>& rec) {
 			for (next++; next != end; next++) {
 				const StripRec& target = (*next).second;
 				double diff = source.yaw - target.yaw;
-				if (diff > 180) {
-					diff = 360 - diff;
-				}
-				diff = fabs(diff);
+
+				diff = fabs(diff > 180 ? 360 - diff : diff);
+
 				if (diff < 10 || diff > 170) {
 					OGRGeomPtr sourceGeom = source.geom;
 					OGRGeomPtr targetGeom = target.geom;
