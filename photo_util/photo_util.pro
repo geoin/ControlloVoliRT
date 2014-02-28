@@ -3,16 +3,25 @@
 # Project created by QtCreator 2013-10-10T17:26:24
 #
 #-------------------------------------------------
-CONFIG += sharedlib
+
 QT       -= core gui
 TARGET = photo_util
 TEMPLATE = lib
 
-INCLUDEPATH += ../include
+DEFINES += DLL_EXPORTS
+
+SOURCES += \
+    vdp.cpp \
+    sun.cpp
+
+HEADERS +=\
+    vdp.h \
+    sun.h
+
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 
 win32 {
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-        DEFINES += DLL_EXPORTS
+        INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
         CONFIG += wd4996
 }
 macx {
@@ -23,17 +32,7 @@ CONFIG(debug, debug|release) {
         TARGET = $$join(TARGET,,,d)
 }
 
-DEFINES +=PHOTOUTIL_LIBRARY
-
-SOURCES += \
-    vdp.cpp \
-    sun.cpp
-
-HEADERS +=\
-    vdp.h \
-    sun.h
-
-DESTDIR = ../lib
+DESTDIR = $$_PRO_FILE_PWD_/../lib
 
 incl.path = ../include/photo_util
 incl.files = ../photo_util/sun.h ../photo_util/vdp.h

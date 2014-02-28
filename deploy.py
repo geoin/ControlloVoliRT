@@ -9,13 +9,15 @@ make = ""
 platform = sys.platform
 if platform == "linux2":
     make = "make"
+    qmake = "qmake"
 else:
+    qmake = "C:/Qt/4.7.4/bin/qmake.exe"
     make = "nmake"
 
 def buildList(l):
     for mod in l:
         os.chdir(mod)
-        subprocess.call(["qmake", "-config", "release"])
+        subprocess.call([qmake, "-config", "release"])
         #subprocess.call(["make", "clean"])
         ret = subprocess.call([make])
         os.chdir("..")
@@ -26,9 +28,9 @@ def buildList(l):
 def addToZip(path, zip):
     for root, dirs, files in os.walk(path):
         for file in files:
-	    absFile = os.path.join(root, file)
-            if os.path.islink(absFile): #symlinks in zip
-            	linkto = os.readlink(absFile)
+            absFile = os.path.join(root, file)
+            if os.path.islink(absFile):
+                linkto = os.readlink(absFile)
                 a = zipfile.ZipInfo(absFile)
                 a.filename = absFile
                 a.create_system = 3

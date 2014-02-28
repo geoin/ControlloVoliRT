@@ -3,7 +3,7 @@
 # Project created by QtCreator 2013-10-10T17:26:24
 #
 #-------------------------------------------------
-CONFIG += sharedlib
+CONFIG += dll
 QT       -= core gui qt
 TARGET = dem_interpolate
 TEMPLATE = lib
@@ -21,9 +21,9 @@ macx {
 
 CONFIG(debug, debug|release) {
         LIBS += -lPocoFoundationd -lPocoZipd -llaslib
-        #TARGET = $$join(TARGET,,,d)
+        TARGET = $$join(TARGET,,,d)
 }
-CONFIG(release, debug|release) {
+else {
     LIBS += -lPocoFoundation -lPocoZip -llaslib
 }
 
@@ -32,7 +32,7 @@ INCLUDEPATH += ../../ControlloVoliRT_Tools/include \
     ../include/dem_interpolate\
     ../include
 
-DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS
+DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS NOMINMAX
 
 SOURCES += \
     geom.cpp \
