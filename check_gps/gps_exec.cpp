@@ -49,7 +49,7 @@
 #define SHAPE_CHAR_SET "CP1252"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOC "check_gps.xml"
-#define REF_FILE "Regione_Toscana_RefVal.xml"
+#define REF_FILE "refval.xml"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -114,7 +114,7 @@ bool gps_exec::run()
 		
 		// write the result on the docbook report
 		//_dbook.write();
-        std::cout << "Prodcedura terminata corretamente" << std::endl;
+        std::cout << "Procedura terminata corretamente" << std::endl;
 	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
@@ -134,7 +134,7 @@ void gps_exec::_init_document()
 bool gps_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
-	ref_file.popDirectory();
+	//ref_file.popDirectory();
 	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {

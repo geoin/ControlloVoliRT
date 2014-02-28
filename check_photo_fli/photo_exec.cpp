@@ -40,7 +40,7 @@
 
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
-#define REF_FILE "Regione_Toscana_RefVal.xml"
+#define REF_FILE "refval.xml"
 #define FOTOGRAMMETRIA "Fotogrammetria"
 
 #define CAMERA "camera.xml"
@@ -162,7 +162,7 @@ void photo_exec::set_checkType(Check_Type t)
 bool photo_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
-	ref_file.popDirectory();
+	//ref_file.popDirectory();
 	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {

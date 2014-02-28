@@ -1,6 +1,5 @@
 #include "cvstationsdetail.h"
 
-#include "gui/cvgui_utils.h"
 #include "core/cvcore_utils.h"
 
 #include <QHBoxLayout>
@@ -47,6 +46,9 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVObject* s) : CVBaseDetail
 	for (int i = 0; i < stations()->count(); ++i) {
 		addItem(stations()->at(i)->name());
 	}
+	
+	connect(this, SIGNAL(persisted()), this, SLOT(onDataPersisted()));
+	connect(this, SIGNAL(importQueued(const QStringList&)), this, SLOT(importAll(const QStringList&)), Qt::QueuedConnection);
 }
 
 CVStationsDetail::~CVStationsDetail() {
@@ -56,6 +58,40 @@ void CVStationsDetail::clearAll() {
 	controller()->remove();
 	_stations->clear();
 	_details->clear();
+}
+
+void CVStationsDetail::onUpdateStatus(QString str) {
+	_dialog.setLabelText(str);
+}
+
+void CVStationsDetail::onDataPersisted() {
+	_dialog.setLabelText(tr("Salvataggio in corso.."));
+
+	QFileInfo info = res.result();
+	QString rinex = info.baseName();
+	Core::CVStation::Ptr r(_id.isEmpty() ? new Core::CVStation(this) : new Core::CVStation(this, _id));
+	r->mission(stations()->mission());
+	r->origin(info.absoluteFilePath());
+	r->uri(stations()->uri());
+	if (r->persist()) {
+		if (_id.isEmpty()) {
+			CVStationDelegate* del = addItem(rinex);
+			//TODO: other info
+			stations()->add(r);
+		} 
+		
+
+		if (_details->isVisible()) {
+			int index = _stations->currentRow();
+			onStationSelected(index);
+		}
+	}
+	
+	_base = QString();
+	_station = QString();
+	_id = QString();
+	_dialog.setLabelText("");
+	_dialog.close();
 }
 
 void CVStationsDetail::searchFile() {
@@ -86,20 +122,18 @@ void CVStationsDetail::searchFile() {
 	}
 }
 
-void CVStationsDetail::importAll(QStringList& uri) {
-	GUI::CVScopedCursor cur;
-	
-	Core::CVScopedTmpDir tmpDir(QFileInfo(stations()->uri()).absolutePath());
-
-	//need a tmp dir
-	const QString& tmp = tmpDir.toString();
+//TODO: move to controller
+QFileInfo CVStationsDetail::_importAllAsync(Core::CVScopedTmpDir& tmpDir, QStringList& uri) {
+	QString tmp = tmpDir.toString();
 	if (tmp.isEmpty()) {
-		return;
+		emit persisted();
+		return QFileInfo();
 	}
+
+	emit onUpdateStatus(tr("Analisi dei dati in corso.."));
 	
 	//check if this station is already in for actual mission, if so get the zip and decompress
-	QString id;
-	QString zipToUpdate = stations()->getZipFromStation(_station, tmp, id);
+	QString zipToUpdate = stations()->getZipFromStation(_station, tmp, _id);
 	if (!zipToUpdate.isEmpty()) {
 		Core::CVZip::unzip(zipToUpdate.toStdString(), tmp.toStdString());
 		tmpDir.dir().remove(zipToUpdate);
@@ -129,48 +163,34 @@ void CVStationsDetail::importAll(QStringList& uri) {
 		files.push_back(f.toStdString());
 	}
 
+	
+	emit onUpdateStatus(tr("Creazione pacchetto.."));
+
 	//new zip creation
 	QString z(tmp + QDir::separator() + _station + ".zip");
 	bool ok = Core::CVZip::zip(files, z.toStdString());
 	if (!ok) {
-		uri.clear();
-		_base = QString();
-		_station = QString();
-		return; // TODO: warning
+		emit persisted();
+		return QFileInfo();
 	}
 
 	//update view
 	QFileInfo info(z);
-	QString rinex = info.baseName();
-	
+	emit persisted();
 	//TODO (FIX): needs to handle station id inside controller
-	Core::CVStation::Ptr r(id.isEmpty() ? new Core::CVStation(this) : new Core::CVStation(this, id));
-	r->mission(stations()->mission());
-	r->origin(info.absoluteFilePath());
-	r->uri(stations()->uri());
-	if (!r->persist()) {
-		uri.clear();
-		_base = QString();
-		_station = QString();
-		return;
-	}
+	return info;
+}
 
-	if (id.isEmpty()) {
-		CVStationDelegate* del = addItem(rinex);
-		//TODO: other info
-		stations()->add(r);
-	} 
-
-	//clean up
+void CVStationsDetail::importAll(const QStringList& uri) {
+	GUI::CVScopedCursor cur;
 	
-    uri.clear();
-	_base = QString();
-	_station = QString();
+	Core::CVScopedTmpDir tmpDir(QFileInfo(stations()->uri()).absolutePath());
+	res = QtConcurrent::run(this, &CVStationsDetail::_importAllAsync, tmpDir, uri);
 
-	if (_details->isVisible()) {
-		int index = _stations->currentRow();
-		onStationSelected(index);
-	}
+	_dialog.setWindowTitle(tr("Caricamento stazione in corso.."));
+	_dialog.resize(260, 100);
+	_dialog.resizeBarWidth(230);
+	_dialog.exec();
 }
 
 void CVStationsDetail::onStationSelected(int item) {
@@ -264,8 +284,7 @@ void CVStationsDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 //TODO: handle this in controller
 void CVStationsDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	importAll(_files);
-	
+	emit importQueued(_files);
 }
 
 } // namespace Details

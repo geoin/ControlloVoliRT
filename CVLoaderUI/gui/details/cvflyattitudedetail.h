@@ -11,7 +11,6 @@
 #include <QFileInfo>
 #include <QList>
 
-#include <QProgressDialog>
 #include <QtConcurrentRun>
 #include <QFuture>
 

@@ -1,7 +1,6 @@
 #include "cvrinexdetail.h"
 
 #include "gui/helper/cvactionslinker.h"
-#include "gui/cvgui_utils.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -62,6 +61,9 @@ CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVObject* r) : CVBaseDetail(p, r)
 			_details->insertItem(0, it);
 		}
 	}
+
+	connect(this, SIGNAL(persisted()), this, SLOT(onDataPersisted()));
+	connect(this, SIGNAL(importQueued(const QStringList&)), this, SLOT(importAll(const QStringList&)), Qt::QueuedConnection);
 }
 
 void CVRinexDetail::dragEnterEvent(QDragEnterEvent* ev) {
@@ -117,19 +119,78 @@ void CVRinexDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 void CVRinexDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 
-	CV::GUI::CVScopedCursor cur;
-	/*
-	TODO
-	*/
-
-	//if a zip is dragged, decompress it in tmp
-	importAll(_files);
+	emit importQueued(_files);
 }
 
 void CVRinexDetail::clearAll() {
 	controller()->remove();
 	_name->setText("");
 	_details->clear();
+}
+
+bool CVRinexDetail::_importAllAsync(Core::CVScopedTmpDir& tmpDir, QStringList& uri) {
+	const QString& tmp = tmpDir.toString();
+	assert(!tmp.isEmpty());
+	
+	emit onUpdateStatus(tr("Analisi dei dati in corso.."));
+
+	QDir& d = tmpDir.dir();
+
+	if (_base == "zip") {
+		foreach (const QString& f, uri) {
+			Core::CVZip::unzip(f.toStdString(), tmp.toStdString());
+		}
+		QStringList tmpFiles = d.entryList(QDir::Files);
+
+		uri.clear();
+		foreach (const QString& n, tmpFiles) {
+			uri.append(tmp + QDir::separator() + n);
+		}
+	} else { 
+		foreach (const QString& f, uri) {
+			QFileInfo info(f);
+			QFile::copy(f, tmp + QDir::separator() + info.fileName());// .n .o in tmp 
+		}
+	}
+
+	emit onUpdateStatus(tr("Creazione pacchetto.."));
+
+	std::vector<std::string> files;
+	foreach (const QString& f, uri) {
+		files.push_back(f.toStdString());
+	}
+
+	//new zip creation
+	QString z(tmp + QDir::separator() + _station + ".zip");
+	Core::CVZip::zip(files, z.toStdString());
+
+	
+	emit onUpdateStatus(tr("Inserimento dati in corso.."));
+	
+	rinex()->origin(z);
+	bool ret = controller()->persist();
+	emit persisted();
+	return ret;
+}
+
+void CVRinexDetail::onUpdateStatus(QString txt) {
+	_dialog.setLabelText(txt);
+}
+
+void CVRinexDetail::onDataPersisted() {
+	_name->setText(rinex()->name());
+	QStringList data;
+	rinex()->list(data);
+	_details->clear();
+	foreach (const QString& f, data) {
+		QListWidgetItem* it = new QListWidgetItem(_details);
+		it->setSizeHint(QSize(0, 26));
+		it->setText(f);
+		_details->insertItem(0, it);
+	}
+
+	_dialog.setLabelText("");
+	_dialog.close();
 }
 
 void CVRinexDetail::searchFile() {
@@ -139,8 +200,6 @@ void CVRinexDetail::searchFile() {
 		Core::CVSettings::get("/paths/search").toString(),
         "(*.*n *.*o *.zip)"
     );
-
-	CV::GUI::CVScopedCursor cur;
 
 	QSet<QString> ext;
 	if (!uri.isEmpty()) {
@@ -162,56 +221,18 @@ void CVRinexDetail::searchFile() {
 	}
 }
 	
-void CVRinexDetail::importAll(QStringList& uri) {
+void CVRinexDetail::importAll(const QStringList& uri) {
 	//need a tmp dir
+	CV::GUI::CVScopedCursor cur;
 	
 	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(rinex()->uri()).absolutePath());
-	const QString& tmp = tmpDir.toString();
-	assert(!tmp.isEmpty());
 
-	QDir& d = tmpDir.dir();
+	res = QtConcurrent::run(this, &CVRinexDetail::_importAllAsync, tmpDir, uri);
 
-	if (_base == "zip") {
-		foreach (const QString& f, uri) {
-			Core::CVZip::unzip(f.toStdString(), tmp.toStdString());
-		}
-		QStringList tmpFiles = d.entryList(QDir::Files);
-
-		uri.clear();
-		foreach (const QString& n, tmpFiles) {
-			uri.append(tmp + QDir::separator() + n);
-		}
-	} else { 
-		foreach (const QString& f, uri) {
-			QFileInfo info(f);
-			QFile::copy(f, tmp + QDir::separator() + info.fileName());// .n .o in tmp 
-		}
-	}
-
-	std::vector<std::string> files;
-	foreach (const QString& f, uri) {
-		files.push_back(f.toStdString());
-	}
-
-	//new zip creation
-	QString z(tmp + QDir::separator() + _station + ".zip");
-	Core::CVZip::zip(files, z.toStdString());
-	
-	rinex()->origin(z);
-	controller()->persist();
-
-	_name->setText(rinex()->name());
-	QStringList data;
-	rinex()->list(data);
-	_details->clear();
-	foreach (const QString& f, data) {
-		QListWidgetItem* it = new QListWidgetItem(_details);
-		it->setSizeHint(QSize(0, 26));
-		it->setText(f);
-		_details->insertItem(0, it);
-	}
-
-	uri.clear();
+	_dialog.setWindowTitle(tr("Caricamento stazione in corso.."));
+	_dialog.resize(260, 100);
+	_dialog.resizeBarWidth(230);
+	_dialog.exec();
 }
 
 } // namespace Details
