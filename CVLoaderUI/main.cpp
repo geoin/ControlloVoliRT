@@ -44,7 +44,13 @@ int main(int argc, char *argv[]) {
 	w.setStyleSheet(str.readAll());
 
 	w.setWindowTitle("Controllo Voli");
-    w.show();
+
+	bool maximized = CV::Core::CVSettings::get("/app/maximized").toBool();
+	if (maximized) {
+		w.showMaximized();
+	} else {
+		w.show();
+	}
 
     int ret = app.exec();
     return ret;

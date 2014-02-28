@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QProgressDialog>
+#include <QProgressbar>
 #include <QMessageBox>
 
 namespace CV {
@@ -21,8 +22,10 @@ public:
 
 class CVProgressDialog : public QProgressDialog {
 public:
-    CVProgressDialog(QWidget* p = NULL, Qt::WindowFlags f = 0) : QProgressDialog(p, f) {
-		//TODO: add window flags
+    CVProgressDialog(QWidget* p = NULL, Qt::WindowFlags f = 0) : QProgressDialog(p, f), _bar(this) {
+		setWindowFlags(((windowFlags() | Qt::CustomizeWindowHint) & ~Qt::WindowCloseButtonHint) & ~Qt::WindowContextHelpButtonHint);
+		setBar(&_bar);
+		
 		setWindowModality(Qt::WindowModal);
 		setCancelButton(NULL);
 		setRange(0, 0);
@@ -31,6 +34,13 @@ public:
 	~CVProgressDialog() {
 		reset();
 	}
+
+	inline void resizeBarWidth(int w) {
+		_bar.setMinimumWidth(w);
+	}
+
+private:
+	QProgressBar _bar;
 };
 
 class CVMessageBox {

@@ -34,26 +34,10 @@ CVContourDetail::CVContourDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p
 	_labels << info;
 	form->addRow(lab, info);
 
-	/*createRow(this, tr("Perimetro"), lab, info);
-	_labels << info;
-	form->addRow(lab, info);
-	
-	createRow(this, tr("Nome"), lab, info);
-	_labels << info;
-	form->addRow(lab, info);
-	
-	createRow(this, tr("CODREG"), lab, info);
-	_labels << info;
-	form->addRow(lab, info);*/
-
 	body(form);
 
 	if (controller()->isValid()) {
-		QStringList info = layer()->data();
-		for (int i = 0; i < info.size(); ++i) {
-			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i).toInt() != 0 ? "Dati inseriti." : "");
-		}
+		_labels.at(0)->setText(tr("Dati inseriti"));
 	}
 }
 
@@ -85,13 +69,8 @@ void CVContourDetail::searchFile() {
 
 void CVContourDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
-	if (controller()->persist()) {
-		QStringList& info = layer()->data();
-		for (int i = 0; i < _labels.size(); ++i) {
-			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i).toInt() != 0 ? "Dati inseriti" : "");
-		}
-	}
+	controller()->persist();
+	_labels.at(0)->setText(tr("Dati inseriti"));
 }
 
 void CVContourDetail::dragEnterEvent(QDragEnterEvent* ev) {

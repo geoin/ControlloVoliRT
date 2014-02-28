@@ -21,6 +21,7 @@ namespace Core {
 
 CVFlyAttitude::CVFlyAttitude(QObject* p) : CVObject(p) {
 	_isValid = false;
+	_count = 0;
 }
 
 CVFlyAttitude::~CVFlyAttitude() {
@@ -48,13 +49,16 @@ bool CVFlyAttitude::remove() { //TODO, should use id
 		QVariantList()
 	);
 
+	_count = 0;
 	return ret;
 }
 
 bool CVFlyAttitude::persist() {
+	_count = 0;
 	QFile file(_origin);
 	bool open = file.open(QIODevice::ReadOnly | QIODevice::Text);
 	if (!open) {
+		emit persisted();
 		return false;
 	}
 	remove();
@@ -67,6 +71,7 @@ bool CVFlyAttitude::persist() {
 		cnn.open(uri().toStdString());
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
+		emit persisted();
 		return false;
 	}
 	cnn.begin_transaction();
@@ -118,10 +123,11 @@ bool CVFlyAttitude::persist() {
 				ph,
 				data
 			)) {
-		} {
 			cnn.rollback_transaction();
+			emit persisted();
+			return false;
 		}
-		
+		emit itemInserted(++_count);
 	}
 
 	cnn.commit_transaction();
@@ -139,6 +145,7 @@ bool CVFlyAttitude::persist() {
 	e->db = uri();
 	Core::CVJournal::add(e);
 
+	emit persisted();
 	return true;
 }
 

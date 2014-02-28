@@ -1,7 +1,6 @@
 #include "cvflyattitudedetail.h"
 
 #include "core/cvcore_utils.h"
-#include "gui/cvgui_utils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -51,6 +50,9 @@ CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBase
 			lab->setText(info.at(i));
 		}
 	}
+
+	connect(controller(), SIGNAL(persisted()), this, SLOT(onDataPersisted()));
+	connect(controller(), SIGNAL(itemInserted(int)), this, SLOT(onItemInserted(int)));
 }
 
 CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
@@ -61,13 +63,27 @@ void CVFlyAttitudeDetail::importAll(QStringList& uri) {
 	CV::GUI::CVScopedCursor cur;
 
 	layer()->origin(uri.at(0));
-	if (controller()->persist()) {
+	res = QtConcurrent::run(controller(), &CV::Core::CVObject::persist);
+
+	_dialog.setWindowTitle(tr("Caricamento assetti in corso.."));
+	_dialog.resize(260, 100);
+	_dialog.resizeBarWidth(230);
+	_dialog.exec();
+}
+
+void CVFlyAttitudeDetail::onItemInserted(int el) {
+	_dialog.setLabelText(tr("Elementi inseriti") + ": " + QString::number(el));
+}
+
+void CVFlyAttitudeDetail::onDataPersisted() {
+	if (res.result()) {
 		QStringList& info = layer()->data();
 		for (int i = 0; i < _labels.size(); ++i) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
 		}
 	}
+	_dialog.close();
 }
 
 void CVFlyAttitudeDetail::searchFile() {

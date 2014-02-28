@@ -42,7 +42,8 @@ protected:
 		if (obj->isValid()) {
 			obj->controlType(_control);
 			QStringList info = layer()->data();
-			for (int i = 0; i < info.size(); ++i) {
+			_labels.at(0)->setText(QString::number(layer()->rows()));
+			for (int i = 1; i < info.size(); ++i) {
 				QLabel* lab = _labels.at(i);
 				lab->setText(info.at(i));
 			}

@@ -71,9 +71,32 @@ QStringList& CVShapeLayer::data() {
 bool CVShapeLayer::load() {
 	_info.clear();
 
+	//TODO: add count query
+
 	CV::Util::Spatialite::Connection cnn;
 	try {
 		cnn.open(uri().toStdString());
+		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList() << "count(*)",
+			QStringList() << _table, 
+			QStringList(),
+			QVariantList(),
+			QStringList(),
+			1
+		);
+
+		if (!set.eof()) {
+			_rows = set[0].toInt();
+			_isValid = true;
+		} 
+
+	} catch (const CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return false;
+	} 
+
+	try {
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		CV::Util::Spatialite::Recordset set = q->select(
 			_cols,
@@ -90,8 +113,6 @@ bool CVShapeLayer::load() {
 				_info << QString(set[i].toString().c_str());	
 				i++;
 			}
-			
-			_isValid = true;
 		} 
 
 	} catch (const CV::Util::Spatialite::spatialite_error& err) {

@@ -27,6 +27,7 @@ CVMainWindow::CVMainWindow(QWidget *parent) : QMainWindow(parent) {
 CVMainWindow::~CVMainWindow() {
 	Core::CVSettings::set("/app/width", width());
 	Core::CVSettings::set("/app/height", height());
+	Core::CVSettings::set("/app/maximized", isMaximized());
 }
 
 }

@@ -46,11 +46,7 @@ CVUnionDetail::CVUnionDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l)
 	body(form);
 
 	if (controller()->isValid()) {
-		QStringList info = layer()->data();
-		for (int i = 0; i < info.size(); ++i) {
-			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i));
-		}
+		lab->setText(QString::number(layer()->rows()));
 	}
 }
 
@@ -82,13 +78,8 @@ void CVUnionDetail::searchFile() {
 
 void CVUnionDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
-	if (controller()->persist()) {
-		QStringList& info = layer()->data();
-		for (int i = 0; i < _labels.size(); ++i) {
-			QLabel* lab = _labels.at(i);
-			lab->setText(info.at(i));
-		}
-	}
+	controller()->persist();
+	_labels.at(0)->setText(QString::number(layer()->rows()));
 }
 
 void CVUnionDetail::dragEnterEvent(QDragEnterEvent* ev) {

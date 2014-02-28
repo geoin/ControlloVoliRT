@@ -26,9 +26,15 @@ public:
 
 	QStringList& data() { return _data; }
 
+signals:
+	void persisted();
+	void itemInserted(int);
+
 private:
 	QString _origin;
 	QStringList _data;
+
+	int _count;
 };
 
 } // namespace Core

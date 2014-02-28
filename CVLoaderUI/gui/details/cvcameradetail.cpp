@@ -120,6 +120,7 @@ void CVCameraDetail::importAll(QStringList& uri) {
                 QLineEdit* it = _params.value(key);
                 if (it != NULL) {
                     it->setText(xml.text().toString());
+					i++;
                 }
             }
         }
