@@ -62,7 +62,7 @@ CVRinexDetail::CVRinexDetail(QWidget* p, Core::CVObject* r) : CVBaseDetail(p, r)
 		}
 	}
 
-	connect(this, SIGNAL(persisted()), this, SLOT(onDataPersisted()), Qt::QueuedConnection);
+	connect(this, SIGNAL(persisted()), this, SLOT(onDataPersisted()));
 	connect(this, SIGNAL(importQueued(const QStringList&)), this, SLOT(importAll(const QStringList&)), Qt::QueuedConnection);
 }
 
