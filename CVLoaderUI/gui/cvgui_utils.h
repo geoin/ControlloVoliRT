@@ -3,7 +3,7 @@
 
 #include <QApplication>
 #include <QProgressDialog>
-#include <QProgressbar>
+#include <QProgressBar>
 #include <QMessageBox>
 
 namespace CV {
