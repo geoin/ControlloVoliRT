@@ -46,7 +46,7 @@ print "Git root: " + root
 modules = ["CVUtil", "photo_util", "rtklib", "ziplib", "dem_interpolate"]
 buildList(modules)
 
-binaries = ["CVLoaderUI", "check_gps", "check_photo_fli", "check_ta", "check_ortho", "RT-qgis_plugin"]
+binaries = ["CVLoaderUI", "check_gps", "check_photo_fli", "check_ta", "check_ortho", "RT-qgis_plugin", "check_lidar_fli"]
 buildList(binaries)
 
 print stat

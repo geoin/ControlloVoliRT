@@ -36,6 +36,8 @@
 #include "dem_interpolate/dsm.h"
 #include "common/util.h"
 
+#include <iostream>
+
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define REFSCALE "RefScale_2000"
@@ -145,9 +147,8 @@ void lidar_exec::set_checkType(Check_Type t)
 }
 bool lidar_exec::_read_ref_val()
 {
-	Path ref_file(_proj_dir, "*");
-	ref_file.popDirectory();
-	ref_file.setFileName("Regione_Toscana_RefVal.xml");
+    Path ref_file(_proj_dir, "*");
+    ref_file.setFileName("refval.xml");
 	AutoPtr<XMLConfiguration> pConf;
 	try {
 		pConf = new XMLConfiguration(ref_file.toString());
@@ -310,7 +311,8 @@ void lidar_exec::_process_strips()
 	double teta2 = DEG_RAD(_lidar.fov / 2.);
 
 	while ( !rs.eof() ) {
-		OGRGeomPtr pol = (Blob) rs["geom"];
+        Blob blob =  rs["geom"].toBlob();
+        OGRGeomPtr pol = blob;
 		OGRPoint* p0 = NULL;
 		OGRPoint* p1 = NULL;
 
@@ -393,7 +395,8 @@ void lidar_exec::_process_block()
 	std::map<std::string, StripRec> rec;
 	while ( !rs.eof() ) {
 		StripRec r;
-		r.geom = (Blob) rs["geom"];
+        Blob blob = rs["geom"].toBlob();
+        r.geom = blob;
 		r.yaw = rs["Z_STRIP_YAW"].toDouble();
 		r.name = rs["Z_STRIP_CS"].toString();
 		rec.insert(std::pair<std::string, StripRec>(r.name, r));
@@ -521,7 +524,8 @@ void lidar_exec::_get_dif()
     OGRGeomPtr carto;
 	bool first = true;
 	while ( !rs.eof() ) {
-		OGRGeomPtr pol = (Blob) rs["geom"];
+        Blob blob = rs["geom"].toBlob();
+        OGRGeomPtr pol = blob;
 		if ( first ) {
             carto = pol;
 			first = false;
@@ -537,7 +541,8 @@ void lidar_exec::_get_dif()
 	Statement stm2(cnn);
 	stm2.prepare(sql2.str());
 	rs = stm2.recordset();
-    OGRGeomPtr block = (Blob) rs["geom"];
+    Blob blob = rs["geom"].toBlob();
+    OGRGeomPtr block = blob;
 
     if ( !block->Intersect(carto) ) {
 		return;
