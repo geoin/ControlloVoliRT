@@ -149,11 +149,11 @@ namespace SQL {
 	
 	bool Query::remove(const QString& tab, const QStringList& where, const QVariantList& binds) {
 		QString query("DELETE FROM %1");
+		query = query.arg(tab);
 		if (where.length()) {
 			query.append(" WHERE %2");
+			query = query.arg(where.join(" AND "));
 		}
-
-		query = query.arg(tab, where.join(" AND "));
 
 		assert(where.length() >= binds.length());
 		QRegExp reg("\\?([0-9]{1,2})");
