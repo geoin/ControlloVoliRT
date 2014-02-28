@@ -20,8 +20,6 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-//TODO: needs cleanup, all details should use the same hooks
-
 CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	setAcceptDrops(true);
 
@@ -83,6 +81,7 @@ void CVFlyAttitudeDetail::onDataPersisted() {
 			lab->setText(info.at(i));
 		}
 	}
+	_dialog.setLabelText("");
 	_dialog.close();
 }
 

@@ -35,16 +35,16 @@ void CVProjectManager::onNewProject() {
 	if (!dialog.getInput(*proj)) {
 		return;
 	}
-	if (!proj->refPath.isEmpty()) {
-		QString target = proj->path + QDir::separator() + "refval.xml";
-		if (QFile::exists(target)) {
-			QFile::remove(target);
-		}
-		QFile::copy(proj->refPath, target);
-	}
-
 	bool ret = proj->create(SQL::database);
 	if (ret) {
+		if (!proj->refPath.isEmpty()) {
+			QString target = proj->path + QDir::separator() + "refval.xml";
+			if (QFile::exists(target)) {
+				QFile::remove(target);
+			}
+			QFile::copy(proj->refPath, target);
+		}
+
 		QString db = proj->path + QDir::separator() + SQL::database;
 
 		CVControl* ctrl = _plan(proj, false);
