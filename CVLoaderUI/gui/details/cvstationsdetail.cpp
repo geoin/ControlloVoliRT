@@ -186,10 +186,9 @@ void CVStationsDetail::importAll(const QStringList& uri) {
 	
 	Core::CVScopedTmpDir tmpDir(QFileInfo(stations()->uri()).absolutePath());
     res = QtConcurrent::run(this, &CVStationsDetail::_importAllAsync, tmpDir.toString(), tmpDir.dir() , uri);
-
 	_dialog.setWindowTitle(tr("Caricamento in corso.."));
-	_dialog.resize(260, 100);
 	_dialog.resizeBarWidth(230);
+	_dialog.resize(260, 100);
 	_dialog.exec();
 }
 
