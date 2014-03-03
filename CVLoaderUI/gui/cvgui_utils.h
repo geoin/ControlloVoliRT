@@ -29,6 +29,7 @@ public:
 		setWindowModality(Qt::WindowModal);
 		setCancelButton(NULL);
 		setRange(0, 0);
+        adjustSize();
 	}
 
 	~CVProgressDialog() {
@@ -37,6 +38,7 @@ public:
 
 	inline void resizeBarWidth(int w) {
 		_bar.setMinimumWidth(w);
+        adjustSize();
 	}
 
 private:
