@@ -24,17 +24,19 @@ CVProjectManager::CVProjectManager(QObject* p) : QObject(p) {
 }
 
 void CVProjectManager::onNewProject() {
-    GUI::Dialogs::CVProjectDialog dialog(static_cast<QWidget*>(parent()));
+	QWidget* p = static_cast<QWidget*>(parent());
+    GUI::Dialogs::CVProjectDialog dialog(p);
     if (dialog.exec() != QDialog::Accepted) {
         return;
     }
 
-	GUI::CVScopedCursor c;
-
     Core::CVProject* proj = new Core::CVProject(this);
 	if (!dialog.getInput(*proj)) {
+		GUI::CVMessageBox::message(p, tr("Errore!"), tr("Dati inseriti incompleti."));
 		return;
 	}
+
+	GUI::CVScopedCursor c;
 	bool ret = proj->create(SQL::database);
 	if (ret) {
 		if (!proj->refPath.isEmpty()) {
