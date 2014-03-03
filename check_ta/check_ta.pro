@@ -14,16 +14,16 @@ win32 {
     LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
 
     CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -lsqlite3_i -lspatialite4
+            LIBS += -lPocoFoundationd -lPocoUtild -lCVUtild -lphoto_utild -lsqlite3_i -lspatialite4 -lgdald_i
             TARGET = $$join(TARGET,,,d)
     } else {
-            LIBS += -lPocoFoundation -lPocoUtil -lphoto_utild -lspatialite4
+            LIBS += -lPocoFoundation -lPocoUtil -lCVUtil -lphoto_utild -lspatialite4 -lsqlite3_i -lgdal_i
     }
 }
 
 unix {
     CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundationd -lPocoUtild -lPocoXMLd -lCVUtild -lphoto_utild -lsqlite3 -lspatialite-lgdal
+            LIBS += -lPocoFoundationd -lPocoUtild -lPocoXMLd -lCVUtild -lphoto_utild -lsqlite3 -lspatialite -lgdal
             TARGET = $$join(TARGET,,,d)
     } else {
             LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lCVUtil -lphoto_util -lspatialite -lsqlite3 -lgdal
@@ -32,7 +32,7 @@ unix {
 
 INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
 
-DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
+DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     check_ta.cpp \

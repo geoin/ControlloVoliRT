@@ -5,11 +5,12 @@
 #-------------------------------------------------
 CONFIG -= qt
 QT       -= core gui
+CONFIG += console
 TARGET = check_ortho
 
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"C:/ControlloVoliRT_Tools/lib" -L"C:/ControlloVoliRT/lib" -L"C:/OSGeo4W/lib/"
+        LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib" -L"C:/OSGeo4W/lib/"
         INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
         CONFIG(debug, debug|release) {
                 LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite4 -lCVutild -lgdald_i -llibtiff_i
@@ -33,7 +34,7 @@ unix {
 
 
 
-DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
+DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     check_ortho.cpp \
