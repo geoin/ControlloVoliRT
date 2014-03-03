@@ -119,7 +119,7 @@ void CVStationsDetail::searchFile() {
 			return;
 		}
 
-		importAll(uri);
+		importQueued(uri);
 	}
 }
 

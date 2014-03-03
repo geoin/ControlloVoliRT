@@ -218,7 +218,7 @@ void CVRinexDetail::searchFile() {
 			return;
 		}
 
-		importAll(uri);
+		importQueued(uri);
 	}
 }
 	
