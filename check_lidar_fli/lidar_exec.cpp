@@ -134,7 +134,9 @@ bool lidar_exec::run()
 }
 
 void lidar_exec::_final_report() {
-
+	//controlo del ricoprimento delle aree da rilevare
+	// verifica ricoprimento tra strisciate
+	// verifica lunghezza strisciate
 }
 
 void lidar_exec::set_proj_dir(const std::string& nome)
