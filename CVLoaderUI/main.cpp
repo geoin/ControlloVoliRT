@@ -16,6 +16,10 @@ using namespace CV::GUI;
 
 int main(int argc, char *argv[]) {
 
+#ifdef linux
+    QApplication::setAttribute(Qt::AA_X11InitThreads, true);
+#endif
+
 #ifdef Q_WS_WIN 
 	QString v(qVersion());
 	if (QSysInfo::windowsVersion() > 0x0090) {
