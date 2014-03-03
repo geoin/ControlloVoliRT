@@ -129,13 +129,10 @@ void CVRinexDetail::clearAll() {
 	_details->clear();
 }
 
-bool CVRinexDetail::_importAllAsync(Core::CVScopedTmpDir& tmpDir, QStringList& uri) {
-	const QString& tmp = tmpDir.toString();
+bool CVRinexDetail::_importAllAsync(const QString& tmp, QDir& d, QStringList& uri) {
 	assert(!tmp.isEmpty());
 	
-	emit onUpdateStatus(tr("Analisi dei dati in corso.."));
-
-	QDir& d = tmpDir.dir();
+    emit onUpdateStatus(tr("Analisi dei dati in corso.."));
 
 	if (_base == "zip") {
 		foreach (const QString& f, uri) {
@@ -228,7 +225,7 @@ void CVRinexDetail::importAll(const QStringList& uri) {
 	
 	CV::Core::CVScopedTmpDir tmpDir(QFileInfo(rinex()->uri()).absolutePath());
 
-	res = QtConcurrent::run(this, &CVRinexDetail::_importAllAsync, tmpDir, uri);
+    res = QtConcurrent::run(this, &CVRinexDetail::_importAllAsync, tmpDir.toString(), tmpDir.dir(), uri);
 
 	_dialog.setWindowTitle(tr("Caricamento stazione in corso.."));
 	_dialog.resize(260, 100);

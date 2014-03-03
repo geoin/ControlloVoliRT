@@ -42,7 +42,7 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
-	bool _importAllAsync(Core::CVScopedTmpDir&, QStringList&);
+    bool _importAllAsync(const QString& tmp, QDir& d, QStringList&);
 
 	QLabel* _name;
 	QListWidget* _details;

@@ -124,8 +124,7 @@ void CVStationsDetail::searchFile() {
 }
 
 //TODO: move to controller
-QFileInfo CVStationsDetail::_importAllAsync(Core::CVScopedTmpDir& tmpDir, QStringList& uri) {
-	QString tmp = tmpDir.toString();
+QFileInfo CVStationsDetail::_importAllAsync(const QString& tmp, QDir& tmpDir, QStringList& uri) {
 	if (tmp.isEmpty()) {
 		emit persisted();
 		return QFileInfo();
@@ -137,7 +136,7 @@ QFileInfo CVStationsDetail::_importAllAsync(Core::CVScopedTmpDir& tmpDir, QStrin
 	QString zipToUpdate = stations()->getZipFromStation(_station, tmp, _id);
 	if (!zipToUpdate.isEmpty()) {
 		Core::CVZip::unzip(zipToUpdate.toStdString(), tmp.toStdString());
-		tmpDir.dir().remove(zipToUpdate);
+        tmpDir.remove(zipToUpdate);
 	}
 
 	//if a zip is dragged, decompress it in tmp
@@ -152,7 +151,7 @@ QFileInfo CVStationsDetail::_importAllAsync(Core::CVScopedTmpDir& tmpDir, QStrin
 		}
 	}
 	
-	QStringList tmpFiles = tmpDir.dir().entryList(QDir::Files);
+    QStringList tmpFiles = tmpDir.entryList(QDir::Files);
 
 	uri.clear();
 	foreach (const QString& n, tmpFiles) {
@@ -186,7 +185,7 @@ void CVStationsDetail::importAll(const QStringList& uri) {
 	GUI::CVScopedCursor cur;
 	
 	Core::CVScopedTmpDir tmpDir(QFileInfo(stations()->uri()).absolutePath());
-	res = QtConcurrent::run(this, &CVStationsDetail::_importAllAsync, tmpDir, uri);
+    res = QtConcurrent::run(this, &CVStationsDetail::_importAllAsync, tmpDir.toString(), tmpDir.dir() , uri);
 
 	_dialog.setWindowTitle(tr("Caricamento stazione in corso.."));
 	_dialog.resize(260, 100);

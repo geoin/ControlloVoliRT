@@ -80,7 +80,7 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
-	QFileInfo _importAllAsync(Core::CVScopedTmpDir&, QStringList&);
+    QFileInfo _importAllAsync(const QString& tmp, QDir& tmpDir, QStringList&);
 
 	QString _base, _station, _id;
     QStringList _files;
