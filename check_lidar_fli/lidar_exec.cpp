@@ -137,6 +137,27 @@ void lidar_exec::_final_report() {
 	//controlo del ricoprimento delle aree da rilevare
 	// verifica ricoprimento tra strisciate
 	// verifica lunghezza strisciate
+
+    if ( _type == fli_type ) {
+        //fly specific data
+    }
+
+    std::stringstream sql;
+    std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
+    sql << "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" << table << "'";
+    Statement stm(cnn);
+    stm.prepare(sql.str());
+    Recordset rs = stm.recordset();
+
+    Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Verifica copertura aree da rilevare");
+
+    int cv = rs[0];
+    if ( cv == 0 ) {
+        sec->add_item("para")->append("Tutte le aree da rilevare sono state ricoperte da modelli ...");
+    } else {
+        sec->add_item("para")->append("Esistono delle aree da rilevare non completamente ricoperte da modelli ...");
+    }
 }
 
 void lidar_exec::set_proj_dir(const std::string& nome)
