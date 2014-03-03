@@ -229,7 +229,7 @@ void CVRinexDetail::importAll(const QStringList& uri) {
 
 	_dialog.setWindowTitle(tr("Caricamento in corso.."));
     //_dialog.resizeBarWidth(230);
-    _dialog.resize(300, 120);
+    _dialog.resize(260, 100);
 	_dialog.exec();
 }
 
