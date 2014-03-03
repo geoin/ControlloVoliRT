@@ -40,7 +40,7 @@
 
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
-#define REF_FILE "Regione_Toscana_RefVal.xml"
+#define REF_FILE "refval.xml"
 #define FOTOGRAMMETRIA "Fotogrammetria"
 
 #define CAMERA "camera.xml"
@@ -56,10 +56,11 @@ using Poco::Path;
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 
-photo_exec::~photo_exec() 
+photo_exec::~photo_exec()
 {
-	if ( _df != NULL )
-		delete _df;
+    if (_df != NULL) {
+        delete _df;
+    }
 }
 
 std::string photo_exec::_get_key(const std::string& val)
@@ -69,20 +70,22 @@ std::string photo_exec::_get_key(const std::string& val)
 
 bool photo_exec::run()
 {
-	if ( _proj_dir.empty() )
-		throw std::runtime_error("cartella di lavoro non impostata");
-	//if ( _refscale.empty() )
-	//	throw std::runtime_error("scala di lavoro non impostata");
+    if (_proj_dir.empty()) {
+        throw std::runtime_error("cartella di lavoro non impostata");
+    }
 
 	try {
 		// initialize spatial lite connection
 		Poco::Path db_path(_proj_dir, DB_NAME);
         cnn.open(db_path.toString());
 
-		if ( !GetProjData(cnn, _note, _refscale) )
+        if ( !GetProjData(cnn, _note, _refscale) ) {
 			throw std::runtime_error("dati progetto incompleti");
-		if ( _refscale.empty() )
+        }
+
+        if ( _refscale.empty() ) {
 			throw std::runtime_error("Scala di lavoro non impostata");
+        }
 
 		//_cam_name = Path(_proj_dir, CAMERA).toString();
 		std::string assetti = std::string(ASSETTI) + (_type == Prj_type ? "P" : "V") + ".txt";
@@ -106,16 +109,19 @@ bool photo_exec::run()
 
 			std::string assi = std::string(ASSI_VOLO) + "V";
 			std::cout << "Layer:" << assi << std::endl;
-			if ( !_calc_vdp(_vdps_plan) )
+            if ( !_calc_vdp(_vdps_plan) ) {
 				std::cout << "Tema degli assi di volo progettati non trovato" << std::endl;
+            }
 		} else {
-			if ( !_calc_vdp(_vdps) )
+            if ( !_calc_vdp(_vdps) ) {
 				throw std::runtime_error("Tema degli assi di volo progettati non trovato");
+            }
 		}
 		
 		// read digital terrain model
-		if ( !_read_dem() )
+        if ( !_read_dem() ) {
 			throw std::runtime_error("Modello numerico non trovato");
+        }
 
 		// initialize docbook xml file
 		std::string title =_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica";
@@ -162,7 +168,7 @@ void photo_exec::set_checkType(Check_Type t)
 bool photo_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
-	ref_file.popDirectory();
+	//ref_file.popDirectory();
 	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {
@@ -635,6 +641,7 @@ void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
 		"(Z_FOTO_ID TEXT NOT NULL, " <<		// photo id
+        "Z_STRIP_ID TEXT NOT NULL, " <<		// strip id
 		"Z_GSD DOUBLE NOT NULL)";		//  gsd value
 	cnn.execute_immediate(sql.str());
 	// add the geom column
@@ -648,8 +655,8 @@ void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
 
 	// create the insertion query
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_GSD, geom) \
-		VALUES (?1, ?2, ST_GeomFromWKB(:geom, " << SRID << ") )";
+    sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_STRIP_ID, Z_GSD, geom) \
+        VALUES (?1, ?2, ?3, ST_GeomFromWKB(:geom, " << SRID << ") )";
 
 	Statement stm(cnn);
 	cnn.begin_transaction();
@@ -664,8 +671,9 @@ void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
 		OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
 		*gp = OGRPoint(vgsd[i].pt.x, vgsd[i].pt.y);
 		stm[1] = vgsd[i].foto;
-		stm[2] = vgsd[i].dpix;
-		stm[3].fromBlob(gp_); 
+        stm[2] = get_strip(vgsd[i].foto);
+        stm[3] = vgsd[i].dpix;
+        stm[4].fromBlob(gp_);
 		stm.execute();
         stm.reset();
 	}
@@ -797,7 +805,8 @@ void photo_exec::_process_models()
 		"Z_MODEL_RIGHT TEXT NOT NULL, " <<	// nome foto destra
 		"Z_MODEL_L_OVERLAP INTEGER NOT NULL, " <<	// overlap longitudinale
 		"Z_MODEL_T_OVERLAP INTEGER NOT NULL, " <<	// overlap trasversale
-		"Z_MODEL_D_HEADING DOUBLE NOT NULL)";		// differenza di heading tra i fotogrammi
+        "Z_MODEL_D_HEADING DOUBLE NOT NULL, " <<		// differenza di heading tra i fotogrammi
+        "Z_MODEL_USED NUMERIC NOT NULL)";		// model used
 	cnn.execute_immediate(sql.str());
 
 	// add the geometry column
@@ -810,8 +819,8 @@ void photo_exec::_process_models()
 	cnn.execute_immediate(sql1.str());
 	
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ST_GeomFromWKB(:geom, " << SRID << ") )";
+    sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING, Z_MODEL_USED, geom) \
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -851,11 +860,13 @@ void photo_exec::_process_models()
 				// get the next photo geometry
                 Blob blob = rs1[6];
                 OGRGeomPtr pol2 = blob;
+                int res = 1;
 				// the model is the intersection of two photos
 				OGRGeomPtr mod = pol1->Intersection(pol2);
 				if ( !mod->Intersect(_carto) ) {
 					std::string mod = nomeleft + " - " + nomeright;
-					_useless_models.push_back(mod);
+                    _useless_models.push_back(mod);
+                    res = 0;
 				}
 		
 				double dh = _vdps[nomeleft].ka - _vdps[nomeright].ka;
@@ -869,8 +880,8 @@ void photo_exec::_process_models()
 				//dh /= 1000.;
 
 				double d1f, d2f, d1m, d2m;
-				get_elong(pol1, _vdps[nomeleft].ka, &d1f, &d2f);
-				get_elong(mod, _vdps[nomeleft].ka, &d1m, &d2m);
+                _get_elong(pol1, _vdps[nomeleft].ka, &d1f, &d2f);
+                _get_elong(mod, _vdps[nomeleft].ka, &d1m, &d2m);
 				double lo = 100 * d1m / d1f; // longitudinal overlap
 				double to = 100 * d2m / d2f; // trasversal overlap
 
@@ -881,9 +892,10 @@ void photo_exec::_process_models()
 				stm[5] = (int) lo;
 				stm[6] = (int) to;
 				stm[7] = dh;
-				stm[8].fromBlob(mod);
+                stm[8] = res;
+                stm[9].fromBlob(mod);
 				stm.execute();
-				stm.reset();
+                stm.reset();
 				nomeleft = nomeright;
 				pol1 = pol2;
 
@@ -1105,10 +1117,10 @@ void photo_exec::_process_block()
 				OGRGeomPtr g2 = vs[j].geo;
 				if ( g1->Intersect(g2) ) {
 					double d1, d2, d3, d4;
-					get_elong(g1, k1, &d1, &d2);
+                    _get_elong(g1, k1, &d1, &d2);
 					OGRGeomPtr inter = g1->Intersection(g2);
 					//if ( inter->getGeometryType() == wkbPolygon ) {
-						get_elong(inter, k1, &d3, &d4);
+                        _get_elong(inter, k1, &d3, &d4);
 						double dt = (int) 100 * (d3 / d1);
 						stm2[1] = (int) k++;
 						stm2[2] = vs[i].strip;

@@ -82,6 +82,9 @@ public:
 	
 	virtual void init() {}
 
+signals:
+	void persisted();
+
 protected:
 	bool _isValid;
 

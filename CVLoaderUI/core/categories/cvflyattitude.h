@@ -27,7 +27,6 @@ public:
 	QStringList& data() { return _data; }
 
 signals:
-	void persisted();
 	void itemInserted(int);
 
 private:

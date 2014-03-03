@@ -51,8 +51,8 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	if (controller()->isValid()) {
 		QStringList& info = layer()->data();
 		_labels.at(0)->setText(QString::number(layer()->rows()));
-		for (int i = 1; i < info.size(); ++i) {
-			QLabel* lab = _labels.at(i);
+		for (int i = 0; i < info.size(); ++i) {
+			QLabel* lab = _labels.at(i + 1);
 			lab->setText(info.at(i));
 		}
 	}
@@ -76,8 +76,8 @@ void CVFlyAxis_p::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
 	if (controller()->persist()) {
 		QStringList& info = layer()->data();
-		for (int i = 1; i < info.size(); ++i) {
-			QLabel* lab = _labels.at(i);
+		for (int i = 0; i < info.size(); ++i) {
+			QLabel* lab = _labels.at(i + 1);
 			lab->setText(info.at(i));
 		}
 	}

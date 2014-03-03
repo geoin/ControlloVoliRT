@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -80,7 +80,11 @@ SOURCES += main.cpp \
     gui/details/cvcontourdetail.cpp \
     gui/details/cvbasedetail.cpp \
     gui/details/cvareadetail.cpp \
-    core/categories/cvcontrol.cpp
+    core/categories/cvcontrol.cpp \
+    gui/details/cvlidarplandetail.cpp \
+    gui/details/cvsensordetail.cpp \
+    core/categories/cvsensor.cpp \
+    gui/dialogs/cvreferenceviewer.cpp
 
 HEADERS  += \
     gui/cvmainwindow.h \
@@ -129,7 +133,11 @@ HEADERS  += \
     gui/details/cvdemdetail.h \
     gui/details/cvcontourdetail.h \
     gui/details/cvbasedetail.h \
-    gui/details/cvareadetail.h
+    gui/details/cvareadetail.h \
+    gui/details/cvlidarplandetail.h \
+    gui/details/cvsensordetail.h \
+    core/categories/cvsensor.h \
+    gui/dialogs/cvreferenceviewer.h
 
 RESOURCES += \
     data/data.qrc

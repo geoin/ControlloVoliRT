@@ -13,8 +13,8 @@ class CVTreeNodeDelegate;
 class CVTreeNode : public QTreeWidgetItem {
 
 public:
-    explicit CVTreeNode(QTreeWidget* = 0, const QStringList& s = QStringList());
-    explicit CVTreeNode(QTreeWidgetItem* = 0, const QStringList& s = QStringList());
+    explicit CVTreeNode(QTreeWidget*, const QStringList& s = QStringList());
+    explicit CVTreeNode(QTreeWidgetItem*, const QStringList& s = QStringList());
 
     CVTreeNodeDelegate* delegate() const;
     Status::CVNodeInfo* info() const;

@@ -42,7 +42,8 @@ protected:
 public slots: //declared as slots only here, not in derived
 	virtual void clearAll() = 0;
 	virtual void searchFile() = 0;
-	virtual void importAll(QStringList&) = 0;
+	virtual void importAll(QStringList&) {}
+	virtual void importAll(const QStringList&) {}
 
 private:
 	Core::CVObject* _controller;

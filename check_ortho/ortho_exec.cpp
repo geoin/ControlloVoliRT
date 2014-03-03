@@ -50,7 +50,7 @@
 #define CONTORNO_RT "CONTORNO_RT"
 #define DB_NAME "geo.sqlite"
 #define OUT_DOC "check_ortho.xml"
-#define REF_FILE "Regione_Toscana_RefVal.xml"
+#define REF_FILE "refval.xml"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -166,7 +166,7 @@ void ortho_exec::set_img_dir(const std::string& nome)
 bool ortho_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
-	ref_file.popDirectory();
+	//ref_file.popDirectory();
 	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {

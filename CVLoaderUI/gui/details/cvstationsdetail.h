@@ -4,10 +4,14 @@
 #include "cvbasedetail.h"
 #include "cvstationdelegate.h"
 #include "core/categories/cvstations.h"
+#include "gui/cvgui_utils.h"
 
 #include <QListWidget>
 #include <QScopedPointer>
 #include <QSet>
+
+#include <QtConcurrentRun>
+#include <QFuture>
 
 #include <assert.h>
 
@@ -52,15 +56,22 @@ public:
 
 	virtual void clearAll();
 	virtual void searchFile();
-	virtual void importAll(QStringList&);
+	virtual void importAll(const QStringList&);
 
 	CVStationDelegate* addItem(const QString&);
 
 	inline Core::CVStations* stations() const { return static_cast<Core::CVStations*>(controller()); }
 
+signals:
+	void persisted();
+	void updateStatus(QString);
+	void importQueued(const QStringList&);
+
 public slots:
 	void onStationSelected(int);
 	void onRemoveStation(int);
+	void onDataPersisted();
+	void onUpdateStatus(QString);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -69,10 +80,15 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
-	QString _base, _station;
+    QFileInfo _importAllAsync(const QString& tmp, QDir& tmpDir, QStringList&);
+
+	QString _base, _station, _id;
     QStringList _files;
 
 	QListWidget* _stations, * _details;
+
+	CVProgressDialog _dialog;
+	QFuture<QFileInfo> res;
 };
 
 } // namespace Details

@@ -121,7 +121,7 @@ bool CVProjectDialog::getInput(Core::CVProject& proj) {
          l << it.text();
 	}
 	proj.notes = l.join("\n");
-	return !proj.name.isEmpty() && !proj.path.isEmpty();
+	return !proj.name.isEmpty() && !proj.path.isEmpty() && !proj.refPath.isEmpty();
 }
 
 } // namespace Dialogs

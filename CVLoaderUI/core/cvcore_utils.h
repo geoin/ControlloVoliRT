@@ -48,6 +48,8 @@ public:
 private:
 	QString _base;
 	QDir _d;
+
+    Q_DISABLE_COPY(CVScopedTmpDir)
 };
 
 

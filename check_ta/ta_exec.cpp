@@ -39,7 +39,7 @@
 #define SIGLA_PRJ "CSTP"
 #define CAMERA "camera.xml"
 #define OUT_DOC "check_ta.xml"
-#define REF_FILE "Regione_Toscana_RefVal.xml"
+#define REF_FILE "refval.xml"
 #define FOTOGRAMMETRIA "Fotogrammetria"
 #define Z_CAMERA "Camera"
 
@@ -149,7 +149,7 @@ void ta_exec::set_proj_dir(const std::string& nome)
 bool ta_exec::_read_ref_val()
 {
 	Path ref_file(_proj_dir, "*");
-	ref_file.popDirectory();
+	//ref_file.popDirectory();
 	ref_file.setFileName(REF_FILE);
 	AutoPtr<XMLConfiguration> pConf;
 	try {

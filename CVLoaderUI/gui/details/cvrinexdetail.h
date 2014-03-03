@@ -3,6 +3,10 @@
 
 #include "cvbasedetail.h"
 #include "core/categories/cvrinex.h"
+#include "gui/cvgui_utils.h"
+
+#include <QtConcurrentRun>
+#include <QFuture>
 
 class QListWidget;
 class QLabel;
@@ -18,9 +22,18 @@ public:
 
 	virtual void clearAll();
 	virtual void searchFile();
-	virtual void importAll(QStringList&);
+	virtual void importAll(const QStringList&);
 
 	inline Core::CVRinex* rinex() const { return static_cast<Core::CVRinex*>(controller()); }
+
+signals:
+	void persisted();
+	void updateStatus(QString);
+	void importQueued(const QStringList&);
+
+public slots:
+	void onDataPersisted();
+	void onUpdateStatus(QString);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -29,11 +42,16 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
+    bool _importAllAsync(const QString& tmp, QDir& d, QStringList&);
+
 	QLabel* _name;
 	QListWidget* _details;
 	
 	QString _base, _station;
     QStringList _files;
+	
+	CVProgressDialog _dialog;
+	QFuture<bool> res;
 };
 
 } // namespace Details
