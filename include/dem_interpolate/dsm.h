@@ -346,9 +346,9 @@ public:
 		return "";
 	}
 private:
-	int _lidar_echo;
-	double _eps;
+    int _lidar_echo;
+    double _eps;
 	File_Mask fm;
-	DSM* _dsm;
+    DSM* _dsm;
 };
 #endif

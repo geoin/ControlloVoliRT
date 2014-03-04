@@ -158,16 +158,16 @@ void lidar_exec::_final_report() {
     stm.reset();
 
     // verifica ricoprimento tra strisciate
-    _strip_report();
     // verifica lunghezza strisciate
+    _strip_report();
 }
 
 void lidar_exec::_strip_report() {
     Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Verifica parametri strisciate");
 
-    double minVal = STRIP_OVERLAP * (1 - STRIP_OVERLAP_RANGE / 100);
-    double maxVal = STRIP_OVERLAP * (1 + STRIP_OVERLAP_RANGE / 100);
+    double minVal = STRIP_OVERLAP * (1 - STRIP_OVERLAP_RANGE / 100.0);
+    double maxVal = STRIP_OVERLAP * (1 + STRIP_OVERLAP_RANGE / 100.0);
 
     sec->add_item("para")->append("Valori di riferimento:");
     Doc_Item itl = sec->add_item("itemizedlist");
@@ -461,11 +461,12 @@ void lidar_exec::_process_strips()
 		p->assignSpatialReference(&sr);
 		p->addRing(gp);
 
+        double dist = ls->get_Length() / 1000;
 		stm[1] = SIGLA_PRJ;
 		stm[2] = strip;
 		stm[3] = mission;
 		stm[4] = RAD_DEG(-k);
-		stm[5] = ls->get_Length();
+        stm[5] = dist;
 		stm[6].fromBlob(rg);
 		stm.execute();
 		stm.reset();
