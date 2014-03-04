@@ -12,8 +12,6 @@ namespace CV {
 namespace GUI {
 namespace Helper {
 
-using namespace Status;
-
 QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::CVControl* control) {
     QWidget* detail = NULL;
     switch (t) {
@@ -32,6 +30,12 @@ QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::
 		case Core::CVControl::LIDAR_PLAN:
 			detail = new Details::CVLidarPlanDetail(p, control);
            break;
+        case Core::CVControl::LIDAR_GPS_DATA:
+            detail = new Details::CVMissionListDetails(p, control);
+           break;
+        /*case Core::CVControl::LIDAR_FLY:
+            detail = new Details::CVLidarFlyDetail(p, control);
+           break;*/
         default:
             break;
     }

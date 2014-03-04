@@ -36,7 +36,7 @@ CVReferenceViewer::CVReferenceViewer(QWidget* p) : QDialog(p) {
 	_viewer->setHorizontalHeaderLabels(QStringList()<< tr("Nome") << tr("Unità di misura") << tr("Valore") << tr("Descrizione"));
 	_viewer->verticalHeader()->hide();
 	_viewer->horizontalHeader()->setStretchLastSection(true);
-	_viewer->horizontalHeader()->setDefaultSectionSize(100);
+    _viewer->horizontalHeader()->setDefaultSectionSize(120);
 
 	for (int i = 0; i < _viewer->columnCount() - 1; ++i) {
 		_viewer->horizontalHeader()->setResizeMode(i, QHeaderView::Interactive);

@@ -20,7 +20,7 @@ public:
 
     explicit CVNodeDetails(QWidget *parent = 0);
 
-	QWidget* getDetail(Core::CVControl::Type t) const { _details.contains(t) ? _details.value(t) : NULL; }
+    QWidget* getDetail(Core::CVControl::Type t) const { return _details.contains(t) ? _details.value(t) : NULL; }
 
 signals:
 

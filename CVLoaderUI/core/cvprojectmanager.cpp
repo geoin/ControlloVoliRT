@@ -51,11 +51,12 @@ void CVProjectManager::onNewProject() {
 
 		CVControl* ctrl = _plan(proj, false);
 		proj->insert(ctrl);
+
+        ctrl = new CVControl(CVControl::GPS_DATA, proj);
+        ctrl->uri(db);
+        proj->insert(ctrl);
 		
-		if (proj->type == CVProject::PHOTOGRAMMETRY) {
-			ctrl = new CVControl(CVControl::GPS_DATA, proj);
-			ctrl->uri(db);
-			proj->insert(ctrl);
+        if (proj->type == CVProject::PHOTOGRAMMETRY) {
 
 			ctrl = _fly(proj, false);
 			proj->insert(ctrl);

@@ -50,7 +50,7 @@ private:
 class CVMessageBox {
 public:
 	static int message(QWidget* p, QString title, QString info, int minWidth = 260, QString icon = QString(), QMessageBox::StandardButtons buttons = QMessageBox::Ok, QMessageBox::StandardButton def = QMessageBox::Ok) {
-		QMessageBox msgBox;
+        QMessageBox msgBox(p);
 		msgBox.setText(title);
 		msgBox.setInformativeText(info);
 		msgBox.setIconPixmap(QPixmap(icon));

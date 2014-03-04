@@ -147,6 +147,7 @@ void CVProjectOverviewDetail::onSaveProject() {
 }
 
 void CVProjectOverviewDetail::showEvent(QShowEvent* ev) {
+    Q_UNUSED(ev)
 	_lastModified->setText(_controller->lastModificationDate().toString());
 }
 

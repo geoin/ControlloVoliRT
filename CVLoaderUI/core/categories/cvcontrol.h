@@ -15,7 +15,7 @@ class CVObject;
 class CVControl : public QObject {
     Q_OBJECT
 public:
-	enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO, LIDAR_PLAN };
+    enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO, LIDAR_PLAN, LIDAR_GPS_DATA, LIDAR_FLY };
 
 	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}
 

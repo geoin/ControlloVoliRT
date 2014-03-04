@@ -59,7 +59,7 @@ public:
 	static bool zip(const std::vector<std::string> files, const std::string& outZip) { 
 		std::ofstream out(outZip.c_str(), std::ios::binary); 
 		Poco::Zip::Compress c(out, true);
-		int i = 0;
+        unsigned int i = 0;
 		try {
 			foreach (const std::string& file, files) {
 				Poco::Path p(file);

@@ -103,7 +103,7 @@ private:
 	std::string _dem_name;
 	std::string _note;
 
-	int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
+    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
 };
 
 class check_lidar: public Poco::Util::Application {

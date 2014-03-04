@@ -167,7 +167,7 @@ void CVStations::removeAt(int i) {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	bool ret = q->remove(
+    q->remove(
 		"STATION", 
 		QStringList() << "ID=?1",
 		QVariantList() << id
