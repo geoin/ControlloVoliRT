@@ -60,7 +60,7 @@ public:
 
 private:
 	struct StripRec {
-		StripRec() : yaw(0.0f) {}
+        StripRec() : yaw(0.0) {}
 		std::string name;
 		double yaw;
 		CV::Util::Geometry::OGRGeomPtr geom;
@@ -83,6 +83,7 @@ private:
 	Doc_Item _initpg2(void);
 
 	void _final_report();
+    void _strip_report();
 
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);

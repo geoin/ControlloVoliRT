@@ -134,14 +134,11 @@ bool lidar_exec::run()
 }
 
 void lidar_exec::_final_report() {
-	//controlo del ricoprimento delle aree da rilevare
-	// verifica ricoprimento tra strisciate
-	// verifica lunghezza strisciate
-
     if ( _type == fli_type ) {
         //fly specific data
     }
 
+    //controlo del ricoprimento delle aree da rilevare
     std::stringstream sql;
     std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
     sql << "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" << table << "'";
@@ -158,16 +155,89 @@ void lidar_exec::_final_report() {
     } else {
         sec->add_item("para")->append("Esistono delle aree da rilevare non completamente ricoperte da modelli ...");
     }
+    stm.reset();
+
+    // verifica ricoprimento tra strisciate
+    _strip_report();
+    // verifica lunghezza strisciate
+}
+
+void lidar_exec::_strip_report() {
+    Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Verifica parametri strisciate");
+
+    double minVal = STRIP_OVERLAP * (1 - STRIP_OVERLAP_RANGE / 100);
+    double maxVal = STRIP_OVERLAP * (1 + STRIP_OVERLAP_RANGE / 100);
+
+    sec->add_item("para")->append("Valori di riferimento:");
+    Doc_Item itl = sec->add_item("itemizedlist");
+    std::stringstream ss;
+    ss << "Ricoprimento Trasversale compreso tra " << minVal << "% e " << maxVal << "%";
+    itl->add_item("listitem")->add_item("para")->append(ss.str());
+    std::stringstream ss1;
+    ss1 << "Massima lunghezza strisciate minore di " << MAX_STRIP_LENGTH << " km";
+    itl->add_item("listitem")->add_item("para")->append(ss1.str());
+
+    std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
+    std::string table2 = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
+    std::stringstream sql;
+    sql << "SELECT Z_STRIP_CS, Z_STRIP_LENGTH, Z_STRIP_T_OVERLAP, Z_STRIP2 FROM " << table << " a inner JOIN " <<
+        table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << minVal << " OR Z_STRIP_T_OVERLAP>" << maxVal;
+
+    Statement stm(cnn);
+    stm.prepare(sql.str());
+    Recordset rs = stm.recordset();
+    if ( rs.fields_count() == 0 ) {
+        sec->add_item("para")->append("In tutte le strisciate i parametri verificati rientrano nei range previsti");
+        return;
+    }
+    sec->add_item("para")->append("Nelle seguenti strisciate i parametri verificati non rientrano nei range previsti");
+
+    Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Strisciate con parametri fuori range");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "4");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Strip.");
+    row->add_item("entry", attr)->append("Lung.");
+    row->add_item("entry", attr)->append("Ric. trasv.");
+    row->add_item("entry", attr)->append("Strip adiac.");
+
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+    while ( !rs.eof() ) {
+        row = tbody->add_item("row");
+
+        row->add_item("entry", attr)->append(rs[0].toString());
+
+        print_item(row, attrr, rs[1], less_ty, MAX_STRIP_LENGTH);
+        print_item(row, attrr, rs[2], between_ty, minVal, maxVal);
+
+        row->add_item("entry", attr)->append(rs[3].toString());
+        rs.next();
+    }
+    return;
 }
 
 void lidar_exec::set_proj_dir(const std::string& nome)
 {
 	_proj_dir = nome;
 }
+
 void lidar_exec::set_checkType(Check_Type t)
 {
 	_type = t;
 }
+
 bool lidar_exec::_read_ref_val()
 {
     Path ref_file(_proj_dir, "*");
@@ -185,6 +255,7 @@ bool lidar_exec::_read_ref_val()
 	}
 	return true;
 }
+
 void lidar_exec::_init_document()
 {
 	Path doc_file(_proj_dir, "*");
@@ -194,6 +265,7 @@ void lidar_exec::_init_document()
 	_article = _dbook.add_item("article");
 	_article->add_item("title")->append("Collaudo triangolazione aerea");
 }
+
 Doc_Item lidar_exec::_initpg1()
 {
 	Doc_Item sec = _article->add_item("section");
@@ -230,7 +302,6 @@ Doc_Item lidar_exec::_initpg1()
 	Doc_Item tbody = tab->add_item("tbody");
 	return tbody;
 }
-
 
 bool lidar_exec::_read_lidar()
 {
@@ -287,6 +358,7 @@ bool lidar_exec::_read_dem() {
 		return false;
 	return true;
 }
+
 void lidar_exec::_process_strips()
 {
 	// create tthe table for the strip footprint
