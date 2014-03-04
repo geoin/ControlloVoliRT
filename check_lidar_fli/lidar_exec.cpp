@@ -362,7 +362,7 @@ bool lidar_exec::_read_dem() {
 void lidar_exec::_process_strips()
 {
 	// create tthe table for the strip footprint
-	std::string table = std::string("STRIP") + (_type == Prj_type ? "P" : "V");
+    std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 	std::cout << "Layer:" << table << std::endl;
 
@@ -476,7 +476,7 @@ void lidar_exec::_process_strips()
 void lidar_exec::_process_block()
 {
 	// select data from flight lines
-	std::string table = std::string("STRIP") + (_type == Prj_type ? "P" : "V");
+    std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
 	std::stringstream sql1;
 	sql1 << "SELECT AsBinary(geom) geom, Z_STRIP_YAW, Z_STRIP_CS from " << table;
 	Statement stm1(cnn);
