@@ -10,7 +10,7 @@
 namespace CV {
 namespace Core {
 
-CVSensor::CVSensor(QObject *parent) : CVObject(parent) {
+CVSensor::CVSensor(QObject *parent) : CVMissionDevice(parent) {
 	_isValid = false;
 }
 

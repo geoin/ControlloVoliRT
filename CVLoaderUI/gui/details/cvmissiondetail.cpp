@@ -1,5 +1,6 @@
 #include "cvmissiondetail.h"
 #include "cvcameradetail.h"
+#include "cvsensordetail.h"
 #include "cvstationsdetail.h"
 #include "cvrinexdetail.h"
 #include "cvflyaxis_p.h"
@@ -12,9 +13,17 @@ CVMissionDetail::CVMissionDetail(QWidget* p, Core::CVMissionObject* mission, Tab
 	assert(mission != NULL);
 	_mission = mission;
 
-	addTab(new CVCameraDetail(this, _mission->at(0)), "");
-    setTabToolTip(0, tr("Fotocamera"));
-	setTabIcon(0, QIcon(":/graphics/icons/plan/camera.png"));
+	Core::CVControl::Type t = _mission->missionType();
+	if (t == Core::CVControl::GPS_DATA) {
+		addTab(new CVCameraDetail(p, _mission->at(0)), "");
+		setTabToolTip(0, tr("Fotocamera"));
+		setTabIcon(0, QIcon(":/graphics/icons/plan/camera.png"));
+	} else {
+		CVSensorDetail* container = new CVSensorDetail(p, _mission->at(0));
+		addTab(container, "");
+		setTabToolTip(0, tr("Sensore lidar"));
+		setTabIcon(0, QIcon(":/graphics/icons/plan/camera.png"));
+	}
 
     addTab(new CVRinexDetail(this, _mission->at(1)), "");
     setTabToolTip(1, tr("Rinex"));

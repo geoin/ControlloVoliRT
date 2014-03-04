@@ -14,7 +14,7 @@
 namespace CV {
 namespace Core {
 
-CVCamera::CVCamera(QObject* p) : CVObject(p) {
+CVCamera::CVCamera(QObject* p) : CVMissionDevice(p) {
 	_isValid = false;
 	_isPlanning = false;
 }

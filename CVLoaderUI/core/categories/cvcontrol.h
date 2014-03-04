@@ -15,7 +15,11 @@ class CVObject;
 class CVControl : public QObject {
     Q_OBJECT
 public:
-    enum Type { UNKNOWN_CATEGORY = 0, PLAN = 3, GPS_DATA, FLY, ORTO, LIDAR_PLAN, LIDAR_GPS_DATA, LIDAR_FLY };
+    enum Type { 
+		UNKNOWN_CATEGORY = 0, 
+		PLAN = 3, GPS_DATA, FLY, ORTO, 
+		LIDAR_PLAN, LIDAR_GPS_DATA, LIDAR_FLY 
+	};
 
 	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}
 
@@ -93,6 +97,24 @@ private:
 
 	Type _type;
 	CVControl::Type _controlType;
+};
+
+class CVMissionDevice : public CVObject {
+	Q_OBJECT
+public:
+	explicit CVMissionDevice(QObject* p) : CVObject(p) {}
+
+	virtual bool load(const QString& mId) {return true; }// = 0;
+
+	inline bool isPlanning() const { return _isPlanning; }
+	inline void isPlanning(bool b) { _isPlanning = b; }
+
+	inline void mission(const QString& id) {
+		_mission = id;
+	}
+protected:
+	bool _isPlanning;
+	QString _mission;
 };
 
 }

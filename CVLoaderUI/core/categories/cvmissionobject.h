@@ -27,6 +27,13 @@ public:
 
 	virtual void init();
 
+	inline void missionType(CVControl::Type t) { 
+		_missionType = t; 
+		_deviceId = t == CVControl::GPS_DATA ? "ID_CAMERA" : "ID_SENSOR";
+	}
+
+	inline const CVControl::Type missionType() const { return _missionType; }
+
 	inline QString id() const { return _id; }
 
 	inline QString name() const { return _name; }
@@ -47,7 +54,10 @@ private:
 	QList<CVObject*> _objects;
 	QString _id;
 	QString _name;
-	QString _cam;
+
+	QString _deviceId;
+
+	CVControl::Type _missionType;
 };
 
 }

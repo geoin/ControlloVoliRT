@@ -6,7 +6,7 @@
 namespace CV {
 namespace Core {
 
-class CVSensor : public CVObject {
+class CVSensor : public CVMissionDevice {
 	Q_OBJECT
 
 public:
@@ -18,15 +18,11 @@ public:
 	virtual bool load();
 
 	virtual bool remove();
-	
-	inline bool isPlanning() const { return _sensor.planning; }
-	inline void isPlanning(bool b) { _sensor.planning = b; }
 
 	struct SensorData {
-		SensorData() : fov(0.0f), ifov(0.0f), freq(0.0f), scan_rate(0.0f), planning(false) {}
+		SensorData() : fov(0.0f), ifov(0.0f), freq(0.0f), scan_rate(0.0f) {}
 
 		double fov, ifov, freq, scan_rate;
-		bool planning;
 		QString id;
 	};
 	

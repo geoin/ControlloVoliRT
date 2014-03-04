@@ -52,7 +52,11 @@ void CVProjectManager::onNewProject() {
 		CVControl* ctrl = _plan(proj, false);
 		proj->insert(ctrl);
 
-        ctrl = new CVControl(CVControl::GPS_DATA, proj);
+		if (proj->type == CVProject::PHOTOGRAMMETRY) {
+			ctrl = new CVControl(CVControl::GPS_DATA, proj);
+		} else {
+			ctrl = new CVControl(CVControl::LIDAR_GPS_DATA, proj);
+		}
         ctrl->uri(db);
         proj->insert(ctrl);
 		
@@ -99,19 +103,25 @@ void CVProjectManager::onLoadProject() {
 
 		ctrl = _plan(proj, true);
 		proj->insert(ctrl);
-
+		
 		if (proj->type == CVProject::PHOTOGRAMMETRY) {
 			ctrl = new CVControl(CVControl::GPS_DATA, proj);
-			ctrl->uri(db);
-			proj->insert(ctrl);
+		} else {
+			ctrl = new CVControl(CVControl::LIDAR_GPS_DATA, proj);
+		}
+		ctrl->uri(db);
+		proj->insert(ctrl);
+		
+		QStringList ids;
+		proj->missionList(ids);
+		foreach (const QString& id, ids) {
+			CVMissionObject* obj = new CVMissionObject(ctrl, id);
+			obj->missionType(ctrl->type());
+			ctrl->insert(obj);
+		}
+		ctrl->load();
 
-			QStringList ids;
-			proj->missionList(ids);
-			foreach (const QString& id, ids) {
-				ctrl->insert(new CVMissionObject(ctrl, id));
-			}
-			ctrl->load();
-			
+		if (proj->type == CVProject::PHOTOGRAMMETRY) {
 			ctrl = _fly(proj, true);
 			proj->insert(ctrl);
 

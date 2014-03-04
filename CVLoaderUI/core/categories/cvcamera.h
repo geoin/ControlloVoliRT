@@ -9,7 +9,7 @@
 namespace CV {
 namespace Core {
 
-class CVCamera : public CVObject {
+class CVCamera : public CVMissionDevice {
 	Q_OBJECT
 
 public:
@@ -22,24 +22,14 @@ public:
 
 	virtual bool remove();
 
-	bool load(const QString& mId);
+	virtual bool load(const QString& mId);
 
 	inline Camera& data() { return _cam; }
-
-	inline bool isPlanning() const { return _isPlanning; }
-	inline void isPlanning(bool b) { _isPlanning = b; }
-
-	inline void mission(const QString& id) {
-		_mission = id;
-	}
 
 	inline QString id() const { return QString(_cam.id.c_str()); }
 
 private:
 	Camera _cam;
-	bool _isPlanning;
-	QString _mission;
-
 
 	//Validator
 };

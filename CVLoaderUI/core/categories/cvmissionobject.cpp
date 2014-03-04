@@ -1,6 +1,7 @@
 #include "cvmissionobject.h"
 
 #include "cvcamera.h"
+#include "cvsensor.h"
 #include "cvrinex.h"
 #include "cvstations.h"
 #include "cvshapelayer.h"
@@ -15,10 +16,14 @@ namespace Core {
 
 CVMissionObject::CVMissionObject(QObject* p) : CVObject(p), _isValid(false) {
 	_id = QUuid::createUuid().toString();
+	missionType(CVControl::GPS_DATA); //set default to photogrammetry
+	_deviceId = "ID_CAMERA";
 }
 
 CVMissionObject::CVMissionObject(QObject* p, QString key) : CVObject(p), _isValid(false) {
 	_id = key;
+	missionType(CVControl::GPS_DATA);
+	_deviceId = "ID_CAMERA";
 }
 
 bool CVMissionObject::remove() { 
@@ -96,27 +101,32 @@ bool CVMissionObject::load() {
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
     CV::Util::Spatialite::Recordset set = q->select(
-		QStringList() << "NAME" << "ID_CAMERA" << "RINEX",
+		QStringList() << "NAME" << _deviceId << "RINEX",
 		QStringList() << "MISSION",
 		QStringList() << "id=?1",
         QVariantList() << id()
 	);
 
-	QString idCam;
+	QString idDevice;
 	QByteArray ba;
 	if (!set.eof()) {
 		name(set[0].toString().c_str());
-		idCam = QString(set[1].toString().c_str());
+		idDevice = QString(set[1].toString().c_str());
 		const std::vector<unsigned char>& b = set[2];
 		const char* ptr = reinterpret_cast<const char*>(&b[0]);
 		ba.append(ptr, b.size());
 		ret = true;
 	}
 
-	if (!idCam.isEmpty()) {
-		CVCamera* cam = static_cast<CVCamera*>(at(0));
+	if (!idDevice.isEmpty()) {
+		CVMissionDevice* cam = NULL;
+		if (missionType() == CVControl::GPS_DATA) {
+			cam = static_cast<CVCamera*>(at(0));
+		} else { 
+			cam = static_cast<CVSensor*>(at(0));
+		}
 		cam->mission(id());
-		cam->load(idCam);
+		cam->load(idDevice);
 	}
 
 	if (ba.length() > 2) {
@@ -147,7 +157,12 @@ bool CVMissionObject::load() {
 }
 
 void CVMissionObject::init() {
-	CVCamera* cam = new CVCamera(this);
+	CVMissionDevice* cam = NULL; 
+	if (missionType() == CVControl::GPS_DATA) {
+		cam = new CVCamera(this);
+	} else {
+		new CVSensor(this);
+	}
 	cam->isPlanning(false);
 	cam->uri(uri());
 	cam->mission(id());
