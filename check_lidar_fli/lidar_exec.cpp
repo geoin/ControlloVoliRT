@@ -372,7 +372,8 @@ void lidar_exec::_process_strips()
 		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
 		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
 		"Z_STRIP_YAW FLOAT NOT NULL, " <<		// angolo
-		"Z_MISSION TEXT NOT NULL)";	// overlap longitudinale
+		"Z_MISSION TEXT NOT NULL, " <<	// overlap longitudinale
+		"Z_STRIP_LENGTH DOUBLE NOT NULL)";  // strip length
 	cnn.execute_immediate(sql.str());
 
 	// add the geometry column
@@ -385,8 +386,8 @@ void lidar_exec::_process_strips()
 	cnn.execute_immediate(sql1.str());
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, geom) \
-		VALUES (?1, ?2, ?3, ?4, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_LENGTH, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -464,7 +465,8 @@ void lidar_exec::_process_strips()
 		stm[2] = strip;
 		stm[3] = mission;
 		stm[4] = RAD_DEG(-k);
-		stm[5].fromBlob(rg);
+		stm[5] = ls->get_Length();
+		stm[6].fromBlob(rg);
 		stm.execute();
 		stm.reset();
 
