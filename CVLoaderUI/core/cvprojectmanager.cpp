@@ -136,46 +136,69 @@ void CVProjectManager::onLoadProject() {
 
 //Take most data from other controls
 CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
-	CVControl* plan = proj->get(CVControl::PLAN);
-	CVControl* gps = proj->get(CVControl::GPS_DATA);
+	CVControl::Type plan_t, fly_t;
+	if (proj->type == CVProject::PHOTOGRAMMETRY) {
+		plan_t = CVControl::PLAN;
+		fly_t = CVControl::FLY;
+	} else {
+		plan_t = CVControl::LIDAR_PLAN;
+		fly_t = CVControl::LIDAR_FLY;
+	}
 
-	CVControl* ctrl = new CVControl(CVControl::FLY, proj);
+	CVControl* plan = proj->get(plan_t);
+
+	CVControl* ctrl = new CVControl(fly_t, proj);
 	ctrl->uri(proj->db());
 
 	CVShapeLayer* axis = new CVShapeLayer(proj);
 	axis->uri(proj->path);
 	axis->type(CVObject::AVOLOV);
-	axis->controlType(CVControl::FLY);
+	axis->controlType(fly_t);
 	axis->table("AVOLOV");
 	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	ctrl->insert(axis);
-	if (b) {
-		axis->load();
-	}
 
 	ctrl->insert(plan->at(2));
 	ctrl->insert(plan->at(3), false);
+	
+	if (proj->type == CVProject::PHOTOGRAMMETRY) {
+		CVFlyAttitude* fa = new CVFlyAttitude(proj);
+		fa->uri(proj->path);
+		ctrl->insert(fa);
+	} else {
+		CVFileInput* file = new CVDemInput(ctrl);
+		file->uri(proj->path); 
+		file->control(plan_t);
+		file->object(CVObject::DEM);
+		ctrl->insert(file, false);
 
-	CVFlyAttitude* fa = new CVFlyAttitude(proj);
-	fa->uri(proj->path);
-	ctrl->insert(fa);
-	if (b) {
-		fa->load();
+		CVShapeLayer* controlPoint = new CVShapeLayer(proj);
+		controlPoint->uri(proj->path);
+		controlPoint->type(CVObject::CLOUD_CONTROL_POINTS);
+		controlPoint->controlType(CVControl::LIDAR_FLY);
+		controlPoint->table("CONTROL_CLOUD");
+		//controlPoint->columns(QStringList());
+		ctrl->insert(controlPoint);
 	}
+
+	if (b) { ctrl->load(); }
 	return ctrl;
 }
 
 CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	CVControl* ctrl = NULL;
 
+	CVControl::Type plan_t;
 	// Init camera
 	if (proj->type == CVProject::PHOTOGRAMMETRY) {
-		ctrl = new CVControl(CVControl::PLAN, proj);
+		plan_t = CVControl::PLAN;
+		ctrl = new CVControl(plan_t, proj);
 		ctrl->uri(proj->db());
 		CVCamera* cam = new CVCamera(ctrl);
 		ctrl->insert(cam);
 	} else {
-		ctrl = new CVControl(CVControl::LIDAR_PLAN, proj);
+		plan_t = CVControl::LIDAR_PLAN;
+		ctrl = new CVControl(plan_t, proj);
 		ctrl->uri(proj->db());
 		CVSensor* sensor = new CVSensor(ctrl);
 		ctrl->insert(sensor);
@@ -195,8 +218,10 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	layer->controlType(CVControl::PLAN);
 	ctrl->insert(layer);
 
-	CVFileInput* file = new CVFileInput(ctrl);
+	CVFileInput* file = new CVDemInput(ctrl);
 	file->uri(proj->path); 
+	file->control(plan_t);
+	file->object(CVObject::DEM);
 	ctrl->insert(file, false);
 
 	if (b) {

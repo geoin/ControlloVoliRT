@@ -18,10 +18,11 @@ public:
     enum Type { 
 		UNKNOWN_CATEGORY = 0, 
 		PLAN = 3, GPS_DATA, FLY, ORTO, 
-		LIDAR_PLAN, LIDAR_GPS_DATA, LIDAR_FLY 
+		LIDAR_PLAN, LIDAR_GPS_DATA, LIDAR_FLY, LIDAR_RAW
 	};
 
 	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}
+	virtual ~CVControl() {}
 
 	inline Type type() const { return _type; }
 
@@ -64,7 +65,10 @@ public:
 		ATTITUDE,
 		QUADRO,
 		CONTOUR,
-		SENSOR
+		SENSOR,
+		TEST_CLOUD,
+		CLOUD_CONTROL_POINTS,
+		LIDAR_RAW_STRIP_DATA
 	};
 
 	explicit CVObject(QObject* p) : QObject(p) {}
@@ -104,7 +108,7 @@ class CVMissionDevice : public CVObject {
 public:
 	explicit CVMissionDevice(QObject* p) : CVObject(p) {}
 
-	virtual bool load(const QString& mId) {return true; }// = 0;
+	virtual bool load(const QString& mId) = 0;
 
 	inline bool isPlanning() const { return _isPlanning; }
 	inline void isPlanning(bool b) { _isPlanning = b; }

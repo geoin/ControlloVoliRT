@@ -17,13 +17,11 @@ namespace Core {
 CVMissionObject::CVMissionObject(QObject* p) : CVObject(p), _isValid(false) {
 	_id = QUuid::createUuid().toString();
 	missionType(CVControl::GPS_DATA); //set default to photogrammetry
-	_deviceId = "ID_CAMERA";
 }
 
 CVMissionObject::CVMissionObject(QObject* p, QString key) : CVObject(p), _isValid(false) {
 	_id = key;
 	missionType(CVControl::GPS_DATA);
-	_deviceId = "ID_CAMERA";
 }
 
 bool CVMissionObject::remove() { 

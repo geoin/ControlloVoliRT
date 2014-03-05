@@ -13,11 +13,10 @@ class CVFileInput : public CVObject {
 
 public:
 	CVFileInput(QObject *parent);
-	~CVFileInput();
+	virtual ~CVFileInput();
 
 	virtual bool isValid() const;
 	virtual bool persist();
-	virtual bool load();
 	
 	virtual bool remove();
 
@@ -29,9 +28,44 @@ public:
 
 	QStringList& data() { return _data; }
 
-private:
+	inline void control(CVControl::Type t) { _control = t; }
+	inline void object(CVObject::Type t) { _object = t; }
+
+protected: 
+	QString _table;
+	CVControl::Type _control;
+	CVObject::Type _object;
+
 	QString _origin, _target;
 	QStringList _data;
+};
+
+class CVDemInput : public CVFileInput {
+	Q_OBJECT
+
+public:
+	CVDemInput(QObject* p) : CVFileInput(p) { 
+		_object = CVObject::DEM;
+		_control = CVControl::PLAN;
+		_table = "DEM";
+	}
+
+	virtual bool load();
+
+};
+
+class CVCloudSampleInput : public CVFileInput {
+	Q_OBJECT
+
+public:
+	CVCloudSampleInput(QObject* p) : CVFileInput(p) { 
+		_object = CVObject::TEST_CLOUD;
+		_control = CVControl::LIDAR_FLY;
+		_table = "CLOUD_SAMPLE";
+	}
+
+	virtual bool load();
+
 };
 
 } // namespace Core

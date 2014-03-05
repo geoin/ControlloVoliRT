@@ -27,7 +27,6 @@ public:
 	virtual void clearAll();
 	virtual void searchFile();
 	virtual void importAll(QStringList&);
-
 	
 	inline Core::CVFileInput* file() const { return static_cast<Core::CVFileInput*>(controller()); }
 

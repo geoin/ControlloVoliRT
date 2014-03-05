@@ -40,7 +40,7 @@ bool CVFileInput::remove() { //TODO, should use id
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	bool ret = q->remove(
-		"DEM", 
+		_table, 
 		QStringList(),
 		QVariantList()
 	);
@@ -75,15 +75,15 @@ bool CVFileInput::persist() {
 
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		bool ret = q->insert(
-			"DEM", 
+			_table, 
 			QStringList() << "ID" << "URI",
 			QStringList() << "?1" << "?2" ,
 			QVariantList() << QUuid::createUuid().toString() << name
 		);
 		if (ret) {
 			Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
-			e->control = Core::CVControl::PLAN;  //TODO: needs control check, multiple position
-			e->object = Core::CVObject::DEM;
+			e->control = _control;  
+			e->object = _object;
 			e->uri = _target;
 			e->db = db;
 			Core::CVJournal::add(e);
@@ -95,7 +95,7 @@ bool CVFileInput::persist() {
 	return load();
 }
 
-bool CVFileInput::load() {
+bool CVDemInput::load() {
 	_isValid = false;
 	data().clear();
 	
@@ -112,7 +112,7 @@ bool CVFileInput::load() {
 			Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 			CV::Util::Spatialite::Recordset set = q->select(
 				QStringList() << "ID" << "URI",
-				QStringList() << "DEM", 
+				QStringList() << _table, 
 				QStringList(),
 				QVariantList(),
 				QStringList(),
@@ -153,6 +153,11 @@ bool CVFileInput::load() {
 	}
 	_isValid = data().size() == rows;
 	return _isValid;
+}
+
+
+bool CVCloudSampleInput::load() {
+	return false;
 }
 
 } // namespace Core
