@@ -18,6 +18,8 @@ public:
 	virtual bool load();
 
 	virtual bool remove();
+	
+	virtual bool load(const QString& mId);
 
 	struct SensorData {
 		SensorData() : fov(0.0f), ifov(0.0f), freq(0.0f), scan_rate(0.0f) {}

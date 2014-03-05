@@ -117,6 +117,7 @@ CVMissionListDetails::CVMissionListDetails(QWidget* p, CV::Core::CVControl* ctrl
 	int count = _control->count();
 	for (int i = 0; i < count; ++i) {
 		Core::CVMissionObject* mission = static_cast<Core::CVMissionObject*>(_control->at(i));
+		mission->missionType(_control->type());
 		add(mission);
 	}
 }
@@ -156,6 +157,7 @@ void CVMissionListDetails::onAddMission() {
 
 	//TODO: should projManager handle this? probably yes
 	Core::CVMissionObject* obj = new Core::CVMissionObject(_control);
+	obj->missionType(_control->type());
 	_control->insert(obj);
 
 	obj->name(name);

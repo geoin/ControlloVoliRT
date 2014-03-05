@@ -89,7 +89,7 @@ void CVAppContainer::insertProject(Core::CVProject* proj) {
 		node = _tree->insertNode(root, tr("Progetto di volo"), Core::CVControl::LIDAR_PLAN);
 		emit controlAdded(node->info()->type(), proj->get(Core::CVControl::LIDAR_PLAN));
 
-        node = _tree->insertNode(root, tr("Progetto di volo"), Core::CVControl::LIDAR_GPS_DATA);
+        node = _tree->insertNode(root, tr("Dati GPS"), Core::CVControl::LIDAR_GPS_DATA);
         emit controlAdded(node->info()->type(), proj->get(Core::CVControl::LIDAR_GPS_DATA));
 	}
 }

@@ -119,14 +119,14 @@ bool CVMissionObject::load() {
 	}
 
 	if (!idDevice.isEmpty()) {
-		CVMissionDevice* cam = NULL;
+		CVMissionDevice* dev = NULL;
 		if (missionType() == CVControl::GPS_DATA) {
-			cam = static_cast<CVCamera*>(at(0));
+			dev = static_cast<CVCamera*>(at(0));
 		} else { 
-			cam = static_cast<CVSensor*>(at(0));
+			dev = static_cast<CVSensor*>(at(0));
 		}
-		cam->mission(id());
-		cam->load(idDevice);
+		dev->mission(id());
+		dev->load(idDevice);
 	}
 
 	if (ba.length() > 2) {
@@ -157,16 +157,16 @@ bool CVMissionObject::load() {
 }
 
 void CVMissionObject::init() {
-	CVMissionDevice* cam = NULL; 
+	CVMissionDevice* dev = NULL; 
 	if (missionType() == CVControl::GPS_DATA) {
-		cam = new CVCamera(this);
+		dev = new CVCamera(this);
 	} else {
-		new CVSensor(this);
+		dev = new CVSensor(this);
 	}
-	cam->isPlanning(false);
-	cam->uri(uri());
-	cam->mission(id());
-	insert(cam);
+	dev->isPlanning(false);
+	dev->uri(uri());
+	dev->mission(id());
+	insert(dev);
 
 	CVRinex* rinex = new CVRinex(this);
 	rinex->uri(uri());
