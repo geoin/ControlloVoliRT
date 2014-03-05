@@ -59,12 +59,11 @@ void CVProjectManager::onNewProject() {
 		}
         ctrl->uri(db);
         proj->insert(ctrl);
+
+		ctrl = _fly(proj, false);
+		proj->insert(ctrl);
 		
         if (proj->type == CVProject::PHOTOGRAMMETRY) {
-
-			ctrl = _fly(proj, false);
-			proj->insert(ctrl);
-
 			ctrl = _orto(proj, false);
 			proj->insert(ctrl);
 		}

@@ -9,6 +9,7 @@ namespace Core {
 
 CVShapeLayer::CVShapeLayer(QObject* p) : CVObject(p), _shapeCharSet("CP1252"), _utm32_SRID(32632), _colName("GEOM") {
 	_rows = 0;
+	_isValid = false;
 }
 
 CVShapeLayer::~CVShapeLayer() {
@@ -70,6 +71,7 @@ QStringList& CVShapeLayer::data() {
 
 bool CVShapeLayer::load() {
 	_info.clear();
+	_isValid = false;
 
 	//TODO: add count query
 

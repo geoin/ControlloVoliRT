@@ -4,6 +4,8 @@
 #include "cvflyaxis_p.h"
 #include "cvdemdetail.h"
 #include "cvareadetail.h"
+#include "cvcontrolpointsdetail.h"
+#include "cvcloudsampledetail.h"
 
 namespace CV {
 namespace GUI {
@@ -29,6 +31,20 @@ CVLidarFlyDetail::CVLidarFlyDetail(QWidget* p, Core::CVControl* c, TabPosition p
 	CVDemDetail* dem = new CVDemDetail(p, c->at(i), c->type());
 	addTab(dem, "");
     setTabToolTip(i, tr("DEM"));
+	setTabIcon(i, QIcon(":/graphics/icons/plan/dem.png"));
+
+	i++;
+
+	CVCloudSampleDetail* cloud = new CVCloudSampleDetail(p, c->at(i));
+	addTab(cloud, "");
+    setTabToolTip(i, tr("Nuvola area di test"));
+	setTabIcon(i, QIcon(":/graphics/icons/plan/cloud.png"));
+
+	i++;
+
+	CVControlPointsDetail* points = new CVControlPointsDetail(p, c->at(i));
+	addTab(points, "");
+    setTabToolTip(i, tr("Punti di controllo"));
 	setTabIcon(i, QIcon(":/graphics/icons/plan/dem.png"));
 }
 
