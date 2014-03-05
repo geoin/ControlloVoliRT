@@ -5,6 +5,7 @@
 #include "gui/details/cvflydetail.h"
 #include "gui/details/cvortodetail.h"
 #include "gui/details/cvlidarplandetail.h"
+#include "gui/details/cvlidarflydetail.h"
 
 #include "core/categories/cvcontrol.h"
 
@@ -33,9 +34,9 @@ QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::
         case Core::CVControl::LIDAR_GPS_DATA:
             detail = new Details::CVMissionListDetails(p, control);
            break;
-        /*case Core::CVControl::LIDAR_FLY:
+        case Core::CVControl::LIDAR_FLY:
             detail = new Details::CVLidarFlyDetail(p, control);
-           break;*/
+           break;
         default:
             break;
     }

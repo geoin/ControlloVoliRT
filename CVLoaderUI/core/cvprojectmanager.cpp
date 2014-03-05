@@ -120,11 +120,11 @@ void CVProjectManager::onLoadProject() {
 			ctrl->insert(obj);
 		}
 		ctrl->load();
+		
+		ctrl = _fly(proj, true);
+		proj->insert(ctrl);
 
 		if (proj->type == CVProject::PHOTOGRAMMETRY) {
-			ctrl = _fly(proj, true);
-			proj->insert(ctrl);
-
 			ctrl = _orto(proj, true);
 			proj->insert(ctrl);
 		}
@@ -166,10 +166,10 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 		fa->uri(proj->path);
 		ctrl->insert(fa);
 	} else {
-		CVFileInput* file = new CVDemInput(ctrl);
+		CVFileInput* file = new CVCloudSampleInput(ctrl);
 		file->uri(proj->path); 
 		file->control(plan_t);
-		file->object(CVObject::DEM);
+		file->object(CVObject::TEST_CLOUD);
 		ctrl->insert(file, false);
 
 		CVShapeLayer* controlPoint = new CVShapeLayer(proj);
