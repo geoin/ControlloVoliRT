@@ -1,3 +1,6 @@
+#ifndef CV_COMMON_UTIL_H
+#define CV_COMMON_UTIL_H
+
 #include "docbook/docbook.h"
 #include "CVUtil/ogrgeomptr.h"
 #include "CVUtil/cvspatialite.h"
@@ -13,7 +16,7 @@ enum CHECK_TYPE {
 #define STRIP_NAME "A_VOL_CS"
 #define SRID 32632 // SRID UTM32 wgs84
 #define SRIDGEO 4326 // SRID lat lon wgs84
-#define GPS "GPS"
+#define GPS_TABLE_NAME "GPS"
 #define Z_UNCOVER "Z_UNCOVER"
 #define ASSI_VOLO "AVOLO"
 #define Z_FOTO "Z_FOTO"
@@ -37,4 +40,6 @@ void read_planned_cam(CV::Util::Spatialite::Connection& cnn, Camera& cam);
 
 std::string get_strip(const std::string& nome);
 std::string get_nome(const std::string& nome);
+
+#endif
 
