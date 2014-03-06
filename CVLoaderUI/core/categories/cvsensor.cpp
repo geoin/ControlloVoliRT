@@ -14,6 +14,7 @@ namespace Core {
 
 CVSensor::CVSensor(QObject *parent) : CVMissionDevice(parent) {
 	_isValid = false;
+	isPlanning(false);
 }
 
 CVSensor::~CVSensor() {
@@ -89,7 +90,7 @@ bool CVSensor::persist() {
 				"SENSOR", 
 				QStringList() << "FOV=?1" << "IFOV=?2" << "FREQ=?3" << "SCAN_RATE=?4" << "PLANNING=?5",
 				QStringList() << "ID=?6",
-				QVariantList() << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << true << _sensor.id //TODO
+				QVariantList() << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << isPlanning() << _sensor.id //TODO
 			);
 			
 		} else {	
@@ -98,7 +99,7 @@ bool CVSensor::persist() {
 				"SENSOR", 
 				QStringList() << "ID" << "FOV" << "IFOV" << "FREQ" << "SCAN_RATE" << "PLANNING",
 				QStringList() << "?1" << "?2" << "?3" << "?4" << "?5" << "?6",
-				QVariantList() << _sensor.id << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << true
+				QVariantList() << _sensor.id << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << isPlanning()
 			);
 		}
 	} catch (CV::Util::Spatialite::spatialite_error& err) {

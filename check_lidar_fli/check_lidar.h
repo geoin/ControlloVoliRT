@@ -34,21 +34,24 @@
 #include "CVUtil/ogrgeomptr.h"
 #include "dem_interpolate/geom.h"
 
+#include "cv/lidar.h"
+
 class DSM_Factory;
 
+/*
 class Lidar {
 public:
 	double fov;
 	double ifov;
 	double freq;
 	double scan;
-};
+};*/
 
 class lidar_exec {
 public:
 	enum Check_Type {
-		Prj_type = 0,
-		fli_type = 1
+		PRJ_TYPE = 0,
+		FLY_TYPE = 1
 	};
 
 	lidar_exec() : STRIP_OVERLAP(0), STRIP_OVERLAP_RANGE(0), MAX_STRIP_LENGTH(0) { }
@@ -59,18 +62,15 @@ public:
 	void set_checkType(Check_Type t);
 
 private:
-	struct StripRec {
-        StripRec() : yaw(0.0) {}
-		std::string name;
-		double yaw;
-		CV::Util::Geometry::OGRGeomPtr geom;
-	};
+	std::map<std::string, CV::Lidar::Strip::Ptr> _strips;
 
 	void _process_strips(void);
+	void _createStripTable(); 
+
 	void _process_block(void);
 	void _get_dif(void);
 
-	void _get_overlaps(const std::map<std::string, StripRec>&);
+	void _get_overlaps(const std::map<std::string, CV::Lidar::Strip::Ptr>&);
 
 	bool _read_lidar(void);
 	bool _read_dem(void);
@@ -81,6 +81,8 @@ private:
 	void _init_document(void);
 	Doc_Item _initpg1(void);
 	Doc_Item _initpg2(void);
+
+	void _update_assi_volo();
 
 	void _final_report();
     void _strip_report();
@@ -97,7 +99,8 @@ private:
 	Check_Type _type;
 	
 	DSM_Factory* _df;
-	Lidar	_lidar;
+	CV::Lidar::Sensor _lidar;
+
 	docbook _dbook;
 	Doc_Item _article;
 	std::string _dem_name;

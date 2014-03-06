@@ -52,6 +52,8 @@ using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
 using Poco::SharedPtr;
 using Poco::Path;
+
+using namespace CV;
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 /**************************************************************************/
@@ -67,6 +69,7 @@ std::string get_key(const std::string& val)
 lidar_exec::~lidar_exec() 
 {
 }
+
 bool lidar_exec::run()
 {
 	try {
@@ -85,19 +88,6 @@ bool lidar_exec::run()
 
 		_read_ref_val();
 
-		// initialize docbook xml file
-		std::string title =_type == fli_type ? "Collaudo rilievo lidar" : "Collaudo progetto di rilievo lidar";
-		Path doc_file(_proj_dir, "*");
-		doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
-
-		init_document(_dbook, doc_file.toString(), title, _note);
-		char* dtd_ = getenv("DOCBOOKRT");
-		std::string dtd;
-		if ( dtd_ != NULL )
-			dtd = std::string("file:") + dtd_;
-		_dbook.set_dtd(dtd);
-		_article = _dbook.get_item("article");
-
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 		_read_lidar();
 		// read digital terrain model
@@ -107,6 +97,8 @@ bool lidar_exec::run()
 
 		_process_strips();
 		_process_block();
+
+		//_update_assi_volo();
 
 		// se volo lidar confronta gli assi progettati con quelli effettivi
 
@@ -118,6 +110,18 @@ bool lidar_exec::run()
 
 		// per il volo verifica i punti dell'area di test
 
+		// initialize docbook xml file
+		std::string title =_type == FLY_TYPE ? "Collaudo rilievo lidar" : "Collaudo progetto di rilievo lidar";
+		Path doc_file(_proj_dir, "*");
+		doc_file.setFileName(_type == FLY_TYPE ? OUT_DOCV : OUT_DOCP);
+
+		init_document(_dbook, doc_file.toString(), title, _note);
+		char* dtd_ = getenv("DOCBOOKRT");
+		std::string dtd;
+		if ( dtd_ != NULL )
+			dtd = std::string("file:") + dtd_;
+		_dbook.set_dtd(dtd);
+		_article = _dbook.get_item("article");
 
 		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
 		_final_report();
@@ -134,13 +138,13 @@ bool lidar_exec::run()
 }
 
 void lidar_exec::_final_report() {
-    if ( _type == fli_type ) {
+    if ( _type == FLY_TYPE ) {
         //fly specific data
     }
 
     //controlo del ricoprimento delle aree da rilevare
     std::stringstream sql;
-    std::string table = std::string(Z_UNCOVER) + (_type == Prj_type ? "P" : "V");
+    std::string table = std::string(Z_UNCOVER) + (_type == PRJ_TYPE ? "P" : "V");
     sql << "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" << table << "'";
     Statement stm(cnn);
     stm.prepare(sql.str());
@@ -178,8 +182,8 @@ void lidar_exec::_strip_report() {
     ss1 << "Massima lunghezza strisciate minore di " << MAX_STRIP_LENGTH << " km";
     itl->add_item("listitem")->add_item("para")->append(ss1.str());
 
-    std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
-    std::string table2 = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
+    std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
+    std::string table2 = std::string(Z_STR_OVL) + (_type == PRJ_TYPE ? "P" : "V");
     std::stringstream sql;
     sql << "SELECT Z_STRIP_CS, Z_STRIP_LENGTH, Z_STRIP_T_OVERLAP, Z_STRIP2 FROM " << table << " a inner JOIN " <<
         table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << minVal << " OR Z_STRIP_T_OVERLAP>" << maxVal;
@@ -305,19 +309,6 @@ Doc_Item lidar_exec::_initpg1()
 
 bool lidar_exec::_read_lidar()
 {
-    /*std::string lidar_name = Path(_proj_dir, "lidar.xml").toString();
-	AutoPtr<XMLConfiguration> pConf;
-	try {
-		pConf = new XMLConfiguration(lidar_name);
-		_lidar.fov = atof(pConf->getString("FOV").c_str());
-		_lidar.ifov = atof(pConf->getString("IFOV").c_str());
-		_lidar.freq = atof(pConf->getString("FREQ").c_str());
-		_lidar.scan = atof(pConf->getString("SCAN_RATE").c_str());
-	} catch (...) {
-		return false;
-	}
-    return true;*/
-
     try {
         CV::Util::Spatialite::Statement stm(cnn);
 
@@ -329,10 +320,10 @@ bool lidar_exec::_read_lidar()
         if (set.eof()) {
             return false;
         }
-        _lidar.fov = set[0].toDouble();
-        _lidar.ifov = set[1].toDouble();
-        _lidar.freq = set[2].toDouble();
-        _lidar.scan = set[3].toDouble();
+        _lidar.fov(set[0].toDouble());
+        _lidar.ifov(set[1].toDouble());
+        _lidar.freq(set[2].toDouble());
+        _lidar.scan(set[3].toDouble());
      } catch (CV::Util::Spatialite::spatialite_error& err) {
         (void*)&err;
         return false;
@@ -359,10 +350,8 @@ bool lidar_exec::_read_dem() {
 	return true;
 }
 
-void lidar_exec::_process_strips()
-{
-	// create tthe table for the strip footprint
-    std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
+void lidar_exec::_createStripTable() {
+	std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 	cnn.remove_layer(table);
 	std::cout << "Layer:" << table << std::endl;
 
@@ -372,7 +361,7 @@ void lidar_exec::_process_strips()
 		"(Z_STRIP_ID TEXT NOT NULL, " <<	// sigla del lavoro
 		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
 		"Z_STRIP_YAW FLOAT NOT NULL, " <<		// angolo
-		"Z_MISSION TEXT NOT NULL, " <<	// overlap longitudinale
+		"Z_MISSION TEXT NOT NULL, " <<	
 		"Z_STRIP_LENGTH DOUBLE NOT NULL)";  // strip length
 	cnn.execute_immediate(sql.str());
 
@@ -384,6 +373,14 @@ void lidar_exec::_process_strips()
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
+}
+
+void lidar_exec::_process_strips()
+{
+	_createStripTable();
+
+	// create the table for the strip footprint
+    std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_LENGTH, geom) \
@@ -393,7 +390,7 @@ void lidar_exec::_process_strips()
 	stm.prepare(sql2.str());
 
 	// select data from flight lines
-	table = std::string(ASSI_VOLO) + (_type == Prj_type ? "P" : "V");
+	table = std::string(ASSI_VOLO) + (_type == PRJ_TYPE ? "P" : "V");
 	std::stringstream sql3;
 	sql3 << "SELECT A_VOL_QT, A_VOL_CS, mission, AsBinary(geom) geom from " << table;
 	Statement stm1(cnn);
@@ -404,74 +401,177 @@ void lidar_exec::_process_strips()
 
 	DSM* ds = _df->GetDsm();
 
-	double teta2 = DEG_RAD(_lidar.fov / 2.);
+	double gProj = _lidar.halfGroundWidth();
 
 	while ( !rs.eof() ) {
         Blob blob =  rs["geom"].toBlob();
         OGRGeomPtr pol = blob;
-		OGRPoint* p0 = NULL;
-		OGRPoint* p1 = NULL;
-
-		OGRGeometry* og = (OGRGeometry*) pol;
-		OGRLineString* ls = (OGRLineString*)og;
-		int n = ls->getNumPoints();
-		if ( n != 2 ) // each line must have only two points
-			throw std::runtime_error("asse di volo non valido");
-
 		double z = rs[0];
-		DPOINT pt0(ls->getX(0), ls->getY(0), z);
-		DPOINT pt1(ls->getX(1), ls->getY(1), z);
-		double k = pt1.angdir(pt0);
 		std::string strip = rs[1];
 		std::string mission = rs[2];
-		MatOri m(0, 0, -k);
 
-		OGRGeometryFactory gf;
-		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
+		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));
+		axis->stripName(strip);
+		axis->missionName(mission);
 
-		OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
-		gp->setCoordinateDimension(2);
-
-		OGRSpatialReference sr;
-		sr.importFromEPSG(SRID);
-		gp->assignSpatialReference(&sr);
-
-		for ( int i = 0; i < 4; i++) {
-			DPOINT pa = ( i < 2 ) ? pt0 : pt1;
-			double x = ( i == 0 || i == 3 ) ? -tan(teta2) : tan(teta2);
-			DPOINT pd(x, 0, -1);
-			pd = m * pd;
-			//pd = pd - pa;
-
-			DPOINT pt;
-			if ( !ds->RayIntersect(pa, pd, pt) ) {
-				if ( !ds->IsInside(pt.z) ) {
-					std::stringstream ss;
-					ss << "la strisciata " << strip << " della missione " << mission << " cade al di fuori del dem";
-					throw std::runtime_error(ss.str());
-				}
-			}
-			gp->addPoint(pt.x, pt.y);
+		if (!axis->isValid()) { 
+			throw std::runtime_error("asse di volo non valido");
 		}
-		gp->closeRings();
 
-		OGRGeomPtr rg = gf.createGeometry(wkbPolygon);
-		OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) rg);
-		p->setCoordinateDimension(2);
-		p->assignSpatialReference(&sr);
-		p->addRing(gp);
+		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);
+		stripPtr->fromAxis(axis, ds, gProj);
 
-        double dist = ls->get_Length() / 1000;
+        double dist = axis->length() / 1000;
 		stm[1] = SIGLA_PRJ;
 		stm[2] = strip;
 		stm[3] = mission;
-		stm[4] = RAD_DEG(-k);
+		stm[4] = RAD_DEG(axis->angle());
         stm[5] = dist;
-		stm[6].fromBlob(rg);
+		stm[6].fromBlob(stripPtr->geom());
 		stm.execute();
-		stm.reset();
 
+		_strips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));
+
+		stm.reset();
 		rs.next();
+	}
+	cnn.commit_transaction();
+}
+
+Poco::Timestamp from_string(const std::string time)
+{
+	Poco::StringTokenizer tok(time, ":", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	Poco::Timestamp tm;
+	if ( tok.count() < 3 )
+		return tm;
+	double sec = atof(tok[2].c_str());
+	double msec = 1000 * ( sec - (int) sec);
+	Poco::DateTime dm(2010, 1, 1, atoi(tok[0].c_str()), atoi(tok[1].c_str()), (int) sec, (int) msec);
+	return dm.timestamp();
+}
+
+void lidar_exec::_update_assi_volo()
+{
+	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
+
+	std::string table = ASSI_VOLO + std::string("V");
+
+	// add the columns for the gps data
+	add_column(cnn, table, "DATE TEXT");
+	add_column(cnn, table, "TIME_S TEXT");
+	add_column(cnn, table, "TIME_E TEXT");
+	add_column(cnn, table, "MISSION TEXT");
+	add_column(cnn, table, "NBASI INTEGER");
+	add_column(cnn, table, "NSAT INTEGER");
+	add_column(cnn, table, "PDOP DOUBLE");
+	add_column(cnn, table, "GPS_GAP INTEGER");
+
+	// query to associate to the first and last point of each flight line the nearest point of the gps track
+	std::stringstream sql;
+	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
+        table << " a, " << GPS_TABLE_NAME << " b group by strip";
+
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+
+	stm[1] = 1;
+	Recordset rs = stm.recordset();
+
+	// for every strip get the GPS time of the first point
+	std::vector<GPS::Sample::Ptr> ft1;
+	while ( !rs.eof() ) {
+		GPS::Sample::Ptr f(new GPS::Sample);
+        f->strip(rs["strip"].toString());
+        f->mission(rs["MISSION"].toString());
+        f->dateTime(rs["DATE"].toString(), rs["TIME"].toString());
+		f->gpsData(rs["NSAT"].toInt(), rs["NBASI"].toInt(), rs["PDOP"].toDouble());
+        Blob blob = rs["geo"].toBlob();
+		f->point(blob);
+		ft1.push_back(f);
+		rs.next();
+	}
+	stm.reset();
+	stm[1] = 2;
+	rs = stm.recordset();
+
+	// for every strip get the GPS time of the last point
+	std::vector<GPS::Sample::Ptr> ft2;
+	while ( !rs.eof() ) {
+		GPS::Sample::Ptr f(new GPS::Sample);
+        f->strip(rs["strip"].toString());
+        f->mission(rs["MISSION"].toString());
+        f->dateTime(rs["DATE"].toString(), rs["TIME"].toString());
+		f->gpsData(rs["NSAT"].toInt(), rs["NBASI"].toInt(), rs["PDOP"].toDouble());
+        Blob blob = rs["geo"].toBlob();
+		f->point(blob);
+		ft2.push_back(f);
+		rs.next();
+	}
+
+	std::stringstream sql1;
+	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << STRIP_NAME  << "=?9";
+	Statement stm1(cnn);
+	stm1.prepare(sql1.str());
+	cnn.begin_transaction();
+
+	// per ogni strip determina i parametri gps con cui è stata acquisita
+	for ( size_t i = 0; i < ft1.size(); i++) {
+		const std::string& val = ft1[i]->strip();
+
+		std::string t1 = ft1[i]->time();
+		for ( size_t j = 0; j < ft2.size(); j++) {
+			if ( ft2[j]->strip() == ft1[i]->strip() ) {
+				std::string t2 = ft2[j]->time();
+				if (t1 > t2) {
+					std::swap(t1, t2);
+				}
+
+				std::stringstream sql;
+				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' ORDER BY TIME";
+				stm.prepare(sql.str());
+				rs = stm.recordset();
+				bool first = true;
+				
+				Poco::Timestamp tm0, tm1;
+				double dt0 = 0.;
+				int nsat, nbasi;
+				double pdop;
+				while (!rs.eof()) {
+					if (first) {
+						stm1[1] = (std::string const &) rs["MISSION"]; // mission
+						stm1[2] = rs["DATE"].toString(); // date
+						stm1[3] = t1; // istante di inizio acquisizione
+						stm1[4] = t2; // istante di fine acquisizione
+
+						nsat = rs["NSAT"].toInt();
+						pdop = rs["PDOP"].toDouble();
+						nbasi = rs["NBASI"].toInt();
+						stm1[9] = val;
+						first = false;
+					} else {
+						nsat = std::min(nsat, rs["NSAT"].toInt());
+						pdop = std::max(pdop, rs["PDOP"].toDouble());
+						nbasi = std::min(nbasi, rs["NBASI"].toInt());
+						tm1 = from_string(rs["TIME"]);
+						double dt = (double) (tm1 - tm0) / 1000000;
+						tm0 = tm1;
+						if (dt > dt0) {
+							dt0 = dt;
+						}
+					}
+					rs.next();
+				}
+				if (first) {
+					return;
+				}
+				stm1[5] = nsat; // minimal number of satellite
+				stm1[6] = pdop; // max pdop
+				stm1[7] = nbasi; // number of bases
+				stm1[8] = (int) dt0;
+				stm1.execute();
+				stm1.reset();
+			}
+		}
 	}
 	cnn.commit_transaction();
 }
@@ -479,7 +579,7 @@ void lidar_exec::_process_strips()
 void lidar_exec::_process_block()
 {
 	// select data from flight lines
-    std::string table = std::string(Z_STRIP) + (_type == Prj_type ? "P" : "V");
+    /*std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 	std::stringstream sql1;
 	sql1 << "SELECT AsBinary(geom) geom, Z_STRIP_YAW, Z_STRIP_CS from " << table;
 	Statement stm1(cnn);
@@ -490,26 +590,31 @@ void lidar_exec::_process_block()
 
 	OGRGeomPtr blk;
 	bool first = true;
-	std::map<std::string, StripRec> rec;
 	while ( !rs.eof() ) {
-		StripRec r;
         Blob blob = rs["geom"].toBlob();
-        r.geom = blob;
-		r.yaw = rs["Z_STRIP_YAW"].toDouble();
-		r.name = rs["Z_STRIP_CS"].toString();
-		rec.insert(std::pair<std::string, StripRec>(r.name, r));
+		Lidar::Strip::Ptr r(new Lidar::Strip(blob));
+		r->yaw(rs["Z_STRIP_YAW"].toDouble());
+		r->name(rs["Z_STRIP_CS"].toString());
+		_strips.insert(std::pair<std::string, Lidar::Strip::Ptr>(r->name(), r));
 		if ( first ) {
-			blk = r.geom;
+			blk = r->geom();
 			first = false;
 		} else {
-			blk = blk->Union(r.geom);
+			blk = blk->Union(r->geom());
 		}
 		rs.next();
+	}*/
+
+	_get_overlaps(_strips);
+
+	Lidar::Block block;
+	std::map<std::string, Lidar::Strip::Ptr>::const_iterator it = _strips.begin();
+	std::map<std::string, Lidar::Strip::Ptr>::const_iterator end = _strips.end();
+	for (; it != end; ++it) {
+		block.add((*it).second);
 	}
 
-	_get_overlaps(rec);
-
-	std::string tableb = std::string("BLOCK") + (_type == Prj_type ? "P" : "V");
+	std::string tableb = std::string("BLOCK") + (_type == PRJ_TYPE ? "P" : "V");
 	cnn.remove_layer(tableb);
 	std::cout << "Layer:" << tableb << std::endl;
 
@@ -522,7 +627,7 @@ void lidar_exec::_process_block()
 	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
 		"'geom'," <<
 		SRID << "," <<
-		"'" << get_typestring(blk) << "'," <<
+		"'" << get_typestring(block.geom()) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sqlb.str());
 	
@@ -532,7 +637,7 @@ void lidar_exec::_process_block()
 	cnn.begin_transaction();
 	stm0.prepare(sqlc.str());
 	stm0[1] = SIGLA_PRJ;
-	stm0[2].fromBlob(blk);
+	stm0[2].fromBlob(block.geom());
 	stm0.execute();
 	stm0.reset();
 	cnn.commit_transaction();
@@ -540,8 +645,8 @@ void lidar_exec::_process_block()
 	_get_dif();
 }
 
-void lidar_exec::_get_overlaps(const std::map<std::string, StripRec>& rec) {
-	std::string table = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
+void lidar_exec::_get_overlaps(const std::map<std::string, Lidar::Strip::Ptr>& rec) {
+	std::string table = std::string(Z_STR_OVL) + (_type == PRJ_TYPE ? "P" : "V");
 	cnn.remove_layer(table);
 
 	std::cout << "Calcolo sovrapposizione tra strisciate" << std::endl;
@@ -563,39 +668,24 @@ void lidar_exec::_get_overlaps(const std::map<std::string, StripRec>& rec) {
 	try {
 		stm.prepare(sql.str());
 
-		std::map<std::string, StripRec>::const_iterator it = rec.begin();
-		std::map<std::string, StripRec>::const_iterator end = rec.end();
+		std::map<std::string, Lidar::Strip::Ptr>::const_iterator it = rec.begin();
+		std::map<std::string, Lidar::Strip::Ptr>::const_iterator end = rec.end();
 		
 		int k = 0;
 		for (; it != end; it++) {
-			const StripRec& source = (*it).second;
-			std::map<std::string, StripRec>::const_iterator next = it;
+			const Lidar::Strip::Ptr source = (*it).second;
+			std::map<std::string, Lidar::Strip::Ptr>::const_iterator next = it;
 			for (next++; next != end; next++) {
-				const StripRec& target = (*next).second;
-				double diff = source.yaw - target.yaw;
-
-				diff = fabs(diff > 180 ? 360 - diff : diff);
-
-				if (diff < 10 || diff > 170) {
-					OGRGeomPtr sourceGeom = source.geom;
-					OGRGeomPtr targetGeom = target.geom;
-					if (sourceGeom->Intersect(targetGeom)) {
-						OGRGeomPtr intersection = sourceGeom->Intersection(targetGeom);
-						if (intersection->getGeometryType() == wkbPolygon) {
-							double srcMajorAxis, srcMinorAxis;
-							get_elong(sourceGeom, DEG_RAD(source.yaw), &srcMajorAxis, &srcMinorAxis);
-							
-							double targetMajorAxis, targetMinorAxis;
-							get_elong(intersection, DEG_RAD(target.yaw), &targetMajorAxis, &targetMinorAxis);
-
-							double dt = (int) 100 * (targetMajorAxis / srcMajorAxis);
-							stm[1] = ++k;
-							stm[2] = source.name;
-							stm[3] = target.name;
-							stm[4] = dt;
-							stm.execute();
-							stm.reset();
-						}
+				const Lidar::Strip::Ptr target = (*next).second;
+				if (source->isParallel(target) && source->intersect(target)) {
+					int dt = source->intersectionPercentage(target);
+					if (dt) {
+						stm[1] = ++k;
+						stm[2] = source->name();
+						stm[3] = target->name();
+						stm[4] = dt;
+						stm.execute();
+						stm.reset();
 					}
 				}
 			}
@@ -633,7 +723,7 @@ void lidar_exec::_get_dif()
 	}
 
 	// select data from strips block
-	table = std::string("BLOCK") + (_type == Prj_type ? "P" : "V");
+	table = std::string("BLOCK") + (_type == PRJ_TYPE ? "P" : "V");
 	std::stringstream sql2;
 	sql2 << "SELECT AsBinary(geom) geom from " << table;
 	Statement stm2(cnn);
@@ -653,7 +743,7 @@ void lidar_exec::_get_dif()
 	stm2.reset();
 
     //OGRPolygon* diffPolygon = (OGRPolygon*) ((OGRGeometry*) dif);
-    std::string tabled = std::string("UNCOVERED_AREA") + (_type == Prj_type ? "P" : "V");
+    std::string tabled = std::string("UNCOVERED_AREA") + (_type == PRJ_TYPE ? "P" : "V");
 	cnn.remove_layer(tabled);
 	std::cout << "Layer:" << tabled << std::endl;
 

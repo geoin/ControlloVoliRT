@@ -149,6 +149,7 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 	CVControl* ctrl = new CVControl(fly_t, proj);
 	ctrl->uri(proj->db());
 
+	//NOTE: now used only in lidar projects. 
 	CVShapeLayer* axis = new CVShapeLayer(proj);
 	axis->uri(proj->path);
 	axis->type(CVObject::AVOLOV);
@@ -194,12 +195,14 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 		ctrl = new CVControl(plan_t, proj);
 		ctrl->uri(proj->db());
 		CVCamera* cam = new CVCamera(ctrl);
+		cam->isPlanning(true);
 		ctrl->insert(cam);
 	} else {
 		plan_t = CVControl::LIDAR_PLAN;
 		ctrl = new CVControl(plan_t, proj);
 		ctrl->uri(proj->db());
 		CVSensor* sensor = new CVSensor(ctrl);
+		sensor->isPlanning(true);
 		ctrl->insert(sensor);
 	}
 	

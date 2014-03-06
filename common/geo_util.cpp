@@ -66,8 +66,7 @@ void add_column(Connection& cnn, const std::string& table, const std::string& co
 	sql << "ALTER TABLE " << table << " ADD COLUMN " << col_name;
 	try {
 		cnn.execute_immediate(sql.str());
-	}
-		catch(std::exception e) {
+	} catch(const std::exception& e) {
 	}
 }
 std::string _set_ref_scale(const std::string& nome)

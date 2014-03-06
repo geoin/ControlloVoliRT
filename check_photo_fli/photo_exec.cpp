@@ -88,11 +88,11 @@ bool photo_exec::run()
         }
 
 		//_cam_name = Path(_proj_dir, CAMERA).toString();
-		std::string assetti = std::string(ASSETTI) + (_type == Prj_type ? "P" : "V") + ".txt";
+		/*std::string assetti = std::string(ASSETTI) + (_type == Prj_type ? "P" : "V") + ".txt";
 		std::string assettip = std::string(ASSETTI) + "P" + ".txt";
 		_vdp_name = Path(_proj_dir, assetti).toString();
 		_vdp_name_proj = Path(_proj_dir, assettip).toString();
-		_dem_name = Path(_proj_dir, DEM).toString();
+		_dem_name = Path(_proj_dir, DEM).toString();*/
 
 		// map areas
 		std::cout << "Layer:" << CARTO << std::endl;
@@ -415,8 +415,9 @@ void photo_exec::_assi_from_vdp(std::map<std::string, VDP>& vdps)
 				stm[11].fromBlob(gp_);
 				stm.execute();
 				stm.reset();
-			} else
+			} else {
 				first = false;
+			}
 			strip0 = strip;
 			p0 = it->second.Pc;
 			fi = get_nome(it->first);
@@ -1239,7 +1240,7 @@ void photo_exec::_update_assi_volo()
 					std::swap(t1, t2);
 
 				std::stringstream sql;
-				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' ORDER BY TIME";
+				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' ORDER BY TIME";
 				stm.prepare(sql.str());
 				rs = stm.recordset();
 				bool first = true;

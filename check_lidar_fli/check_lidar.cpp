@@ -96,11 +96,11 @@ void check_lidar::defineOptions(OptionSet& options)
 }
 void check_lidar::handleFlight(const std::string& name, const std::string& value)
 {
-	_lix.set_checkType(lidar_exec::fli_type);
+	_lix.set_checkType(lidar_exec::FLY_TYPE);
 }
 void check_lidar::handleProject(const std::string& name, const std::string& value)
 {
-	_lix.set_checkType(lidar_exec::Prj_type);
+	_lix.set_checkType(lidar_exec::PRJ_TYPE);
 }
 void check_lidar::handlePrjDir(const std::string & name, const std::string & value)
 {

@@ -31,7 +31,7 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 void init_document(docbook& dbook, const std::string& nome, const std::string& title, const std::string& note)
 {
 	//Path doc_file(_proj_dir, "*");
-	//doc_file.setFileName(_type == fli_type ? OUT_DOCV : OUT_DOCP);
+	//doc_file.setFileName(_type == FLY_TYPE ? OUT_DOCV : OUT_DOCP);
 	//_dbook.set_name(doc_file.toString());	
 	dbook.set_name(nome);	
 
@@ -39,7 +39,7 @@ void init_document(docbook& dbook, const std::string& nome, const std::string& t
 	attr.addAttribute("", "", "lang", "", "it");
 	Doc_Item article = dbook.add_item("article", attr);
 	article->add_item("title")->append(title);
-	//_article->add_item("title")->append(_type == fli_type ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
+	//_article->add_item("title")->append(_type == FLY_TYPE ? "Collaudo ripresa aerofotogrammetrica" : "Collaudo progetto di ripresa aerofotogrammetrica");
 
 	Doc_Item sec = article->add_item("section");
 	sec->add_item("title")->append("Intestazione");
