@@ -89,7 +89,12 @@ bool lidar_exec::run()
 		_read_ref_val();
 
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
-		_read_lidar();
+		
+		if ( _type == FLY_TYPE ) {
+			_read_lidar_from_mission();
+		} else {
+			_read_lidar();
+		}
 		// read digital terrain model
 		//_dem_name = Path(_proj_dir, DEM).toString();
 		if ( !_read_dem() )
@@ -97,8 +102,11 @@ bool lidar_exec::run()
 
 		_process_strips();
 		_process_block();
-
-		//_update_assi_volo();
+		
+		if ( _type == FLY_TYPE ) {
+			_compare_axis();
+			_update_assi_volo();
+		}
 
 		// se volo lidar confronta gli assi progettati con quelli effettivi
 
@@ -134,6 +142,43 @@ bool lidar_exec::run()
 	} catch(const std::exception& ex) {
 		std::string msg = ex.what();
 		return false; //TODO
+	}
+}
+
+void lidar_exec::_compare_axis() {
+	std::stringstream sql;
+    sql << "SELECT A_VOL_CS, mission, A_VOL_QT, AsBinary(GEOM) as GEOM FROM AVOLOP";
+    Statement stm(cnn);
+    stm.prepare(sql.str());
+    Recordset rs = stm.recordset();
+
+	std::vector<CV::Lidar::Axis::Ptr> _projectAxis;
+	while (!rs.eof()) {
+		Blob b = rs["GEOM"].toBlob();
+		OGRGeomPtr g = b;
+		CV::Lidar::Axis::Ptr axis(new CV::Lidar::Axis(g, rs["A_VOL_QT"].toDouble()));
+		axis->stripName(rs["A_VOL_CS"].toString());
+		axis->missionName(rs["mission"].toString());
+		_projectAxis.push_back(axis);
+		rs.next();
+	}
+
+	if (_projectAxis.size() != _strips.size()) {
+		std::cout << "Error in project axis number" << std::endl;
+	}
+
+	std::map<std::string, CV::Lidar::Strip::Ptr>::const_iterator it = _strips.begin();
+	std::map<std::string, CV::Lidar::Strip::Ptr>::const_iterator end = _strips.end();
+	for (; it != end; it++) {
+		CV::Lidar::Axis::Ptr stripAxis = (*it).second->axis();
+		std::vector<CV::Lidar::Axis::Ptr>::const_iterator tIt = _projectAxis.begin();
+		std::vector<CV::Lidar::Axis::Ptr>::const_iterator tEnd = _projectAxis.end();
+		for (; tIt != tEnd; ++tIt) {
+			CV::Lidar::Axis::Ptr tAxis = (*tIt);
+			if (stripAxis->first().dist2D(tAxis->first()) < 10 && stripAxis->last().dist2D(tAxis->last()) < 10) {
+				std::cout << stripAxis->stripName() << " equal " << tAxis->stripName() << std::endl; 
+			}
+		}
 	}
 }
 
@@ -332,6 +377,32 @@ bool lidar_exec::_read_lidar()
     return true;
 }
 
+bool lidar_exec::_read_lidar_from_mission() {
+	try {
+        CV::Util::Spatialite::Statement stm(cnn);
+
+        std::stringstream query;
+		query << "select MISSION.NAME as MISSION, SENSOR.* from MISSION, SENSOR where MISSION.ID_SENSOR == SENSOR.ID";
+		stm.prepare(query.str());
+
+        CV::Util::Spatialite::Recordset set = stm.recordset();
+		while (!set.eof()) {
+			Lidar::Sensor::Ptr sensor(new Lidar::Sensor);
+			sensor->fov(set["FOV"].toDouble());
+			sensor->ifov(set["IFOV"].toDouble());
+			sensor->freq(set["FREQ"].toDouble());
+			sensor->scan(set["SCAN_RATE"].toDouble());
+			_lidarsList.insert(std::pair<std::string, Lidar::Sensor::Ptr>(set["MISSION"].toString(), sensor));
+			set.next();
+		}
+
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		(void*)&err;
+		return false;
+	}
+	return true;
+}
+
 bool lidar_exec::_read_dem() {
     CV::Util::Spatialite::Statement stm(cnn);
 
@@ -401,7 +472,6 @@ void lidar_exec::_process_strips()
 
 	DSM* ds = _df->GetDsm();
 
-	double gProj = _lidar.halfGroundWidth();
 
 	while ( !rs.eof() ) {
         Blob blob =  rs["geom"].toBlob();
@@ -409,6 +479,7 @@ void lidar_exec::_process_strips()
 		double z = rs[0];
 		std::string strip = rs[1];
 		std::string mission = rs[2];
+		double gProj = _type == FLY_TYPE ? _lidarsList[mission]->halfGroundWidth() : _lidar.halfGroundWidth();
 
 		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));
 		axis->stripName(strip);
@@ -438,16 +509,28 @@ void lidar_exec::_process_strips()
 	cnn.commit_transaction();
 }
 
-Poco::Timestamp from_string(const std::string time)
+Poco::Timestamp from_string(const std::string& date, const std::string& time, const std::string& format = "%Y/%m/%d %H:%M:%s")
 {
-	Poco::StringTokenizer tok(time, ":", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
+	/*Poco::StringTokenizer tok(time, ":", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
 	Poco::Timestamp tm;
 	if ( tok.count() < 3 )
 		return tm;
 	double sec = atof(tok[2].c_str());
 	double msec = 1000 * ( sec - (int) sec);
 	Poco::DateTime dm(2010, 1, 1, atoi(tok[0].c_str()), atoi(tok[1].c_str()), (int) sec, (int) msec);
-	return dm.timestamp();
+
+	Poco::DateTime date;
+	int d;
+	bool ret = Poco::DateTimeParser::tryParse("%H:%M:%s", time, date, d);
+
+	return dm.timestamp();*/
+
+	std::stringstream stream;
+	stream << date << " " << time;  
+	int d;
+	Poco::DateTime outDate;
+	Poco::DateTimeParser::tryParse(format, stream.str(), outDate, d);
+	return outDate.timestamp();
 }
 
 void lidar_exec::_update_assi_volo()
@@ -488,6 +571,8 @@ void lidar_exec::_update_assi_volo()
         Blob blob = rs["geo"].toBlob();
 		f->point(blob);
 		ft1.push_back(f);
+
+		_strips["1"/*f->mission()*/]->axis()->addFirstSample(f);
 		rs.next();
 	}
 	stm.reset();
@@ -505,8 +590,12 @@ void lidar_exec::_update_assi_volo()
         Blob blob = rs["geo"].toBlob();
 		f->point(blob);
 		ft2.push_back(f);
+
+		_strips["1"/*f->mission()*/]->axis()->addLastSample(f);
 		rs.next();
 	}
+
+	_strips["1"/*f->mission()*/]->axis()->averageSpeed();
 
 	std::stringstream sql1;
 	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << STRIP_NAME  << "=?9";
@@ -517,6 +606,7 @@ void lidar_exec::_update_assi_volo()
 	// per ogni strip determina i parametri gps con cui è stata acquisita
 	for ( size_t i = 0; i < ft1.size(); i++) {
 		const std::string& val = ft1[i]->strip();
+		std::string dateStr;
 
 		std::string t1 = ft1[i]->time();
 		for ( size_t j = 0; j < ft2.size(); j++) {
@@ -538,8 +628,10 @@ void lidar_exec::_update_assi_volo()
 				double pdop;
 				while (!rs.eof()) {
 					if (first) {
+						dateStr = rs["DATE"].toString();
+
 						stm1[1] = (std::string const &) rs["MISSION"]; // mission
-						stm1[2] = rs["DATE"].toString(); // date
+						stm1[2] = dateStr; // date
 						stm1[3] = t1; // istante di inizio acquisizione
 						stm1[4] = t2; // istante di fine acquisizione
 
@@ -552,7 +644,7 @@ void lidar_exec::_update_assi_volo()
 						nsat = std::min(nsat, rs["NSAT"].toInt());
 						pdop = std::max(pdop, rs["PDOP"].toDouble());
 						nbasi = std::min(nbasi, rs["NBASI"].toInt());
-						tm1 = from_string(rs["TIME"]);
+						tm1 = from_string(dateStr, rs["TIME"]);
 						double dt = (double) (tm1 - tm0) / 1000000;
 						tm0 = tm1;
 						if (dt > dt0) {

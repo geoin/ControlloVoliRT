@@ -62,8 +62,6 @@ public:
 	void set_checkType(Check_Type t);
 
 private:
-	std::map<std::string, CV::Lidar::Strip::Ptr> _strips;
-
 	void _process_strips(void);
 	void _createStripTable(); 
 
@@ -73,6 +71,9 @@ private:
 	void _get_overlaps(const std::map<std::string, CV::Lidar::Strip::Ptr>&);
 
 	bool _read_lidar(void);
+	bool _read_lidar_from_mission();
+	void _compare_axis();
+
 	bool _read_dem(void);
 	std::string _get_strip(const std::string& nome);
 	bool _check_differences(void);
@@ -100,6 +101,8 @@ private:
 	
 	DSM_Factory* _df;
 	CV::Lidar::Sensor _lidar;
+	std::map<std::string, CV::Lidar::Sensor::Ptr> _lidarsList;
+	std::map<std::string, CV::Lidar::Strip::Ptr> _strips;
 
 	docbook _dbook;
 	Doc_Item _article;

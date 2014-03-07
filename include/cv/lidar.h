@@ -67,12 +67,17 @@ public:
 	const DPOINT& first() const { return _first; }
 	const DPOINT& last() const { return _last; }
 
-	OGRLineString* toLineString() {
+	inline OGRLineString* toLineString() {
 		if (!_line) {
-			OGRGeometry* og = (OGRGeometry*)_geom;
+			OGRGeometry* og = _geom;
 			_line = reinterpret_cast<OGRLineString*>(og);
 		}
 		return _line;
+	}
+
+	inline const OGRLineString* toLineString() const {
+		const OGRGeometry* og = _geom;
+		return reinterpret_cast<const OGRLineString*>(og);
 	}
 
 	bool isValid() const {
@@ -89,9 +94,15 @@ public:
 	void missionName(const std::string& m) { _missionName = m; }
 	const std::string& missionName() const { return _missionName; }
 
-	void add(GPS::Sample::Ptr s) { _samples.push_back(s); }
+	void addSample(GPS::Sample::Ptr s) { _samples.push_back(s); }
+	
+	void addFirstSample(GPS::Sample::Ptr s) { _firstSample = s; }
+	void addLastSample(GPS::Sample::Ptr s) { _lastSample = s; }
+
+	double averageSpeed() const;
 
 private:
+
 	DPOINT _first;
 	DPOINT _last;
 	
@@ -104,6 +115,8 @@ private:
 	std::string _missionName;
 
 	std::vector<GPS::Sample::Ptr> _samples;
+	GPS::Sample::Ptr _firstSample;
+	GPS::Sample::Ptr _lastSample; 
 };
 
 class Strip {
@@ -120,12 +133,17 @@ public:
 	
 	void fromAxis(Axis::Ptr axis, DSM* dsm, double hWidth);
 
-	OGRPolygon* toPolygon() {
+	inline OGRPolygon* toPolygon() {
 		if (!_polygon) {
-			OGRGeometry* og = (OGRGeometry*)_geom;
+			OGRGeometry* og = _geom;
 			_polygon = reinterpret_cast<OGRPolygon*>(og);
 		}
 		return _polygon;
+	}
+
+	inline const OGRPolygon* toPolygon() const {
+		const OGRGeometry* og = _geom;
+		return reinterpret_cast<const OGRPolygon*>(og);
 	}
 
 	void yaw(double yaw) { _yaw = yaw; } 
@@ -144,6 +162,8 @@ public:
 	bool intersect(Strip::Ptr other) const;
 	int intersectionPercentage(Strip::Ptr other) const;
 
+	Axis::Ptr axis() const { return _axis; }
+	
 private:
 	std::string _missionName, _name;
 	double _length;

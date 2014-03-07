@@ -60,7 +60,7 @@ bool Strip::intersect(Strip::Ptr other) const {
 int Strip::intersectionPercentage(Strip::Ptr other) const {
 	int p = 0;
 	Util::Geometry::OGRGeomPtr sourceGeom = geom();
-	OGRGeomPtr intersection = geom()->Intersection(other->geom());
+	OGRGeomPtr intersection = sourceGeom->Intersection(other->geom());
 	if (intersection->getGeometryType() == wkbPolygon) {
 		double srcMajorAxis, srcMinorAxis;
 		get_elong(sourceGeom, yaw(), &srcMajorAxis, &srcMinorAxis);
@@ -71,6 +71,20 @@ int Strip::intersectionPercentage(Strip::Ptr other) const {
 		p = static_cast<int>(100 * (targetMajorAxis / srcMajorAxis));
 	}
 	return p;
+}
+
+double Axis::averageSpeed() const { 
+	Poco::Timestamp start = _firstSample->timestamp();
+	Poco::Timestamp end = _lastSample->timestamp();
+
+	Poco::Timestamp stamp = end - start;
+	Poco::Timestamp::TimeVal elapsed = stamp.epochMicroseconds();
+	
+	double speed_MS = 0;
+	if(elapsed != 0) {
+		speed_MS = length() / abs(elapsed / 1000.0 * 1000.0);
+	}
+	return speed_MS;
 }
 
 void Block::add(Strip::Ptr strip) {

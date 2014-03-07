@@ -20,10 +20,13 @@ public:
 	inline const std::string& strip() const { return _strip; }
 
 	inline void mission(const std::string& mission) { _mission = mission; }
+	inline const std::string mission() { return _mission; }
 
 	inline void dateTime(const std::string& date, const std::string& time) {
 		_date = date;
 		_time = time;
+
+		_timestamp();
 	}
 
 	inline const std::string& date() const { return _date; }
@@ -40,14 +43,50 @@ public:
 		_point = blob;
 	}
 
+	inline void point(CV::Util::Geometry::OGRGeomPtr blob) {
+		_point = blob;
+	}
+
+	inline CV::Util::Geometry::OGRGeomPtr geom() { return _point; }
+
+	inline const OGRPoint* toPoint() const {
+		const OGRGeometry* ptr = _point;
+		return reinterpret_cast<const OGRPoint*>(ptr);
+	}
+
+	inline OGRPoint* toPoint() {
+		OGRGeometry* ptr = _point;
+		return reinterpret_cast<OGRPoint*>(ptr);
+	}
+
+	Poco::Timestamp timestamp() const {
+		return _ts;
+	}
+
 private:
+	void _timestamp() {
+		std::stringstream stream;
+		std::string timeStart = time();
+		std::string day = date();
+		stream << day << " " << timeStart;  
+		int d;
+		Poco::DateTime date;
+		if (Poco::DateTimeParser::tryParse("%Y/%m/%d %H:%M:%s", stream.str(), date, d)) {
+			_ts = date.timestamp();
+		}
+	}
+
 	std::string _strip;
 	std::string _mission;
+
 	std::string _time;
 	std::string _date;
+	Poco::Timestamp _ts;
+	
 	int _nSat;
 	int _nBase;
 	double _pdop;
+	
 	CV::Util::Geometry::OGRGeomPtr _point;
 };
 
