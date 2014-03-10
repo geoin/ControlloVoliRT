@@ -34,6 +34,7 @@ void CVProjectOverviewDetail::addProjectInformations(QVBoxLayout* l) {
 
 	_addDescr(info, tr("Nome progetto"), _controller->name);
 	_addDescr(info, tr("Tipo"), _controller->type == Core::CVProject::PHOTOGRAMMETRY ? tr("Fotogrammetria") : tr("Lidar"));
+	_addDescr(info, tr("Percorso"), _controller->path);
 	_addDescr(info, tr("Data creazione"), _controller->creationDate().toString());
 	_lastModified = _addDescr(info, tr("Ultima modifica"), _controller->lastModificationDate().toString());
 

@@ -164,9 +164,10 @@ void lidar_exec::_compare_axis() {
 	}
 
 	if (_projectAxis.size() != _strips.size()) {
-		std::cout << "Error in project axis number" << std::endl;
+		std::cout << "Different axis number" << std::endl;
 	}
 
+	int tollerance = 10;
 	std::map<std::string, CV::Lidar::Strip::Ptr>::const_iterator it = _strips.begin();
 	std::map<std::string, CV::Lidar::Strip::Ptr>::const_iterator end = _strips.end();
 	for (; it != end; it++) {
@@ -175,7 +176,9 @@ void lidar_exec::_compare_axis() {
 		std::vector<CV::Lidar::Axis::Ptr>::const_iterator tEnd = _projectAxis.end();
 		for (; tIt != tEnd; ++tIt) {
 			CV::Lidar::Axis::Ptr tAxis = (*tIt);
-			if (stripAxis->first().dist2D(tAxis->first()) < 10 && stripAxis->last().dist2D(tAxis->last()) < 10) {
+			if (stripAxis->first().dist2D(tAxis->first()) < tollerance && stripAxis->last().dist2D(tAxis->last()) < tollerance) {
+				std::cout << stripAxis->stripName() << " equal " << tAxis->stripName() << std::endl; 
+			} else if (stripAxis->first().dist2D(tAxis->last()) < tollerance && stripAxis->last().dist2D(tAxis->first()) < tollerance) {
 				std::cout << stripAxis->stripName() << " equal " << tAxis->stripName() << std::endl; 
 			}
 		}
@@ -479,7 +482,6 @@ void lidar_exec::_process_strips()
 		double z = rs[0];
 		std::string strip = rs[1];
 		std::string mission = rs[2];
-		double gProj = _type == FLY_TYPE ? _lidarsList[mission]->halfGroundWidth() : _lidar.halfGroundWidth();
 
 		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));
 		axis->stripName(strip);
@@ -489,6 +491,7 @@ void lidar_exec::_process_strips()
 			throw std::runtime_error("asse di volo non valido");
 		}
 
+		double gProj = _type == FLY_TYPE ? _lidarsList[mission]->halfGroundWidth() : _lidar.halfGroundWidth();
 		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);
 		stripPtr->fromAxis(axis, ds, gProj);
 
@@ -572,7 +575,7 @@ void lidar_exec::_update_assi_volo()
 		f->point(blob);
 		ft1.push_back(f);
 
-		_strips["1"/*f->mission()*/]->axis()->addFirstSample(f);
+		_strips["1"/*f->strip()*/]->axis()->addFirstSample(f);
 		rs.next();
 	}
 	stm.reset();
@@ -591,11 +594,11 @@ void lidar_exec::_update_assi_volo()
 		f->point(blob);
 		ft2.push_back(f);
 
-		_strips["1"/*f->mission()*/]->axis()->addLastSample(f);
+		_strips["1"/*f->strip()*/]->axis()->addLastSample(f);
 		rs.next();
 	}
 
-	_strips["1"/*f->mission()*/]->axis()->averageSpeed();
+	_strips["1"/*f->strip()*/]->axis()->averageSpeed();
 
 	std::stringstream sql1;
 	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << STRIP_NAME  << "=?9";

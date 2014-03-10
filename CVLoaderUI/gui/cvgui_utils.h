@@ -28,7 +28,7 @@ public:
 		setWindowFlags(((windowFlags() | Qt::CustomizeWindowHint) & ~Qt::WindowCloseButtonHint) & ~Qt::WindowContextHelpButtonHint);
 		setBar(&_bar);
 		
-		setWindowModality(Qt::WindowModal);
+		setWindowModality(Qt::ApplicationModal);
 		setCancelButton(NULL);
 		setRange(0, 0);
         adjustSize();
