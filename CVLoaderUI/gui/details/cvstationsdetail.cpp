@@ -48,7 +48,7 @@ CVStationsDetail::CVStationsDetail(QWidget* p, Core::CVObject* s) : CVBaseDetail
 	}
 	
 	connect(this, SIGNAL(persisted()), this, SLOT(onDataPersisted()), Qt::QueuedConnection);
-	connect(this, SIGNAL(updateStatus(QString)), this, SLOT(onUpdateStatus(QString)), Qt::QueuedConnection);
+	connect(this, SIGNAL(updateStatus(QString)), &_dialog, SLOT(setLabelText(QString)), Qt::QueuedConnection);
 	connect(this, SIGNAL(importQueued(const QStringList&)), this, SLOT(importAll(const QStringList&)), Qt::QueuedConnection);
 }
 

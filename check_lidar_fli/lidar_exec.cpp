@@ -104,7 +104,6 @@ bool lidar_exec::run()
 		_process_block();
 		
 		if ( _type == FLY_TYPE ) {
-			_compare_axis();
 			_update_assi_volo();
 		}
 
@@ -145,14 +144,13 @@ bool lidar_exec::run()
 	}
 }
 
-void lidar_exec::_compare_axis() {
+void lidar_exec::_get_planned_axis(std::vector<CV::Lidar::Axis::Ptr>& _projectAxis) {
 	std::stringstream sql;
     sql << "SELECT A_VOL_CS, mission, A_VOL_QT, AsBinary(GEOM) as GEOM FROM AVOLOP";
     Statement stm(cnn);
     stm.prepare(sql.str());
     Recordset rs = stm.recordset();
 
-	std::vector<CV::Lidar::Axis::Ptr> _projectAxis;
 	while (!rs.eof()) {
 		Blob b = rs["GEOM"].toBlob();
 		OGRGeomPtr g = b;
@@ -162,10 +160,19 @@ void lidar_exec::_compare_axis() {
 		_projectAxis.push_back(axis);
 		rs.next();
 	}
+}
+
+void lidar_exec::_compare_axis() {
+	std::vector<CV::Lidar::Axis::Ptr> _projectAxis;
+	_get_planned_axis(_projectAxis);
 
 	if (_projectAxis.size() != _strips.size()) {
 		std::cout << "Different axis number" << std::endl;
 	}
+
+	//<real axis, proj axis>
+	std::map<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr> matches;
+	std::vector<unsigned short> matchesId;
 
 	int tollerance = 10;
 	std::map<std::string, CV::Lidar::Strip::Ptr>::const_iterator it = _strips.begin();
@@ -174,20 +181,93 @@ void lidar_exec::_compare_axis() {
 		CV::Lidar::Axis::Ptr stripAxis = (*it).second->axis();
 		std::vector<CV::Lidar::Axis::Ptr>::const_iterator tIt = _projectAxis.begin();
 		std::vector<CV::Lidar::Axis::Ptr>::const_iterator tEnd = _projectAxis.end();
-		for (; tIt != tEnd; ++tIt) {
+
+		struct Target {
+			unsigned short id;
+			double distance;
+		} target = {-1, 1e10};
+
+		int i = 0;
+		for (; tIt != tEnd; ++tIt, ++i) {
 			CV::Lidar::Axis::Ptr tAxis = (*tIt);
-			if (stripAxis->first().dist2D(tAxis->first()) < tollerance && stripAxis->last().dist2D(tAxis->last()) < tollerance) {
-				std::cout << stripAxis->stripName() << " equal " << tAxis->stripName() << std::endl; 
-			} else if (stripAxis->first().dist2D(tAxis->last()) < tollerance && stripAxis->last().dist2D(tAxis->first()) < tollerance) {
-				std::cout << stripAxis->stripName() << " equal " << tAxis->stripName() << std::endl; 
+			double minFirst = std::min(stripAxis->first().dist2D(tAxis->first()), stripAxis->first().dist2D(tAxis->last()));
+			double minLast = std::min(stripAxis->last().dist2D(tAxis->last()), stripAxis->last().dist2D(tAxis->first())); 
+			double med = (minFirst + minLast) / 2;
+			if (med < target.distance) {
+				target.id = i;
+				target.distance = med;
+
+				matchesId.push_back(i);
 			}
+		}
+
+		if (target.distance < tollerance) {
+			matches.insert(std::pair<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>(stripAxis, _projectAxis.at(target.id)));
+		} else {
+			matches.insert(std::pair<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>(stripAxis, CV::Lidar::Axis::Ptr(NULL)));
+		}
+	}
+
+	for (unsigned short i = 0; i < _projectAxis.size(); ++i) {
+		if (std::find(matchesId.begin(), matchesId.end(), i) == matchesId.end()) {
+			matches.insert(std::pair<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>(CV::Lidar::Axis::Ptr(NULL), _projectAxis.at(i)));
+		}
+	}
+
+	_compare_axis_report(matches);
+}
+
+void lidar_exec::_compare_axis_report(std::map<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>& matches) {
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Confronto del volo col progetto di volo");
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("Accoppiamento tra strisciate progettate e volate");
+
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "64");
+	tab = tab->add_item("tgroup", attr);
+
+	attr.clear();
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Strisciata pianificata");
+	row->add_item("entry", attr)->append("lung.");
+	row->add_item("entry", attr)->append("Strisciata volata");
+	row->add_item("entry", attr)->append("lung.");
+
+	Doc_Item tbody = tab->add_item("tbody");
+		
+	std::map<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>::iterator b = matches.begin();
+	for (; b != matches.end(); b++) {
+		row = tbody->add_item("row");
+
+		CV::Lidar::Axis::Ptr real = b->first;
+		CV::Lidar::Axis::Ptr proj = b->second;
+
+		if (!proj.isNull()) {
+			row->add_item("entry", attr)->append(proj->stripName());
+			std::stringstream s1; s1 << proj->length();
+			row->add_item("entry", attr)->append(s1.str());
+		} else {
+			row->add_item("entry", attr)->append(" - ");
+			row->add_item("entry", attr)->append(" - ");
+		}
+
+		if (!real.isNull()) {
+			row->add_item("entry", attr)->append(real->stripName());
+			std::stringstream s2; s2 << real->length();
+			row->add_item("entry", attr)->append(s2.str());
+		} else {
+			row->add_item("entry", attr)->append(" - ");
+			row->add_item("entry", attr)->append(" - ");
 		}
 	}
 }
 
 void lidar_exec::_final_report() {
     if ( _type == FLY_TYPE ) {
-        //fly specific data
+		_compare_axis();
     }
 
     //controlo del ricoprimento delle aree da rilevare
@@ -575,7 +655,7 @@ void lidar_exec::_update_assi_volo()
 		f->point(blob);
 		ft1.push_back(f);
 
-		_strips["1"/*f->strip()*/]->axis()->addFirstSample(f);
+		_strips[f->strip()]->axis()->addFirstSample(f);
 		rs.next();
 	}
 	stm.reset();
@@ -594,11 +674,9 @@ void lidar_exec::_update_assi_volo()
 		f->point(blob);
 		ft2.push_back(f);
 
-		_strips["1"/*f->strip()*/]->axis()->addLastSample(f);
+		_strips[f->strip()]->axis()->addLastSample(f);
 		rs.next();
 	}
-
-	_strips["1"/*f->strip()*/]->axis()->averageSpeed();
 
 	std::stringstream sql1;
 	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << STRIP_NAME  << "=?9";

@@ -72,7 +72,10 @@ private:
 
 	bool _read_lidar(void);
 	bool _read_lidar_from_mission();
+
 	void _compare_axis();
+	void _get_planned_axis(std::vector<CV::Lidar::Axis::Ptr>&);
+	void _compare_axis_report(std::map<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>&);
 
 	bool _read_dem(void);
 	std::string _get_strip(const std::string& nome);
