@@ -46,14 +46,13 @@ public:
 	}
 
 	~CVScopedTmpDir() {
-		if (_base.isEmpty()) {
-			return;
+		if (!_base.isEmpty()) {
+			removeDir(_base);
 		}
-
-		removeDir(_base);
 	}
 
 	inline const QString& toString() const { return _base; }
+
 	inline QDir& dir() { return _d; }
 
 private:
