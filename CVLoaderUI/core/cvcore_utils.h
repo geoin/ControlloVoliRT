@@ -14,6 +14,25 @@
 namespace CV {
 namespace Core {
 
+static bool removeDir(const QString& dirName) {
+	bool result = false;
+	QDir dir(dirName); 
+	if (dir.exists(dirName)) {
+		Q_FOREACH (QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::Hidden | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+			if (info.isDir()) {
+				result = removeDir(info.absoluteFilePath());
+			} else {
+				result = QFile::remove(info.absoluteFilePath());
+			}
+			if (!result) {
+				return result;
+			}
+		}
+		result = dir.rmdir(dirName);
+	}
+	return result;
+}
+
 //create a tmp dir, removing all files on destroy
 class CVScopedTmpDir {
 public:
@@ -27,19 +46,11 @@ public:
 	}
 
 	~CVScopedTmpDir() {
-		//TODO, must be recursive
 		if (_base.isEmpty()) {
 			return;
 		}
 
-		_d.setNameFilters(QStringList() << "*.*");
-		_d.setFilter(QDir::Files);
-		foreach (const QString& dirFile, _d.entryList()) {
-			_d.remove(dirFile);
-		}
-		_d.cdUp();
-		
-		_d.rmdir(_base);
+		removeDir(_base);
 	}
 
 	inline const QString& toString() const { return _base; }
@@ -51,7 +62,6 @@ private:
 
     Q_DISABLE_COPY(CVScopedTmpDir)
 };
-
 
 //zip handling
 class CVZip {
