@@ -30,7 +30,7 @@ void check_lidar_raw::defineOptions(OptionSet& options) {
     Application::defineOptions(options);
 
     options.addOption(
-        Option("help", "h", "mostra le informazioni sui parametri da specificare")
+        Option("help", "h", "Mostra le informazioni sui parametri da specificare")
             .required(false)
             .repeatable(false)
             .callback(OptionCallback<check_lidar_raw>(this, &check_lidar_raw::handleHelp)));
@@ -58,7 +58,7 @@ void check_lidar_raw::displayHelp() {
     HelpFormatter helpFormatter(options());
     helpFormatter.setCommand(commandName());
     helpFormatter.setUsage("OPZIONI");
-    helpFormatter.setHeader("Applicazione per la verifica del volo effettuato o del progetto di volo");
+    helpFormatter.setHeader("Applicazione per la verifica dei dati raw");
     helpFormatter.format(std::cout);
 }
 
