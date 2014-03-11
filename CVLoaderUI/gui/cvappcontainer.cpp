@@ -94,6 +94,9 @@ void CVAppContainer::insertProject(Core::CVProject* proj) {
 		
         node = _tree->insertNode(root, tr("Volo effettuato"), Core::CVControl::LIDAR_FLY);
         emit controlAdded(node->info()->type(), proj->get(Core::CVControl::LIDAR_FLY));
+		
+        node = _tree->insertNode(root, tr("Dati grezzi lidar"), Core::CVControl::LIDAR_RAW);
+        emit controlAdded(node->info()->type(), proj->get(Core::CVControl::LIDAR_RAW));
 	}
 }
 

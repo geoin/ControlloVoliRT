@@ -28,6 +28,7 @@ private:
 	CVControl* _plan(CVProject*, bool load);
 	CVControl* _fly(CVProject*, bool load);
 	CVControl* _orto(CVProject*, bool load);
+	CVControl* _rawLidar(CVProject*, bool load);
 
 	QList<CVProject::Ptr> _projects;
 };

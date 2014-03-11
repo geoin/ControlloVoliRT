@@ -12,6 +12,7 @@
 #include "core/categories/cvshapelayer.h"
 #include "core/categories/cvfileinput.h"
 #include "core/categories/cvmissionobject.h"
+#include "core/categories/cvfolderinput.h"
 #include "core/cvcore_utils.h"
 
 #include "CVUtil/cvspatialite.h"
@@ -65,6 +66,9 @@ void CVProjectManager::onNewProject() {
 		
         if (proj->type == CVProject::PHOTOGRAMMETRY) {
 			ctrl = _orto(proj, false);
+			proj->insert(ctrl);
+		} else {
+			ctrl = _rawLidar(proj, false);
 			proj->insert(ctrl);
 		}
 
@@ -125,6 +129,9 @@ void CVProjectManager::onLoadProject() {
 
 		if (proj->type == CVProject::PHOTOGRAMMETRY) {
 			ctrl = _orto(proj, true);
+			proj->insert(ctrl);
+		} else {
+			ctrl = _rawLidar(proj, true);
 			proj->insert(ctrl);
 		}
 		
@@ -255,12 +262,33 @@ CVControl* CVProjectManager::_orto(CVProject* proj, bool b) {
 	}
 	return ctrl;
 }
+
+CVControl* CVProjectManager::_rawLidar(CVProject* proj, bool load) {
+	CVControl* ctrl = new CVControl(CVControl::LIDAR_RAW, proj);
+	ctrl->uri(proj->db());
+
+	CVShapeLayer* layer = new CVShapeLayer(ctrl);
+	layer->columns(QStringList());
+	layer->table("CLOUD_CONTROL_POINTS");
+	layer->controlType(CVControl::LIDAR_RAW);
+	layer->type(CVObject::CLOUD_CONTROL_POINTS);
+	ctrl->insert(layer);
+
+	CVFolderInput* folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_RAW);
+	folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
+	ctrl->insert(folder);
+
+	if (load) {
+		ctrl->load();
+	}
+	return ctrl;
+}
    
 void CVProjectManager::onCloseProject() {
 	//TODO
 	_projects.clear();
 }
-
 
 } // namespace Core
 } // namespace CV
