@@ -354,10 +354,10 @@ void Check_gps::_optype(int index)
 {
     switch ( index ) {
     case 0:
-        _args[1] = "/p";
+        _args[1] = FLAG_PREFIX("p");
         break;
     case 1:
-        _args[1] = "/l";
+        _args[1] = FLAG_PREFIX("l");
         break;
     }
 }

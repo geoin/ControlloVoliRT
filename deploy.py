@@ -1,7 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import sys, os, subprocess, zipfile
+import sys, os, subprocess, zipfile, getopt
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:],"hc",["clean"])
+except getopt.GetoptError:
+    print 'deploy.py -c'
+    sys.exit(2)
+
+clean = False
+for opt, arg in opts:
+    if opt == '-h':
+        print 'deploy.py: -c rebuild all'
+        sys.exit()
+    elif opt in ("-c", "--clean"):
+          clean = True
 
 stat = dict()
 
@@ -18,7 +32,8 @@ def buildList(l):
     for mod in l:
         os.chdir(mod)
         subprocess.call([qmake, "-config", "release"])
-        #subprocess.call(["make", "clean"])
+        if clean == True:
+            subprocess.call(["make", "clean"])
         ret = subprocess.call([make])
         os.chdir("..")
 
@@ -48,17 +63,17 @@ print "Git root: " + root
 modules = ["CVUtil", "photo_util", "rtklib", "ziplib", "dem_interpolate"]
 buildList(modules)
 
-binaries = ["CVLoaderUI", "check_gps", "check_photo_fli", "check_ta", "check_ortho", "RT-qgis_plugin", "check_lidar_fli"]
+binaries = ["CVLoaderUI", "check_gps", "check_photo_fli", "check_ta", "check_ortho", "RT-qgis_plugin", "check_lidar_fli", "check_lidar_raw"]
 buildList(binaries)
 
 print stat
 
-with zipfile.ZipFile('deploy.zip', 'w') as testzip:
-    addToZip("lib", testzip)
-    addToZip("bin", testzip)
-    addToZip("icons", testzip)
-    addToZip("script", testzip)
-    addToZip("docbookrt", testzip)
+with zipfile.ZipFile('deploy.zip', 'w') as zip_:
+    addToZip("lib", zip_)
+    addToZip("bin", zip_)
+    addToZip("icons", zip_)
+    addToZip("script", zip_)
+    addToZip("docbookrt", zip_)
 
 #with zipfile.ZipFile('deploy.zip', 'r') as testzip:
 #    testzip.extractall("deploy")

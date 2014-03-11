@@ -32,7 +32,6 @@ win32 {
 
 unix {
     LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3
-
 }
 
 SOURCES += main.cpp \
@@ -84,7 +83,12 @@ SOURCES += main.cpp \
     gui/details/cvlidarplandetail.cpp \
     gui/details/cvsensordetail.cpp \
     core/categories/cvsensor.cpp \
-    gui/dialogs/cvreferenceviewer.cpp
+    gui/dialogs/cvreferenceviewer.cpp \
+    gui/details/cvlidarflydetail.cpp \
+    gui/details/cvcontrolpointsdetail.cpp \
+    gui/details/cvcloudsampledetail.cpp \
+    core/categories/cvfolderinput.cpp \
+    gui/details/cvlidarrawdetail.cpp
 
 HEADERS  += \
     gui/cvmainwindow.h \
@@ -137,7 +141,12 @@ HEADERS  += \
     gui/details/cvlidarplandetail.h \
     gui/details/cvsensordetail.h \
     core/categories/cvsensor.h \
-    gui/dialogs/cvreferenceviewer.h
+    gui/dialogs/cvreferenceviewer.h \
+    gui/details/cvlidarflydetail.h \
+    gui/details/cvcontrolpointsdetail.h \
+    gui/details/cvcloudsampledetail.h \
+    core/categories/cvfolderinput.h \
+    gui/details/cvlidarrawdetail.h
 
 RESOURCES += \
     data/data.qrc
