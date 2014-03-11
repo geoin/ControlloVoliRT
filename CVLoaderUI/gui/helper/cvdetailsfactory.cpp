@@ -41,6 +41,9 @@ QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::
         case Core::CVControl::LIDAR_RAW:
             detail = new Details::CVLidarRawDetail(p, control);
            break;
+		case Core::CVControl::LIDAR_FINAL:
+            detail = new QWidget(p);
+           break;
         default:
 			detail = new QWidget(p);
             break;

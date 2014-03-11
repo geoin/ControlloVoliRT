@@ -18,7 +18,7 @@ public:
     enum Type { 
 		UNKNOWN_CATEGORY = 0, 
 		PLAN = 3, GPS_DATA, FLY, ORTO, 
-		LIDAR_PLAN, LIDAR_GPS_DATA, LIDAR_FLY, LIDAR_RAW
+		LIDAR_PLAN, LIDAR_GPS_DATA, LIDAR_FLY, LIDAR_RAW, LIDAR_FINAL
 	};
 
 	explicit CVControl(Type t, QObject* p) : QObject(p), _type(t) {}

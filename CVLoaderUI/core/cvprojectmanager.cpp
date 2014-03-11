@@ -70,6 +70,9 @@ void CVProjectManager::onNewProject() {
 		} else {
 			ctrl = _rawLidar(proj, false);
 			proj->insert(ctrl);
+
+			ctrl = _finalLidar(proj, true);
+			proj->insert(ctrl);
 		}
 
 		emit addProject(proj);
@@ -132,6 +135,9 @@ void CVProjectManager::onLoadProject() {
 			proj->insert(ctrl);
 		} else {
 			ctrl = _rawLidar(proj, true);
+			proj->insert(ctrl);
+			
+			ctrl = _finalLidar(proj, true);
 			proj->insert(ctrl);
 		}
 		
@@ -277,6 +283,21 @@ CVControl* CVProjectManager::_rawLidar(CVProject* proj, bool load) {
 	CVFolderInput* folder = new CVFolderInput(ctrl);
 	folder->controlType(CVControl::LIDAR_RAW);
 	folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
+	ctrl->insert(folder);
+
+	if (load) {
+		ctrl->load();
+	}
+	return ctrl;
+}
+
+CVControl* CVProjectManager::_finalLidar(CVProject* proj, bool load) {
+	CVControl* ctrl = new CVControl(CVControl::LIDAR_FINAL, proj);
+	ctrl->uri(proj->db());
+
+	CVFolderInput* folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_FINAL);
+	//folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
 	ctrl->insert(folder);
 
 	if (load) {
