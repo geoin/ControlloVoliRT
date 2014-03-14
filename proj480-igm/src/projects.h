@@ -456,6 +456,17 @@ void *pj_gauss_ini(double, double, double *,double *);
 LP pj_gauss(projCtx, LP, const void *);
 LP pj_inv_gauss(projCtx, LP, const void *);
 
+//FRANCO
+int igmgriddealloc(PJ *projdef);
+int igmgridinit(const char* igmgrids, PJ *projdef);
+int pj_apply_igmgridshift( PJ *projdef, int inverse,
+                        long point_count, int point_offset,
+                        double *x, double *y, double *z );
+void* grInit(const char* igmgrids);
+void grEnd(void*_ig_);
+void grApply(void*_ig_, double* x, double* y, double* z);
+void grApplyI(void*_ig_, double* x, double* y, double* z);
+
 extern char const pj_release[];
 
 struct PJ_ELLPS *pj_get_ellps_ref( void );

@@ -74,9 +74,9 @@ protected:
 	}
 	void _init(const std::string& in, const std::string& out) {
 		if ( !pin.init(in) ) 
-			throw(std::exception("input Transformation error"));
+            throw(std::runtime_error("input Transformation error"));
 		if ( !pout.init(out) ) 
-			throw(std::exception("output Transformation error"));
+            throw(std::runtime_error("output Transformation error"));
 		cdt.assign(new coord_transformer(&pin, &pout));
 		cdtr.assign(new coord_transformer(&pout, &pin));
 		latout = ( strstr(out.c_str(), "longlat") ) ? true : false;

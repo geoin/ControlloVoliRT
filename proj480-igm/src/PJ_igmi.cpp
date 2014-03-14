@@ -88,7 +88,7 @@ protected:
 	int nlon;	// numero di colonne della matrice (longitudine)
 
 	//virtual bool Init(const char* nome, int type = 0) = 0; // inizializza
-	virtual void Release(void) = 0; // rilascia la memoria utilizzata
+    virtual void Release(void) = 0; // rilascia la memoria utilizzata
 	HGRID_TYPE _type;	// tipo di grigliato grx o gkx
 	int _idxLat0, _idxLon0;
 };
