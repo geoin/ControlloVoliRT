@@ -201,7 +201,7 @@ void lidar_exec::_compare_axis() {
 			}
 		}
 
-		if (target.distance < tollerance) {
+		if (target.distance < tollerance && target.id != -1) {
 			matches.insert(std::pair<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>(stripAxis, _projectAxis.at(target.id)));
 		} else {
 			matches.insert(std::pair<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>(stripAxis, CV::Lidar::Axis::Ptr(NULL)));
