@@ -283,9 +283,9 @@ void lidar_exec::_final_report() {
 
     int cv = rs[0];
     if ( cv == 0 ) {
-        sec->add_item("para")->append("Tutte le aree da rilevare sono state ricoperte da modelli ...");
+        sec->add_item("para")->append("Tutte le aree da rilevare sono state ricoperte da modelli.");
     } else {
-        sec->add_item("para")->append("Esistono delle aree da rilevare non completamente ricoperte da modelli ...");
+        sec->add_item("para")->append("Esistono delle aree da rilevare non completamente ricoperte da modelli.");
     }
     stm.reset();
 
