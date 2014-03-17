@@ -94,3 +94,16 @@ void Block::add(Strip::Ptr strip) {
 		_geom = _geom->Union(strip->geom());
 	}
 }
+
+void ControlPoint::zDiffFrom(DSM* dsm) {
+	const OGRPoint* p = toPoint();
+	double q = dsm->GetQuota(p->getX(), p->getY());
+	if (q == Z_NOVAL) {
+		_status = NO_VAL;
+	} else if (q == Z_OUT) {
+		_status = OUT_VAL;
+	} else {
+		_status = VALID;
+		_diff = q  - _quota;
+	}
+}

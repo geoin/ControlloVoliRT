@@ -78,6 +78,11 @@ private:
 	void _compare_axis_report(std::map<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>&);
 
 	bool _read_dem(void);
+
+	CV::Util::Spatialite::Recordset _read_control_points();
+	bool _check_sample_cloud();
+	bool _read_cloud();
+
 	std::string _get_strip(const std::string& nome);
 	bool _check_differences(void);
 	bool _check_cpt(void);
@@ -90,6 +95,7 @@ private:
 
 	void _final_report();
     void _strip_report();
+    void _control_points_report();
 
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
@@ -103,9 +109,12 @@ private:
 	Check_Type _type;
 	
 	DSM_Factory* _df;
+
+	Poco::SharedPtr<DSM_Factory> _sampleCloudFactory;
 	CV::Lidar::Sensor _lidar;
 	std::map<std::string, CV::Lidar::Sensor::Ptr> _lidarsList;
 	std::map<std::string, CV::Lidar::Strip::Ptr> _strips;
+	std::vector<CV::Lidar::ControlPoint::Ptr> _controlVal;
 
 	docbook _dbook;
 	Doc_Item _article;
@@ -113,6 +122,7 @@ private:
 	std::string _note;
 
     int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
+	double LID_TOL_Z;
 };
 
 class check_lidar: public Poco::Util::Application {

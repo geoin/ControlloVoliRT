@@ -104,6 +104,7 @@ bool lidar_exec::run()
 		_process_block();
 		
 		if ( _type == FLY_TYPE ) {
+			_check_sample_cloud();
 			_update_assi_volo();
 		}
 
@@ -158,6 +159,7 @@ void lidar_exec::_get_planned_axis(std::vector<CV::Lidar::Axis::Ptr>& _projectAx
 		axis->stripName(rs["A_VOL_CS"].toString());
 		axis->missionName(rs["mission"].toString());
 		_projectAxis.push_back(axis);
+
 		rs.next();
 	}
 }
@@ -268,6 +270,7 @@ void lidar_exec::_compare_axis_report(std::map<CV::Lidar::Axis::Ptr, CV::Lidar::
 void lidar_exec::_final_report() {
     if ( _type == FLY_TYPE ) {
 		_compare_axis();
+		_control_points_report();
     }
 
     //controlo del ricoprimento delle aree da rilevare
@@ -292,6 +295,56 @@ void lidar_exec::_final_report() {
     // verifica ricoprimento tra strisciate
     // verifica lunghezza strisciate
     _strip_report();
+}
+
+void lidar_exec::_control_points_report() {
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Punti di controllo");
+
+    sec->add_item("para")->append("Validità punti di controllo");
+
+    Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Punti di controllo");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "2");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Punto di controllo");
+    row->add_item("entry", attr)->append("Z diff");
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
+	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
+
+	for (; it != end; it++) {
+		CV::Lidar::ControlPoint::Ptr ptr = *it;
+		const std::string& name = ptr->name();
+        row = tbody->add_item("row");
+
+        row->add_item("entry", attr)->append(name);
+		
+		if (ptr->isValid()) {
+			double diff = ptr->zDiff();
+			print_item(row, attrr, diff, abs_less_ty, LID_TOL_Z);
+		} else {
+			Lidar::ControlPoint::Status status = ptr->status();
+			if (status == Lidar::ControlPoint::NO_VAL) {
+				row->add_item("entry", attr)->append("NO_VAL");
+			} else if (status == Lidar::ControlPoint::OUT_VAL) {
+				row->add_item("entry", attr)->append("OUT_VAL");
+			}
+		}
+    }
+    return;
 }
 
 void lidar_exec::_strip_report() {
@@ -380,6 +433,7 @@ bool lidar_exec::_read_ref_val()
 		STRIP_OVERLAP = pConf->getInt(get_key("STRIP_OVERLAP"));
 		STRIP_OVERLAP_RANGE = pConf->getInt(get_key("STRIP_OVERLAP_RANGE"));
 		MAX_STRIP_LENGTH = pConf->getInt(get_key("MAX_STRIP_LENGTH"));
+		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
 		//_T_CP = pConf->getDouble(get_key("T_CP"));
 
 	} catch (...) {
@@ -481,6 +535,64 @@ bool lidar_exec::_read_lidar_from_mission() {
 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		(void*)&err;
+		return false;
+	}
+	return true;
+}
+
+bool lidar_exec::_check_sample_cloud() {
+	if (!_read_cloud()) {
+		return false;
+	}
+
+	try {
+		DSM* dsm = _sampleCloudFactory->GetDsm();
+
+		CV::Util::Spatialite::Recordset set = _read_control_points();
+		while (!set.eof()) {
+			Blob b = set["GEOM"].toBlob();
+			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(b));
+			point->quota(set["Z_QUOTA"].toDouble());
+			point->name(set["NAME"].toString());
+
+			point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT?
+			_controlVal.push_back(point);
+
+			set.next();
+		}
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		(void*)&err;
+		return false;
+	}
+	return true;
+}
+
+CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {
+	CV::Util::Spatialite::Statement stm(cnn);
+
+    std::stringstream query;
+	query << "select Z_QUOTA, NAME, AsBinary(GEOM) as GEOM FROM CONTROL_CLOUD";
+	stm.prepare(query.str());
+
+    CV::Util::Spatialite::Recordset set = stm.recordset();
+	return set;
+}
+
+bool lidar_exec::_read_cloud() {
+	CV::Util::Spatialite::Statement stm(cnn);
+
+    std::stringstream query;
+    query << "select URI from CLOUD_SAMPLE";
+    stm.prepare(query.str());
+    CV::Util::Spatialite::Recordset set = stm.recordset();
+    if (set.eof()) {
+        return false;
+    }
+	std::string samplePath = Path(_proj_dir, set[0].toString()).toString();
+
+	_sampleCloudFactory.assign(new DSM_Factory);
+	_sampleCloudFactory->SetEcho(MyLas::last_pulse);
+	if (!_sampleCloudFactory->Open(samplePath, false)) {
 		return false;
 	}
 	return true;

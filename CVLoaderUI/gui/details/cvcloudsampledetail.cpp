@@ -58,16 +58,18 @@ void CVCloudSampleDetail::searchFile() {
         this,
         tr("Importa nuovola di punti area di test"),
 		Core::CVSettings::get("/paths/search").toString(),
-        "(*.shp)"
+        ""
     );
 	if (!uri.isEmpty()) {
 		QFileInfo shp(uri);
 		Core::CVSettings::set("/paths/search", shp.absolutePath());
-		importAll(QStringList() << shp.absolutePath() + QDir::separator() + shp.baseName());
+		importAll(QStringList() << shp.absoluteFilePath());
 	}
 }
 
 void CVCloudSampleDetail::importAll(QStringList& uri) {
+	input()->origin(uri.at(0));
+
 	controller()->persist();
 	_labels.at(0)->setText(tr("Dati inseriti"));
 }
@@ -95,7 +97,7 @@ void CVCloudSampleDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVCloudSampleDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	importAll(QStringList() << _file->absolutePath() + QDir::separator() + _file->baseName());
+	importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);
 }
 

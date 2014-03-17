@@ -69,8 +69,11 @@ void CVControlPointsDetail::searchFile() {
 
 void CVControlPointsDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
-	controller()->persist();
-	_labels.at(0)->setText(tr("Dati inseriti"));
+	if (controller()->persist()) {
+		_labels.at(0)->setText(tr("Dati inseriti"));
+	} else {
+		_labels.at(0)->setText(tr(""));
+	}
 }
 
 void CVControlPointsDetail::dragEnterEvent(QDragEnterEvent* ev) {

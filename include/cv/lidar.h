@@ -14,6 +14,8 @@
 
 #include "gps.h"
 
+#include <limits>
+
 namespace CV {
 namespace Lidar {
 
@@ -102,7 +104,6 @@ public:
 	double averageSpeed() const;
 
 private:
-
 	DPOINT _first;
 	DPOINT _last;
 	
@@ -123,9 +124,9 @@ class Strip {
 public:
 	typedef Poco::SharedPtr<Strip> Ptr;
 
-	Strip() : _yaw(0.0), _length(0.0), _polygon(NULL) {}
+	Strip() : _yaw(0.0), _length(0.0) {}
 
-	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0), _polygon(NULL) {
+	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0) {
 		geom(g);
 	}
 
@@ -134,11 +135,8 @@ public:
 	void fromAxis(Axis::Ptr axis, DSM* dsm, double hWidth);
 
 	inline OGRPolygon* toPolygon() {
-		if (!_polygon) {
-			OGRGeometry* og = _geom;
-			_polygon = reinterpret_cast<OGRPolygon*>(og);
-		}
-		return _polygon;
+		OGRGeometry* og = _geom;
+		return reinterpret_cast<OGRPolygon*>(og);
 	}
 
 	inline const OGRPolygon* toPolygon() const {
@@ -170,7 +168,6 @@ private:
 	double _yaw;
 
 	CV::Util::Geometry::OGRGeomPtr _geom;
-	OGRPolygon* _polygon;
 
 	Axis::Ptr _axis;
 };
@@ -206,16 +203,45 @@ private:
 	double _bearing;
 	double _height;
 };
-	
-class Mission {
-public:
-	typedef Poco::SharedPtr<Mission> Ptr;
 
-	Mission() {}
-	~Mission() {}
+class ControlPoint {
+public:
+	enum Status { UNKNOWN = 0, VALID = 1, NO_VAL, OUT_VAL };
+
+	typedef Poco::SharedPtr<ControlPoint> Ptr;
+
+	ControlPoint(CV::Util::Geometry::OGRGeomPtr g) : _geom(g), _quota(0.0), _diff(std::numeric_limits<double>::max()), _status(UNKNOWN) {}
+
+	inline OGRPoint* toPoint() {
+		OGRGeometry* og = _geom;
+		return reinterpret_cast<OGRPoint*>(og);
+	}
+
+	inline const OGRPoint* toPoint() const {
+		const OGRGeometry* og = _geom;
+		return reinterpret_cast<const OGRPoint*>(og);
+	}
+
+	void quota(double q) { _quota = q; }
+	double quota() const { return _quota; }
+
+	void name(const std::string& n) { _name = n; }
+	const std::string& name() const { return _name; }
+
+	void zDiffFrom(DSM*);
+	double zDiff() const { return _diff; } 
+
+	inline bool isValid() const { return _status == VALID; }
+
+	inline Status status() const { return _status; }
 
 private:
+	CV::Util::Geometry::OGRGeomPtr _geom;
+	std::string _name;
+	double _quota;
 
+	double _diff;
+	Status _status;
 };
 
 }

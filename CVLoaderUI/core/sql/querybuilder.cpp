@@ -111,7 +111,8 @@ namespace SQL {
 		int i = 0;
 		QString query("SELECT %" + QString::number(++i));
 		query += QString(" FROM %" + QString::number(++i) + " ");
-		query = query.arg(what.join(", "), from.join(", "));
+		QString w = what.size() ? what.join(", ") : "*";
+		query = query.arg(w, from.join(", "));
 
 		if (where.length()) {
 			query.append(" WHERE %" + QString::number(++i));
