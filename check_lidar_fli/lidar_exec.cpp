@@ -239,6 +239,7 @@ void lidar_exec::_compare_axis_report(std::map<CV::Lidar::Axis::Ptr, CV::Lidar::
 	row->add_item("entry", attr)->append("lung.");
 
 	Doc_Item tbody = tab->add_item("tbody");
+
 		
 	std::map<CV::Lidar::Axis::Ptr, CV::Lidar::Axis::Ptr>::iterator b = matches.begin();
 	for (; b != matches.end(); b++) {
@@ -791,7 +792,7 @@ void lidar_exec::_update_assi_volo()
 
 	// for every strip get the GPS time of the last point
 	std::vector<GPS::Sample::Ptr> ft2;
-	while ( !rs.eof() ) {
+	while (!rs.eof()) {
 		GPS::Sample::Ptr f(new GPS::Sample);
         f->strip(rs["strip"].toString());
         f->mission(rs["MISSION"].toString());

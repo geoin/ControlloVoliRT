@@ -8,6 +8,7 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
+
 class CVLidarRawDetail : public CVBaseTabWidget {
 	Q_OBJECT
 

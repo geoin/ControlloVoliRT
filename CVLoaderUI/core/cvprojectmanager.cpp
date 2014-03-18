@@ -275,14 +275,15 @@ CVControl* CVProjectManager::_rawLidar(CVProject* proj, bool load) {
 
 	CVShapeLayer* layer = new CVShapeLayer(ctrl);
 	layer->columns(QStringList());
-	layer->table("CLOUD_CONTROL_POINTS");
+	layer->table("RAW_CONTROL_POINTS");
 	layer->controlType(CVControl::LIDAR_RAW);
-	layer->type(CVObject::CLOUD_CONTROL_POINTS);
+	layer->type(CVObject::RAW_CONTROL_POINTS);
 	ctrl->insert(layer);
 
 	CVFolderInput* folder = new CVFolderInput(ctrl);
 	folder->controlType(CVControl::LIDAR_RAW);
 	folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
+	folder->table("STRIP_RAW_DATA");
 	ctrl->insert(folder);
 
 	if (load) {
@@ -297,7 +298,8 @@ CVControl* CVProjectManager::_finalLidar(CVProject* proj, bool load) {
 
 	CVFolderInput* folder = new CVFolderInput(ctrl);
 	folder->controlType(CVControl::LIDAR_FINAL);
-	//folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
+	folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
+	folder->table("STRIP_RAW_DATA"); //TODO change
 	ctrl->insert(folder);
 
 	if (load) {

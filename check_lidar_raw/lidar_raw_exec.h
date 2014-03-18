@@ -4,14 +4,20 @@
 #include <iostream>
 #include <string>
 
+#include "cv/lidar.h"
+
 class lidar_raw_exec {
 
 public:
-    bool run();
-
     void set_proj_dir(const std::string&);
+
+    bool run();
+	bool openDBConnection();
+
 private:
     std::string _proj_dir;
+	
+	CV::Util::Spatialite::Connection cnn;
 };
 
 #endif

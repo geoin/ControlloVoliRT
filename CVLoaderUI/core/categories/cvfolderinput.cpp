@@ -40,23 +40,16 @@ bool CVFolderInput::remove() {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	/*ret = q->update(
-		"MISSION", 
-		QStringList() << "RINEX=?1" <<  "RINEX_NAME= ?2",
-		QStringList() << "ID=?3",
-		QVariantList() << QByteArray("0") << QString("") << mission()
-	);*/
+	ret = q->remove(
+		table(), 
+		QStringList(),
+		QVariantList()
+	);
 	return ret;
 }
 
 bool CVFolderInput::persist() {
-	QFile file(origin());
-	bool open = file.open(QIODevice::ReadOnly);
-	if (!open) {
-        return false;
-    }
-
-	QFileInfo info(file);
+	QFileInfo info(origin());
 
 	CV::Util::Spatialite::Connection cnn;
 	try {
@@ -67,18 +60,19 @@ bool CVFolderInput::persist() {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	bool ret = false;/*q->update(
-		"MISSION", 
-		QStringList() << "RINEX=?1" << "RINEX_NAME=?2",
-		QStringList() << "ID=?3",
-		QVariantList() << file.readAll() << info.baseName() << mission()
-	);*/
+	bool ret = q->insert(
+		table(), 
+		QStringList() << "ID" << "FOLDER",
+		QStringList() << "?1" << "?2" ,
+		QVariantList() << QUuid::createUuid().toString() << info.absoluteFilePath()
+	);
+
 	if (!ret) {
 		return false;
 	} else {
 		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
-		e->control = Core::CVControl::FLY;  
-		e->object = Core::CVObject::FLY_RINEX;
+		e->control = controlType();  
+		e->object = type();
 		e->uri = origin();
 		e->db = uri();
 		Core::CVJournal::add(e);
@@ -99,17 +93,17 @@ bool CVFolderInput::load() {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	/*CV::Util::Spatialite::Recordset set = q->select(
-		QStringList() << "RINEX_NAME",
-		QStringList() << "MISSION", 
-		QStringList() << "ID=?1",
-		QVariantList() << mission()
+	CV::Util::Spatialite::Recordset set = q->select(
+		QStringList() << "FOLDER",
+		QStringList() << table(), 
+		QStringList(),
+		QVariantList()
 	);
 	if (!set.eof()) {
-		_rin = QString(set[0].toString().c_str());
+		_data << QString(set[0].toString().c_str());
 	} 
 
-	_isValid = !_rin.isEmpty();*/
+	_isValid = _data.size() == 1;
 
 	return _isValid;
 }

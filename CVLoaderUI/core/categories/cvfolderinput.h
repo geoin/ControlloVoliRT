@@ -24,8 +24,15 @@ public:
 	inline void origin(const QString& file) { _origin = file; }
 	inline const QString& origin() const { return _origin; }
 
+	inline void table(const QString& t) { _table = t; }
+	inline const QString& table() const { return _table; }
+
+	QStringList& data() { return _data; }
+
 private:
+	QString _table;
 	QString _origin;
+	QStringList _data;
 };
 
 } // namespace Core

@@ -64,7 +64,7 @@ void check_lidar_raw::displayHelp() {
 
 int check_lidar_raw::main(const std::vector<std::string>& args) {
     try {
-        if ( !_helpRequested ) {
+        if (!_helpRequested && _check.openDBConnection()) {
             _check.run();
         }
     } catch (const std::exception& ex) {
