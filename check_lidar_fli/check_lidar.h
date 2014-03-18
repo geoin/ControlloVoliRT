@@ -111,7 +111,7 @@ private:
 	DSM_Factory* _df;
 
 	Poco::SharedPtr<DSM_Factory> _sampleCloudFactory;
-	CV::Lidar::Sensor _lidar;
+	CV::Lidar::Sensor::Ptr _lidar;
 	std::map<std::string, CV::Lidar::Sensor::Ptr> _lidarsList;
 	std::map<std::string, CV::Lidar::Strip::Ptr> _strips;
 	std::vector<CV::Lidar::ControlPoint::Ptr> _controlVal;

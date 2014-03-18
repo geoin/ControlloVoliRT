@@ -58,10 +58,10 @@ public:
 	Axis() : _qt(0.0), _line(NULL) {}
 
 	Axis(CV::Util::Geometry::OGRGeomPtr g, double qt) : _geom(g), _qt(qt), _line(NULL) {
-		OGRLineString* ls = toLineString();
+		_line = toLineString();
 		
-		_first = DPOINT(ls->getX(0), ls->getY(0), qt);
-		_last = DPOINT(ls->getX(1), ls->getY(1), qt);
+		_first = DPOINT(_line->getX(0), _line->getY(0), qt);
+		_last = DPOINT(_line->getX(1), _line->getY(1), qt);
 	} 
 
 	double quota() const { return _qt; }
@@ -70,11 +70,8 @@ public:
 	const DPOINT& last() const { return _last; }
 
 	inline OGRLineString* toLineString() {
-		if (!_line) {
-			OGRGeometry* og = _geom;
-			_line = reinterpret_cast<OGRLineString*>(og);
-		}
-		return _line;
+		OGRGeometry* og = _geom;
+		return reinterpret_cast<OGRLineString*>(og);
 	}
 
 	inline const OGRLineString* toLineString() const {
@@ -211,6 +208,7 @@ public:
 	typedef Poco::SharedPtr<ControlPoint> Ptr;
 
 	ControlPoint(CV::Util::Geometry::OGRGeomPtr g) : _geom(g), _quota(0.0), _diff(std::numeric_limits<double>::max()), _status(UNKNOWN) {}
+	ControlPoint(CV::Util::Geometry::OGRGeomPtr g, double q) : _geom(g), _quota(q), _diff(std::numeric_limits<double>::max()), _status(UNKNOWN) {}
 
 	inline OGRPoint* toPoint() {
 		OGRGeometry* og = _geom;

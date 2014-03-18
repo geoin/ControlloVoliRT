@@ -9,8 +9,8 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double stripWidth) {
 	MatOri m(0, 0, axis->angle());
 
 	OGRGeomPtr gp_ = OGRGeometryFactory::createGeometry(wkbLinearRing);
-
-	OGRLinearRing* gp = (OGRLinearRing*) ((OGRGeometry*) gp_);
+	OGRGeometry* g = gp_;
+	OGRLinearRing* gp = reinterpret_cast<OGRLinearRing*>(g);
 	gp->setCoordinateDimension(2);
 
 	for (int i = 0; i < 4; i++) {
@@ -31,8 +31,8 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double stripWidth) {
 	}
 	gp->closeRings();
 
-	OGRGeomPtr rg = OGRGeometryFactory::createGeometry(wkbPolygon);
-	OGRPolygon* p = (OGRPolygon*) ((OGRGeometry*) rg);
+	OGRGeometry* rg = OGRGeometryFactory::createGeometry(wkbPolygon);
+	OGRPolygon* p = reinterpret_cast<OGRPolygon*>(rg);
 	p->setCoordinateDimension(2);
 	p->addRing(gp);
 
@@ -82,7 +82,7 @@ double Axis::averageSpeed() const {
 	
 	double speed_MS = 0;
 	if(elapsed != 0) {
-		speed_MS = length() / abs(elapsed / 1000.0 * 1000.0);
+		speed_MS = length() / abs(elapsed / (1000.0 * 1000.0));
 	}
 	return speed_MS;
 }

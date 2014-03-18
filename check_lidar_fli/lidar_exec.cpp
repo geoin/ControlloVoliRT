@@ -326,21 +326,24 @@ void lidar_exec::_control_points_report() {
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
 
 	for (; it != end; it++) {
-		CV::Lidar::ControlPoint::Ptr ptr = *it;
-		const std::string& name = ptr->name();
-        row = tbody->add_item("row");
+		CV::Lidar::ControlPoint::Ptr point = *it;
+		const std::string& name = point->name();
 
+		row = tbody->add_item("row");
         row->add_item("entry", attr)->append(name);
 		
-		if (ptr->isValid()) {
-			double diff = ptr->zDiff();
+		if (point->isValid()) {
+			double diff = point->zDiff();
 			print_item(row, attrr, diff, abs_less_ty, LID_TOL_Z);
 		} else {
-			Lidar::ControlPoint::Status status = ptr->status();
+			Doc_Item r = row->add_item("entry", attr);
+			r->add_instr("dbfo", "bgcolor=\"red\"");
+
+			Lidar::ControlPoint::Status status = point->status();
 			if (status == Lidar::ControlPoint::NO_VAL) {
-				row->add_item("entry", attr)->append("NO_VAL");
+				r->append("NO_VAL");
 			} else if (status == Lidar::ControlPoint::OUT_VAL) {
-				row->add_item("entry", attr)->append("OUT_VAL");
+				r->append("OUT_VAL");
 			}
 		}
     }
@@ -491,6 +494,7 @@ Doc_Item lidar_exec::_initpg1()
 
 bool lidar_exec::_read_lidar()
 {
+	_lidar.assign(new Lidar::Sensor);
     try {
         CV::Util::Spatialite::Statement stm(cnn);
 
@@ -502,10 +506,10 @@ bool lidar_exec::_read_lidar()
         if (set.eof()) {
             return false;
         }
-        _lidar.fov(set[0].toDouble());
-        _lidar.ifov(set[1].toDouble());
-        _lidar.freq(set[2].toDouble());
-        _lidar.scan(set[3].toDouble());
+        _lidar->fov(set[0].toDouble());
+        _lidar->ifov(set[1].toDouble());
+        _lidar->freq(set[2].toDouble());
+        _lidar->scan(set[3].toDouble());
      } catch (CV::Util::Spatialite::spatialite_error& err) {
         (void*)&err;
         return false;
@@ -551,11 +555,10 @@ bool lidar_exec::_check_sample_cloud() {
 		CV::Util::Spatialite::Recordset set = _read_control_points();
 		while (!set.eof()) {
 			Blob b = set["GEOM"].toBlob();
-			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(b));
-			point->quota(set["Z_QUOTA"].toDouble());
+			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(b, set["Z_QUOTA"].toDouble()));
 			point->name(set["NAME"].toString());
 
-			point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT?
+			point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT
 			_controlVal.push_back(point);
 
 			set.next();
@@ -683,7 +686,19 @@ void lidar_exec::_process_strips()
 			throw std::runtime_error("asse di volo non valido");
 		}
 
-		double gProj = _type == FLY_TYPE ? _lidarsList[mission]->halfGroundWidth() : _lidar.halfGroundWidth();
+		Lidar::Sensor::Ptr lidar;
+		double gProj = 0.0;
+		if (_type == FLY_TYPE) {
+			lidar = _lidarsList[mission];
+		} else {
+			lidar = _lidar; 
+		}
+		if (lidar.isNull()) {
+			throw std::runtime_error("Valori lidar non validi");
+		} else {
+			gProj = lidar->halfGroundWidth();
+		}
+
 		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);
 		stripPtr->fromAxis(axis, ds, gProj);
 
