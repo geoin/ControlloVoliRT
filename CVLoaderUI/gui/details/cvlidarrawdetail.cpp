@@ -1,6 +1,7 @@
 #include "cvlidarrawdetail.h"
 
 #include "cvrawstripfolderdetail.h"
+#include "cvcontrolpointsdetail.h"
 
 namespace CV {
 namespace GUI {
@@ -9,7 +10,7 @@ namespace Details {
 CVLidarRawDetail::CVLidarRawDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
 	int i = 0;
 
-	addTab(new QWidget(this), "");
+	addTab(new CVControlPointsDetail(this, c->at(i)), "");
     setTabToolTip(i, tr("Punti di controllo"));
 	setTabIcon(i, QIcon(":/graphics/icons/plan/axis.png"));
 

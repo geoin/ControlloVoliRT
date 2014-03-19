@@ -16,6 +16,13 @@
 
 #include <limits>
 
+#define CV_DISABLE_COPY(T)  \
+	T (const T&);			\
+	T& operator= (const T&)
+
+#define CV_DISABLE_DEFAULT_CTOR(T) \
+	T()
+
 namespace CV {
 namespace Lidar {
 
@@ -128,6 +135,18 @@ public:
 	}
 
 	~Strip() {}
+
+	class Intersection {
+		public:
+			typedef Poco::SharedPtr<Intersection> Ptr;
+			Intersection(CV::Util::Geometry::OGRGeomPtr g) : _geom(g) {}
+
+			bool contains(double x, double y);
+			bool contains(DPOINT&);
+
+		private:
+			CV::Util::Geometry::OGRGeomPtr _geom;
+	};
 	
 	void fromAxis(Axis::Ptr axis, DSM* dsm, double hWidth);
 
@@ -156,8 +175,10 @@ public:
 	bool isParallel(Strip::Ptr other, int p = 10) const;
 	bool intersect(Strip::Ptr other) const;
 	int intersectionPercentage(Strip::Ptr other) const;
+	Strip::Intersection::Ptr intersection(Strip::Ptr other) const;
 
 	Axis::Ptr axis() const { return _axis; }
+	bool hasAxis() const { return !_axis.isNull(); }
 	
 private:
 	std::string _missionName, _name;
@@ -240,6 +261,81 @@ private:
 
 	double _diff;
 	Status _status;
+};
+
+class DSMHandler {
+public:
+	DSMHandler(DSM_Factory* dsm) : _dsm(dsm) {
+		_d = dsm ? dsm->GetDsm() : NULL;
+	}
+
+	~DSMHandler() { 
+		if (_dsm != NULL) {
+			_dsm->Close();
+		}
+	}
+
+	bool isNull() const { return _dsm == NULL; }
+
+	DSM* operator -> () {
+		return _d;
+	}
+
+	const DSM* operator -> () const {
+		return _d;
+	}
+
+private:
+	DSM_Factory* _dsm;
+	DSM* _d;
+
+	CV_DISABLE_DEFAULT_CTOR(DSMHandler);
+	CV_DISABLE_COPY(DSMHandler);
+};
+
+class CloudStrip {
+public:
+	typedef Poco::SharedPtr<CloudStrip> Ptr;
+	typedef Poco::SharedPtr<DSM_Factory> DSMPtr;
+
+	CloudStrip(Strip::Ptr p) : _strip(p), _density(0.0) {
+		_factory.assign(new DSM_Factory);
+		_factory->SetEcho(MyLas::first_pulse);
+	}
+
+	~CloudStrip() { 
+		if (_factory->GetDsm() != NULL) {
+			_factory->Close();
+		}
+	}
+
+	const std::string& name() const { return _strip->name(); } 
+
+	double density() const { return _density; }
+	void density(double d) { _density = d; }
+
+	Strip::Ptr strip() { return _strip; }
+
+	void cloudPath(const std::string& path) { _cloudPath = path; }
+	
+	void computeDensity();
+
+	DSM_Factory* dsm(bool open = true) { 
+		bool ret = true;
+		if (open) {
+			ret = _factory->Open(_cloudPath, false);
+		}
+		return ret ? _factory.get() : NULL; 
+	}
+
+private:
+	double _density;
+	Strip::Ptr _strip;
+	DSMPtr _factory;
+
+	std::string _cloudPath;
+
+	CV_DISABLE_DEFAULT_CTOR(CloudStrip);
 };
 
 }

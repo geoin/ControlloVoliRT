@@ -63,15 +63,27 @@ void check_lidar_raw::displayHelp() {
 }
 
 int check_lidar_raw::main(const std::vector<std::string>& args) {
+	if (_helpRequested) {
+		return Application::EXIT_OK;
+	}
+
     try {
-        if (!_helpRequested && _check.openDBConnection()) {
-            _check.run();
+
+		bool ret = true;
+		ret = _check.openDBConnection();
+        if (ret) {
+			if (!_check.init()) {
+				throw std::runtime_error("Error while initializing check");
+			}
+            ret = _check.run();
         }
+		
+		return ret ? Application::EXIT_OK : Application::EXIT_SOFTWARE;
+
     } catch (const std::exception& ex) {
-        std::cout << ex.what() << std::endl;
+		lidar_raw_exec::Error("Main", ex);
         return Application::EXIT_SOFTWARE;
     }
-    return Application::EXIT_OK;
 }
 
 POCO_APP_MAIN(check_lidar_raw)

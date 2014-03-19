@@ -73,6 +73,29 @@ int Strip::intersectionPercentage(Strip::Ptr other) const {
 	return p;
 }
 
+bool Strip::Intersection::contains(double x, double y) {
+	OGRGeomPtr rg = OGRGeometryFactory::createGeometry(wkbPoint);
+	OGRGeometry* g = rg;
+	OGRPoint* p = reinterpret_cast<OGRPoint*>(g);
+	p->setX(x);
+	p->setY(y);
+	return _geom->Contains(rg) ? true : false;
+}
+
+bool Strip::Intersection::contains(DPOINT& pt) {
+	double x = pt.x;
+	double y = pt.y;
+	return contains(x, y);
+}
+
+Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
+	Util::Geometry::OGRGeomPtr sourceGeom = geom();
+	Util::Geometry::OGRGeomPtr i = sourceGeom->Intersection(other->geom());
+	Strip::Intersection::Ptr iPtr;
+	iPtr.assign(new Strip::Intersection(i));
+	return iPtr;
+}
+
 double Axis::averageSpeed() const { 
 	Poco::Timestamp start = _firstSample->timestamp();
 	Poco::Timestamp end = _lastSample->timestamp();
@@ -106,4 +129,25 @@ void ControlPoint::zDiffFrom(DSM* dsm) {
 		_status = VALID;
 		_diff = q  - _quota;
 	}
+}
+
+void CloudStrip::computeDensity() {
+	if (!_factory->Open(_cloudPath, false)) {
+		throw std::runtime_error("Cannot open " + _cloudPath);
+	}
+
+	OGRPolygon* pol = _strip->toPolygon();
+	double area = pol->get_Area();
+	if (area == 0.0) {
+		throw std::runtime_error("Empty strip area");
+	}
+
+	DSM* dsm = _factory->GetDsm();
+	unsigned int count = dsm->Npt();
+	if (count == 0) {
+		throw std::runtime_error("Empty cloud");
+	}
+
+	_density = count / area;
+	_factory->Close();
 }
