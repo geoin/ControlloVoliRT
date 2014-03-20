@@ -43,10 +43,6 @@ protected:
 			obj->controlType(_control);
 			QStringList info = layer()->data();
 			_labels.at(0)->setText(QString::number(layer()->rows()));
-			for (int i = 1; i < info.size(); ++i) {
-				QLabel* lab = _labels.at(i);
-				lab->setText(info.at(i));
-			}
 		}
 	}
 
