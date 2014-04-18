@@ -53,7 +53,7 @@ public:
 		phot_type = 0,
 		lid_type = 1
 	};
-	gps_exec() {}
+    gps_exec() : _gpsId(1), _baseId(1) {}
 	~gps_exec();
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
@@ -105,6 +105,9 @@ private:
 	double _MIN_SAT_ANG;
 	int _NBASI;
 	double _MIN_ANG_SOL;
+
+    long _gpsId;
+    long _baseId;
 };
 
 class check_gps: public Poco::Util::Application {

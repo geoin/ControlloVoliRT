@@ -244,6 +244,7 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 
 void gps_exec::_createGPSMissionsTables() {
 	try {
+        std::stringstream sql;
 		sql.str("");
 		sql << "CREATE TABLE " << BASI << 
 			"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
@@ -262,6 +263,7 @@ void gps_exec::_createGPSMissionsTables() {
 	}
 
 	try {
+        std::stringstream sql;
 		sql.str("");
 		sql << "CREATE TABLE " << GPS << 
 			" (id INTEGER NOT NULL PRIMARY KEY,\
@@ -282,7 +284,7 @@ void gps_exec::_createGPSMissionsTables() {
 			"'XY')";
 		cnn.execute_immediate(sql.str());
 	} catch (const std::exception& ex) {
-		std::cout << "Error while creating " << BASI << ": " << ex.what() << std::endl;
+        std::cout << "Error while creating " << GPS << ": " << ex.what() << std::endl;
 	}
 }
 
@@ -314,7 +316,7 @@ bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 	OGRSpatialReference sr;
 	sr.importFromEPSG(SRIDGEO);
 
-	for ( size_t i = 0; i < basi.size(); i++) {
+    for ( size_t i = _baseId; i < basi.size(); i++, _baseId++) {
 		OGRGeometryFactory gf;
 		OGRGeomPtr gp_ = gf.createGeometry(wkbPoint);
 		gp_->setCoordinateDimension(2);
@@ -444,7 +446,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	std::string data;
 	std::string time;
 	int nbasi;
-	long id = 1;
+    //long id = 1;
 
 	OGRSpatialReference sr;
 	sr.importFromEPSG(SRIDGEO);
@@ -499,7 +501,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
 		*gp = OGRPoint(p.x, p.y);
 
-        stm[1].fromInt64(id++);
+        stm[1].fromInt64(_gpsId++);
 		stm[2] = data;
 		stm[3] = time;
 		stm[4] = nsat;

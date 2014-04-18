@@ -192,8 +192,8 @@ bool photo_exec::_read_ref_val()
 		_MIN_ANG_SOL = pConf->getDouble(_get_key("MIN_ANG_SOL"));
 
 		_MAX_GPS_GAP = pConf->getDouble(_get_key("MAX_GPS_GAP"), 3);
-	} catch (...) {
-		throw std::runtime_error("Errore nela lettura dei valori di riferimento");
+    } catch (const std::exception& ex) {
+        throw std::runtime_error(std::string("Errore nela lettura dei valori di riferimento: ") + ex.what());
 	}
 	return true;
 }

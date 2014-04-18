@@ -88,7 +88,8 @@ SOURCES += main.cpp \
     gui/details/cvcontrolpointsdetail.cpp \
     gui/details/cvcloudsampledetail.cpp \
     core/categories/cvfolderinput.cpp \
-    gui/details/cvlidarrawdetail.cpp
+    gui/details/cvlidarrawdetail.cpp \
+    gui/details/cvrawstripfolderdetail.cpp
 
 HEADERS  += \
     gui/cvmainwindow.h \
@@ -146,7 +147,8 @@ HEADERS  += \
     gui/details/cvcontrolpointsdetail.h \
     gui/details/cvcloudsampledetail.h \
     core/categories/cvfolderinput.h \
-    gui/details/cvlidarrawdetail.h
+    gui/details/cvlidarrawdetail.h \
+    gui/details/cvrawstripfolderdetail.h
 
 RESOURCES += \
     data/data.qrc
