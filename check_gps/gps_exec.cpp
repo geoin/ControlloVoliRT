@@ -244,10 +244,6 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 
 void gps_exec::_createGPSMissionsTables() {
 	try {
-		std::stringstream sql;
-		sql << "DROP TABLE IF EXISTS " << BASI;	
-		cnn.execute_immediate(sql.str());
-
 		sql.str("");
 		sql << "CREATE TABLE " << BASI << 
 			"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
@@ -266,10 +262,6 @@ void gps_exec::_createGPSMissionsTables() {
 	}
 
 	try {
-		std::stringstream sql;
-		sql << "DROP TABLE IF EXISTS " << BASI;	
-		cnn.execute_immediate(sql.str());
-		
 		sql.str("");
 		sql << "CREATE TABLE " << GPS << 
 			" (id INTEGER NOT NULL PRIMARY KEY,\
@@ -536,8 +528,14 @@ bool gps_exec::_create_gps_track()
     fn.append(MISSIONI);
     Poco::File(fn).createDirectories();
 
-	cnn.remove_layer(BASI);
-	cnn.remove_layer(GPS);
+	try {
+		cnn.remove_layer(BASI);
+		cnn.remove_layer(GPS);
+	} catch (const std::exception& ex) {
+		std::cout << ex.what() << std::endl;
+	}
+	
+	_createGPSMissionsTables();
 
 	std::stringstream q;
 	q << "select NAME, RINEX_NAME, RINEX, ID from MISSION";
@@ -607,8 +605,6 @@ bool gps_exec::_create_gps_track()
 	}
 
 	std::cout << "Elaborazione di " << (int) count << " missioni" << std::endl;
-	
-	_createGPSMissionsTables();
 
 	for (size_t i = 0; i < files.size(); i++) {
         Poco::Path ms(fn.toString());
