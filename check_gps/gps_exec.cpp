@@ -241,11 +241,63 @@ std::string gps_exec::_getnome(const std::string& nome, gps_type type)
 	fl.setExtension(*sst.begin());
 	return fl.toString();
 }
-bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base)
-{
+
+void gps_exec::_createGPSMissionsTables() {
+	try {
+		std::stringstream sql;
+		sql << "DROP TABLE IF EXISTS " << BASI;	
+		cnn.execute_immediate(sql.str());
+
+		sql.str("");
+		sql << "CREATE TABLE " << BASI << 
+			"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
+			"nome TEXT NOT NULL)";			// base name
+		cnn.execute_immediate(sql.str());
+
+		sql.str("");
+		sql << "SELECT AddGeometryColumn('" << BASI << "'," <<
+			"'geom'," <<
+			SRIDGEO << "," <<
+			"'POINT'," <<
+			"'XY')";
+		cnn.execute_immediate(sql.str());
+	} catch(const std::exception& ex) {
+		std::cout << "Error while creating " << BASI << ": " << ex.what() << std::endl;
+	}
+
+	try {
+		std::stringstream sql;
+		sql << "DROP TABLE IF EXISTS " << BASI;	
+		cnn.execute_immediate(sql.str());
+		
+		sql.str("");
+		sql << "CREATE TABLE " << GPS << 
+			" (id INTEGER NOT NULL PRIMARY KEY,\
+			DATE TEXT NOT NULL,\
+			TIME TEXT NOT NULL,\
+			NSAT INTEGER NOT NULL,\
+			PDOP FLOAT NOT NULL,\
+			NBASI INTEGER NOT NULL,\
+			RMS DOUBLE NOT NULL,\
+			MISSION TEXT NOT NULL )";
+		cnn.execute_immediate(sql.str());
+
+		sql.str("");
+		sql << "SELECT AddGeometryColumn('" << GPS << "'," <<
+			"'geom'," <<
+			SRIDGEO << "," <<
+			"'POINT'," <<
+			"'XY')";
+		cnn.execute_immediate(sql.str());
+	} catch (const std::exception& ex) {
+		std::cout << "Error while creating " << BASI << ": " << ex.what() << std::endl;
+	}
+}
+
+bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base) {
 	std::cout << "Layer:" << BASI << std::endl;
 
-	std::stringstream sql;
+	/*std::stringstream sql;
 	sql << "CREATE TABLE " << BASI << 
 		"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
 		"nome TEXT NOT NULL)";			// base name
@@ -257,7 +309,7 @@ bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 		SRIDGEO << "," <<
 		"'POINT'," <<
 		"'XY')";
-	cnn.execute_immediate(sql1.str());
+	cnn.execute_immediate(sql1.str());*/
 	
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << BASI << " (id, nome, geom) \
@@ -366,7 +418,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	std::cout << "Layer:" << GPS << std::endl;
 
 	// create the GPS table
-	std::stringstream sql;
+	/*std::stringstream sql;
 	sql << "CREATE TABLE " << GPS << 
 		" (id INTEGER NOT NULL PRIMARY KEY,\
 		DATE TEXT NOT NULL,\
@@ -384,7 +436,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		SRIDGEO << "," <<
 		"'POINT'," <<
 		"'XY')";
-	cnn.execute_immediate(sql1.str());
+	cnn.execute_immediate(sql1.str());*/
 
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << GPS << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION, geom) \
@@ -555,6 +607,8 @@ bool gps_exec::_create_gps_track()
 	}
 
 	std::cout << "Elaborazione di " << (int) count << " missioni" << std::endl;
+	
+	_createGPSMissionsTables();
 
 	for (size_t i = 0; i < files.size(); i++) {
         Poco::Path ms(fn.toString());

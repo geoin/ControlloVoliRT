@@ -63,6 +63,7 @@ public:
 private:
 	std::string _getnome(const std::string& nome, gps_type type);
 	void _add_column(const std::string& col_name) ;
+	void _createGPSMissionsTables();
 
 	// compensa le tracce relative alle singole basi producendo una traccia unica
 	bool _single_track(const std::string& mission, std::vector< Poco::SharedPtr<vGPS> >& vvg, MBR* mbr);
