@@ -109,7 +109,7 @@ bool gps_exec::run()
 		// initialize docbook xml file
 		//_init_document();
 		
-		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+        //std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
 		//_final_report();
 		
 		// write the result on the docbook report
@@ -248,7 +248,7 @@ void gps_exec::_createGPSMissionsTables() {
 		sql.str("");
 		sql << "CREATE TABLE " << BASI << 
 			"(id INTEGER NOT NULL PRIMARY KEY, " << //id della stazione
-			"nome TEXT NOT NULL)";			// base name
+            "nome TEXT NOT NULL UNIQUE)";			// base name
 		cnn.execute_immediate(sql.str());
 
 		sql.str("");
@@ -310,13 +310,13 @@ bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 		VALUES (?1, ?2, ST_GeomFromWKB(:geom, " << SRIDGEO << ") )";
 	
 	CV::Util::Spatialite::Statement stm(cnn);
-	cnn.begin_transaction();
+    //cnn.begin_transaction();
 	stm.prepare(sql2.str());	
 
 	OGRSpatialReference sr;
 	sr.importFromEPSG(SRIDGEO);
 
-    for ( size_t i = _baseId; i < basi.size(); i++, _baseId++) {
+    for ( size_t i = 0; i < basi.size(); i++, _baseId++) {
 		OGRGeometryFactory gf;
 		OGRGeomPtr gp_ = gf.createGeometry(wkbPoint);
 		gp_->setCoordinateDimension(2);
@@ -324,13 +324,17 @@ bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 		OGRPoint* gp = (OGRPoint*) ((OGRGeometry*) gp_);
 		gp->setX(basi[i].x); gp->setY(basi[i].y);
 
-		stm[1] = (int) (i + 1);
-		stm[2] = vs_base[i];
-		stm[3].fromBlob(gp_); 
-		stm.execute();
-		stm.reset();
+        try {
+            stm[1] = (int) (i + 1 + _baseId);
+            stm[2] = vs_base[i];
+            stm[3].fromBlob(gp_);
+            stm.execute();
+            stm.reset();
+        } catch (const std::exception& ex) {
+            std::cout << ex.what() << std::endl;
+        }
 	}
-	cnn.commit_transaction();
+    //cnn.commit_transaction();
 
 	return true;
 }
