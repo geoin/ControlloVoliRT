@@ -36,7 +36,7 @@ unix: {
 INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
 
 
-DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY
+DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     check_gps.cpp \
