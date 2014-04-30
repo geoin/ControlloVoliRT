@@ -325,7 +325,7 @@ bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 		gp->setX(basi[i].x); gp->setY(basi[i].y);
 
         try {
-            stm[1] = (int) (i + 1 + _baseId);
+            stm[1] = (int) (_baseId);
             stm[2] = vs_base[i];
             stm[3].fromBlob(gp_);
             stm.execute();
