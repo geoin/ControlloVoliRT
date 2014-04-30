@@ -11,7 +11,7 @@ TARGET = check_ortho
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
         LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib" -L"C:/OSGeo4W/lib/"
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include ../../ControlloVoliRT_Tools/include/tifflib
         CONFIG(debug, debug|release) {
                 LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite4 -lCVutild -lgdald_i -llibtiff_i
                 TARGET = $$join(TARGET,,,d)
