@@ -573,6 +573,9 @@ void GetMbr(const OGRGeometry* fv, const OGRPoint& po, double ka, MBR& mbr)
 {
     const OGRPolygon* polygon = static_cast<const OGRPolygon*>(fv);
     const OGRLinearRing* linearRing = polygon->getExteriorRing();
+    if (!linearRing) {
+        return;
+    }
 
     for (int i = 0; i < linearRing->getNumPoints(); i++) {
         double x = linearRing->getX(i) - po.getX();
@@ -837,9 +840,10 @@ void photo_exec::_process_models()
 	while ( !rs.eof() ) { //for every strip
 		std::string strip = rs[0];
 		std::stringstream sql4;
-		sql4 << "select Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, AsBinary(geom) from " << tablef << " where Z_FOTO_CS=" << strip;
+        sql4 << "select Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, AsBinary(geom) from " << tablef << " where Z_FOTO_CS=?1";// << strip;
 		CV::Util::Spatialite::Statement stm2(cnn);
 		stm2.prepare(sql4.str());
+        stm2[1] = strip;
 		CV::Util::Spatialite::Recordset rs1 = stm2.recordset();
 		std::string nomeleft;
 		std::string id;
@@ -954,9 +958,10 @@ void photo_exec::_process_strips()
 		std::string strip = rs[0];
 		std::stringstream sql4;
 
-		sql4 << "select Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, AsBinary(geom) from " << tablef << " where Z_MODEL_CS=" << strip;
+        sql4 << "select Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, AsBinary(geom) from " << tablef << " where Z_MODEL_CS=?1";// << strip;
 		CV::Util::Spatialite::Statement stm2(cnn);
 		stm2.prepare(sql4.str());
+        stm2[1] = strip;
 		CV::Util::Spatialite::Recordset rs1 = stm2.recordset();
 		std::string id;
 		OGRGeomPtr pol;
@@ -975,8 +980,10 @@ void photo_exec::_process_strips()
                 lastname = rs1["Z_MODEL_RIGHT"].toString();
 				// joins all the models
                 Blob blob = rs1[4].toBlob();
-                OGRGeomPtr pol2 = blob;
-				pol = pol->Union(pol2);
+                if (blob.size()) {
+                    OGRGeomPtr pol2 = blob;
+                    pol = pol->Union(pol2);
+                }
 			}
 			count++;
 			rs1.next();
@@ -1224,7 +1231,7 @@ void photo_exec::_update_assi_volo()
 	}
 
 	std::stringstream sql1;
-	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8, GPS_GAP=?9 where " << STRIP_NAME  << "=?10";
+    sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8, GPS_GAP=?9 where " << STRIP_NAME  << "=?10";
 	Statement stm1(cnn);
 	stm1.prepare(sql1.str());
 	cnn.begin_transaction();
