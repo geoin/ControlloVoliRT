@@ -364,7 +364,7 @@ void DSM_Grid::Set(double xmin, double ymin, int nx, int ny, double stepx, doubl
 bool DSM_Grid::GetProperties(const std::string& nome) 
 {
     std::fstream txf;
-    txf.open(nome.c_str(), std::fstream::in);
+	txf.open(nome.c_str(), std::fstream::in | std::fstream::binary);
     if ( !txf.is_open() )
 		return false;
     char mes[256];
