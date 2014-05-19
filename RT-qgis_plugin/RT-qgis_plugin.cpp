@@ -50,6 +50,8 @@
 #include <QDesktopServices>
 #include <QUrl>
 
+#define RT_PLUGIN_VERSION "1.2.1"
+
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
 
@@ -274,6 +276,8 @@ void dbox::_esegui(const QString& exec, const QStringList& args)
 {
     _out->clear();
     _layers.clear();
+
+	_out->append(QString("Versione: ") + RT_PLUGIN_VERSION + "\n");
 
     QString exe(exec);
 
@@ -719,7 +723,7 @@ QGISEXTERN QString icon()
 
 
     QString icon = icon_path + "/Regione.png";
-    return icon.toStdString().c_str(); //"C:/Google Drive/Regione Toscana Tools/icons/regione.png";
+    return icon.toStdString().c_str(); 
 }
 QGISEXTERN QString name()
 {
@@ -735,7 +739,7 @@ QGISEXTERN QString description()
 }
 QGISEXTERN QString version()
 {
-    return "0.00001";
+    return RT_PLUGIN_VERSION;
 }
 // Return the type (either UI or MapLayer plugin)
 QGISEXTERN int type()
