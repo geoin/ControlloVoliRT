@@ -369,7 +369,9 @@ namespace CV {
             int nbytes = sqlite3_column_bytes( _stmt._statement() , _index );
             const void *chr = sqlite3_column_blob( _stmt._statement() , _index );
             _tmpv.resize(nbytes);
-            memcpy( &_tmpv[0], chr, nbytes);
+			if (nbytes > 0) {
+				memcpy( &_tmpv[0], chr, nbytes);
+			}
             return _tmpv;
         }
 
