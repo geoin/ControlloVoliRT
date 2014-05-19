@@ -241,20 +241,22 @@ void dbox::_report(bool b)
     connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated1(int, QProcess::ExitStatus)));
 
     QStringList args;
+    QFileInfo qf1(_prj->text(), _check_name);
+    QByteArray p = qgetenv( "DOCBOOKRT" );
+    QString path(p);
+    QDir dir(path);
+
 #ifdef WIN32
     QString exe = "cmd.exe";
     QString launcher = "pdf_convert.bat";
     args << FLAG_PREFIX("c");
-
+	dir.cdUp();
+    QFileInfo qf(dir, launcher);
 #else
     QString exe = "python";
     QString launcher = "report.py";
-#endif
-    QByteArray p = qgetenv( "DOCBOOKRT" );
-    QFileInfo qf1(_prj->text(), _check_name);
-    QString path(p);
-    QDir dir(path);
     QFileInfo qf(dir, launcher);
+#endif
 
     args << qf.filePath();
     args << qf1.filePath();
