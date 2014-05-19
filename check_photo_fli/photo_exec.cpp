@@ -868,7 +868,7 @@ void photo_exec::_process_models()
                 int res = 1;
 				// the model is the intersection of two photos
 				OGRGeomPtr mod = pol1->Intersection(pol2);
-				if ( !mod->Intersect(_carto) ) {
+				if (!mod->IsValid() || mod->IsEmpty() || !mod->Intersect(_carto) ) {
 					std::string mod = nomeleft + " - " + nomeright;
                     _useless_models.push_back(mod);
                     res = 0;

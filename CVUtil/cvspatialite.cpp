@@ -25,7 +25,7 @@
         Copyright (C) 2013 Geoin s.r.l.
 
 */
-#include "cvspatialite.h"
+#include "cvspatialite.h" 
 #include <sstream>
 #include <string.h>
 
