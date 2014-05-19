@@ -667,7 +667,7 @@ void QgsRTtoolsPlugin::set_prj()
     QFileInfo qf(plugin_dir, name);
 
     //QMessageBox::information(NULL, "starting...", qf.filePath(), QMessageBox::Ok);
-    QProcess::startDetached(qf.filePath());
+    QProcess::startDetached(QString("\"") + qf.filePath() + QString("\""));
 }
 void QgsRTtoolsPlugin::ver_gps()
 {
