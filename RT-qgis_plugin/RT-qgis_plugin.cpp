@@ -50,7 +50,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-#define RT_PLUGIN_VERSION "1.2.1"
+#define RT_PLUGIN_VERSION "1.2.2"
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
@@ -276,8 +276,6 @@ void dbox::_esegui(const QString& exec, const QStringList& args)
 {
     _out->clear();
     _layers.clear();
-
-	_out->append(QString("Versione: ") + RT_PLUGIN_VERSION + "\n");
 
     QString exe(exec);
 

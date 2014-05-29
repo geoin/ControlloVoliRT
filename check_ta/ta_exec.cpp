@@ -50,6 +50,10 @@ using Poco::Path;
 using namespace CV::Util::Spatialite;
 /**************************************************************************/
 
+
+#define CHECK_VERSION "1.2.2"
+#define CHECK_DATE "29/05/2014"
+
 /***************************************************************************************/
 std::string ta_exec::_get_key(const std::string& val)
 {
@@ -60,6 +64,8 @@ ta_exec::~ta_exec()
 }
 bool ta_exec::run()
 {
+	std::cout << "Versione: " << CHECK_VERSION << " - " << CHECK_DATE << std::endl << std::endl;
+
 	if ( _proj_dir.empty() )
 		throw std::runtime_error("cartella di lavoro non impostata");
 

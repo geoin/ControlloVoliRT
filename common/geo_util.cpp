@@ -179,14 +179,26 @@ void read_cams(Connection& cnn, std::map<std::string, Camera>& map_strip_cam)
 std::string get_strip(const std::string& nome)
 {
 	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[0];
+	if ( tok.count() < 2 ) {
+		throw std::runtime_error("Nome non valido: " + nome);
+	}
+	
+	Poco::StringTokenizer::Iterator it = tok.begin();
+	Poco::StringTokenizer::Iterator end = tok.end();
+	
+	std::stringstream out;
+	out << (*it);
+
+	for (it++; it != end - 1; it++) {
+		out << "_" << *it;
+	}
+	return out.str();
 }
 std::string get_nome(const std::string& nome)
 {
 	Poco::StringTokenizer tok(nome, "_", Poco::StringTokenizer::TOK_IGNORE_EMPTY);
-	if ( tok.count() != 2 )
-		return "";
-	return tok[1];
+	if ( tok.count() < 2 ) {
+		throw std::runtime_error("Nome non valido: " + nome);
+	}
+	return tok[tok.count() - 1];
 }
