@@ -24,8 +24,21 @@ def copyAllFiles(src, dest):
         count += 1
     return count
 
-ret = raw_input("\nAggiungere il repository ubuntu-gis e installare qgis?\n[sì (y/Y)] [no (n/N)]\n")
-if (ret == 'y') or (ret == 'Y'):
+def setExecPrivilege(target):
+    "Set exec privilege by calling chmod +x on target"
+    subprocess.call(["chmod", "+x", target])
+
+def setExecPrivilegesToAll(src):
+    "Set exec to all files in folder"
+    files = os.listdir(src)
+    for name in files:
+        fullName = os.path.join(src, name)
+        fileName, fileExtension = os.path.splitext(fullName)
+        if len(fileExtension) == 0 or fileExtension == ".so":
+	    setExecPrivilege(fullName)
+    
+ret = raw_input("\nAggiungere il repository ubuntu-gis e installare qgis?\n[sì (s/S)] [no (n/N)]\n")
+if (ret == 's') or (ret == 'S'):
     subprocess.call(["apt-add-repository", "-y", "ppa:ubuntugis/ubuntugis-unstable"])
     subprocess.call(["apt-get", "update"])
     subprocess.call(["apt-get", "-y", "upgrade"])
@@ -45,17 +58,22 @@ print "\nCartella di lavoro: " + installDir
 
 #Put library in local/lib
 libs = installDir + "/lib"
+setExecPrivilegesToAll(libs)
+
 dest = "/usr/local/lib"
 copyAllFiles(libs, dest)
 
 #Setting env
 env = installDir + "/script/rt_env.sh"
-subprocess.call(["chmod", "+x", env])
+#subprocess.call(["chmod", "+x", env])
+setExecPrivilege(env)
 dest = "/etc/profile.d"
 shutil.copy(env, dest)
 
 #Copy plugin binaries
 plugins = installDir + "/bin"
+setExecPrivilegesToAll(plugins)
+
 dest = "/usr/lib/qgis/plugins"
 copyAllFiles(plugins, dest)
 
