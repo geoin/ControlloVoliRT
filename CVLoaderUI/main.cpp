@@ -10,7 +10,7 @@
 
 using namespace CV::GUI;
 
-#define RT_APP_VERSION "1.2.1"
+#include "cv_version.h"
 
 #ifdef Q_WS_WIN
 #include <QWindowsXPStyle>
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     QApplication::setOrganizationName("Geoin");
     QApplication::setOrganizationDomain("CV");
     QApplication::setApplicationName("Controllo Voli");
-    QApplication::setApplicationVersion(RT_APP_VERSION);
+	QApplication::setApplicationVersion(CHECK_VERSION);
 
     QApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 	QTextStream str(&res);
 	w.setStyleSheet(str.readAll());
 
-	w.setWindowTitle(QString("Controllo Voli - ")  + RT_APP_VERSION);
+	w.setWindowTitle(QString("Controllo Voli - ")  + CHECK_VERSION);
 
 	bool maximized = CV::Core::CVSettings::get("/app/maximized").toBool();
 	if (maximized) {

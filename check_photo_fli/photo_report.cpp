@@ -479,6 +479,7 @@ bool photo_exec::_prj_report()
 	std::map<int, int> mp;
 	for ( size_t i = 0; i < plan.size(); i++) {
 		double dmin = 1e10;
+		mp[i] = -1;
 		for ( size_t j = 0; j < real.size(); j++) {
 			double d1 = std::min(plan[i].p1.dist2D(real[j].p1), plan[i].p1.dist2D(real[j].p2));
 			double d2 = std::min(plan[i].p2.dist2D(real[j].p1), plan[i].p2.dist2D(real[j].p2));
@@ -513,18 +514,24 @@ bool photo_exec::_prj_report()
 	for ( itt = mp.begin(); itt != mp.end(); itt++) {
 		row = tbody->add_item("row");
 		int i = itt->first;
-		//int j = itt->second;
 		row->add_item("entry", attr)->append(plan[i].id);
 		std::stringstream s1; s1 << plan[i].n_fot;
 		row->add_item("entry", attr)->append(s1.str());
 		std::stringstream s2; s2 << plan[i].len;
 		row->add_item("entry", attr)->append(s2.str());
 
-		row->add_item("entry", attr)->append(real[i].id);
-		std::stringstream s3; s3 << real[i].n_fot;
-		row->add_item("entry", attr)->append(s3.str());
-		std::stringstream s4; s4 << real[i].len;
-		row->add_item("entry", attr)->append(s4.str());
+		int j = itt->second;
+		if (j != -1) {
+			row->add_item("entry", attr)->append(real[j].id);
+			std::stringstream s3; s3 << real[j].n_fot;
+			row->add_item("entry", attr)->append(s3.str());
+			std::stringstream s4; s4 << real[j].len;
+			row->add_item("entry", attr)->append(s4.str());
+		} else {
+			row->add_item("entry", attr)->append("-");
+			row->add_item("entry", attr)->append("-");
+			row->add_item("entry", attr)->append("-");
+		}
 	}
 	return true;
 }

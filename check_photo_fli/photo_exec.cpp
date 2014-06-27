@@ -49,8 +49,7 @@
 #define OUT_DOCV "check_photoV.xml"
 #define OUT_DOCP "check_photoP.xml"
 
-#define CHECK_VERSION "1.2.2"
-#define CHECK_DATE "29/05/2014"
+#include "cv_version.h"
 
 using Poco::Util::XMLConfiguration;
 using Poco::AutoPtr;
@@ -73,7 +72,7 @@ std::string photo_exec::_get_key(const std::string& val)
 
 bool photo_exec::run()
 {
-	std::cout << "Versione: " << CHECK_VERSION << " - " << CHECK_DATE << std::endl << std::endl;
+	CV::Version::print();
 
     if (_proj_dir.empty()) {
         throw std::runtime_error("cartella di lavoro non impostata");

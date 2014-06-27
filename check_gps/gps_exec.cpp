@@ -58,10 +58,7 @@ using Poco::File;
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 
-
-#define CHECK_VERSION "1.2.2"
-#define CHECK_DATE "29/05/2014"
-
+#include "cv_version.h"
 
 /**************************************************************/
 
@@ -86,7 +83,7 @@ void gps_exec::set_checkType(Check_Type t)
 
 bool gps_exec::run()
 {
-	std::cout << "Versione: " << CHECK_VERSION << " - " << CHECK_DATE << std::endl << std::endl;
+	CV::Version::print();
 
 	try {
 		// initialize spatial lite connection
