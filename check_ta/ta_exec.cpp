@@ -499,39 +499,6 @@ bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts)
 }
 bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 {
-	Doc_Item row = _initpg1();
-	CPT_MAP::const_iterator it;
-	for ( it = pm.begin(); it != pm.end(); it++) {
-		std::pair<CPT_VDP::const_iterator, CPT_VDP::const_iterator> ret;
-		std::string cod = it->first;
-		DPOINT pc = it->second;
-		ret = pts.equal_range(cod);
-		CPT_VDP::const_iterator it1 = ret.first;
-		std::string nome1 = it1->second;
-		it1++;
-		for (; it1 != ret.second; it1++) {
-			std::string nome2 = it1->second;
-			if ( get_strip(nome1) == get_strip(nome2) ) {
-				// only for images of the same strip
-				VDPC& vdp1 = vdps[nome1];
-				VDPC& vdp2 = vdps[nome2];
-				Collimation c1 = vdp1[cod];
-				Collimation c2 = vdp2[cod];
-				DPOINT pt;
-				vdp1.Img_TerA(vdp2, c1, c2, pt);
-				DPOINT sc;
-				if ( pc.x == 0 && pc.y == 0 )
-					sc = DPOINT(0, 0, pc.z - pt.z);
-				else if ( pc.z == 0 )
-					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
-				else
-					sc = pc - pt;//DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
-				if ( !_add_point_to_table(row, cod, nome1, nome2, sc) )
-					_cpt_out_tol.push_back(cod);
-			}
-			nome1 = nome2;
-		}
-	}
 	Doc_Item sec = _article->get_item("section");
 	if ( sec.get() == NULL )
 		return false;
@@ -540,13 +507,47 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 		ss << "Tutti i punti di controllo rientrano nelle tolleranze";
 		sec->add_item("para")->append(ss.str());
 	} else {
+		Doc_Item row = _initpg1();
+		CPT_MAP::const_iterator it;
+		for ( it = pm.begin(); it != pm.end(); it++) {
+			std::pair<CPT_VDP::const_iterator, CPT_VDP::const_iterator> ret;
+			std::string cod = it->first;
+			DPOINT pc = it->second;
+			ret = pts.equal_range(cod);
+			CPT_VDP::const_iterator it1 = ret.first;
+			std::string nome1 = it1->second;
+			it1++;
+			for (; it1 != ret.second; it1++) {
+				std::string nome2 = it1->second;
+				if ( get_strip(nome1) == get_strip(nome2) ) {
+					// only for images of the same strip
+					VDPC& vdp1 = vdps[nome1];
+					VDPC& vdp2 = vdps[nome2];
+					Collimation c1 = vdp1[cod];
+					Collimation c2 = vdp2[cod];
+					DPOINT pt;
+					vdp1.Img_TerA(vdp2, c1, c2, pt);
+					DPOINT sc;
+					if ( pc.x == 0 && pc.y == 0 )
+						sc = DPOINT(0, 0, pc.z - pt.z);
+					else if ( pc.z == 0 )
+						sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
+					else
+						sc = pc - pt;//DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
+					if ( !_add_point_to_table(row, cod, nome1, nome2, sc) )
+						_cpt_out_tol.push_back(cod);
+				}
+				nome1 = nome2;
+			}
+		}
+
 		std::stringstream ss;
 		ss << "I seguenti punti risultano fuori dalle tolleranze";
 		sec->add_item("para")->append(ss.str());
 		Doc_Item itl = sec->add_item("itemizedlist");
-		std::list<std::string>::iterator it;
-		for (it = _cpt_out_tol.begin(); it != _cpt_out_tol.end(); it++) {
-			itl->add_item("listitem")->add_item("para")->append(*it);
+		std::list<std::string>::iterator itList;
+		for (itList = _cpt_out_tol.begin(); itList != _cpt_out_tol.end(); itList++) {
+			itl->add_item("listitem")->add_item("para")->append(*itList);
 		}
 	}
 	return true;
@@ -643,27 +644,6 @@ bool ta_exec::_check_differences()
 	std::cout << "Confronto tra i risultati di due calcoli" << std::endl;
 
 	try {
-		Doc_Item row = _initpg2();
-
-		//read_cams(cnn, _map_strip_cam);
-
-		VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
-		VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
-		_read_vdp(_vdp_name, vdps1);
-		_read_vdp(_vdp_name_2, vdps2);
-		VDP_MAP::iterator it;
-		for (it = vdps1.begin(); it != vdps1.end(); it++) {
-			std::string nome = it->first;
-			if ( vdps2.find(nome) != vdps2.end() ) {
-				VDP& vdp1 = vdps1[nome];
-				VDP& vdp2 = vdps2[nome];
-				VecOri pc = vdp1.Pc - vdp2.Pc;
-				VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
-
-				if ( !_add_point_to_table(row, nome, pc, at) )
-					_tria_out_tol.push_back(nome);
-			}
-		}
 		Doc_Item sec = _article->get_item("section");
 		if ( sec.get() == NULL )
 			return false;
@@ -672,13 +652,35 @@ bool ta_exec::_check_differences()
 			ss << "I due risultati sono compatibili";
 			sec->add_item("para")->append(ss.str());
 		} else {
+			Doc_Item row = _initpg2();
+
+			//read_cams(cnn, _map_strip_cam);
+
+			VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
+			VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
+			_read_vdp(_vdp_name, vdps1);
+			_read_vdp(_vdp_name_2, vdps2);
+			VDP_MAP::iterator it;
+			for (it = vdps1.begin(); it != vdps1.end(); it++) {
+				std::string nome = it->first;
+				if ( vdps2.find(nome) != vdps2.end() ) {
+					VDP& vdp1 = vdps1[nome];
+					VDP& vdp2 = vdps2[nome];
+					VecOri pc = vdp1.Pc - vdp2.Pc;
+					VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
+
+					if ( !_add_point_to_table(row, nome, pc, at) )
+						_tria_out_tol.push_back(nome);
+				}
+			}
+
 			std::stringstream ss;
 			ss << "I due risultati sono diversi nei seguenti fotogrammi";
 			sec->add_item("para")->append(ss.str());
 			Doc_Item itl = sec->add_item("itemizedlist");
-			std::list<std::string>::iterator it;
-			for (it = _tria_out_tol.begin(); it != _tria_out_tol.end(); it++) {
-				itl->add_item("listitem")->add_item("para")->append(*it);
+			std::list<std::string>::iterator itList;
+			for (itList = _tria_out_tol.begin(); itList != _tria_out_tol.end(); itList++) {
+				itl->add_item("listitem")->add_item("para")->append(*itList);
 			}
 		}
 	} catch(std::exception &e) {
