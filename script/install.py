@@ -4,7 +4,8 @@
 import sys, os, subprocess, shutil
 
 scriptPath = os.path.dirname(os.path.realpath(sys.argv[0]));
-print scriptPath
+print "\n## Regione Toscana Tools - Plugin QGis ##"
+print "#########################################"
 os.chdir(scriptPath)
 os.chdir("..")
 
@@ -44,14 +45,27 @@ if (ret == 's') or (ret == 'S'):
     subprocess.call(["apt-get", "-y", "upgrade"])
     subprocess.call(["apt-get", "-y", "install", "qgis"])
 
-ret = subprocess.call(["apt-get", "-y", "install", "fop", "docbook-xsl-ns", "docbook5-xml", "docbook-xsl", "xsltproc", "libgeotiff2"])
-if ret != 0:
-    print "\nNon è stato possibile installare uno o più pacchetti necessari."
-    print "Verificare ed eventualmente installare manualmente."
-    print "[lista pacchetti]"
-    ret = raw_input("Continuare?\n[sì (y/Y)] [no (n/N)]\n")
-    if (ret != 'y') and (ret != 'Y'):
-        sys.exit()
+ret = raw_input("\nInstallare le dipendenze?\n[sì (s/S)] [no (n/N)]\n")
+if (ret == 's') or (ret == 'S'):
+    ret = subprocess.call(["apt-get", "-y", "install", "fop", "docbook-xsl-ns", "docbook5-xml", "docbook-xsl", "xsltproc", "libgeotiff2"])
+    if ret != 0:
+        print "\nNon è stato possibile installare uno o più pacchetti necessari."
+	print "Verificare ed eventualmente installare manualmente."
+	print "[lista pacchetti]"
+	ret = raw_input("Continuare?\n[sì (s/S)] [no (n/N)]\n")
+	if (ret != 's') and (ret != 'S'):
+	    sys.exit()
+
+processname = 'qgis.bin'
+
+for line in os.popen("ps xa"):
+    fields  = line.split()
+    pid     = fields[0]
+    process = fields[4]
+
+    if process.find(processname) > 0:
+	ret = raw_input("\nChiudere QGis prima di effettuare l'installazione\n(Premere un tasto per continuare)\n")
+	break
 
 installDir = os.getcwd()
 print "\nCartella di lavoro: " + installDir
