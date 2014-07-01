@@ -375,27 +375,27 @@ void Check_gps::_optype(int index)
 
 QStringList Check_ta::getArgs() {
     QStringList args;
-    args << QString(PARAM_PREFIX("d")) + "\"" + _prj->text() + "\"";
+    args << QString(PARAM_PREFIX("d")) + _prj->text();
 
     QString par;
 
     par = _f1->text();
     if (par.length()) {
-        args << QString(PARAM_PREFIX("r")) + "\"" + par + "\"";
+        args << QString(PARAM_PREFIX("r")) + par;
     } else {
         args << "";
     }
 
     par = _f2->text();
     if (par.length()) {
-        args << QString(PARAM_PREFIX("c")) + "\"" + par + "\"";
+        args << QString(PARAM_PREFIX("c")) + par;
     } else {
         args << "";
     }
 
     par = _f3->text();
     if (par.length()) {
-        args << QString(PARAM_PREFIX("o")) + "\"" + par + "\"";
+        args << QString(PARAM_PREFIX("o")) + par;
     } else {
         args << "";
     }
