@@ -460,27 +460,7 @@ bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts)
 }
 bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 {
-	Doc_Item tableSec = _initpg1();
-	Doc_Item tab = tableSec->add_item("table");
-	tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
-	
-	Poco::XML::AttributesImpl attrs;
-	attrs.addAttribute("", "", "cols", "", "6");
-	tab = tab->add_item("tgroup", attrs);
-	
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-
-	attrs.clear();
-	attrs.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attrs)->append("Codice");
-	row->add_item("entry", attrs)->append("Foto Sx");
-	row->add_item("entry", attrs)->append("Foto Dx");
-	row->add_item("entry", attrs)->append("sc X");
-	row->add_item("entry", attrs)->append("sc Y");
-	row->add_item("entry", attrs)->append("Sc Z");
-
-	Doc_Item tbody = tab->add_item("tbody");
+    Doc_Item tableSec = _initpg1();
 
 	Doc_Item sec = _article->get_item("section");
 	if ( sec.get() == NULL )
@@ -490,6 +470,28 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 		ss << "Tutti i punti di controllo rientrano nelle tolleranze";
 		sec->add_item("para")->append(ss.str());
 	} else {
+
+        Doc_Item tab = tableSec->add_item("table");
+        tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
+
+        Poco::XML::AttributesImpl attrs;
+        attrs.addAttribute("", "", "cols", "", "6");
+        tab = tab->add_item("tgroup", attrs);
+
+        Doc_Item thead = tab->add_item("thead");
+        Doc_Item row = thead->add_item("row");
+
+        attrs.clear();
+        attrs.addAttribute("", "", "align", "", "center");
+        row->add_item("entry", attrs)->append("Codice");
+        row->add_item("entry", attrs)->append("Foto Sx");
+        row->add_item("entry", attrs)->append("Foto Dx");
+        row->add_item("entry", attrs)->append("sc X");
+        row->add_item("entry", attrs)->append("sc Y");
+        row->add_item("entry", attrs)->append("Sc Z");
+
+        Doc_Item tbody = tab->add_item("tbody");
+
 		CPT_MAP::const_iterator it;
 		for ( it = pm.begin(); it != pm.end(); it++) {
 			std::pair<CPT_VDP::const_iterator, CPT_VDP::const_iterator> ret;
@@ -623,29 +625,7 @@ bool ta_exec::_check_differences()
 	Doc_Item tableSec = _initpg2();
 
 	if ( _vdp_name_2.empty() )
-		return true;
-
-	Doc_Item tab = tableSec->add_item("table");
-	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
-	
-	Poco::XML::AttributesImpl attrs;
-	attrs.addAttribute("", "", "cols", "", "7");
-	tab = tab->add_item("tgroup", attrs);
-	
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-	
-	attrs.clear();
-	attrs.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attrs)->append("Foto");
-	row->add_item("entry", attrs)->append("sc pc-X");
-	row->add_item("entry", attrs)->append("sc pc-Y");
-	row->add_item("entry", attrs)->append("sc pc-Z");
-	row->add_item("entry", attrs)->append("sc omega");
-	row->add_item("entry", attrs)->append("sc fi");
-	row->add_item("entry", attrs)->append("Sc ka");
-
-	Doc_Item tbody = tab->add_item("tbody");
+        return true;
 		
 	std::cout << "Confronto tra i risultati di due calcoli" << std::endl;
 
@@ -657,7 +637,29 @@ bool ta_exec::_check_differences()
 			std::stringstream ss;
 			ss << "I due risultati sono compatibili";
 			sec->add_item("para")->append(ss.str());
-		} else {
+        } else {
+
+            Doc_Item tab = tableSec->add_item("table");
+            tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
+
+            Poco::XML::AttributesImpl attrs;
+            attrs.addAttribute("", "", "cols", "", "7");
+            tab = tab->add_item("tgroup", attrs);
+
+            Doc_Item thead = tab->add_item("thead");
+            Doc_Item row = thead->add_item("row");
+
+            attrs.clear();
+            attrs.addAttribute("", "", "align", "", "center");
+            row->add_item("entry", attrs)->append("Foto");
+            row->add_item("entry", attrs)->append("sc pc-X");
+            row->add_item("entry", attrs)->append("sc pc-Y");
+            row->add_item("entry", attrs)->append("sc pc-Z");
+            row->add_item("entry", attrs)->append("sc omega");
+            row->add_item("entry", attrs)->append("sc fi");
+            row->add_item("entry", attrs)->append("Sc ka");
+
+            Doc_Item tbody = tab->add_item("tbody");
 
 			//read_cams(cnn, _map_strip_cam);
 
