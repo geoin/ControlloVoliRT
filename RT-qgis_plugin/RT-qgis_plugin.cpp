@@ -269,7 +269,13 @@ void dbox::_exec(bool b)
 {
     _qp.disconnect( SIGNAL(finished(int, QProcess::ExitStatus)), this );
     connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
-    _esegui(_executable, _args);
+
+    QStringList vArgs = getArgs();
+    if (vArgs.length()) {
+        _esegui(_executable, vArgs);
+    } else {
+        _esegui(_executable, _args);
+    }
 }
 
 void dbox::_esegui(const QString& exec, const QStringList& args)
@@ -366,6 +372,36 @@ void Check_gps::_optype(int index)
     }
 }
 /**********************************************************************************/
+
+QStringList Check_ta::getArgs() {
+    QStringList args;
+    args << QString(PARAM_PREFIX("d")) + _prj->text();
+
+    QString par;
+
+    par = _f1->text();
+    if (par.length()) {
+        args << QString(PARAM_PREFIX("r")) + par;
+    } else {
+        args << "";
+    }
+
+    par = _f2->text();
+    if (par.length()) {
+        args << QString(PARAM_PREFIX("c")) + par;
+    } else {
+        args << "";
+    }
+
+    par = _f3->text();
+    if (par.length()) {
+        args << QString(PARAM_PREFIX("o")) + par;
+    } else {
+        args << "";
+    }
+    return args;
+}
+
 Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 {
     setWindowTitle("Controllo triangolazione aerea");
@@ -404,10 +440,10 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l2 = new QLabel("File da confrontare:");
     _f2 = new QLineEdit;
-    //QString q2 = qs.value("TA_CFG", "").toString();
-    //_f2->setText(q2);
-    //if ( !q2.isEmpty() )
-    //    _args[2] = QString(PARAM_PREFIX("c")) + q2;
+    QString q2 = qs.value("TA_CFG", "").toString();
+    _f2->setText(q2);
+    if ( !q2.isEmpty() )
+        _args[2] = QString(PARAM_PREFIX("c")) + q2;
 
     QPushButton* b2 = new QPushButton("...");
     b2->setFixedWidth(20);
@@ -420,10 +456,10 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l3 = new QLabel("File Osservazioni:");
     _f3 = new QLineEdit;
-    //QString q3 = qs.value("TA_OBS", "").toString();
-    //_f3->setText(q3);
-    //if ( !q3.isEmpty() )
-    //    _args[3] = QString(PARAM_PREFIX("o")) + q3;
+    QString q3 = qs.value("TA_OBS", "").toString();
+    _f3->setText(q3);
+    if ( !q3.isEmpty() )
+        _args[3] = QString(PARAM_PREFIX("o")) + q3;
 
 
     QPushButton* b3 = new QPushButton("...");

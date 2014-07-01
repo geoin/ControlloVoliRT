@@ -73,6 +73,8 @@ class dbox: public QDialog {
     Q_OBJECT
 public:
     dbox(QgisInterface* mi);
+    virtual QStringList getArgs() { return QStringList(); }
+
 protected slots:
     void _report(bool);
     void _exec(bool);
@@ -119,6 +121,9 @@ class Check_ta: public dbox {
     Q_OBJECT
 public:
     Check_ta(QgisInterface* mi);
+
+    virtual QStringList getArgs();
+
 protected slots:
     bool _dirlist1(bool);
     bool _dirlist2(bool);
