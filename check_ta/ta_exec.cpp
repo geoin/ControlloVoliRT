@@ -200,27 +200,8 @@ Doc_Item ta_exec::_initpg1()
 	ss1 << "Tolleranza altimetrica " << _TA_PA << " m";
 	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 	
-	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
-	
-	Poco::XML::AttributesImpl attrs;
-	attrs.addAttribute("", "", "cols", "", "6");
-	tab = tab->add_item("tgroup", attrs);
-	
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-
-	attrs.clear();
-	attrs.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attrs)->append("Codice");
-	row->add_item("entry", attrs)->append("Foto Sx");
-	row->add_item("entry", attrs)->append("Foto Dx");
-	row->add_item("entry", attrs)->append("sc X");
-	row->add_item("entry", attrs)->append("sc Y");
-	row->add_item("entry", attrs)->append("Sc Z");
-
-	Doc_Item tbody = tab->add_item("tbody");
-	return tbody;
+	/**/
+	return sec;
 }
 Doc_Item ta_exec::_initpg2()
 {
@@ -236,31 +217,11 @@ Doc_Item ta_exec::_initpg2()
 	ss1 << "Massima differenza tra i valori di pitch e roll " << _T_PR << " mdeg";
 	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 	std::stringstream ss2;
-	ss2 << "Massima differenza tra i valori ddellheading " << _T_PR << " mdeg";
+	ss2 << "Massima differenza tra i valori dell'heading " << _T_PR << " mdeg";
 	itl->add_item("listitem")->add_item("para")->append(ss2.str());
 
-	Doc_Item tab = sec->add_item("table");
-	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
-	
-	Poco::XML::AttributesImpl attrs;
-	attrs.addAttribute("", "", "cols", "", "7");
-	tab = tab->add_item("tgroup", attrs);
-	
-	Doc_Item thead = tab->add_item("thead");
-	Doc_Item row = thead->add_item("row");
-	
-	attrs.clear();
-	attrs.addAttribute("", "", "align", "", "center");
-	row->add_item("entry", attrs)->append("Foto");
-	row->add_item("entry", attrs)->append("sc pc-X");
-	row->add_item("entry", attrs)->append("sc pc-Y");
-	row->add_item("entry", attrs)->append("sc pc-Z");
-	row->add_item("entry", attrs)->append("sc omega");
-	row->add_item("entry", attrs)->append("sc fi");
-	row->add_item("entry", attrs)->append("Sc ka");
-
-	Doc_Item tbody = tab->add_item("tbody");
-	return tbody;
+	/**/
+	return sec;
 }
 
 /// checks for differences between two triangulations
@@ -499,6 +460,28 @@ bool ta_exec::_read_image_pat(VDP_MAP& vdps, const CPT_MAP& pm, CPT_VDP& pts)
 }
 bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 {
+	Doc_Item tableSec = _initpg1();
+	Doc_Item tab = tableSec->add_item("table");
+	tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
+	
+	Poco::XML::AttributesImpl attrs;
+	attrs.addAttribute("", "", "cols", "", "6");
+	tab = tab->add_item("tgroup", attrs);
+	
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+
+	attrs.clear();
+	attrs.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attrs)->append("Codice");
+	row->add_item("entry", attrs)->append("Foto Sx");
+	row->add_item("entry", attrs)->append("Foto Dx");
+	row->add_item("entry", attrs)->append("sc X");
+	row->add_item("entry", attrs)->append("sc Y");
+	row->add_item("entry", attrs)->append("Sc Z");
+
+	Doc_Item tbody = tab->add_item("tbody");
+
 	Doc_Item sec = _article->get_item("section");
 	if ( sec.get() == NULL )
 		return false;
@@ -507,7 +490,6 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 		ss << "Tutti i punti di controllo rientrano nelle tolleranze";
 		sec->add_item("para")->append(ss.str());
 	} else {
-		Doc_Item row = _initpg1();
 		CPT_MAP::const_iterator it;
 		for ( it = pm.begin(); it != pm.end(); it++) {
 			std::pair<CPT_VDP::const_iterator, CPT_VDP::const_iterator> ret;
@@ -534,7 +516,7 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 						sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
 					else
 						sc = pc - pt;//DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
-					if ( !_add_point_to_table(row, cod, nome1, nome2, sc) )
+					if ( !_add_point_to_table(tbody, cod, nome1, nome2, sc) )
 						_cpt_out_tol.push_back(cod);
 				}
 				nome1 = nome2;
@@ -638,6 +620,29 @@ bool ta_exec::_check_cpt()
 }
 bool ta_exec::_check_differences()
 {
+	Doc_Item tableSec = _initpg2();
+	Doc_Item tab = tableSec->add_item("table");
+	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
+	
+	Poco::XML::AttributesImpl attrs;
+	attrs.addAttribute("", "", "cols", "", "7");
+	tab = tab->add_item("tgroup", attrs);
+	
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+	
+	attrs.clear();
+	attrs.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attrs)->append("Foto");
+	row->add_item("entry", attrs)->append("sc pc-X");
+	row->add_item("entry", attrs)->append("sc pc-Y");
+	row->add_item("entry", attrs)->append("sc pc-Z");
+	row->add_item("entry", attrs)->append("sc omega");
+	row->add_item("entry", attrs)->append("sc fi");
+	row->add_item("entry", attrs)->append("Sc ka");
+
+	Doc_Item tbody = tab->add_item("tbody");
+
 	if ( _vdp_name_2.empty() )
 		return true;
 		
@@ -652,7 +657,6 @@ bool ta_exec::_check_differences()
 			ss << "I due risultati sono compatibili";
 			sec->add_item("para")->append(ss.str());
 		} else {
-			Doc_Item row = _initpg2();
 
 			//read_cams(cnn, _map_strip_cam);
 
@@ -669,7 +673,7 @@ bool ta_exec::_check_differences()
 					VecOri pc = vdp1.Pc - vdp2.Pc;
 					VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
 
-					if ( !_add_point_to_table(row, nome, pc, at) )
+					if ( !_add_point_to_table(tbody, nome, pc, at) )
 						_tria_out_tol.push_back(nome);
 				}
 			}
