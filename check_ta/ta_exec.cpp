@@ -621,6 +621,10 @@ bool ta_exec::_check_cpt()
 bool ta_exec::_check_differences()
 {
 	Doc_Item tableSec = _initpg2();
+
+	if ( _vdp_name_2.empty() )
+		return true;
+
 	Doc_Item tab = tableSec->add_item("table");
 	tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
 	
@@ -642,9 +646,6 @@ bool ta_exec::_check_differences()
 	row->add_item("entry", attrs)->append("Sc ka");
 
 	Doc_Item tbody = tab->add_item("tbody");
-
-	if ( _vdp_name_2.empty() )
-		return true;
 		
 	std::cout << "Confronto tra i risultati di due calcoli" << std::endl;
 
