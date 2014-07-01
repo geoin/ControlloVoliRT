@@ -375,7 +375,7 @@ void Check_gps::_optype(int index)
 
 QStringList Check_ta::getArgs() {
     QStringList args;
-    args << QString(PARAM_PREFIX("d")) + "\"" + _prj->text() + "\"";
+    args << QString(PARAM_PREFIX("d")) + _prj->text();
 
     QString par;
 
