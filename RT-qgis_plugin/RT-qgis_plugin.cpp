@@ -404,8 +404,8 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l2 = new QLabel("File da confrontare:");
     _f2 = new QLineEdit;
-    QString q2 = qs.value("TA_CFG", "").toString();
-    _f2->setText(q2);
+    //QString q2 = qs.value("TA_CFG", "").toString();
+    //_f2->setText(q2);
     //if ( !q2.isEmpty() )
     //    _args[2] = QString(PARAM_PREFIX("c")) + q2;
 
@@ -420,8 +420,8 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l3 = new QLabel("File Osservazioni:");
     _f3 = new QLineEdit;
-    QString q3 = qs.value("TA_OBS", "").toString();
-    _f3->setText(q3);
+    //QString q3 = qs.value("TA_OBS", "").toString();
+    //_f3->setText(q3);
     //if ( !q3.isEmpty() )
     //    _args[3] = QString(PARAM_PREFIX("o")) + q3;
 
