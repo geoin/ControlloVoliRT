@@ -49,6 +49,8 @@ public:
 	void set_vdp_name2(const std::string& nome);
 	void set_obs_name(const std::string& nome);
 	//void set_ref_scale(const std::string& nomevalue);
+	bool isDiffValid(VecOri& pt, VecOri& at);
+	bool isPointValid(const DPOINT& sc);
 
 private:
 	//bool _read_cam(void);
@@ -95,6 +97,8 @@ private:
 	
 	// spatial lite connection
 	CV::Util::Spatialite::Connection cnn;
+
+	bool _tableHasHeader;
 };
 
 class check_ta: public Poco::Util::Application {

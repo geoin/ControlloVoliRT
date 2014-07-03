@@ -225,6 +225,24 @@ Doc_Item ta_exec::_initpg2()
 }
 
 /// checks for differences between two triangulations
+
+bool ta_exec::isDiffValid(VecOri& pt, VecOri& sc) {
+	for (int i = 0; i < 3; i++) {
+		if (fabs(pt[i]) > _T_CP) {
+			return false;
+		}
+	}
+	for (int i = 0; i < 2; i++) {
+		if (fabs(sc[i]) > _T_PR) {
+			return false;
+		}
+	}
+	if (fabs(sc[2]) > _T_H) {
+		return false;
+	}
+	return true;
+}
+
 bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc)
 {
 	Doc_Item row = tbody->add_item("row");
@@ -242,6 +260,19 @@ bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& foto, const
 	b &= print_item(row, attrr, sc[1], abs_less_ty, _T_PR);
 	b &= print_item(row, attrr, sc[2], abs_less_ty, _T_H);
 	return b; // false if at least one element is out of tolerance
+}
+
+bool ta_exec::isPointValid(const DPOINT& sc) {
+	if (sc.x == 0 || sc.x > _TA_PA) {
+		return false;
+	}
+	if (sc.y == 0 || sc.y > _TA_PA) {
+		return false;
+	}
+	if (sc.z == 0 || sc.z > _TA_PA) {
+		return false;
+	}
+	return true;
 }
 
 bool ta_exec::_add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc)
@@ -462,6 +493,70 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 {
     Doc_Item tableSec = _initpg1();
 
+	Doc_Item tbody;
+	bool header = false;
+
+	CPT_MAP::const_iterator it;
+	for ( it = pm.begin(); it != pm.end(); it++) {
+		std::pair<CPT_VDP::const_iterator, CPT_VDP::const_iterator> ret;
+		std::string cod = it->first;
+		DPOINT pc = it->second;
+		ret = pts.equal_range(cod);
+		CPT_VDP::const_iterator it1 = ret.first;
+		std::string nome1 = it1->second;
+		it1++;
+		for (; it1 != ret.second; it1++) {
+			std::string nome2 = it1->second;
+			if ( get_strip(nome1) == get_strip(nome2) ) {
+				// only for images of the same strip
+				VDPC& vdp1 = vdps[nome1];
+				VDPC& vdp2 = vdps[nome2];
+				Collimation c1 = vdp1[cod];
+				Collimation c2 = vdp2[cod];
+				DPOINT pt;
+				vdp1.Img_TerA(vdp2, c1, c2, pt);
+				DPOINT sc;
+				if ( pc.x == 0 && pc.y == 0 )
+					sc = DPOINT(0, 0, pc.z - pt.z);
+				else if ( pc.z == 0 )
+					sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
+				else
+					sc = pc - pt;//DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
+
+				if (isPointValid(sc) == false) {
+					if (header == false) {
+						Doc_Item tab = tableSec->add_item("table");
+						tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
+
+						Poco::XML::AttributesImpl attrs;
+						attrs.addAttribute("", "", "cols", "", "6");
+						tab = tab->add_item("tgroup", attrs);
+
+						Doc_Item thead = tab->add_item("thead");
+						Doc_Item row = thead->add_item("row");
+
+						attrs.clear();
+						attrs.addAttribute("", "", "align", "", "center");
+						row->add_item("entry", attrs)->append("Codice");
+						row->add_item("entry", attrs)->append("Foto Sx");
+						row->add_item("entry", attrs)->append("Foto Dx");
+						row->add_item("entry", attrs)->append("sc X");
+						row->add_item("entry", attrs)->append("sc Y");
+						row->add_item("entry", attrs)->append("Sc Z");
+
+						tbody = tab->add_item("tbody");
+						header = true;
+					}
+					if ( !_add_point_to_table(tbody, cod, nome1, nome2, sc) ) {
+						_cpt_out_tol.push_back(cod);
+					}
+				}
+			}
+			nome1 = nome2;
+		}
+	}
+
+	
 	Doc_Item sec = _article->get_item("section");
 	if ( sec.get() == NULL )
 		return false;
@@ -470,61 +565,6 @@ bool ta_exec::_calc_pts(VDP_MAP& vdps, const CPT_MAP& pm, const CPT_VDP& pts)
 		ss << "Tutti i punti di controllo rientrano nelle tolleranze";
 		sec->add_item("para")->append(ss.str());
 	} else {
-
-        Doc_Item tab = tableSec->add_item("table");
-        tab->add_item("title")->append("scarti tra valori nominali e valori misurati");
-
-        Poco::XML::AttributesImpl attrs;
-        attrs.addAttribute("", "", "cols", "", "6");
-        tab = tab->add_item("tgroup", attrs);
-
-        Doc_Item thead = tab->add_item("thead");
-        Doc_Item row = thead->add_item("row");
-
-        attrs.clear();
-        attrs.addAttribute("", "", "align", "", "center");
-        row->add_item("entry", attrs)->append("Codice");
-        row->add_item("entry", attrs)->append("Foto Sx");
-        row->add_item("entry", attrs)->append("Foto Dx");
-        row->add_item("entry", attrs)->append("sc X");
-        row->add_item("entry", attrs)->append("sc Y");
-        row->add_item("entry", attrs)->append("Sc Z");
-
-        Doc_Item tbody = tab->add_item("tbody");
-
-		CPT_MAP::const_iterator it;
-		for ( it = pm.begin(); it != pm.end(); it++) {
-			std::pair<CPT_VDP::const_iterator, CPT_VDP::const_iterator> ret;
-			std::string cod = it->first;
-			DPOINT pc = it->second;
-			ret = pts.equal_range(cod);
-			CPT_VDP::const_iterator it1 = ret.first;
-			std::string nome1 = it1->second;
-			it1++;
-			for (; it1 != ret.second; it1++) {
-				std::string nome2 = it1->second;
-				if ( get_strip(nome1) == get_strip(nome2) ) {
-					// only for images of the same strip
-					VDPC& vdp1 = vdps[nome1];
-					VDPC& vdp2 = vdps[nome2];
-					Collimation c1 = vdp1[cod];
-					Collimation c2 = vdp2[cod];
-					DPOINT pt;
-					vdp1.Img_TerA(vdp2, c1, c2, pt);
-					DPOINT sc;
-					if ( pc.x == 0 && pc.y == 0 )
-						sc = DPOINT(0, 0, pc.z - pt.z);
-					else if ( pc.z == 0 )
-						sc = DPOINT(pc.x - pt.x, pc.y - pt.y, 0);
-					else
-						sc = pc - pt;//DPOINT(pc.x - pt.x, pc.y - pt.y, pc.z - pt.z);
-					if ( !_add_point_to_table(tbody, cod, nome1, nome2, sc) )
-						_cpt_out_tol.push_back(cod);
-				}
-				nome1 = nome2;
-			}
-		}
-
 		std::stringstream ss;
 		ss << "I seguenti punti risultano fuori dalle tolleranze";
 		sec->add_item("para")->append(ss.str());
@@ -620,6 +660,7 @@ bool ta_exec::_check_cpt()
     }
 	return true;
 }
+
 bool ta_exec::_check_differences()
 {
 	Doc_Item tableSec = _initpg2();
@@ -633,54 +674,62 @@ bool ta_exec::_check_differences()
 		Doc_Item sec = _article->get_item("section");
 		if ( sec.get() == NULL )
 			return false;
+
+		//read_cams(cnn, _map_strip_cam);
+
+		VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
+		VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
+		_read_vdp(_vdp_name, vdps1);
+		_read_vdp(_vdp_name_2, vdps2);
+		VDP_MAP::iterator it;
+
+		bool header = false;
+		Doc_Item tbody;
+		
+		for (it = vdps1.begin(); it != vdps1.end(); it++) {
+			std::string nome = it->first;
+			if ( vdps2.find(nome) != vdps2.end() ) {
+				VDP& vdp1 = vdps1[nome];
+				VDP& vdp2 = vdps2[nome];
+				VecOri pc = vdp1.Pc - vdp2.Pc;
+				VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
+				if (isDiffValid(pc, at) == false) {
+					if (header == false) {
+						Doc_Item tab = tableSec->add_item("table");
+						tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
+
+						Poco::XML::AttributesImpl attrs;
+						attrs.addAttribute("", "", "cols", "", "7");
+						tab = tab->add_item("tgroup", attrs);
+
+						Doc_Item thead = tab->add_item("thead");
+						Doc_Item row = thead->add_item("row");
+
+						attrs.clear();
+						attrs.addAttribute("", "", "align", "", "center");
+						row->add_item("entry", attrs)->append("Foto");
+						row->add_item("entry", attrs)->append("sc pc-X");
+						row->add_item("entry", attrs)->append("sc pc-Y");
+						row->add_item("entry", attrs)->append("sc pc-Z");
+						row->add_item("entry", attrs)->append("sc omega");
+						row->add_item("entry", attrs)->append("sc fi");
+						row->add_item("entry", attrs)->append("Sc ka");
+
+						tbody = tab->add_item("tbody");
+						header = true;
+					}
+					if ( !_add_point_to_table(tbody, nome, pc, at) ) {
+						_tria_out_tol.push_back(nome);
+					}
+				}
+			}
+		}
+
 		if ( _tria_out_tol.empty() ) {
 			std::stringstream ss;
 			ss << "I due risultati sono compatibili";
 			sec->add_item("para")->append(ss.str());
         } else {
-
-            Doc_Item tab = tableSec->add_item("table");
-            tab->add_item("title")->append("scarti tra i valori risultanti dai due calcoli");
-
-            Poco::XML::AttributesImpl attrs;
-            attrs.addAttribute("", "", "cols", "", "7");
-            tab = tab->add_item("tgroup", attrs);
-
-            Doc_Item thead = tab->add_item("thead");
-            Doc_Item row = thead->add_item("row");
-
-            attrs.clear();
-            attrs.addAttribute("", "", "align", "", "center");
-            row->add_item("entry", attrs)->append("Foto");
-            row->add_item("entry", attrs)->append("sc pc-X");
-            row->add_item("entry", attrs)->append("sc pc-Y");
-            row->add_item("entry", attrs)->append("sc pc-Z");
-            row->add_item("entry", attrs)->append("sc omega");
-            row->add_item("entry", attrs)->append("sc fi");
-            row->add_item("entry", attrs)->append("Sc ka");
-
-            Doc_Item tbody = tab->add_item("tbody");
-
-			//read_cams(cnn, _map_strip_cam);
-
-			VDP_MAP vdps1; // mappa nome fotogramma, parametri assetto
-			VDP_MAP vdps2; // mappa nome fotogramma, parametri assetto
-			_read_vdp(_vdp_name, vdps1);
-			_read_vdp(_vdp_name_2, vdps2);
-			VDP_MAP::iterator it;
-			for (it = vdps1.begin(); it != vdps1.end(); it++) {
-				std::string nome = it->first;
-				if ( vdps2.find(nome) != vdps2.end() ) {
-					VDP& vdp1 = vdps1[nome];
-					VDP& vdp2 = vdps2[nome];
-					VecOri pc = vdp1.Pc - vdp2.Pc;
-					VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
-
-					if ( !_add_point_to_table(tbody, nome, pc, at) )
-						_tria_out_tol.push_back(nome);
-				}
-			}
-
 			std::stringstream ss;
 			ss << "I due risultati sono diversi nei seguenti fotogrammi";
 			sec->add_item("para")->append(ss.str());
