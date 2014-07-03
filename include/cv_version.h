@@ -1,10 +1,10 @@
 #ifndef CV_VERSION_H
 #define CV_VERSION_H
 
-#define CHECK_VERSION "1.2.3"
-#define CHECK_DATE "27/06/2014"
+#define CHECK_VERSION "1.2.4"
+#define CHECK_DATE "04/07/2014"
 
-#include <iostream>
+#include <iostream> 
 #include <sstream>
 
 namespace CV {
