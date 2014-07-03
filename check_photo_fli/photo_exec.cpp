@@ -1246,12 +1246,17 @@ void photo_exec::_update_assi_volo()
 		std::string t1 = ft1[i].time;
 		for ( size_t j = 0; j < ft2.size(); j++) {
 			if ( ft2[j].strip == ft1[i].strip ) {
+				if ( ft2[j].mission != ft1[i].mission ) {
+					std::cout << "strip " << ft1[i].strip << " non correttamente abbinata alla traccia GPS" << std::endl;
+					continue;
+				}
 				std::string t2 = ft2[j].time;
 				if ( t1 > t2 )
 					std::swap(t1, t2);
 
 				std::stringstream sql;
-				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' ORDER BY TIME";
+				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' and MISSION= '" <<
+					ft1[i].mission << "' ORDER BY TIME";
 				stm.prepare(sql.str());
 				rs = stm.recordset();
 				bool first = true;
