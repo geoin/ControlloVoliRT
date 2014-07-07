@@ -23,7 +23,7 @@ win32 {
 
 unix {
     CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundationd -lPocoUtild -lPocoXMLd -lCVUtild -lphoto_utild -lsqlite3 -lspatialite -lgdal
+            LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lCVUtil -lphoto_util -lsqlite3 -lspatialite -lgdal
             TARGET = $$join(TARGET,,,d)
     } else {
             LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lCVUtil -lphoto_util -lspatialite -lsqlite3 -lgdal
