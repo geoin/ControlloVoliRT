@@ -7,10 +7,10 @@
 #define MyAppURL "http://www.geoin.it"
 #define MyAppExeName "ControlloVoliRT"
 #define vcfiles "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT"
-#define MyBaseDir "C:\ControlloVoliRT"
-#define MyBinDir "C:\ControlloVoliRT\bin"
-#define MyLibDir "C:\ControlloVoliRT\lib"
-#define MyIconDir "C:\ControlloVoliRT\icon"
+#define MyBaseDir "D:\projects\RT\ControlloVoliRT"
+#define MyBinDir "D:\projects\RT\ControlloVoliRT\bin"
+#define MyLibDir "D:\projects\RT\ControlloVoliRT\lib"
+#define MyIconDir "D:\projects\RT\ControlloVoliRT\icon"
 #define MyOutDir "C:\OSGeo4W\apps\qgis\"
 #define Qgis GetEnv('QGIS_PREFIX_PATH')
 [Setup]
@@ -55,17 +55,17 @@ Name: "Spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "CV_QGIS_PREFIX_PATH"; ValueData: {app}\
 
 [Files]
-Source: "{#MyLibDir}\PocoFoundation.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyLibDir}\PocoXML.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyLibDir}\PocoUtil.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyLibDir}\PocoZip.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyLibDir}\gdal.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyLibDir}\ziplib.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoFoundation.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoXML.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoUtil.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoZip.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\gdal.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\ziplib.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyLibDir}\rtklib.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyLibDir}\dem_interpolate.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyLibDir}\photo_util.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyBinDir}\CVLoader.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyLibDir}\RT-qgis_plugin.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\RT-qgis_plugin.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_photo.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_gps.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_ta.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion

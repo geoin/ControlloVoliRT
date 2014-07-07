@@ -8,9 +8,9 @@
 #define MyAppExeName "DocBookRT"
 #define vcfiles "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT"
 ; cartella da cui prelevare i files
-#define MySourceDir "D:\Docbook" 
+#define MySourceDir "C:\DocBookRT" 
 ; cartella in cui registare il file per il setup
-#define MyBaseDir "C:\ControlloVoliRT"
+#define MyBaseDir "D:\projects\RT\ControlloVoliRT"
 ; cartella di default in cui installare i dati
 #define MyOutDir "C:\DocBookRT"
 
@@ -58,10 +58,10 @@ Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environmen
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "DOCBOOKRT"; ValueData: "{app}\docbookx.dtd" 
 
 [Files]
-Source: "D:\docbook\docbook-xsl-1.78.1\*"; DestDir: "{app}\docbook-xsl-1.78.1"; Flags: recursesubdirs
-Source: "D:\docbook\fop-1.0\*"; DestDir: "{app}\fop-1.0"; Flags: recursesubdirs
-Source: "D:\docbook\lib\*"; DestDir: "{app}\lib"; Flags: recursesubdirs
-Source: "D:\docbook\docbookx.dtd"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "{#MySourceDir}\docbook-xsl-1.78.1\*"; DestDir: "{app}\docbook-xsl-1.78.1"; Flags: recursesubdirs
+Source: "{#MySourceDir}\fop-1.0\*"; DestDir: "{app}\fop-1.0"; Flags: recursesubdirs
+Source: "{#MySourceDir}\lib\*"; DestDir: "{app}\lib"; Flags: recursesubdirs
+Source: "{#MySourceDir}\docbookx.dtd"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Code]
 // procedura per verificare se un valore è già stato settato
