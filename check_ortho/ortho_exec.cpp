@@ -398,7 +398,8 @@ bool ortho_exec::_final_report()
 	std::cout << "Verifica presenza di tutte le tavole previste" << std::endl;
 
 	std::stringstream sql;
-	sql << "select * from " << table_rt << " a left join " << table << " b on a.foglio=b.foglio where b.foglio is null";
+	//sql << "select * from " << table_rt << " a left join " << table << " b on a.foglio=b.foglio where b.foglio is null";
+	sql << "select a.FOGLIO as FOGLIO from " << table_rt << " a left join " << table << " b on a.foglio=b.foglio where b.foglio is null";
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
@@ -453,6 +454,11 @@ bool ortho_exec::_final_report()
 		throw std::runtime_error("Blocco fotogrammi non tovato");
 	
 	std::cout << "Layer:" << CONTORNO_RT << std::endl;
+
+	std::stringstream sqla;
+	sqla << "SELECT CreateSpatialIndex('" << CONTORNO_RT << "', 'geom')";
+	cnn.execute_immediate(sqla.str());
+
 	std::stringstream sql5;
 	sql5 << "select AsBinary(geom) from " << CONTORNO_RT;
 	Statement stm5(cnn);

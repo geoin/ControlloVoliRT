@@ -32,6 +32,7 @@
 #include "CVUtil/cvspatialite.h"
 #include "CVUtil/ogrgeomptr.h"
 #include "docbook/docbook.h"
+#include "common/util.h"
 
 class DSM_Factory;
 class OGRPolygon;
@@ -47,6 +48,19 @@ public:
 	std::string foto;
 	double dpix;
 };
+typedef struct feature {
+	std::string strip;
+	std::string time;
+	std::string time2;
+	std::string date;
+	std::string mission;
+	int nsat;
+	int nbasi;
+	double pdop;
+	double dist;
+	CV::Util::Geometry::OGRGeomPtr pt;
+} feature;
+typedef std::map<std::string, feature> end_point_axis_info;
 
 class photo_exec {
 public:
@@ -65,6 +79,9 @@ private:
 	bool _read_vdp(std::map<std::string, VDP>& vdps);
 	bool _calc_vdp(std::map<std::string, VDP>& vdps);
 	void _assi_from_vdp(std::map<std::string, VDP>& vdps);
+	void process_end_point_axis_info(const Blob& pt, end_point_axis_info& epai);
+	void update_strips(std::vector<feature>& ft);
+	bool select_mission(end_point_axis_info& ep1, end_point_axis_info& ep2, feature& f, double len);
 
 	//bool _strip_cam(void); // strip camera association
 	bool _read_dem(void);

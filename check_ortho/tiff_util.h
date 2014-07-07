@@ -79,7 +79,7 @@ public:
 		ty_palette = 3,
 		ty_notsupported = -1
 };
-    CV_image(): _tif(NULL), col(NULL), bf(NULL), _dimx(0), _dimy(0) {
+    CV_image(): _tif(NULL), col(NULL), bf(NULL), _buffs(NULL), _dimx(0), _dimy(0), bitScale(8) {
 		_prevW = TIFFSetWarningHandler(NULL);
 		_prevE = TIFFSetErrorHandler(NULL);
 	}
@@ -108,11 +108,18 @@ public:
 	unsigned char* bf;
 	rgb* col;
 private:
+	unsigned char*	_buffs;
 	TIFF* _tif ;
 	long _dimx, _dimy;
+	long _actStrip;
 	long _nbands;
 	long _bit_sample;
 	IMG_TYPE _type;
+
+	long	RowStrip;
+	short	PhotoInt;
+	short	bitScale;
+
 	TIFFErrorHandler _prevW;
 	TIFFErrorHandler _prevE;
 };

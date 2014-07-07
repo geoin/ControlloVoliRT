@@ -14,7 +14,7 @@ namespace CV {
                 _geom = gptr._geom;
             }
 
-            OGRGeomPtr::OGRGeomPtr( std::vector<unsigned char>  &v ){
+            OGRGeomPtr::OGRGeomPtr(const std::vector<unsigned char> &v ){
                 _assign(v);
             }
 
@@ -27,7 +27,7 @@ namespace CV {
                 return *this;
             }
 
-            OGRGeomPtr &OGRGeomPtr::operator=( std::vector<unsigned char>  &v ){
+            OGRGeomPtr &OGRGeomPtr::operator=( std::vector<unsigned char>  const &v ){
                 _assign(v);
                 return (*this);
             }
@@ -45,10 +45,11 @@ namespace CV {
                 return _geom.get();
             }
 
-            void OGRGeomPtr::_assign(std::vector<unsigned char>  &v){
+            void OGRGeomPtr::_assign(std::vector<unsigned char> const &v){
                 OGRGeometryFactory gf;
                 OGRGeometry *geom;
-                if ( gf.createFromWkb(&v[0],NULL, &geom) != OGRERR_NONE )
+                unsigned char* c = (unsigned char*) &v[0];
+                if ( gf.createFromWkb(c, NULL, &geom) != OGRERR_NONE )
                     throw std::runtime_error("Invalid import from WKB");
                 _geom.assign(geom);
             }

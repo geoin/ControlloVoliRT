@@ -22,10 +22,10 @@ namespace CV {
                 ~OGRGeomPtr();
                 OGRGeomPtr();
                 OGRGeomPtr( OGRGeomPtr const &gptr );
-                OGRGeomPtr( std::vector<unsigned char> &v );
+                OGRGeomPtr( std::vector<unsigned char> const &v );
                 OGRGeomPtr( OGRGeometry  *g );
                 OGRGeomPtr &operator=( OGRGeomPtr const &gptr );
-                OGRGeomPtr &operator=( std::vector<unsigned char>  &v );
+                OGRGeomPtr &operator=( std::vector<unsigned char>  const &v );
                 OGRGeomPtr &operator=( OGRGeometry *g );
 
                 OGRGeometry *operator->();
@@ -36,7 +36,7 @@ namespace CV {
                 operator std::vector<unsigned char> const &() const;
 
             private:
-                void _assign(std::vector<unsigned char> &v);
+                void _assign(std::vector<unsigned char> const &v);
                 void _assign(OGRGeometry *g);
 
                 std::vector<unsigned char> mutable _v;
