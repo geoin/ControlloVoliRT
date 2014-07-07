@@ -1166,16 +1166,8 @@ void photo_exec::process_end_point_axis_info(const Blob& pt, end_point_axis_info
 	OGRPoint* pti = (OGRPoint*) ((OGRGeometry*) gp);
 
 	std::stringstream sql;
-	//sql << "SELECT *, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo FROM " << GPS_TABLE_NAME << " WHERE ST_Distance(ST_Transform(geom, " << SRID <<
-	//sql << "SELECT *, AsBinary(geom) as geo FROM " << GPS_TABLE_NAME << " WHERE ST_Distance(geom, ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << "))< 0.0007";
-	
-//ROWID 
-//    FROM SpatialIndex
-//    WHERE f_table_name='DB=ext.comuni' 
-//       AND search_frame = c1.geometry
 
-
-	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo FROM " << GPS_TABLE_NAME << 
+	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo, AsBinary(geom) as geoWGS FROM " << GPS_TABLE_NAME << 
 		" WHERE rowid in( select rowid from SpatialIndex where f_table_name='gps' and  search_frame=MakeCircle(ST_X(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), ST_Y(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), 0.01))";
 
 	Statement stm(cnn);
@@ -1185,7 +1177,7 @@ void photo_exec::process_end_point_axis_info(const Blob& pt, end_point_axis_info
 	Recordset rs = stm.recordset();
 	while ( !rs.eof() ) {
 		feature f;
-		Blob b = rs["geo"].toBlob();
+		Blob b = rs["geo"].toBlob(); // geometria utm
         OGRGeomPtr g1 = b;
 		OGRPoint* pti1 = (OGRPoint*) ((OGRGeometry*) g1);
 		
@@ -1203,6 +1195,11 @@ void photo_exec::process_end_point_axis_info(const Blob& pt, end_point_axis_info
 			f.nbasi = rs["NBASI"].toInt();
 			f.pdop = rs["PDOP"].toDouble();
 			f.pt = g1;
+
+			Blob bwgs = rs["geoWGS"].toBlob();
+			OGRGeomPtr gwgs = bwgs;
+			f.ptwgs = gwgs;
+
 			epai[f.mission] = f;
 		}
 		rs.next();
@@ -1243,7 +1240,7 @@ void photo_exec::update_strips(std::vector<feature>& ft)
 			if ( first ) {
 				tm0 = from_string(rs["TIME"]);
 				// determina l'altezza media del sole sull'orizzonte
-				OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft[i].pt);
+				OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft[i].ptwgs);
 				Sun sun(pt->getY(), pt->getX());
 				int td;
 				std::stringstream ss2;

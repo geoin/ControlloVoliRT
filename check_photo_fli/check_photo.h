@@ -59,6 +59,7 @@ typedef struct feature {
 	double pdop;
 	double dist;
 	CV::Util::Geometry::OGRGeomPtr pt;
+	CV::Util::Geometry::OGRGeomPtr ptwgs;
 } feature;
 typedef std::map<std::string, feature> end_point_axis_info;
 
