@@ -109,6 +109,7 @@ bool CV_image::open(const std::string& nome)
 	if ( _tif == NULL ) {
 		return false;
 	}
+	_actStrip = -1;
 
 	TIFFGetField(_tif, TIFFTAG_IMAGEWIDTH, &_dimx);
 	TIFFGetField(_tif, TIFFTAG_IMAGELENGTH, &_dimy);
@@ -116,17 +117,24 @@ bool CV_image::open(const std::string& nome)
 	short v;
 	TIFFGetField(_tif, TIFFTAG_BITSPERSAMPLE, &v); _bit_sample = v;
 	TIFFGetField(_tif, TIFFTAG_SAMPLESPERPIXEL, &v); _nbands = v;
+	TIFFGetField(_tif, TIFFTAG_ROWSPERSTRIP, &RowStrip);
 
-	TIFFGetField(_tif, TIFFTAG_PHOTOMETRIC, &v);
-	if ( v == PHOTOMETRIC_MINISWHITE || v == PHOTOMETRIC_MINISBLACK ) {
+	TIFFGetField(_tif, TIFFTAG_PHOTOMETRIC, &PhotoInt);
+	if ( _nbands == 3 && PhotoInt == 1 )
+		PhotoInt = PHOTOMETRIC_RGB;
+
+	if ( PhotoInt == PHOTOMETRIC_MINISWHITE || PhotoInt == PHOTOMETRIC_MINISBLACK ) {
 		_type = _bit_sample == 1 ? ty_bilevel : ty_gray;
 		bf = new unsigned char[_dimx];
-	} else if ( v == PHOTOMETRIC_RGB ) {
+	} else if ( PhotoInt == PHOTOMETRIC_RGB ) {
 		_type = ty_rgb;
 		col = new rgb[_dimx];
 		bf = new unsigned char[_dimx];
 	} else
 		_type = ty_notsupported;
+
+	int sz = TIFFStripSize(_tif);
+	_buffs = (unsigned char*) _TIFFmalloc(sz);
 	return true;
 }
 void CV_image::close()
@@ -137,23 +145,155 @@ void CV_image::close()
 	if ( col != NULL )
 		delete [] col;
 	if ( bf != NULL )
-		bf = NULL;
+		delete [] bf;
+	if ( _buffs != NULL )
+		_TIFFfree(_buffs);
 	col = NULL;
 	bf = NULL;
+	_buffs = NULL;
 }
+//bool CV_image::read_line(int line)
+//{
+//	if ( line < 0 || line >= _dimy )
+//		return false;
+//
+//	uint32 strip = TIFFComputeStrip(_tif, line, 0);
+//	if ( _type == ty_rgb ) {
+//		TIFFReadEncodedStrip(_tif, strip, col, (tsize_t) -1);
+//	} else  if ( _type == ty_gray )
+//		TIFFReadEncodedStrip(_tif, strip, bf, (tsize_t) -1);
+//	else
+//		return false;
+//
+//	return true;
+//}
 bool CV_image::read_line(int line)
 {
-	if ( line < 0 || line >= _dimy )
-		return false;
+	long rws = 0;
+	// data reading
+	tstrip_t	strip;
+	//if ( tilex > 0 ) {
+	//	// modalità tile
+	//	strip = line / img->tiley;
+	//	if ( strip != _actStrip ) {
+	//		if ( img->Planar == 2 ) {
+	//			_readPlanarTile(img, line);
+	//		} else {
+	//			if ( img->PhotoInt == 6 ) {
+	//				_readJpgTile(img, line);
+	//			} else {
+	//				_readTile(img, line);
+	//			}
+	//		}
+	//		img->ActStrip = strip;
+	//	}
+	//	rws = img->tiley;
+	//} else {
+		// modalità strip
+		strip = TIFFComputeStrip(_tif, line, 0);
+		if ( strip != _actStrip ) {
+			//if ( img->Planar == 2 ) {
+			//	_readPlanarStrip(img, line);
+			//} else {
+			//	if ( img->PhotoInt == 6 ) {
+			//		_readJpgStrip(img, line, strip);
+			//	} else {
+					TIFFReadEncodedStrip((TIFF*) _tif, strip, _buffs, (tsize_t) -1);
+				//}
+			//}
+			_actStrip = strip;
+		}
+		rws = RowStrip;
+	//}
+	
+	// DATA FORMATTING
 
-	uint32 strip = TIFFComputeStrip(_tif, line, 0);
-	if ( _type == ty_rgb ) {
-		TIFFReadEncodedStrip(_tif, strip, col, (tsize_t) -1);
-	} else  if ( _type == ty_gray )
-		TIFFReadEncodedStrip(_tif, strip, bf, (tsize_t) -1);
-	else
-		return false;
+	// monochrome images
+	if ( PhotoInt <= 1 ) {
+		if ( _bit_sample == 8 ) { // 8 bit
+			uint32	off = (line - strip * rws) * _dimx;
+			memcpy(bf, &_buffs[off], _dimx);
+			return true;
+		}
+		//if ( _bit_sample == 16 ) { // 16 bit
+		//	uint32	off = 2 * ((line - strip * rws) * _dimx);
+		//	unsigned short* ubf = (unsigned short*) &_buffs[off];
+		//	img->bbufs = ubf;
+		//	for (int i = 0; i < n; i++) {
+		//		short v = (short) (ubf[i] >> img->bitScale);
+		//		if ( v < 0 ) v = 0; if ( v > 255 ) v = 255;
+		//		img->bf[i] = (BYTE) v;
+		//		//img->bf[i] = (BYTE) ((ubf[i] >> img->bitScale)  & 0xFF);
+		//	}
+		//	return 0;
+		//}
+		//if ( _bit_sample == 1 ) { // bilevel
+		//	PIXEL wh = ( img->PhotoInt == 0 ) ? 0 : 255;
+		//	uint32	off = (line - strip * img->RowStrip) * ((img->dimx + 7) / 8);
+		//	byteExpand(&img->buffs[off], img->bf, img->dimx, wh);
+		//	if ( x > 0 ) {
+		//		for (int i = 0, j = x; i < n; i++, j++)
+		//			img->bf[i] = img->bf[j];
+		//	}
+		//	return true;
+		//}
+	}
 
+	// palette images
+	//if ( img->PhotoInt == 3 ) {
+	//	uint32	off = (line - strip * rws) * img->dimx + x;
+	//	memcpy(img->bf, &img->buffs[off], n);
+	//	for (int i = 0; i < n; i ++) {
+	//		PIXEL lev = img->bf[i];
+	//		img->rgb[i].r = (img->lut->r[lev] >> 8) & 0XFF;
+	//		img->rgb[i].g = (img->lut->g[lev] >> 8) & 0XFF;
+	//		img->rgb[i].b = (img->lut->b[lev] >> 8) & 0XFF;
+	//	}
+	//	return true;
+	//}
+
+	// color images
+	if ( PhotoInt == 2 || PhotoInt == 6 ) {
+		if ( _bit_sample == 16 ) {
+			uint32	off = 6 * ((line - strip * rws) * _dimx);
+			unsigned short* ubf = (unsigned short*) &_buffs[off];
+			for (int i = 0; i < _dimx; i ++) {
+				int k = 3 * i;
+
+				short v = (short) (ubf[k + 0] >> bitScale);
+				if ( v < 0 ) v = 0; if ( v > 255 ) v = 255;
+				col[i].r = (unsigned char) v;
+
+				v = (short) (ubf[k + 1] >> bitScale);
+				if ( v < 0 ) v = 0; if ( v > 255 ) v = 255;
+				col[i].g = (unsigned char) v;
+				
+				v = (short) (ubf[k + 2] >> bitScale);
+				if ( v < 0 ) v = 0; if ( v > 255 ) v = 255;
+				col[i].b = (unsigned char) v;
+				col[i] = (unsigned char) (col[i].r * 0.30 + col[i].g * 0.59 + col[i].b * 0.11);
+			}
+			return true;
+		}
+		if (  _bit_sample == 8 ) {
+			uint32	off = _nbands * ((line - strip * rws) * _dimx);
+			unsigned char* b2 = &_buffs[off];
+			if ( _nbands == 3 ) {
+				memcpy(col, b2, 3 * _dimx);
+			} else {
+				for (int i = 0; i < _dimx; i ++) {
+					memcpy((unsigned char*) &col[i], b2, 3);
+
+					//memcpy((unsigned char*) &img->rgba[i], b2, 4);
+					b2 += _nbands;
+				}
+			}
+			for (int i = 0; i < _dimx; i ++)
+				bf[i] = (unsigned char) (col[i].r * 0.30 + col[i].g * 0.59 + col[i].b * 0.11);
+
+			return true;
+		}
+	}
 	return true;
 }
 /***********************************************************************/
@@ -172,6 +312,10 @@ int BorderLine::_getBackGround()
 				nwhite++;
 		}
 	}
+	// incomplete table if at least 1/10 of the pixels are background
+	unsigned long thr = (unsigned long) (_img.dimx() * _img.dimy() * 0.1);
+	if ( nblack < thr || nwhite < thr )
+		return -1;
 	if ( nblack > nwhite )
 		return 0;
 	else if ( nblack < nwhite )

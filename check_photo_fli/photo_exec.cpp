@@ -1159,18 +1159,177 @@ Poco::Timestamp from_string(const std::string time)
 	Poco::DateTime dm(2010, 1, 1, atoi(tok[0].c_str()), atoi(tok[1].c_str()), (int) sec, (int) msec);
 	return dm.timestamp();
 }
-typedef struct feature {
-	std::string strip;
-	std::string time;
-	std::string date;
-	std::string mission;
-	int nsat;
-	int nbasi;
-	double pdop;
-	OGRGeomPtr pt;
-} feature;
+
+void photo_exec::process_end_point_axis_info(const Blob& pt, end_point_axis_info& epai)
+{
+    OGRGeomPtr gp = pt;
+	OGRPoint* pti = (OGRPoint*) ((OGRGeometry*) gp);
+
+	std::stringstream sql;
+	//sql << "SELECT *, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo FROM " << GPS_TABLE_NAME << " WHERE ST_Distance(ST_Transform(geom, " << SRID <<
+	//sql << "SELECT *, AsBinary(geom) as geo FROM " << GPS_TABLE_NAME << " WHERE ST_Distance(geom, ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << "))< 0.0007";
+	
+//ROWID 
+//    FROM SpatialIndex
+//    WHERE f_table_name='DB=ext.comuni' 
+//       AND search_frame = c1.geometry
+
+
+	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo FROM " << GPS_TABLE_NAME << 
+		" WHERE rowid in( select rowid from SpatialIndex where f_table_name='gps' and  search_frame=MakeCircle(ST_X(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), ST_Y(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), 0.01))";
+
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+
+	stm[1].fromBlob(pt);
+	Recordset rs = stm.recordset();
+	while ( !rs.eof() ) {
+		feature f;
+		Blob b = rs["geo"].toBlob();
+        OGRGeomPtr g1 = b;
+		OGRPoint* pti1 = (OGRPoint*) ((OGRGeometry*) g1);
+		
+		f.dist = g1->Distance(gp);
+        f.mission = rs["MISSION"].toString();
+		bool insert = true;
+		if ( epai.find(f.mission) != epai.end() ) {
+			if ( epai[f.mission].dist < f.dist )
+				insert = false;
+		}
+		if ( insert ) {
+			f.time = rs["TIME"].toString();
+			f.date = rs["DATE"].toString();
+			f.nsat = rs["NSAT"].toInt();
+			f.nbasi = rs["NBASI"].toInt();
+			f.pdop = rs["PDOP"].toDouble();
+			f.pt = g1;
+			epai[f.mission] = f;
+		}
+		rs.next();
+	}
+}
+void photo_exec::update_strips(std::vector<feature>& ft)
+{
+	std::string table = ASSI_VOLO + std::string("V");
+
+	std::stringstream sql1;
+    sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8, GPS_GAP=?9 where " << STRIP_NAME  << "=?10";
+	Statement stm(cnn);
+	stm.prepare(sql1.str());
+	cnn.begin_transaction();
+
+	// per ogni strip determina i parametri gps con cui è stata acquisita
+	for ( size_t i = 0; i < ft.size(); i++) {
+		const std::string & val = ft[i].strip;
+		std::string t1 = ft[i].time;
+		std::string t2 = ft[i].time2;
+		if ( t1 > t2 )
+			std::swap(t1, t2);
+
+		std::stringstream sql;
+		sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' and MISSION= '" <<
+			ft[i].mission << "' ORDER BY TIME";
+
+		Statement stm1(cnn);
+		stm1.prepare(sql.str());
+		Recordset rs = stm1.recordset();
+		bool first = true;
+		
+		Poco::Timestamp tm0, tm1;
+		double dt0 = 0.;
+		int nsat, nbasi;
+		double pdop;
+		while ( !rs.eof() ) {
+			if ( first ) {
+				tm0 = from_string(rs["TIME"]);
+				// determina l'altezza media del sole sull'orizzonte
+				OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft[i].pt);
+				Sun sun(pt->getY(), pt->getX());
+				int td;
+				std::stringstream ss2;
+				ss2 << ft[i].date << " " << t1;
+				Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
+				sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
+				double h = sun.altit();
+
+				stm[1] = (std::string const &) rs["MISSION"].toString(); // mission
+				stm[2] = rs["DATE"].toString(); // date
+				stm[3] = t1; // istante di inizio acquisizione
+				stm[4] = t2; // istante di fine acquisizione
+
+				nsat = rs["NSAT"].toInt();
+				pdop = rs["PDOP"].toDouble();
+				nbasi = rs["NBASI"].toInt();
+
+				stm[8] = h;	// sun elevation
+				stm[10] = val;
+				first = false;
+			} else {
+				nsat = std::min(nsat, rs["NSAT"].toInt());
+				pdop = std::max(pdop, rs["PDOP"].toDouble());
+				nbasi = std::min(nbasi, rs["NBASI"].toInt());
+				tm1 = from_string(rs["TIME"]);
+				double dt = (double) (tm1 - tm0) / 1000000;
+				tm0 = tm1;
+				if ( dt > dt0 )
+					dt0 = dt;
+			}
+			rs.next();
+		}
+		if ( first )
+			return;
+		stm[5] = nsat; // minimal number of satellite
+		stm[6] = pdop; // max pdop
+		stm[7] = nbasi; // number of bases
+		stm[9] = (int) dt0;
+		stm.execute();
+		stm.reset();
+	}
+	cnn.commit_transaction();
+}
+bool photo_exec::select_mission(end_point_axis_info& ep1, end_point_axis_info& ep2, feature& f, double len)
+{
+	bool ret = false;
+	end_point_axis_info::const_iterator it1 = ep1.begin();
+	end_point_axis_info::const_iterator it2 = ep2.begin();
+	double d0 = 1e30;
+	double v0 = 10000;
+	for ( it1 = ep1.begin(); it1 != ep1.end(); it1++) {
+		for ( it2 = ep2.begin(); it2 != ep2.end(); it2++) {
+			if ( it1->first == it2->first ) {
+				// same mission
+				double d1 = it1->second.dist;
+				double d2 = it2->second.dist;
+				double d = sqrt(d1 * d1 + d2 * d2);
+
+				Poco::DateTime dt1, dt2;
+				int tm = 0;
+				Poco::DateTimeParser::parse("%H:%M:%s", it1->second.time, dt1, tm);
+				Poco::DateTimeParser::parse("%H:%M:%s", it2->second.time, dt2, tm);
+				Poco::Timespan tspan = dt2 > dt1 ? dt2 - dt1 : dt1 - dt2;
+				double dtime = tspan.totalMilliseconds() / 1000.;
+				double v = fabs(3.6 * len / dtime - 250); 
+				//if ( fabs(d - d0) < 10 ) {
+				if ( v < v0 ) {
+					f = it1->second;
+					f.time2 = it2->second.time;
+					d0 = d;
+					v0 = v;
+					ret = true;
+				}
+				break;
+			}
+		}
+	}
+	return ret;
+}
 void photo_exec::_update_assi_volo()
 {
+	std::stringstream sqla;
+	sqla << "SELECT CreateSpatialIndex('" << GPS_TABLE_NAME << "', 'geom')";
+	//sqla << "SELECT DisableSpatialIndex('" << GPS_TABLE_NAME << "', 'geom')";
+	cnn.execute_immediate(sqla.str());
+
 	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
 
 	std::string table = ASSI_VOLO + std::string("V");
@@ -1186,138 +1345,168 @@ void photo_exec::_update_assi_volo()
 	add_column(cnn, table, "PDOP DOUBLE");
 	add_column(cnn, table, "GPS_GAP INTEGER");
 
-	// query to associate to the first and last point of each flight line the nearest point of the gps track
-	std::stringstream sql;
-	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
-        table << " a, GPS b group by strip";
-
-	Statement stm(cnn);
-	stm.prepare(sql.str());
-
-	stm[1] = 1;
-	Recordset rs = stm.recordset();
+	std::stringstream sqli;
+	sqli << "SELECT " << STRIP_NAME << ", ST_Length(geom), AsBinary(StartPoint(geom)), AsBinary(EndPoint(geom)) FROM "  << table;
+	Statement stm1(cnn);
+	stm1.prepare(sqli.str());
+	Recordset rs1 = stm1.recordset();
 
 	// for every strip get the GPS time of the first point
-	std::vector<feature> ft1;
-	while ( !rs.eof() ) {
+	std::vector<feature> ft;
+	while ( !rs1.eof() ) {
+		end_point_axis_info ep1;
+		end_point_axis_info ep2;
+		double len = rs1[1].toDouble();
+		process_end_point_axis_info(rs1[2].toBlob(), ep1);
+		process_end_point_axis_info(rs1[3].toBlob(), ep2);
+
+		std::string s = rs1[0].toString();
+		if ( ep1.size() >  1 || ep2.size() > 1 )
+			int a = 1;
+
 		feature f;
-        f.strip = rs["strip"].toString();
-        f.mission = rs["MISSION"].toString();
-        f.time = rs["TIME"].toString();
-        f.date = rs["DATE"].toString();
-        f.nsat = rs["NSAT"].toInt();
-        f.nbasi = rs["NBASI"].toInt();
-        f.pdop = rs["PDOP"].toDouble();
-        Blob blob = rs["geo"].toBlob();
-        f.pt = blob;
-		ft1.push_back(f);
-		rs.next();
-	}
-	stm.reset();
-	stm[1] = 2;
-	rs = stm.recordset();
-
-	// for every strip get the GPS time of the last point
-	std::vector<feature> ft2;
-	while ( !rs.eof() ) {
-		feature f;
-        f.strip = rs["strip"].toString();
-        f.mission = rs["MISSION"].toString();
-        f.time = rs["TIME"].toString();
-        f.date = rs["DATE"].toString();
-        f.nsat = rs["NSAT"].toInt();
-        f.nbasi = rs["NBASI"].toInt();
-        f.pdop = rs["PDOP"].toDouble();
-        Blob blob = rs["geo"].toBlob();
-        f.pt = blob;
-		ft2.push_back(f);
-		rs.next();
-	}
-
-	std::stringstream sql1;
-    sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8, GPS_GAP=?9 where " << STRIP_NAME  << "=?10";
-	Statement stm1(cnn);
-	stm1.prepare(sql1.str());
-	cnn.begin_transaction();
-
-	// per ogni strip determina i parametri gps con cui è stata acquisita
-	for ( size_t i = 0; i < ft1.size(); i++) {
-		const std::string & val = ft1[i].strip;
-		std::string t1 = ft1[i].time;
-		for ( size_t j = 0; j < ft2.size(); j++) {
-			if ( ft2[j].strip == ft1[i].strip ) {
-				if ( ft2[j].mission != ft1[i].mission ) {
-					std::cout << "strip " << ft1[i].strip << " non correttamente abbinata alla traccia GPS" << std::endl;
-					continue;
-				}
-				std::string t2 = ft2[j].time;
-				if ( t1 > t2 )
-					std::swap(t1, t2);
-
-				std::stringstream sql;
-				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' and MISSION= '" <<
-					ft1[i].mission << "' ORDER BY TIME";
-				stm.prepare(sql.str());
-				rs = stm.recordset();
-				bool first = true;
-				
-				Poco::Timestamp tm0, tm1;
-				double dt0 = 0.;
-				int nsat, nbasi;
-				double pdop;
-				while ( !rs.eof() ) {
-					if ( first ) {
-						tm0 = from_string(rs["TIME"]);
-						// determina l'altezza media del sole sull'orizzonte
-						OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft1[i].pt);
-						Sun sun(pt->getY(), pt->getX());
-						int td;
-						std::stringstream ss2;
-						ss2 << ft1[i].date << " " << t1;
-						Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
-						sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
-						double h = sun.altit();
-
-						stm1[1] = (std::string const &) rs["MISSION"]; // mission
-						stm1[2] = rs["DATE"].toString(); // date
-						stm1[3] = t1; // istante di inizio acquisizione
-						stm1[4] = t2; // istante di fine acquisizione
-
-						nsat = rs["NSAT"].toInt();
-						pdop = rs["PDOP"].toDouble();
-						nbasi = rs["NBASI"].toInt();
-
-						//stm1[5] = rs["NSAT"].toInt(); // minimal number of satellite
-						//stm1[6] = rs["PDOP"].toDouble(); // max pdop
-						//stm1[7] = rs["NBASI"].toInt(); // number of bases
-						stm1[8] = h;	// sun elevation
-						stm1[10] = val;
-						//stm1.execute();
-						//stm1.reset();
-						first = false;
-						//continue;
-					} else {
-						nsat = std::min(nsat, rs["NSAT"].toInt());
-						pdop = std::max(pdop, rs["PDOP"].toDouble());
-						nbasi = std::min(nbasi, rs["NBASI"].toInt());
-						tm1 = from_string(rs["TIME"]);
-						double dt = (double) (tm1 - tm0) / 1000000;
-						tm0 = tm1;
-						if ( dt > dt0 )
-							dt0 = dt;
-					}
-					rs.next();
-				}
-				if ( first )
-					return;
-				stm1[5] = nsat; // minimal number of satellite
-				stm1[6] = pdop; // max pdop
-				stm1[7] = nbasi; // number of bases
-				stm1[9] = (int) dt0;
-				stm1.execute();
-				stm1.reset();
-			}
+		if ( select_mission(ep1, ep2, f, len) ) {
+			f.strip = rs1[0].toString();
+			ft.push_back(f);
 		}
+		rs1.next();
 	}
-	cnn.commit_transaction();
+	update_strips(ft);
+
+
+	//// query to associate to the first and last point of each flight line the nearest point of the gps track
+	//std::stringstream sql;
+	//sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
+ //       table << " a, GPS b group by strip";
+
+	//Statement stm(cnn);
+	//stm.prepare(sql.str());
+
+	//stm[1] = 1;
+	//Recordset rs = stm.recordset();
+
+	//// for every strip get the GPS time of the first point
+	//std::vector<feature> ft1;
+	//while ( !rs.eof() ) {
+	//	feature f;
+ //       f.strip = rs["strip"].toString();
+ //       f.mission = rs["MISSION"].toString();
+ //       f.time = rs["TIME"].toString();
+ //       f.date = rs["DATE"].toString();
+ //       f.nsat = rs["NSAT"].toInt();
+ //       f.nbasi = rs["NBASI"].toInt();
+ //       f.pdop = rs["PDOP"].toDouble();
+ //       Blob blob = rs["geo"].toBlob();
+ //       f.pt = blob;
+	//	ft1.push_back(f);
+	//	rs.next();
+	//}
+	//stm.reset();
+	//stm[1] = 2;
+	//rs = stm.recordset();
+
+	//// for every strip get the GPS time of the last point
+	//std::vector<feature> ft2;
+	//while ( !rs.eof() ) {
+	//	feature f;
+ //       f.strip = rs["strip"].toString();
+ //       f.mission = rs["MISSION"].toString();
+ //       f.time = rs["TIME"].toString();
+ //       f.date = rs["DATE"].toString();
+ //       f.nsat = rs["NSAT"].toInt();
+ //       f.nbasi = rs["NBASI"].toInt();
+ //       f.pdop = rs["PDOP"].toDouble();
+ //       Blob blob = rs["geo"].toBlob();
+ //       f.pt = blob;
+	//	ft2.push_back(f);
+	//	rs.next();
+	//}
+
+	//std::stringstream sql1;
+ //   sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, SUN_HL=?8, GPS_GAP=?9 where " << STRIP_NAME  << "=?10";
+	//Statement stm1(cnn);
+	//stm1.prepare(sql1.str());
+	//cnn.begin_transaction();
+
+	//// per ogni strip determina i parametri gps con cui è stata acquisita
+	//for ( size_t i = 0; i < ft1.size(); i++) {
+	//	const std::string & val = ft1[i].strip;
+	//	std::string t1 = ft1[i].time;
+	//	for ( size_t j = 0; j < ft2.size(); j++) {
+	//		if ( ft2[j].strip == ft1[i].strip ) {
+	//			if ( ft2[j].mission != ft1[i].mission ) {
+	//				std::cout << "strip " << ft1[i].strip << " non correttamente abbinata alla traccia GPS" << std::endl;
+	//				continue;
+	//			}
+	//			std::string t2 = ft2[j].time;
+	//			if ( t1 > t2 )
+	//				std::swap(t1, t2);
+
+	//			std::stringstream sql;
+	//			sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' and MISSION= '" <<
+	//				ft1[i].mission << "' ORDER BY TIME";
+	//			stm.prepare(sql.str());
+	//			rs = stm.recordset();
+	//			bool first = true;
+	//			
+	//			Poco::Timestamp tm0, tm1;
+	//			double dt0 = 0.;
+	//			int nsat, nbasi;
+	//			double pdop;
+	//			while ( !rs.eof() ) {
+	//				if ( first ) {
+	//					tm0 = from_string(rs["TIME"]);
+	//					// determina l'altezza media del sole sull'orizzonte
+	//					OGRPoint* pt = (OGRPoint*) ((OGRGeometry*) ft1[i].pt);
+	//					Sun sun(pt->getY(), pt->getX());
+	//					int td;
+	//					std::stringstream ss2;
+	//					ss2 << ft1[i].date << " " << t1;
+	//					Poco::DateTime dt = Poco::DateTimeParser::parse(ss2.str(), td);
+	//					sun.calc(dt.year(), dt.month(), dt.day(), dt.hour());
+	//					double h = sun.altit();
+
+	//					stm1[1] = (std::string const &) rs["MISSION"]; // mission
+	//					stm1[2] = rs["DATE"].toString(); // date
+	//					stm1[3] = t1; // istante di inizio acquisizione
+	//					stm1[4] = t2; // istante di fine acquisizione
+
+	//					nsat = rs["NSAT"].toInt();
+	//					pdop = rs["PDOP"].toDouble();
+	//					nbasi = rs["NBASI"].toInt();
+
+	//					//stm1[5] = rs["NSAT"].toInt(); // minimal number of satellite
+	//					//stm1[6] = rs["PDOP"].toDouble(); // max pdop
+	//					//stm1[7] = rs["NBASI"].toInt(); // number of bases
+	//					stm1[8] = h;	// sun elevation
+	//					stm1[10] = val;
+	//					//stm1.execute();
+	//					//stm1.reset();
+	//					first = false;
+	//					//continue;
+	//				} else {
+	//					nsat = std::min(nsat, rs["NSAT"].toInt());
+	//					pdop = std::max(pdop, rs["PDOP"].toDouble());
+	//					nbasi = std::min(nbasi, rs["NBASI"].toInt());
+	//					tm1 = from_string(rs["TIME"]);
+	//					double dt = (double) (tm1 - tm0) / 1000000;
+	//					tm0 = tm1;
+	//					if ( dt > dt0 )
+	//						dt0 = dt;
+	//				}
+	//				rs.next();
+	//			}
+	//			if ( first )
+	//				return;
+	//			stm1[5] = nsat; // minimal number of satellite
+	//			stm1[6] = pdop; // max pdop
+	//			stm1[7] = nbasi; // number of bases
+	//			stm1[9] = (int) dt0;
+	//			stm1.execute();
+	//			stm1.reset();
+	//		}
+	//	}
+	//}
+	//cnn.commit_transaction();
+
 }
