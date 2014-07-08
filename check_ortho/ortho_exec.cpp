@@ -203,7 +203,8 @@ bool ortho_exec::_process_img_border(const std::string& foglio, std::vector<DPOI
 	if ( !bl.Evaluate(img_name.toString(), pt1) ) {
 		std::stringstream ss;
 		ss << "impossibile aprire " << foglio << std::endl;
-		throw std::runtime_error(ss.str());
+		return false;
+		//throw std::runtime_error(ss.str());
 	}
 
 	pt.clear();

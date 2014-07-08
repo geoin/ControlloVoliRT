@@ -313,9 +313,9 @@ int BorderLine::_getBackGround()
 		}
 	}
 	// incomplete table if at least 1/10 of the pixels are background
-	unsigned long thr = (unsigned long) (_img.dimx() * _img.dimy() * 0.1);
-	if ( nblack < thr || nwhite < thr )
-		return -1;
+	//unsigned long thr = (unsigned long) (_img.dimx() * _img.dimy() * 0.1);
+	//if ( nblack < thr || nwhite < thr )
+	//	return -1;
 	if ( nblack > nwhite )
 		return 0;
 	else if ( nblack < nwhite )
