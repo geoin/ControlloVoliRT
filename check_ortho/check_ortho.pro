@@ -22,7 +22,8 @@ win32 {
 }
 
 unix {
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+        INCLUDEPATH +=  -I$$_PRO_FILE_PWD_/../include
+        LIBS += -L$$_PRO_FILE_PWD_/../lib
         CONFIG(debug, debug|release) {
                 LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lsqlite3 -lspatialite -lgdal -ltiff
                 TARGET = $$join(TARGET,,,d)

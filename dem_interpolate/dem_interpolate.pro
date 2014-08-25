@@ -13,6 +13,7 @@ win32 {
         DEFINES += DLL_EXPORTS
 }
 unix{
+    LIBS += -L"../../ControlloVoliRT/lib"
     QMAKE_CXXFLAGS += -fPIC
 }
 macx {

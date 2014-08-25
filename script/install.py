@@ -106,7 +106,7 @@ copyAllFiles(docb, reportDir)
 shutil.copy(installDir + "/script/report.py", reportDir)
 
 #icons
-iconsDir = "/usr/lib/qgis/icons"
+iconsDir = "/usr/lib/qgis/icon"
 try:
     os.mkdir(iconsDir)
 except:

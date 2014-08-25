@@ -22,6 +22,7 @@ win32 {
 }
 
 unix {
+    LIBS += -L$$_PRO_FILE_PWD_/../lib
     CONFIG(debug, debug|release) {
             LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lCVUtil -lphoto_util -lsqlite3 -lspatialite -lgdal
             TARGET = $$join(TARGET,,,d)

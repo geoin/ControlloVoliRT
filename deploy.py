@@ -23,7 +23,7 @@ make = ""
 platform = sys.platform
 if platform == "linux2":
     make = "make"
-    qmake = "qmake"
+    qmake = "qmake-qt4"
 else:
     qmake = "C:/Qt/4.7.4/bin/qmake.exe"
     make = "nmake"
@@ -63,7 +63,7 @@ print "Git root: " + root
 modules = ["CVUtil", "photo_util", "rtklib", "ziplib", "dem_interpolate"]
 buildList(modules)
 
-binaries = ["CVLoaderUI", "check_gps", "check_photo_fli", "check_ta", "check_ortho", "RT-qgis_plugin", "check_lidar_fli", "check_lidar_raw"]
+binaries = ["CVLoaderUI", "check_gps", "check_photo_fli", "check_ta", "check_ortho", "RT-qgis_plugin", "check_lidar_fli", "check_lidar_raw", "check_lidar_final"]
 buildList(binaries)
 
 print stat
@@ -71,7 +71,7 @@ print stat
 with zipfile.ZipFile('deploy.zip', 'w') as zip_:
     addToZip("lib", zip_)
     addToZip("bin", zip_)
-    addToZip("icons", zip_)
+    addToZip("icon", zip_)
     addToZip("script", zip_)
     addToZip("docbookrt", zip_)
 

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <numeric>
 #include <math.h>
+#include <cmath>
 
 #define GEO_DB_NAME "geo.sqlite"
 

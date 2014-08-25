@@ -39,11 +39,11 @@ macx {
 unix {
     INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
     CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtil -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
+        LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
         TARGET = $$join(TARGET,,,d)
     }
     else {
-        LIBS += -lPocoUtil -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
+        LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
     }
 }
 

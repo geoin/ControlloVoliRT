@@ -20,7 +20,7 @@ DEFINES += NOMINMAX
 INCLUDEPATH += $${CV_INCL}
 
 win32 {
-    INCLUDEPATH += $${CV_TOOLS_INCL} $$_PRO_FILE_PWD_
+    INCLUDEPATH += $$_PRO_FILE_PWD_/$${CV_TOOLS_INCL}
     LIBS += -L$$_PRO_FILE_PWD_"/../lib" -L$$_PRO_FILE_PWD_"/../../ControlloVoliRT_Tools/lib"
     CONFIG(debug, debug|release) {
          LIBS += -lCVUtild -lPocoZipd -lspatialite -lPocoFoundationd -lsqlite3_i
@@ -31,6 +31,7 @@ win32 {
 }
 
 unix {
+    LIBS += -L$$_PRO_FILE_PWD_/../lib
     LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3
 }
 
