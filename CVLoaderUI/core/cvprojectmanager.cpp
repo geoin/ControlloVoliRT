@@ -21,7 +21,6 @@ namespace CV {
 namespace Core {
 
 CVProjectManager::CVProjectManager(QObject* p) : QObject(p) {
-    
 }
 
 void CVProjectManager::onNewProject() {

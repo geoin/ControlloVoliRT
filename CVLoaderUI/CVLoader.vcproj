@@ -39,7 +39,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;.\GeneratedFiles&quot;;&quot;$(QTDIR)\include&quot;;&quot;.\GeneratedFiles\$(ConfigurationName)&quot;;&quot;$(QTDIR)\include\QtCore&quot;;&quot;$(QTDIR)\include\QtGui&quot;;&quot;.\&quot;;&quot;.\core\sql&quot;;&quot;.\core&quot;;&quot;.\core\categories&quot;;&quot;.\gui\details&quot;;&quot;../include&quot;;&quot;../../ControlloVoliRT_Tools/include&quot;;&quot;$(QTDIR)\include\QtXml&quot;"
+				AdditionalIncludeDirectories=".\GeneratedFiles;C:\Qt\4.7.4\include;&quot;.\GeneratedFiles\$(ConfigurationName)&quot;;C:\Qt\4.7.4\include\QtCore;C:\Qt\4.7.4\include\QtGui;.\;.\core\sql;.\core;.\core\categories;.\gui\details;../include;../../ControlloVoliRT_Tools/include;C:\Qt\4.7.4\include\QtXml"
 				PreprocessorDefinitions="UNICODE;WIN32;QT_LARGEFILE_SUPPORT;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_DLL;NOMINMAX;QT_XML_LIB"
 				RuntimeLibrary="2"
 				TreatWChar_tAsBuiltInType="false"
@@ -58,7 +58,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="qtmain.lib QtCore4.lib QtGui4.lib sqlite3_i.lib spatialite4.lib CVUtil.lib photo_util.lib PocoZip.lib QtXml4.lib"
 				OutputFile="$(OutDir)\$(ProjectName).exe"
-				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;../../ControlloVoliRT_Tools/lib;../lib"
+				AdditionalLibraryDirectories="C:\Qt\4.7.4\lib;../../ControlloVoliRT_Tools/lib;../lib"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 			/>
@@ -108,7 +108,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;.\GeneratedFiles&quot;;&quot;$(QTDIR)\include&quot;;&quot;.\GeneratedFiles\$(ConfigurationName)&quot;;&quot;$(QTDIR)\include\QtCore&quot;;&quot;$(QTDIR)\include\QtGui&quot;;&quot;.\&quot;;&quot;../include&quot;;&quot;../../ControlloVoliRT_Tools/include&quot;;&quot;.\core\sql&quot;;&quot;.\core&quot;;&quot;.\core\categories&quot;;&quot;.\gui\details&quot;;&quot;$(QTDIR)\include\QtXml&quot;"
+				AdditionalIncludeDirectories="&quot;.\GeneratedFiles&quot;;&quot;C:\Qt\4.7.4\include&quot;;&quot;.\GeneratedFiles\$(ConfigurationName)&quot;;&quot;C:\Qt\4.7.4\include\QtCore&quot;;&quot;C:\Qt\4.7.4\include\QtGui&quot;;&quot;.\&quot;;&quot;../include&quot;;&quot;../../ControlloVoliRT_Tools/include&quot;;&quot;.\core\sql&quot;;&quot;.\core&quot;;&quot;.\core\categories&quot;;&quot;.\gui\details&quot;;&quot;C:\Qt\4.7.4\include\QtXml&quot;"
 				PreprocessorDefinitions="UNICODE;WIN32;QT_LARGEFILE_SUPPORT;QT_CORE_LIB;QT_GUI_LIB;NOMINMAX;QT_DLL;QT_XML_LIB"
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
@@ -127,7 +127,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="qtmaind.lib QtCored4.lib QtGuid4.lib sqlite3_i.lib spatialite4.lib CVUtild.lib photo_utild.lib PocoZipd.lib QtXmld4.lib"
 				OutputFile="$(OutDir)\$(ProjectName).exe"
-				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;../lib;../../ControlloVoliRT_Tools/lib"
+				AdditionalLibraryDirectories="&quot;C:\Qt\4.7.4\lib&quot;;../lib;../../ControlloVoliRT_Tools/lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 			/>
@@ -195,11 +195,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\gui\details\cvcloudsampledetail.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\gui\details\cvcontourdetail.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\core\categories\cvcontrol.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\gui\details\cvcontrolpointsdetail.cpp"
 				>
 			</File>
 			<File
@@ -231,11 +239,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\core\categories\cvfolderinput.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\core\cvjournal.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\gui\details\cvlidarflydetail.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\gui\details\cvlidarplandetail.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\gui\details\cvlidarrawdetail.cpp"
 				>
 			</File>
 			<File
@@ -284,6 +304,10 @@
 			</File>
 			<File
 				RelativePath=".\gui\cvprojectoverviewdetail.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\gui\details\cvrawstripfolderdetail.cpp"
 				>
 			</File>
 			<File
@@ -377,8 +401,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvactionslinker.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -388,8 +412,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvactionslinker.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -403,8 +427,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvappcontainer.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -414,8 +438,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvappcontainer.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -429,8 +453,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvareadetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -440,8 +464,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvareadetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -455,8 +479,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvbasedetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -466,8 +490,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvbasedetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -481,8 +505,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvbaseinputverifier.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -492,8 +516,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvbaseinputverifier.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -507,8 +531,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvbasetabwidget.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -518,8 +542,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvbasetabwidget.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -533,8 +557,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcamera.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -544,8 +568,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcamera.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -559,8 +583,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcameradetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -570,8 +594,34 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcameradetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\gui\details\cvcloudsampledetail.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvcloudsampledetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvcloudsampledetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -585,8 +635,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcontourdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -596,8 +646,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcontourdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -611,8 +661,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcontrol.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -622,11 +672,41 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvcontrol.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\gui\details\cvcontrolpointsdetail.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvcontrolpointsdetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvcontrolpointsdetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\core\cvcore_utils.h"
+				>
 			</File>
 			<File
 				RelativePath=".\gui\details\cvdemdetail.h"
@@ -637,8 +717,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvdemdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -648,8 +728,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvdemdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -667,8 +747,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvfileinput.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -678,8 +758,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvfileinput.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -693,8 +773,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflyattitude.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -704,8 +784,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflyattitude.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -719,8 +799,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflyattitudedetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -730,8 +810,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflyattitudedetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -745,8 +825,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflyaxis_p.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -756,8 +836,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflyaxis_p.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -771,8 +851,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflydetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -782,8 +862,34 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvflydetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\core\categories\cvfolderinput.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvfolderinput.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvfolderinput.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -819,6 +925,32 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\gui\details\cvlidarflydetail.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvlidarflydetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvlidarflydetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\gui\details\cvlidarplandetail.h"
 				>
 				<FileConfiguration
@@ -827,8 +959,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvlidarplandetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -838,8 +970,34 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvlidarplandetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\gui\details\cvlidarrawdetail.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvlidarrawdetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvlidarrawdetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -853,8 +1011,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmainwindow.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -864,8 +1022,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmainwindow.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -879,8 +1037,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmenubar.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -890,8 +1048,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmenubar.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -905,8 +1063,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmissiondetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -916,8 +1074,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmissiondetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -931,8 +1089,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmissiondialog.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -942,8 +1100,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmissiondialog.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -957,8 +1115,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmissionobject.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -968,8 +1126,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvmissionobject.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -983,8 +1141,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvnodedetails.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -994,8 +1152,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvnodedetails.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1013,8 +1171,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvortodetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1024,8 +1182,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvortodetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1039,8 +1197,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvproject.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1050,8 +1208,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvproject.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1065,8 +1223,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvprojectdialog.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1076,8 +1234,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvprojectdialog.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1091,8 +1249,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvprojectmanager.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1102,8 +1260,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvprojectmanager.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1117,8 +1275,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvprojectoverviewdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1128,8 +1286,34 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvprojectoverviewdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\gui\details\cvrawstripfolderdetail.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvrawstripfolderdetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
+						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing cvrawstripfolderdetail.h..."
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1143,8 +1327,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvreferenceviewer.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1154,8 +1338,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvreferenceviewer.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1169,8 +1353,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvrinex.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1180,8 +1364,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvrinex.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1195,8 +1379,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvrinexdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1206,8 +1390,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvrinexdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1221,8 +1405,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvsensor.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1232,8 +1416,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvsensor.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1247,8 +1431,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvsensordetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1258,8 +1442,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvsensordetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1273,8 +1457,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvshapelayer.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1284,8 +1468,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvshapelayer.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1299,8 +1483,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstationdelegate.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1310,8 +1494,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstationdelegate.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1325,8 +1509,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstations.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1336,8 +1520,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstations.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1351,8 +1535,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstationsdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1362,8 +1546,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstationsdetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1377,8 +1561,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstatusbar.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1388,8 +1572,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvstatusbar.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1403,8 +1587,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvtoolbar.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1414,8 +1598,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvtoolbar.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1433,8 +1617,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvtreenodedelegate.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1444,8 +1628,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvtreenodedelegate.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1459,8 +1643,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvtreewidget.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1470,8 +1654,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvtreewidget.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1485,8 +1669,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvuniondetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1496,8 +1680,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing cvuniondetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1511,8 +1695,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing missionlistdetails.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1522,8 +1706,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing missionlistdetails.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1537,8 +1721,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing plandetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_GUI_LIB -DQT_DLL -DNOMINMAX -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1548,8 +1732,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Moc&apos;ing plandetail.h..."
-						CommandLine="&quot;$(QTDIR)\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-I$(QTDIR)\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-I$(QTDIR)\include\QtCore&quot; &quot;-I$(QTDIR)\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-I$(QTDIR)\include\QtXml&quot;&#x0D;&#x0A;"
-						AdditionalDependencies="&quot;$(QTDIR)\bin\moc.exe&quot;;$(InputPath)"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;  &quot;$(InputPath)&quot; -o &quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;  -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DQT_CORE_LIB -DQT_GUI_LIB -DNOMINMAX -DQT_DLL -DQT_XML_LIB  &quot;-I.\GeneratedFiles&quot; &quot;-IC:\Qt\4.7.4\include&quot; &quot;-I.\GeneratedFiles\$(ConfigurationName)\.&quot; &quot;-IC:\Qt\4.7.4\include\QtCore&quot; &quot;-IC:\Qt\4.7.4\include\QtGui&quot; &quot;-I.&quot; &quot;-I.\..\include&quot; &quot;-I.\..\..\ControlloVoliRT_Tools\include&quot; &quot;-I.\core\sql&quot; &quot;-I.\core&quot; &quot;-I.\core\categories&quot; &quot;-I.\gui\details&quot; &quot;-IC:\Qt\4.7.4\include\QtXml&quot;&#x0D;&#x0A;"
+						AdditionalDependencies="&quot;C:\Qt\4.7.4\bin\moc.exe&quot;;$(InputPath)"
 						Outputs="&quot;.\GeneratedFiles\$(ConfigurationName)\moc_$(InputName).cpp&quot;"
 					/>
 				</FileConfiguration>
@@ -1606,7 +1790,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing $(InputFileName)..."
-						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;$(InputName)&quot; -no-compress &quot;$(InputPath)&quot; -o .\GeneratedFiles\qrc_$(InputName).cpp&#x0D;&#x0A;"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\rcc.exe&quot; -name &quot;$(InputName)&quot; -no-compress &quot;$(InputPath)&quot; -o .\GeneratedFiles\qrc_$(InputName).cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(InputPath);.\data\db.sql;.\data\update.sql;.\data\style.qss"
 						Outputs=".\GeneratedFiles\qrc_$(InputName).cpp"
 					/>
@@ -1617,7 +1801,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Rcc&apos;ing $(InputFileName)..."
-						CommandLine="&quot;$(QTDIR)\bin\rcc.exe&quot; -name &quot;$(InputName)&quot; -no-compress &quot;$(InputPath)&quot; -o .\GeneratedFiles\qrc_$(InputName).cpp&#x0D;&#x0A;"
+						CommandLine="&quot;C:\Qt\4.7.4\bin\rcc.exe&quot; -name &quot;$(InputName)&quot; -no-compress &quot;$(InputPath)&quot; -o .\GeneratedFiles\qrc_$(InputName).cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(InputPath);.\data\db.sql;.\data\update.sql;.\data\style.qss"
 						Outputs=".\GeneratedFiles\qrc_$(InputName).cpp"
 					/>
@@ -1642,6 +1826,14 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\data\lidar.sql"
+				>
+			</File>
+			<File
+				RelativePath=".\data\photogrammetry.sql"
+				>
 			</File>
 			<File
 				RelativePath=".\data\style.qss"
@@ -1812,6 +2004,18 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\GeneratedFiles\Release\moc_cvcloudsampledetail.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath=".\GeneratedFiles\Release\moc_cvcontourdetail.cpp"
 					>
 					<FileConfiguration
@@ -1825,6 +2029,18 @@
 				</File>
 				<File
 					RelativePath=".\GeneratedFiles\Release\moc_cvcontrol.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_cvcontrolpointsdetail.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1908,7 +2124,43 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\GeneratedFiles\Release\moc_cvfolderinput.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_cvlidarflydetail.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath=".\GeneratedFiles\Release\moc_cvlidarplandetail.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_cvlidarrawdetail.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -2041,6 +2293,18 @@
 				</File>
 				<File
 					RelativePath=".\GeneratedFiles\Release\moc_cvprojectoverviewdetail.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Release\moc_cvrawstripfolderdetail.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -2346,6 +2610,18 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_cvcloudsampledetail.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath=".\GeneratedFiles\Debug\moc_cvcontourdetail.cpp"
 					>
 					<FileConfiguration
@@ -2359,6 +2635,18 @@
 				</File>
 				<File
 					RelativePath=".\GeneratedFiles\Debug\moc_cvcontrol.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_cvcontrolpointsdetail.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -2442,7 +2730,43 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_cvfolderinput.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_cvlidarflydetail.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath=".\GeneratedFiles\Debug\moc_cvlidarplandetail.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_cvlidarrawdetail.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -2575,6 +2899,18 @@
 				</File>
 				<File
 					RelativePath=".\GeneratedFiles\Debug\moc_cvprojectoverviewdetail.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\GeneratedFiles\Debug\moc_cvrawstripfolderdetail.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -2807,7 +3143,7 @@
 		/>
 		<Global
 			Name="QtVersion Win32"
-			Value="4.7.1"
+			Value="4.7.4"
 		/>
 		<Global
 			Name="RccDir"

@@ -336,6 +336,7 @@ private:
 	std::string _cloudPath;
 
 	CV_DISABLE_DEFAULT_CTOR(CloudStrip);
+	CV_DISABLE_COPY(CloudStrip);
 };
 
 }

@@ -15,6 +15,25 @@ namespace SQL {
 
 static const QString database = "geo.sqlite";
 
+class Database {
+public:
+	static bool open(const QString& db) {
+		try {
+			cnn.open(db.toStdString());
+			return true;
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			return false;
+		}
+	}
+	static CV::Util::Spatialite::Connection& get() {
+		return cnn;
+	}
+
+private:
+	static CV::Util::Spatialite::Connection cnn;
+};
+
 class Query {
 public:
 	typedef QSharedPointer<Query> Ptr;
