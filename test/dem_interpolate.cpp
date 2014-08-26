@@ -48,7 +48,7 @@ TEST (DemTest, Triangulation) {
     for (int i = 0; i < r; i++) {
         double x = xmin + i*xdiff/r;
         double y = ymin + i*ydiff/r;
-        out << x << y << d->GetQuota(x, y) << std::endl;
+        out << x << " " << y << " " << d->GetQuota(x, y) << std::endl;
     }
 
     f.Close();
