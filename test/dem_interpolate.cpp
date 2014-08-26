@@ -50,15 +50,20 @@ TEST (DemTest, Triangulation) {
         double y = ymin + i*ydiff/r;
         out << x << " " << y << " " << d->GetQuota(x, y) << " -> ";
 
-        TRIANGLE tr = d->Triangle(d->FindTriangle(x, y));
+        int idx = d->FindTriangle(x, y);
+        if (idx == -1) {
+            continue;
+        }
+
+        TRIANGLE tr = d->Triangle(idx);
 
         DPOINT p1 = d->Node(tr.p[0]);
         DPOINT p2 = d->Node(tr.p[1]);
         DPOINT p3 = d->Node(tr.p[2]);
 
-        out << "p1 (" << p1.x << ", " << p1.y << ", " << p1.z
+        out << idx << "- p1 (" << p1.x << ", " << p1.y << ", " << p1.z
             << ") p2 (" << p2.x << ", " << p2.y << ", " << p2.z
-            <<  ") p3 (" << p3.x << ", " << p3.y << ", " << p3.z <<  ")";
+            <<  ") p3 (" << p3.x << ", " << p3.y << ", " << p3.z <<  ")" << std::endl;
 
     }
 
