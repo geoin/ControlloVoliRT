@@ -25,5 +25,15 @@ TEST (DemTest, Triangulation) {
         out << std::endl;
     }
 
+    out << std::endl << "Nodes:" << std::endl;
+
+    for (unsigned int i = 0; i < d->Npt(); i++) {
+        const DPOINT p = d->Node(i);
+        out << p.x << " " << p.y << " " << p.z << std::endl;
+    }
+
     f.Close();
+}
+
+TEST (DemTest, Las) {
 }
