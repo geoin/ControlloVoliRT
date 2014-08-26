@@ -3,6 +3,8 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
+DESTDIR = $$_PRO_FILE_PWD_/bin
+
 SOURCES += main.cpp \
     dem_interpolate.cpp
 
