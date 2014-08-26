@@ -18,6 +18,8 @@ TEST (DemTest, Triangulation) {
 
     std::string npOut = path + "tria.np";
     std::fstream out(npOut.c_str(), std::fstream::out);
+    out << std::fixed;
+
     for (unsigned int i = 0; i < d->Ntriangle(); i++) {
         const TRIANGLE t = d->Triangle(i);
         out << "N: [" << t.n[0] << ", " << t.n[1] << ", " << t.n[2] << "] - ";
