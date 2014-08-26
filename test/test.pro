@@ -3,10 +3,16 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
+DESTDIR = $$_PRO_FILE_PWD_/bin
+
 SOURCES += main.cpp \
     dem_interpolate.cpp
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 
 LIBS += -L$$_PRO_FILE_PWD_/libs -L$$_PRO_FILE_PWD_/../lib
-LIBS += -lgtest -lgtest_main -lpthread -ldem_interpolate
+LIBS += -lgtest -lgtest_main -ldem_interpolate
+
+unix {
+    LIBS += -lpthread
+}

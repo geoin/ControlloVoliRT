@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-const std::string path = "/home/umberto/projects/rt/ControlloVoliRT/test/data/";
+const std::string path = "../data/";
 
 TEST (DemTest, Triangulation) {
 
