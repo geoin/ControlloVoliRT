@@ -34,6 +34,21 @@ TEST (DemTest, Triangulation) {
         out << p.x << " " << p.y << " " << p.z << std::endl;
     }
 
+    out << std::endl << "Quotas:" << std::endl;
+
+    double xmax = d->Xmax();
+    double ymax = d->Ymax();
+    double xmin = d->Xmin();
+    double ymin  = d->Ymin();
+
+    double xdiff = xmax - xmin;
+    double ydiff = ymax - ymin;
+
+    int r = 10;
+    for (int i = 0; i < r; i++) {
+        out << d->GetQuota(xmin + i*xdiff/r, ymin + i*ydiff/r) << std::endl;
+    }
+
     f.Close();
 }
 
