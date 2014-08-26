@@ -53,4 +53,10 @@ TEST (DemTest, Triangulation) {
 }
 
 TEST (DemTest, Las) {
+    DSM_Factory f;
+    ASSERT_TRUE(f.Open(path + " S1C1_strip32.las", false));
+    DSM* d = f.GetDsm();
+
+   f.Close();
 }
+
