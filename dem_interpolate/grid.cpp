@@ -45,7 +45,7 @@ bool MyLas::get_next_point(DPOINT& p)
 		_echo = 0;
 		if ( _lasreader->point.return_number == 1 )
 			_echo |= 1; // first echo
-        if ( _lasreader->point.return_number ==  _lasreader->point.number_of_returns_of_given_pulse )
+        if ( _lasreader->point.return_number ==  _lasreader->point.number_of_returns )
 			_echo |= 2; // last echo
 		if ( _echo == 0 )
 			_echo = 4; // intermediate echo
