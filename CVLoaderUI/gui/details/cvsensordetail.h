@@ -27,6 +27,10 @@ public:
 	void save();
 	void view();
 
+public slots:
+	void edit();
+	void saveFormData();
+
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
     virtual void dragMoveEvent(QDragMoveEvent*);

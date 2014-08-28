@@ -5,6 +5,7 @@
 #include <QXmlStreamReader>
 #include <QMimeData>
 #include <QUrl>
+#include <QPushButton>
 
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
@@ -33,6 +34,17 @@ CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 		i->setMinimumHeight(26);
 		i->setMaximumHeight(26);
     }
+	
+	QPushButton* b = new QPushButton(tr("Save"), this);
+	b->setMaximumWidth(64);
+	b->setVisible(false);
+	form->addWidget(b);
+	
+	connect(b, SIGNAL(pressed()), this, SLOT(saveFormData()));
+	
+	QAction* edit = detailMenu()->addAction(QIcon(""), tr("Edita"));
+	connect(edit, SIGNAL(triggered()), this, SLOT(edit()));
+	connect(edit, SIGNAL(triggered()), b, SLOT(show()));
 
 	description(tr(sensor()->isPlanning() ? "Sensore lidar di progetto" : "Sensore lidar di missione"));
 	if (controller()->isValid()) {
@@ -64,6 +76,22 @@ void CVSensorDetail::searchFile() {
 		Core::CVSettings::set("/paths/search", info.absolutePath());
 		importAll(QStringList() << uri);
 	}
+}
+
+void CVSensorDetail::edit() { 
+	foreach (QLineEdit* i, _params) {
+		enableLineEdit(i);
+    }
+}
+
+void CVSensorDetail::saveFormData() {
+	qobject_cast<QWidget*>(sender())->hide();
+
+	foreach (QLineEdit* i, _params) {
+		disableLineEdit(this, i);
+    }
+
+	save();
 }
 
 void CVSensorDetail::save() { 

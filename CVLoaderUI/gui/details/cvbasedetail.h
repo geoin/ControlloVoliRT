@@ -34,7 +34,10 @@ public:
 
 	void createRow(QWidget* parent, const QString&, QLabel*& lab, QLabel*& info);
 	
-    QLineEdit* lineEdit(QWidget* p, const QPalette&);
+    QLineEdit* lineEdit(QWidget* p, const QPalette&); // TODO: I can find a palette from p, remove
+
+	void disableLineEdit(QWidget* p, QLineEdit*);
+	void enableLineEdit(QLineEdit*);
 
 protected:
 	inline Core::CVObject* controller() const { return _controller; }

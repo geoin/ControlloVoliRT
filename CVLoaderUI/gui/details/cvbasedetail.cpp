@@ -70,18 +70,30 @@ void CVBaseDetail::createRow(QWidget* p, const QString& label, QLabel*& lab, QLa
 	info->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 }
 
-
 QLineEdit* CVBaseDetail::lineEdit(QWidget* p, const QPalette& pal) {
-    QBrush back = pal.foreground();
-    const QColor& color = back.color();
     QLineEdit* line = new QLineEdit("", p);
     line->setContextMenuPolicy(Qt::NoContextMenu);
     line->setAlignment(Qt::AlignRight);
-    line->setReadOnly(true);
+	line->setReadOnly(true);
+
+	QBrush back = pal.foreground();
+    const QColor& color = back.color();
     line->setStyleSheet(QString("background-color: rgba(%1, %2, %3, %3)").arg(QString::number(color.red() + 6), QString::number(color.green() + 6), QString::number(color.blue() + 6)));
     return line;
 }
 
+void CVBaseDetail::disableLineEdit(QWidget* p, QLineEdit* line) {
+	QBrush back = p->palette().foreground();
+    const QColor& color = back.color();
+
+	line->setReadOnly(true);
+    line->setStyleSheet(QString("background-color: rgba(%1, %2, %3, %3)").arg(QString::number(color.red() + 6), QString::number(color.green() + 6), QString::number(color.blue() + 6)));
+}
+
+void CVBaseDetail::enableLineEdit(QLineEdit* line) {
+	line->setReadOnly(false);
+    line->setStyleSheet("");
+}
 
 } // namespace Details
 } // namespace GUI
