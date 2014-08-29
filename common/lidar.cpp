@@ -5,7 +5,8 @@
 using namespace CV::Lidar;
 using namespace CV::Util::Geometry;
 
-void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double stripWidth) {
+//TODO: creare la strisciata a blocchi
+void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 	MatOri m(0, 0, axis->angle());
 
 	OGRGeomPtr gp_ = OGRGeometryFactory::createGeometry(wkbLinearRing);
@@ -15,8 +16,8 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double stripWidth) {
 
 	for (int i = 0; i < 4; i++) {
 		DPOINT pa = ( i < 2 ) ? axis->first() : axis->last();
-		double x = ( i == 0 || i == 3 ) ? -stripWidth : stripWidth;
-		DPOINT pd(x, 0, -1);
+		double x = ( i == 0 || i == 3 ) ? -thf : thf;
+		DPOINT pd(x, 0, -1); //H = 1, DPOINT (h*thf, 0, -h)
 		pd = m * pd;
 
 		DPOINT pt;

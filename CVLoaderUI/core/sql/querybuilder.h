@@ -26,6 +26,17 @@ public:
 			return false;
 		}
 	}
+
+	static bool create(const QString& db) {
+		try {
+			cnn.create(db.toStdString());
+			return true;
+		} catch (CV::Util::Spatialite::spatialite_error& err) {
+			Q_UNUSED(err)
+			return false;
+		}
+	}
+
 	static CV::Util::Spatialite::Connection& get() {
 		return cnn;
 	}
@@ -47,6 +58,8 @@ public:
 	CV::Util::Spatialite::Recordset select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QStringList& order = QStringList(), int = 0);
 	
 	void bindValue(const int& index, const QVariant& val);
+
+	QStringList columns(const QString& table);
 
 private:
 	CV::Util::Spatialite::Connection& _connection;

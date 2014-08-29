@@ -11,14 +11,14 @@ CVProject::CVProject(QObject *parent) : QObject(parent) {
 
 QString CVProject::loadFrom(const QDir& dir) {
 	_db = dir.absolutePath() + dir.separator() + SQL::database;
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(_db.toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
+	if (!SQL::Database::open(_db)) {
 		return QString();
 	}
+
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
+
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+
 	try {
 		CV::Util::Spatialite::Recordset set = q->select(
 			QStringList() << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL",
@@ -90,15 +90,13 @@ bool CVProject::create(const QString& d) {
 
 	_db = dir.absolutePath() + dir.separator() + d;
 
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.create(_db.toStdString()); 
-		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
-			cnn.initialize_metdata(); 
-		}
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
+	if (!SQL::Database::create(_db)) {
 		return false;
+	}
+
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
+	if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
+		cnn.initialize_metdata(); 
 	}
 
 	bool isValid = cnn.is_valid();
@@ -154,16 +152,7 @@ CVControl* CVProject::get(CVControl::Type t) {
 }
 
 void CVProject::missionList(QStringList& ids) {
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.create(db().toStdString()); 
-		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
-			cnn.initialize_metdata(); 
-		}
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return;
-	}
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	try {
@@ -185,15 +174,7 @@ void CVProject::missionList(QStringList& ids) {
 }
 
 QDateTime CVProject::creationDate() {
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.create(db().toStdString()); 
-		if (cnn.check_metadata() == CV::Util::Spatialite::Connection::NO_SPATIAL_METADATA) {
-			cnn.initialize_metdata(); 
-		}
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-	}
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	try {
@@ -232,13 +213,8 @@ QDateTime CVProject::lastModificationDate() {
 
 bool CVProject::persist() {
 	bool ret = false;
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(db().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-	}
-
+	
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	ret = q->update(
 		"PROJECT",

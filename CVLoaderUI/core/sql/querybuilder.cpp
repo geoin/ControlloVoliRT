@@ -10,6 +10,8 @@ namespace CV {
 namespace Core {
 namespace SQL {
 
+	CV::Util::Spatialite::Connection Database::cnn;
+
 	bool Query::insert(const QString& tab, const QStringList& fields, const QStringList& values, const QVariantList& binds) {
 		QString query("INSERT INTO %1 (%2) VALUES (%3)");
 		query = query.arg(tab, fields.join(", "), values.join(", "));
@@ -97,6 +99,7 @@ namespace SQL {
 
 		return true;
 	}
+
 	
 	//TODO: too basic
 	CV::Util::Spatialite::Recordset Query::select(
@@ -147,6 +150,28 @@ namespace SQL {
 		return _stm.recordset();
 	}
 
+	QStringList Query::columns(const QString& table) {
+		Util::Spatialite::Recordset set = select(
+			QStringList(),
+			QStringList() << table,
+			QStringList(),
+			QVariantList(),
+			QStringList(),
+			1
+		);
+
+		if (set.eof()) {
+			return QStringList();
+		}
+
+		QStringList cols;
+		if (set.next()) {
+			for (int i = 0; i < set.fields_count(); ++i) {
+				cols << set.column_name(i).c_str();
+			}
+		}
+		return cols;
+	}
 	
 	bool Query::remove(const QString& tab, const QStringList& where, const QVariantList& binds) {
 		QString query("DELETE FROM %1");

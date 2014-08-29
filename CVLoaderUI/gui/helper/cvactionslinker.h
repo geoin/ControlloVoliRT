@@ -24,6 +24,7 @@ enum Action_t {
 
 enum Signal_t {
     ITEM_SELECTED = 0,
+	QUIT,
 	CAM_LOADED
 };
 

@@ -91,8 +91,10 @@ bool lidar_exec::run()
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 		
 		if ( _type == FLY_TYPE ) {
+			// legge i dati del sensore in base alla missione
 			_read_lidar_from_mission();
 		} else {
+			// legge i dati del sensore di progetto
 			_read_lidar();
 		}
 		// read digital terrain model
@@ -647,9 +649,8 @@ void lidar_exec::_createStripTable() {
 
 void lidar_exec::_process_strips()
 {
-	_createStripTable();
-
 	// create the table for the strip footprint
+	_createStripTable();
     std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 
 	std::stringstream sql2;
@@ -697,7 +698,7 @@ void lidar_exec::_process_strips()
 		if (lidar.isNull()) {
 			throw std::runtime_error("Valori lidar non validi");
 		} else {
-			gProj = lidar->halfGroundWidth();
+			gProj = lidar->tanHalfFov();
 		}
 
 		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);

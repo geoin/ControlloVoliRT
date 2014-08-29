@@ -20,10 +20,19 @@ bool CVShapeLayer::isValid() const {
 	return _isValid;
 }
 
-bool CVShapeLayer::remove() { 
-	CV::Util::Spatialite::Connection cnn;
+QStringList CVShapeLayer::fields() const {	
+	QStringList f;
 	try {
-		cnn.open(uri().toStdString());
+		CV::Util::Spatialite::Connection cnn = SQL::Database::get();
+		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+		f = q->columns(_table);
+	} catch(...) {}
+	return f;
+}
+
+bool CVShapeLayer::remove() { 
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
+	try {
 		cnn.remove_layer(_table.toStdString());
 	} catch (const CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
@@ -34,9 +43,8 @@ bool CVShapeLayer::remove() {
 
 bool CVShapeLayer::persist() {
 	_isValid = false;
-	CV::Util::Spatialite::Connection cnn;
 	try {
-		cnn.open(uri().toStdString());
+		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 		_rows = cnn.load_shapefile(
 			_shp.toStdString(),
@@ -75,9 +83,8 @@ bool CVShapeLayer::load() {
 
 	//TODO: add count query
 
-	CV::Util::Spatialite::Connection cnn;
+	CV::Util::Spatialite::Connection cnn = SQL::Database::get();
 	try {
-		cnn.open(uri().toStdString());
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		CV::Util::Spatialite::Recordset set = q->select(
 			QStringList() << "count(*)",

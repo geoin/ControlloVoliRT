@@ -34,9 +34,14 @@ public:
     QToolBar* toolbar() const;
     QStatusBar* statusbar() const;
 
+	void notifyShutdown() {
+		emit quit();
+	}
+
 signals:
     void controlAdded(CV::Core::CVControl::Type, Core::CVControl*);
 	void projectAdded(Core::CVProject*);
+	void quit();
 
 public slots:
 	void insertProject(Core::CVProject*);

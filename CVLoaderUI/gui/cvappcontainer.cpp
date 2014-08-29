@@ -61,6 +61,8 @@ CVAppContainer::CVAppContainer(QWidget* parent) : QWidget(parent) {
 	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
 	linker->add(Helper::ITEM_SELECTED, _tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)));
 	linker->on(Helper::ITEM_SELECTED, _details, SLOT(onProjectItemActivated(QTreeWidgetItem*, int)));
+
+	linker->add(Helper::QUIT, this, SIGNAL(quit()));
 }
 
 void CVAppContainer::insertProject(Core::CVProject* proj) {

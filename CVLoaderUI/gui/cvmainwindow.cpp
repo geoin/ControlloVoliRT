@@ -14,7 +14,7 @@ CVMainWindow::CVMainWindow(QWidget *parent) : QMainWindow(parent) {
     setMinimumSize(QSize(640, 480));
 	resize(w, h);
 
-    CVAppContainer* app = new CVAppContainer(this);
+    app = new CVAppContainer(this);
     addToolBar(app->toolbar());
     setMenuBar(app->menu());
     setStatusBar(app->statusbar());
@@ -28,6 +28,12 @@ CVMainWindow::~CVMainWindow() {
 	Core::CVSettings::set("/app/width", width());
 	Core::CVSettings::set("/app/height", height());
 	Core::CVSettings::set("/app/maximized", isMaximized());
+}
+
+
+void CVMainWindow::closeEvent(QCloseEvent* ev) {
+	app->notifyShutdown();
+	QMainWindow::closeEvent(ev);
 }
 
 }

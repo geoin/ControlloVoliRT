@@ -30,6 +30,7 @@ public:
 public slots:
 	void edit();
 	void saveFormData();
+	void onQuit();
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

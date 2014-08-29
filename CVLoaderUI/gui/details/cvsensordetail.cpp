@@ -1,5 +1,7 @@
 #include "cvsensordetail.h"
 
+#include "gui/cvgui_utils.h"
+
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QXmlStreamReader>
@@ -11,12 +13,16 @@
 #include <QDragMoveEvent>
 #include <QDragLeaveEvent>
 #include <QDropEvent>
+#include "gui/helper/cvactionslinker.h"
 
 namespace CV {
 namespace GUI {
 namespace Details {
 
 CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p, cam) {
+	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
+	linker->on(Helper::QUIT, this, SLOT(onQuit()));
+
 	setAcceptDrops(true);
 	title(tr("Sensore lidar"));
 	
@@ -35,7 +41,7 @@ CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 		i->setMaximumHeight(26);
     }
 	
-	QPushButton* b = new QPushButton(tr("Save"), this);
+	QPushButton* b = new QPushButton(tr("Salva"), this);
 	b->setMaximumWidth(64);
 	b->setVisible(false);
 	form->addWidget(b);
@@ -54,6 +60,10 @@ CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 
 CVSensorDetail::~CVSensorDetail() {
 
+}
+
+void CVSensorDetail::onQuit() {
+	int ret = CVMessageBox::message(this, tr("Chiusura applicazione(TODO)"), tr("Salvare le modifiche?"));
 }
 
 void CVSensorDetail::clearAll() {
@@ -85,6 +95,8 @@ void CVSensorDetail::edit() {
 }
 
 void CVSensorDetail::saveFormData() {
+	CVScopedCursor cur;
+
 	qobject_cast<QWidget*>(sender())->hide();
 
 	foreach (QLineEdit* i, _params) {

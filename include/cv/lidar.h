@@ -47,7 +47,7 @@ public:
 	inline void scan(double scan) { _scan = scan; }
 	inline double scan() const { return _scan; }
 
-	inline double halfGroundWidth() const {
+	inline double tanHalfFov() const {
 		return tan(DEG_RAD(fov() / 2.0));
 	}
 
@@ -148,7 +148,7 @@ public:
 			CV::Util::Geometry::OGRGeomPtr _geom;
 	};
 	
-	void fromAxis(Axis::Ptr axis, DSM* dsm, double hWidth);
+	void fromAxis(Axis::Ptr axis, DSM* dsm, double tanHalfFov);
 
 	inline OGRPolygon* toPolygon() {
 		OGRGeometry* og = _geom;

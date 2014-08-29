@@ -26,14 +26,7 @@ bool CVSensor::isValid() const {
 }
 
 bool CVSensor::load(const QString& mId) {
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
-
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	bool ret = cnn.is_valid();
 	if (!ret) {
 		return false;
@@ -70,14 +63,7 @@ bool CVSensor::load(const QString& mId) {
 }
 
 bool CVSensor::persist() {
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
-
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	bool ret = cnn.is_valid();
 	if (!ret) {
 		return false;
@@ -133,13 +119,8 @@ bool CVSensor::persist() {
 
 bool CVSensor::load() {
 	_isValid = false;
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
+
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 	bool ret = cnn.is_valid();
 	if (!ret) {
@@ -175,17 +156,14 @@ bool CVSensor::load() {
 }
 
 bool CVSensor::remove() {
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
+
+	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	bool ret = cnn.is_valid();
+	if (!ret) {
 		return false;
 	}
 
-	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-
-	bool ret;
 	ret = q->remove(
 		"SENSOR",
 		QStringList() << "ID = ?1",

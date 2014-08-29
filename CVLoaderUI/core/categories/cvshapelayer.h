@@ -36,6 +36,8 @@ public:
 
 	int rows() const { return _rows; }
 
+	QStringList fields() const;
+
 private:
 	QStringList _info;
 	QStringList _cols;
