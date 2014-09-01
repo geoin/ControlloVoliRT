@@ -39,6 +39,8 @@ public:
 	QStringList fields() const;
 
 private:
+	void _initLoadProcess();
+
 	QStringList _info;
 	QStringList _cols;
 	QString _table;
@@ -48,6 +50,10 @@ private:
 	QString _shp;
 
 	int _rows;
+};
+
+class CVShapeLayerEditor : public CVShapeLayer {
+
 };
 
 } // namespace Core

@@ -219,7 +219,7 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	}
 	
 	CVShapeLayer* layer = new CVShapeLayer(ctrl);
-	layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	//layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
 	layer->type(CVObject::AVOLOP);
 	layer->controlType(CVControl::PLAN);

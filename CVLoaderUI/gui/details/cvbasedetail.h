@@ -6,6 +6,7 @@
 #include <QMenu>
 #include <QFileInfo>
 #include <QScopedPointer>
+#include <QComboBox>
 #include <QFileDialog>
 
 #include "core/categories/cvcontrol.h"
@@ -33,6 +34,7 @@ public:
 	inline QMenu* detailMenu() const { return _menu; }
 
 	void createRow(QWidget* parent, const QString&, QLabel*& lab, QLabel*& info);
+	void createRow(QWidget* parent, const QString&, QLabel*& lab, QComboBox*& info);
 	
     QLineEdit* lineEdit(QWidget* p, const QPalette&); // TODO: I can find a palette from p, remove
 

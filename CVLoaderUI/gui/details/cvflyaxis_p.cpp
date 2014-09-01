@@ -29,22 +29,18 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 
 	QLabel* n = NULL;
 	QLabel* info = NULL;
-
+	
 	createRow(this, tr("Record inseriti"), n, info);
 	_labels << info;
 	form->addRow(n, info);
 
-	createRow(this, tr("Ente"), n, info);
-	_labels << info;
-	form->addRow(n, info);
+	QStringList fields = layer()->fields();
+	Q_FOREACH(QString val, fields) {
+		createRow(this, val, n, info);
+		_labels << info;
+		form->addRow(n, info);
 
-	createRow(this, tr("DT"), n, info);
-	_labels << info;
-	form->addRow(n, info);
-
-	createRow(this, tr("RID"), n, info);
-	_labels << info;
-	form->addRow(n, info);
+	}
 
 	body(form);
 

@@ -10,6 +10,8 @@ namespace Core {
 CVShapeLayer::CVShapeLayer(QObject* p) : CVObject(p), _shapeCharSet("CP1252"), _utm32_SRID(32632), _colName("GEOM") {
 	_rows = 0;
 	_isValid = false;
+	
+	_cols = fields();
 }
 
 CVShapeLayer::~CVShapeLayer() {
@@ -77,13 +79,13 @@ QStringList& CVShapeLayer::data() {
 	return _info;
 }
 
-bool CVShapeLayer::load() {
+void CVShapeLayer::_initLoadProcess() {
 	_info.clear();
 	_isValid = false;
 
 	//TODO: add count query
 
-	CV::Util::Spatialite::Connection cnn = SQL::Database::get();
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	try {
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		CV::Util::Spatialite::Recordset set = q->select(
@@ -102,9 +104,16 @@ bool CVShapeLayer::load() {
 
 	} catch (const CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
-		return false;
 	} 
+}
 
+bool CVShapeLayer::load() {
+	_initLoadProcess();
+	if (isValid() == false) {
+		return false;
+	}
+	
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	try {
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		CV::Util::Spatialite::Recordset set = q->select(

@@ -117,6 +117,10 @@ public:
 	inline void mission(const QString& id) {
 		_mission = id;
 	}
+	inline const QString& mission() const {
+		return _mission;
+	}
+
 protected:
 	bool _isPlanning;
 	QString _mission;

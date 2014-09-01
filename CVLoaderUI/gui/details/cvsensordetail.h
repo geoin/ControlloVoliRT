@@ -39,8 +39,12 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
+	QString _keyToFieldName(const QString& key);
+
     QMap<QString, QLineEdit*> _params;
     QString _uri;
+
+	bool _isEditing;
 };
 
 } // namespace Details

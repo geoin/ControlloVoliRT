@@ -4,6 +4,7 @@
 
 #include <QFormLayout>
 #include <QLineEdit>
+#include <QDoubleValidator>
 #include <QXmlStreamReader>
 #include <QMimeData>
 #include <QUrl>
@@ -15,11 +16,15 @@
 #include <QDropEvent>
 #include "gui/helper/cvactionslinker.h"
 
+#include <limits>
+
+#define CV_MAX_DECIMALS 3
+
 namespace CV {
 namespace GUI {
 namespace Details {
 
-CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p, cam) {
+CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p, cam), _isEditing(false) {
 	Helper::CVSignalLinker* linker = Helper::CVSignalHandle::get();
 	linker->on(Helper::QUIT, this, SLOT(onQuit()));
 
@@ -30,13 +35,36 @@ CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
     body(form);
 
     QPalette pal = palette();
-    _params.insert("FOV", lineEdit(this, pal));
-    _params.insert("IFOV", lineEdit(this, pal));
-    _params.insert("FREQ", lineEdit(this, pal));
-    _params.insert("SCAN_RATE", lineEdit(this, pal));
+	QLineEdit* line = NULL;
+
+	line = lineEdit(this, pal);
+	line->setValidator(new QDoubleValidator(0.0, std::numeric_limits<qreal>::max(), CV_MAX_DECIMALS, line));
+    _params.insert("FOV", line);
+
+	line = lineEdit(this, pal);
+	line->setValidator(new QDoubleValidator(0.0, std::numeric_limits<qreal>::max(), CV_MAX_DECIMALS, line));
+    _params.insert("FREQ", line);
+	
+	line = lineEdit(this, pal);
+	line->setValidator(new QDoubleValidator(0.0, std::numeric_limits<qreal>::max(), CV_MAX_DECIMALS, line));
+    _params.insert("SCAN_RATE", line);
+	
+	line = lineEdit(this, pal);
+	line->setValidator(new QDoubleValidator(0.0, std::numeric_limits<qreal>::max(), CV_MAX_DECIMALS, line));
+    _params.insert("IFOV", line);
+
+	if (sensor()->isPlanning()) {
+		line = lineEdit(this, pal);
+		line->setValidator(new QDoubleValidator(0.0, std::numeric_limits<qreal>::max(), CV_MAX_DECIMALS, line));
+		_params.insert("SPEED", line);
+	}
 
     foreach (QLineEdit* i, _params) {
-        form->addRow(_params.key(i), i);
+		QString field = _keyToFieldName(_params.key(i));
+		if (field.isEmpty()) {
+			continue;
+		}
+        form->addRow(field, i);
 		i->setMinimumHeight(26);
 		i->setMaximumHeight(26);
     }
@@ -63,7 +91,15 @@ CVSensorDetail::~CVSensorDetail() {
 }
 
 void CVSensorDetail::onQuit() {
-	int ret = CVMessageBox::message(this, tr("Chiusura applicazione(TODO)"), tr("Salvare le modifiche?"));
+	if (!_isEditing) {
+		return;
+	}
+
+	int ret = CVMessageBox::message(this, tr("<b>Modifiche parametri sensore pendenti.</b>"), tr("Salvare ora?"), 260, QString(), QMessageBox::Yes| QMessageBox::No, QMessageBox::Yes);
+	if (ret == QMessageBox::Ok) {
+		CVScopedCursor cur;
+		save();
+	}
 }
 
 void CVSensorDetail::clearAll() {
@@ -92,6 +128,8 @@ void CVSensorDetail::edit() {
 	foreach (QLineEdit* i, _params) {
 		enableLineEdit(i);
     }
+	
+	_isEditing = true;
 }
 
 void CVSensorDetail::saveFormData() {
@@ -104,6 +142,8 @@ void CVSensorDetail::saveFormData() {
     }
 
 	save();
+
+	_isEditing = false;
 }
 
 void CVSensorDetail::save() { 
@@ -112,16 +152,24 @@ void CVSensorDetail::save() {
 	s.ifov = _params.value("IFOV")->text().toDouble();
 	s.freq = _params.value("FREQ")->text().toDouble();
 	s.scan_rate = _params.value("SCAN_RATE")->text().toDouble();
+	
+	if (sensor()->isPlanning()) {
+		s.speed = _params.value("SPEED")->text().toDouble();
+	}
 
 	controller()->persist();
 }
 
 void CVSensorDetail::view() {
 	Core::CVSensor::SensorData& s = sensor()->data();
-	_params.value("FOV")->setText(QString::number(s.fov, 'f', 2));
-	_params.value("IFOV")->setText(QString::number(s.ifov, 'f', 2));
-	_params.value("FREQ")->setText(QString::number(s.freq, 'f', 2));
-	_params.value("SCAN_RATE")->setText(QString::number(s.scan_rate, 'f', 2));
+	_params.value("FOV")->setText(QString::number(s.fov, 'f', CV_MAX_DECIMALS));
+	_params.value("IFOV")->setText(QString::number(s.ifov, 'f', CV_MAX_DECIMALS));
+	_params.value("FREQ")->setText(QString::number(s.freq, 'f', CV_MAX_DECIMALS));
+	_params.value("SCAN_RATE")->setText(QString::number(s.scan_rate, 'f', CV_MAX_DECIMALS));
+	
+	if (sensor()->isPlanning()) {
+		_params.value("SPEED")->setText(QString::number(s.speed, 'f', CV_MAX_DECIMALS));
+	}
 }
 
 void CVSensorDetail::importAll(QStringList& uri) {
@@ -149,7 +197,7 @@ void CVSensorDetail::importAll(QStringList& uri) {
             }
         }
     }
-    if(i == _params.size()) {
+    if (i == _params.size()) {
 		save();
 	}
 }
@@ -179,11 +227,30 @@ void CVSensorDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 	ev->accept();
 	_uri = QString();
 }
- 
+
 void CVSensorDetail::dropEvent(QDropEvent* ev) {
 	ev->accept();
     importAll(QStringList() << _uri);
 	_uri = QString();
+}
+
+QString CVSensorDetail::_keyToFieldName(const QString& key) {
+	if (key == "FOV") {
+		return QString(tr("Angolo di scansione"));
+	}
+	if (key == "FREQ") {
+		return QString(tr("Frequenza di campionamento"));
+	}
+	if (key == "SCAN_RATE") {
+		return QString(tr("Frequenza di scansione"));
+	}
+	if (key == "SPEED") {
+		return QString(tr("Velocità aereo"));
+	}
+	if (key == "IFOV") {
+		return QString(tr("Divergenza fascio"));
+	}
+	return QString();
 }
 
 } // namespace Details

@@ -17,7 +17,7 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 	for (int i = 0; i < 4; i++) {
 		DPOINT pa = ( i < 2 ) ? axis->first() : axis->last();
 		double x = ( i == 0 || i == 3 ) ? -thf : thf;
-		DPOINT pd(x, 0, -1); //H = 1, DPOINT (h*thf, 0, -h)
+		DPOINT pd(x, 0, -1); //h = 1, DPOINT (h*thf, 0, -h)
 		pd = m * pd;
 
 		DPOINT pt;
@@ -119,7 +119,7 @@ void Block::add(Strip::Ptr strip) {
 	}
 }
 
-void ControlPoint::zDiffFrom(DSM* dsm) {
+ControlPoint::Status ControlPoint::zDiffFrom(DSM* dsm) {
 	const OGRPoint* p = toPoint();
 	double q = dsm->GetQuota(p->getX(), p->getY());
 	if (q == Z_NOVAL) {
@@ -130,9 +130,12 @@ void ControlPoint::zDiffFrom(DSM* dsm) {
 		_status = VALID;
 		_diff = q  - _quota;
 	}
+
+	return _status;
 }
 
-void CloudStrip::computeDensity() {
+double CloudStrip::computeDensity() {
+	//TODO: use RAII handler 
 	if (!_factory->Open(_cloudPath, false)) {
 		throw std::runtime_error("Cannot open " + _cloudPath);
 	}
@@ -140,15 +143,24 @@ void CloudStrip::computeDensity() {
 	OGRPolygon* pol = _strip->toPolygon();
 	double area = pol->get_Area();
 	if (area == 0.0) {
+		_factory->Close();
 		throw std::runtime_error("Empty strip area");
 	}
 
 	DSM* dsm = _factory->GetDsm();
 	unsigned int count = dsm->Npt();
 	if (count == 0) {
+		_factory->Close();
 		throw std::runtime_error("Empty cloud");
 	}
 
 	_density = count / area;
 	_factory->Close();
+
+	return _density;
+}
+
+double CloudStrip::computeDensity(Sensor::Ptr s, double speed) {
+	_density = 2*s->tanHalfFov() * speed/s->freq();
+	return _density;
 }

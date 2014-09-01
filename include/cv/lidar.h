@@ -247,8 +247,11 @@ public:
 	void name(const std::string& n) { _name = n; }
 	const std::string& name() const { return _name; }
 
-	void zDiffFrom(DSM*);
-	double zDiff() const { return _diff; } 
+	Status ControlPoint::zDiffFrom(DSM* dsm);
+	double zDiff() const { 
+		if (_status == UNKNOWN) { throw std::runtime_error("Uninitialized control point"); }
+		return _diff; 
+	} 
 
 	inline bool isValid() const { return _status == VALID; }
 
@@ -318,7 +321,8 @@ public:
 
 	void cloudPath(const std::string& path) { _cloudPath = path; }
 	
-	void computeDensity();
+	double computeDensity();
+	double computeDensity(Sensor::Ptr, double speed);
 
 	DSM_Factory* dsm(bool open = true) { 
 		bool ret = true;

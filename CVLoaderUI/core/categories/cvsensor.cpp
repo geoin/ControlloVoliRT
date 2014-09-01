@@ -33,10 +33,15 @@ bool CVSensor::load(const QString& mId) {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+	QStringList fields;
+	fields << "ID" << "FOV" << "IFOV" << "FREQ" << "SCAN_RATE";
+	if (isPlanning()) {
+		fields << "SPEED";
+	}
 
 	try {
 		CV::Util::Spatialite::Recordset set = q->select(
-			QStringList() << "ID" << "FOV" << "IFOV" << "FREQ" << "SCAN_RATE" << "PLANNING",
+			fields,
 			QStringList() << "SENSOR", 
 			QStringList() << "ID = ?1",
 			QVariantList() << mId
@@ -50,6 +55,9 @@ bool CVSensor::load(const QString& mId) {
 			_sensor.ifov = set[++i].toDouble();
 			_sensor.freq = set[++i].toDouble();
 			_sensor.scan_rate = set[++i].toDouble();
+			if (isPlanning()) { 
+				_sensor.speed = set[++i].toDouble();
+			}
 
 			_isValid = true;
 		} 
@@ -72,32 +80,50 @@ bool CVSensor::persist() {
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	try {
 		if (isValid()) {
+			QStringList fields; fields << "FOV=?1" << "IFOV=?2" << "FREQ=?3" << "SCAN_RATE=?4" << "PLANNING=?5";
+			QStringList idx; idx << "ID=?6";
+			QVariantList vals; vals << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << isPlanning() << _sensor.id;
+
+			if (isPlanning()) {
+				fields << "SPEED=?7";
+				vals << _sensor.speed;
+			}
 			ret = q->update( //TODO: real id
 				"SENSOR", 
-				QStringList() << "FOV=?1" << "IFOV=?2" << "FREQ=?3" << "SCAN_RATE=?4" << "PLANNING=?5",
-				QStringList() << "ID=?6",
-				QVariantList() << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << isPlanning() << _sensor.id //TODO
+				fields,
+				idx,
+				vals
 			);
 			
 		} else {	
 			_sensor.id = QUuid::createUuid().toString();
+
+			QStringList fields; fields << "ID" << "FOV" << "IFOV" << "FREQ" << "SCAN_RATE" << "PLANNING";
+			QStringList idx; idx << "?1" << "?2" << "?3" << "?4" << "?5" << "?6";
+			QVariantList vals; vals << _sensor.id << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << isPlanning();
+
+			if (isPlanning()) {
+				fields << "SPEED";
+				idx << "?7";
+				vals << _sensor.speed;
+			}
+
 			ret = q->insert(
 				"SENSOR", 
-				QStringList() << "ID" << "FOV" << "IFOV" << "FREQ" << "SCAN_RATE" << "PLANNING",
-				QStringList() << "?1" << "?2" << "?3" << "?4" << "?5" << "?6",
-				QVariantList() << _sensor.id << _sensor.fov << _sensor.ifov << _sensor.freq << _sensor.scan_rate << isPlanning()
+				fields,
+				idx,
+				vals
 			);
 		}
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
 		return false;
 	}
-
+	
+	_isValid = ret;
 	if (!ret) {
 		return false;
 	}
-
-	_isValid = ret;
 
 	if (!isPlanning()) {
 		assert(!_mission.isEmpty());
@@ -128,9 +154,17 @@ bool CVSensor::load() {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+
+	QStringList fields;
+	fields << "ID" << "FOV" << "IFOV" << "FREQ" << "SCAN_RATE";
+
+	if (isPlanning()) {
+		fields << "SPEED";
+	}
+
 	try {
 		CV::Util::Spatialite::Recordset set = q->select(
-			QStringList() << "ID" << "FOV" << "IFOV" << "FREQ" << "SCAN_RATE" << "PLANNING",
+			fields,
 			QStringList() << "SENSOR", 
 			QStringList() << "PLANNING = ?1",
 			QVariantList() << 1
@@ -143,6 +177,10 @@ bool CVSensor::load() {
 			_sensor.ifov = set[++i].toDouble();
 			_sensor.freq = set[++i].toDouble();
 			_sensor.scan_rate = set[++i].toDouble();
+
+			if (isPlanning()) {
+				_sensor.speed = set[++i].toDouble();
+			}
 			
 			_isValid = true;
 		} 

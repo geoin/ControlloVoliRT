@@ -70,6 +70,18 @@ void CVBaseDetail::createRow(QWidget* p, const QString& label, QLabel*& lab, QLa
 	info->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 }
 
+void CVBaseDetail::createRow(QWidget* p, const QString& label, QLabel*& lab, QComboBox*& info) {
+	lab = new QLabel(label, p);
+	lab->setMinimumHeight(26);
+	lab->setMaximumHeight(26);
+	lab->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
+
+	info = new QComboBox(p);
+	info->setMinimumHeight(26);
+	info->setMaximumHeight(26);
+	//info->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
+}
+
 QLineEdit* CVBaseDetail::lineEdit(QWidget* p, const QPalette& pal) {
     QLineEdit* line = new QLineEdit("", p);
     line->setContextMenuPolicy(Qt::NoContextMenu);
