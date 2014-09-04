@@ -15,6 +15,10 @@
 #include <QUrl>
 #include <QDir>
 
+#include <QTableWidget>
+#include <QHeaderView>
+#include <QComboBox>
+
 namespace CV {
 namespace GUI {
 namespace Details {
@@ -24,34 +28,77 @@ namespace Details {
 CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	title(tr("Assi di volo"));
 	description(tr("File shape"));
-
-    QFormLayout* form = new QFormLayout;
-
-	QLabel* n = NULL;
-	QLabel* info = NULL;
 	
-	createRow(this, tr("Record inseriti"), n, info);
-	_labels << info;
-	form->addRow(n, info);
-
-	QStringList fields = layer()->fields();
-	Q_FOREACH(QString val, fields) {
-		createRow(this, val, n, info);
-		_labels << info;
-		form->addRow(n, info);
-
-	}
-
-	body(form);
+    QVBoxLayout* form = new QVBoxLayout;
+	table = new QTableWidget(0, 2, body());
 
 	if (controller()->isValid()) {
-		QStringList& info = layer()->data();
-		_labels.at(0)->setText(QString::number(layer()->rows()));
-		for (int i = 0; i < info.size(); ++i) {
-			QLabel* lab = _labels.at(i + 1);
-			lab->setText(info.at(i));
+		_populateTable();
+	}
+
+	form->addWidget(table);
+	body(form);
+
+}
+
+void CVFlyAxis_p::_populateTable() {
+	QStringList fields = layer()->fields();
+
+	Core::CVShapeLayerWithMeta::CVMetaColList meta = layer()->refColumns();
+	QStringList vals;
+	vals << "";
+	Q_FOREACH(Core::CVShapeLayerWithMeta::MetaCol col, meta) {
+		vals << col.ref;
+	}
+		
+	table->clear();
+
+	table->setRowCount(fields.size());
+	table->setVerticalHeaderLabels(fields);
+	table->setHorizontalHeaderLabels(QStringList() << "" << "Valori primo record");
+	//table->horizontalHeader()->hide();
+	table->horizontalHeader()->setStretchLastSection(true);
+	table->horizontalHeader()->setDefaultSectionSize(120);
+	for (int i = 0; i < table->columnCount() - 1; ++i) {
+		table->horizontalHeader()->setResizeMode(i, QHeaderView::Interactive);
+	}
+	
+	for (int i = 0; i < table->rowCount(); ++i) {
+		table->verticalHeader()->setResizeMode(i, QHeaderView::Fixed);
+		QComboBox* box = new QComboBox(table);
+		box->setObjectName(fields.at(i));
+		box->addItems(vals);
+		_editors << box;
+		table->setCellWidget(i, 0, box);
+
+		connect(box, SIGNAL(currentIndexChanged (const QString&)), this, SLOT(onComboSelected(const QString&)));
+	}
+
+	QStringList& info = layer()->data();
+	for (int i = 0; i < info.size(); ++i) {
+		QTableWidgetItem* item = new QTableWidgetItem(info.at(i));
+		item->setTextAlignment(Qt::AlignRight);
+		item->setFlags(item->flags() ^ Qt::ItemIsEditable);
+		table->setItem(i, 1, item);
+
+	}
+}
+
+void CVFlyAxis_p::onComboSelected(const QString& val) {
+	if (val.isEmpty()) {
+		return;
+	}
+
+	QComboBox* box = qobject_cast<QComboBox*>(sender());
+	QString data = box->objectName();
+
+	Q_FOREACH(QComboBox* b, _editors) {
+		if (b != box && b->currentIndex() == box->currentIndex()) {
+			b->setCurrentIndex(0);
 		}
 	}
+
+	bool ret = layer()->edit(val, data);
 }
 
 void CVFlyAxis_p::searchFile() {
@@ -71,21 +118,16 @@ void CVFlyAxis_p::searchFile() {
 void CVFlyAxis_p::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
 	if (controller()->persist()) {
-		QStringList& info = layer()->data();
-		for (int i = 0; i < info.size(); ++i) {
-			QLabel* lab = _labels.at(i + 1);
-			lab->setText(info.at(i));
-		}
+		_populateTable();
 	}
-	_labels.at(0)->setText(QString::number(layer()->rows()));
 }
  
 void CVFlyAxis_p::clearAll() {
 	controller()->remove();
-	for (int i = 0; i < _labels.size(); ++i) {
-		QLabel* lab = _labels.at(i);
-		lab->setText("");
-	}
+	table->clear();
+	table->setRowCount(0);
+	table->setColumnCount(0);
+	table->reset();
 }
 
 CVFlyAxis_p::~CVFlyAxis_p() {

@@ -218,7 +218,7 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 		ctrl->insert(sensor);
 	}
 	
-	CVShapeLayer* layer = new CVShapeLayer(ctrl);
+	CVShapeLayer* layer = new CVShapeLayerWithMeta(ctrl);
 	//layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
 	layer->type(CVObject::AVOLOP);

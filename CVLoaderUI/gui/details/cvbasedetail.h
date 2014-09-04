@@ -31,6 +31,7 @@ public:
 	inline QString description() const { return _descr->text(); }
 
 	inline void body(QLayout* l) { _body->setLayout(l); }
+	inline QWidget* body() { return _body; }
 	inline QMenu* detailMenu() const { return _menu; }
 
 	void createRow(QWidget* parent, const QString&, QLabel*& lab, QLabel*& info);

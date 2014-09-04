@@ -141,5 +141,49 @@ bool CVShapeLayer::load() {
 	return true;
 }
 
+/* META COLS */
+
+CVShapeLayerWithMeta::CVMetaColList CVShapeLayerWithMeta::refColumns() const {
+	CVMetaColList list;
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
+	try {
+		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+		CV::Util::Spatialite::Recordset set = q->select(
+			QStringList(),
+			QStringList() << "_META_COLUMNS_", 
+			QStringList() << "CONTROL = ?1" << " OBJECT = ?2",
+			QVariantList() << this->controlType() << this->type()
+		);
+
+		while (!set.eof()) {
+			MetaCol col;
+			col.ref = QString(set[2].toString().c_str());
+			col.target = QString(set[3].toString().c_str());
+
+			list << col;
+
+			set.next();
+		}
+	} catch (const std::exception&) {
+		return CVMetaColList();
+	}
+	return list;
+}
+
+bool CVShapeLayerWithMeta::edit(QString ref, QString target) {
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
+	try {
+		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+		return q->update(
+			"_META_COLUMNS_",
+			QStringList() << "TARGET = ?1",
+			QStringList() << "REF = ?2",
+			QVariantList() << target << ref
+		);
+	} catch (const std::exception&) {
+		return false;
+	}
+}
+
 } // namespace Core
 } // namespace CV

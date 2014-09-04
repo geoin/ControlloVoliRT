@@ -13,7 +13,7 @@ class CVShapeLayer : public CVObject {
 
 public:
 	CVShapeLayer(QObject *parent);
-	~CVShapeLayer();
+	virtual ~CVShapeLayer();
 
 	virtual bool isValid() const;
 	virtual bool persist();
@@ -38,12 +38,14 @@ public:
 
 	QStringList fields() const;
 
+protected:
+	QStringList _cols;
+	QString _table;
+
 private:
 	void _initLoadProcess();
 
 	QStringList _info;
-	QStringList _cols;
-	QString _table;
 
 	QString _shapeCharSet, _colName;
 	short _utm32_SRID;
@@ -52,8 +54,20 @@ private:
 	int _rows;
 };
 
-class CVShapeLayerEditor : public CVShapeLayer {
+class CVShapeLayerWithMeta : public CVShapeLayer {
+public:
+	CVShapeLayerWithMeta(QObject* p) : CVShapeLayer(p) {}
+	virtual ~CVShapeLayerWithMeta() {}
 
+	struct MetaCol {
+		QString ref, target;
+	};
+
+	typedef QList<MetaCol> CVMetaColList;
+
+	CVMetaColList refColumns() const;
+
+	bool edit(QString ref, QString target);
 };
 
 } // namespace Core

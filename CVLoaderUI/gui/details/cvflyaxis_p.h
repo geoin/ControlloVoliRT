@@ -11,6 +11,7 @@
 #include <QList>
 
 class QLabel;
+class QTableWidget;
 
 namespace CV {
 namespace GUI {
@@ -27,7 +28,10 @@ public:
 	virtual void searchFile();
 	virtual void importAll(QStringList&);
 
-	inline Core::CVShapeLayer* layer() const { return static_cast<Core::CVShapeLayer*>(controller()); }
+	inline Core::CVShapeLayerWithMeta* layer() const { return static_cast<Core::CVShapeLayerWithMeta*>(controller()); }
+
+public slots:
+	void onComboSelected(const QString&);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -36,9 +40,13 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
+	void _populateTable();
+
     QScopedPointer<QFileInfo> _file;
 	QString _uri;
-	QList<QLabel*> _labels;
+	QList<QComboBox*> _editors;
+
+	QTableWidget* table;
 };
 
 } // namespace Details
