@@ -143,8 +143,8 @@ bool CVShapeLayer::load() {
 
 /* META COLS */
 
-CVShapeLayerWithMeta::CVMetaColList CVShapeLayerWithMeta::refColumns() const {
-	CVMetaColList list;
+QMap<QString, QString> CVShapeLayerWithMeta::refColumns() const {
+	QMap<QString, QString> map;
 	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	try {
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
@@ -156,18 +156,14 @@ CVShapeLayerWithMeta::CVMetaColList CVShapeLayerWithMeta::refColumns() const {
 		);
 
 		while (!set.eof()) {
-			MetaCol col;
-			col.ref = QString(set[2].toString().c_str());
-			col.target = QString(set[3].toString().c_str());
-
-			list << col;
+			map.insert(QString(set[2].toString().c_str()), QString(set[3].toString().c_str()));
 
 			set.next();
 		}
 	} catch (const std::exception&) {
-		return CVMetaColList();
+		return QMap<QString, QString>();
 	}
-	return list;
+	return map;
 }
 
 bool CVShapeLayerWithMeta::edit(QString ref, QString target) {

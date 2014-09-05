@@ -1,5 +1,6 @@
 #include "cvflyaxis_p.h"
 #include "core/cvcore_utils.h"
+#include "gui/cvgui_utils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -30,7 +31,7 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	description(tr("File shape"));
 	
     QVBoxLayout* form = new QVBoxLayout;
-	table = new QTableWidget(0, 2, body());
+	table = new QTableWidget(body());
 
 	if (controller()->isValid()) {
 		_populateTable();
@@ -38,48 +39,88 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 
 	form->addWidget(table);
 	body(form);
-
 }
 
 void CVFlyAxis_p::_populateTable() {
+	CVScopedCursor cur;
+
 	QStringList fields = layer()->fields();
 
-	Core::CVShapeLayerWithMeta::CVMetaColList meta = layer()->refColumns();
+	QMap<QString, QString> meta = layer()->refColumns();
+	
+	bool editable = false;
+
+	//Check reference columns
+	if (meta.size()) {
+		QStringList keys = meta.keys();
+		int count = 0;
+		Q_FOREACH(QString k, keys) {
+			if (fields.contains(k)) {
+				count++;
+			}
+		}
+
+		editable = count < keys.size();
+	}
+
+	//Check that actual targets columns are valid in this shape, if not clear it
+	QStringList targets = meta.values();
+	Q_FOREACH(QString v, targets) { 
+		if (fields.contains(v) == false) {
+			layer()->edit(meta.key(v), QString());
+		}
+	}
+
 	QStringList vals;
 	vals << "";
-	Q_FOREACH(Core::CVShapeLayerWithMeta::MetaCol col, meta) {
-		vals << col.ref;
+
+	QMap<QString, QString>::const_iterator i = meta.constBegin();
+	while (i != meta.constEnd()) {
+		vals << i.key();
+		++i;
 	}
 		
 	table->clear();
-
+	_editors.clear();
+	
+	table->setColumnCount(editable ? 2 : 1);
 	table->setRowCount(fields.size());
 	table->setVerticalHeaderLabels(fields);
-	table->setHorizontalHeaderLabels(QStringList() << "" << "Valori primo record");
-	//table->horizontalHeader()->hide();
-	table->horizontalHeader()->setStretchLastSection(true);
+	table->setHorizontalHeaderLabels(QStringList() << "Valori di esempio" << "Riferimento");
+
+	table->horizontalHeader()->setStretchLastSection(!editable);
 	table->horizontalHeader()->setDefaultSectionSize(120);
+
 	for (int i = 0; i < table->columnCount() - 1; ++i) {
-		table->horizontalHeader()->setResizeMode(i, QHeaderView::Interactive);
+		table->horizontalHeader()->setResizeMode(i, QHeaderView::Stretch);
 	}
 	
-	for (int i = 0; i < table->rowCount(); ++i) {
-		table->verticalHeader()->setResizeMode(i, QHeaderView::Fixed);
-		QComboBox* box = new QComboBox(table);
-		box->setObjectName(fields.at(i));
-		box->addItems(vals);
-		_editors << box;
-		table->setCellWidget(i, 0, box);
-
-		connect(box, SIGNAL(currentIndexChanged (const QString&)), this, SLOT(onComboSelected(const QString&)));
-	}
-
+	int colIdx = 0;
 	QStringList& info = layer()->data();
 	for (int i = 0; i < info.size(); ++i) {
 		QTableWidgetItem* item = new QTableWidgetItem(info.at(i));
-		item->setTextAlignment(Qt::AlignRight);
+		item->setTextAlignment(Qt::AlignRight | Qt::AlignCenter);
 		item->setFlags(item->flags() ^ Qt::ItemIsEditable);
-		table->setItem(i, 1, item);
+		table->setItem(i, colIdx, item);
+	}
+	colIdx++;
+
+	if (editable) {
+		for (int i = 0; i < table->rowCount(); ++i) {
+			table->verticalHeader()->setResizeMode(i, QHeaderView::Fixed);
+			QComboBox* box = new QComboBox(table);
+			box->setObjectName(fields.at(i));
+			box->addItems(vals);
+			table->setCellWidget(i, colIdx, box);
+
+			QString k = meta.key(fields.at(i));
+			if (!k.isEmpty()) {
+				box->setCurrentIndex(box->findText(k));
+			}
+		
+			_editors << box;
+			connect(box, SIGNAL(currentIndexChanged (const QString&)), this, SLOT(onComboSelected(const QString&)));
+		}
 
 	}
 }

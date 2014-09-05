@@ -4,6 +4,7 @@
 #include "core/categories/cvcontrol.h"
 
 #include <QStringList>
+#include <QMap>
 
 namespace CV {
 namespace Core {
@@ -59,13 +60,7 @@ public:
 	CVShapeLayerWithMeta(QObject* p) : CVShapeLayer(p) {}
 	virtual ~CVShapeLayerWithMeta() {}
 
-	struct MetaCol {
-		QString ref, target;
-	};
-
-	typedef QList<MetaCol> CVMetaColList;
-
-	CVMetaColList refColumns() const;
+	QMap<QString, QString> refColumns() const;
 
 	bool edit(QString ref, QString target);
 };

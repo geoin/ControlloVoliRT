@@ -167,7 +167,7 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 	axis->type(CVObject::AVOLOV);
 	axis->controlType(fly_t);
 	axis->table("AVOLOV");
-	axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
+	//axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	ctrl->insert(axis);
 
 	ctrl->insert(plan->at(2));
