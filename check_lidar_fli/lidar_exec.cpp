@@ -88,6 +88,8 @@ bool lidar_exec::run()
 
 		_read_ref_val();
 
+		_findReferenceColumns();
+
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 		
 		if ( _type == FLY_TYPE ) {
@@ -147,9 +149,10 @@ bool lidar_exec::run()
 	}
 }
 
+// TODO (CHECK): removing mission for now
 void lidar_exec::_get_planned_axis(std::vector<CV::Lidar::Axis::Ptr>& _projectAxis) {
 	std::stringstream sql;
-    sql << "SELECT A_VOL_CS, mission, A_VOL_QT, AsBinary(GEOM) as GEOM FROM AVOLOP";
+    sql << "SELECT " << _stripNameCol << ", "/*mission, "*/ << _quotaCol << ", AsBinary(GEOM) as GEOM FROM AVOLOP";
     Statement stm(cnn);
     stm.prepare(sql.str());
     Recordset rs = stm.recordset();
@@ -157,9 +160,9 @@ void lidar_exec::_get_planned_axis(std::vector<CV::Lidar::Axis::Ptr>& _projectAx
 	while (!rs.eof()) {
 		Blob b = rs["GEOM"].toBlob();
 		OGRGeomPtr g = b;
-		CV::Lidar::Axis::Ptr axis(new CV::Lidar::Axis(g, rs["A_VOL_QT"].toDouble()));
-		axis->stripName(rs["A_VOL_CS"].toString());
-		axis->missionName(rs["mission"].toString());
+		CV::Lidar::Axis::Ptr axis(new CV::Lidar::Axis(g, rs[_quotaCol ].toDouble()));
+		axis->stripName(rs[_stripNameCol].toString());
+		axis->missionName("");//rs["mission"].toString());
 		_projectAxis.push_back(axis);
 
 		rs.next();
@@ -663,7 +666,7 @@ void lidar_exec::_process_strips()
 	// select data from flight lines
 	table = std::string(ASSI_VOLO) + (_type == PRJ_TYPE ? "P" : "V");
 	std::stringstream sql3;
-	sql3 << "SELECT A_VOL_QT, A_VOL_CS, mission, AsBinary(geom) geom from " << table;
+	sql3 << "SELECT " << _quotaCol << ", " << _stripNameCol << /*", mission*/", AsBinary(geom) geom from " << table;
 	Statement stm1(cnn);
 	stm1.prepare(sql3.str());
 	Recordset rs = stm1.recordset();
@@ -672,20 +675,19 @@ void lidar_exec::_process_strips()
 
 	DSM* ds = _df->GetDsm();
 
-
 	while ( !rs.eof() ) {
         Blob blob =  rs["geom"].toBlob();
         OGRGeomPtr pol = blob;
 		double z = rs[0];
 		std::string strip = rs[1];
-		std::string mission = rs[2];
+		std::string mission = "";//rs[2];
 
 		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));
 		axis->stripName(strip);
 		axis->missionName(mission);
 
 		if (!axis->isValid()) { 
-			throw std::runtime_error("asse di volo non valido");
+			throw std::runtime_error("Asse di volo non valido");
 		}
 
 		Lidar::Sensor::Ptr lidar;
@@ -1072,4 +1074,36 @@ void lidar_exec::_get_dif()
 	stm0.execute();
 	stm0.reset();
 	cnn.commit_transaction();
+}
+
+void lidar_exec::_findReferenceColumns() {
+	std::stringstream sql;
+	sql << "SELECT TARGET FROM _META_COLUMNS_ WHERE CONTROL = 3 AND OBJECT = 2 and REF = ?1";
+	Statement stm(cnn);
+
+	stm.prepare(sql.str());
+	stm[1] = "A_VOL_QT";
+	Recordset rs = stm.recordset();
+	if (rs.eof()) {
+		throw std::runtime_error("Errore durante il reperimento di A_VOL_QT");
+	}
+
+	_quotaCol = rs[0].toString();
+	if (_quotaCol.size() == 0) {
+		throw std::runtime_error("Errore, selezionare la colonna dello shape contente i valori di quota");
+	}
+
+	stm.reset();
+	
+	stm.prepare(sql.str());
+	stm[1] = "A_VOL_CS";
+	rs = stm.recordset();
+	if (rs.eof()) {
+		throw std::runtime_error("Errore durante il reperimento di A_VOL_CS");
+	}
+
+	_stripNameCol = rs[0].toString();
+	if (_stripNameCol.size() == 0) {
+		throw std::runtime_error("Errore, selezionare la colonna dello shape contente il nome delle strisciate");
+	}
 }

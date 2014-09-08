@@ -219,7 +219,6 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	}
 	
 	CVShapeLayer* layer = new CVShapeLayerWithMeta(ctrl);
-	//layer->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
 	layer->table("AVOLOP");
 	layer->type(CVObject::AVOLOP);
 	layer->controlType(CVControl::PLAN);
@@ -247,8 +246,8 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 CVControl* CVProjectManager::_orto(CVProject* proj, bool b) {
 	CVControl* ctrl = new CVControl(CVControl::ORTO, proj);
 	ctrl->uri(proj->db());
-
-	CVShapeLayer* layer = new CVShapeLayer(ctrl);
+	
+	CVShapeLayer* layer = new CVShapeLayerWithMeta(ctrl);
 	layer->columns(QStringList());
 	layer->table("QUADRO_RT");
 	layer->type(CVObject::QUADRO);

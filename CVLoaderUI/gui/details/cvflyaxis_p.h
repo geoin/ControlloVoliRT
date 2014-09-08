@@ -30,8 +30,12 @@ public:
 
 	inline Core::CVShapeLayerWithMeta* layer() const { return static_cast<Core::CVShapeLayerWithMeta*>(controller()); }
 
+signals:
+	void refreshGrid();
+
 public slots:
 	void onComboSelected(const QString&);
+	void populateTable();
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -40,7 +44,7 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
-	void _populateTable();
+	void _clearRefCols();
 
     QScopedPointer<QFileInfo> _file;
 	QString _uri;

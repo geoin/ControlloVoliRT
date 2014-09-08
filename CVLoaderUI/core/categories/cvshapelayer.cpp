@@ -25,7 +25,7 @@ bool CVShapeLayer::isValid() const {
 QStringList CVShapeLayer::fields() const {	
 	QStringList f;
 	try {
-		CV::Util::Spatialite::Connection cnn = SQL::Database::get();
+		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		f = q->columns(_table);
 	} catch(...) {}

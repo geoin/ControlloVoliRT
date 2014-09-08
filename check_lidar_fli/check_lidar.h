@@ -123,6 +123,9 @@ private:
 
     int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
 	double LID_TOL_Z;
+
+	void _findReferenceColumns();
+	std::string _quotaCol, _stripNameCol;
 };
 
 class check_lidar: public Poco::Util::Application {

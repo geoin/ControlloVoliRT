@@ -24,8 +24,6 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-//TODO: needs cleanup, field generation
-
 CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	title(tr("Assi di volo"));
 	description(tr("File shape"));
@@ -34,14 +32,16 @@ CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	table = new QTableWidget(body());
 
 	if (controller()->isValid()) {
-		_populateTable();
+		populateTable();
 	}
 
 	form->addWidget(table);
 	body(form);
+
+	connect(this, SIGNAL(refreshGrid()), this, SLOT(populateTable()));
 }
 
-void CVFlyAxis_p::_populateTable() {
+void CVFlyAxis_p::populateTable() {
 	CVScopedCursor cur;
 
 	QStringList fields = layer()->fields();
@@ -59,15 +59,12 @@ void CVFlyAxis_p::_populateTable() {
 				count++;
 			}
 		}
-
 		editable = count < keys.size();
-	}
 
-	//Check that actual targets columns are valid in this shape, if not clear it
-	QStringList targets = meta.values();
-	Q_FOREACH(QString v, targets) { 
-		if (fields.contains(v) == false) {
-			layer()->edit(meta.key(v), QString());
+		if (!editable) { //all the reference cols are in this shape, so set it 
+			Q_FOREACH(QString k, keys) {
+				layer()->edit(k, k);
+			}
 		}
 	}
 
@@ -119,9 +116,8 @@ void CVFlyAxis_p::_populateTable() {
 			}
 		
 			_editors << box;
-			connect(box, SIGNAL(currentIndexChanged (const QString&)), this, SLOT(onComboSelected(const QString&)));
+			connect(box, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(onComboSelected(const QString&)));
 		}
-
 	}
 }
 
@@ -129,7 +125,7 @@ void CVFlyAxis_p::onComboSelected(const QString& val) {
 	if (val.isEmpty()) {
 		return;
 	}
-
+	
 	QComboBox* box = qobject_cast<QComboBox*>(sender());
 	QString data = box->objectName();
 
@@ -140,6 +136,9 @@ void CVFlyAxis_p::onComboSelected(const QString& val) {
 	}
 
 	bool ret = layer()->edit(val, data);
+	if (!ret) {
+		box->setCurrentIndex(0);
+	}
 }
 
 void CVFlyAxis_p::searchFile() {
@@ -159,16 +158,32 @@ void CVFlyAxis_p::searchFile() {
 void CVFlyAxis_p::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
 	if (controller()->persist()) {
-		_populateTable();
+		_clearRefCols();
+
+		populateTable();
 	}
 }
- 
+
 void CVFlyAxis_p::clearAll() {
 	controller()->remove();
 	table->clear();
 	table->setRowCount(0);
 	table->setColumnCount(0);
 	table->reset();
+
+	_clearRefCols();
+}
+
+void CVFlyAxis_p::_clearRefCols() {
+	QMap<QString, QString> meta = layer()->refColumns();
+
+	QMap<QString, QString>::const_iterator i = meta.constBegin();
+	QMap<QString, QString>::const_iterator end = meta.constEnd();
+	while (i != end) {
+		QString key = i.key();
+		layer()->edit(key, QString(""));
+		i++;
+	}
 }
 
 CVFlyAxis_p::~CVFlyAxis_p() {
