@@ -46,6 +46,9 @@ public:
 
 	inline void scan(double scan) { _scan = scan; }
 	inline double scan() const { return _scan; }
+	
+	inline void speed(double speed) { _speed = speed; }
+	inline double speed() const { return _speed; }
 
 	inline double tanHalfFov() const {
 		return tan(DEG_RAD(fov() / 2.0));
@@ -56,6 +59,7 @@ private:
 	double _ifov;
 	double _freq;
 	double _scan;
+	double _speed;
 };
 
 class Axis {
@@ -130,7 +134,7 @@ public:
 
 	Strip() : _yaw(0.0), _length(0.0) {}
 
-	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0) {
+	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0), _density(0.0) {
 		geom(g);
 	}
 
@@ -179,11 +183,14 @@ public:
 
 	Axis::Ptr axis() const { return _axis; }
 	bool hasAxis() const { return !_axis.isNull(); }
+
+	double computeDensity(Sensor::Ptr, DSM* dsm);
 	
 private:
 	std::string _missionName, _name;
 	double _length;
 	double _yaw;
+	double _density;
 
 	CV::Util::Geometry::OGRGeomPtr _geom;
 
@@ -322,7 +329,6 @@ public:
 	void cloudPath(const std::string& path) { _cloudPath = path; }
 	
 	double computeDensity();
-	double computeDensity(Sensor::Ptr, double speed);
 
 	DSM_Factory* dsm(bool open = true) { 
 		bool ret = true;

@@ -30,13 +30,7 @@ bool CVFileInput::isValid() const {
 
 bool CVFileInput::remove() { //TODO, should use id
 	QFile::remove(_target);
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(QString(uri() + QDir::separator() + SQL::database).toStdString());
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	bool ret = q->remove(
@@ -64,14 +58,8 @@ bool CVFileInput::persist() {
 	} else {
 		QFile::remove(_tmp);
 
-		CV::Util::Spatialite::Connection cnn;
 		QString db(uri() + QDir::separator() + SQL::database);
-		try {
-			cnn.open(db.toStdString());
-		} catch (CV::Util::Spatialite::spatialite_error& err) {
-			Q_UNUSED(err)
-			return false;
-		}
+		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		bool ret = q->insert(
@@ -100,15 +88,8 @@ bool CVDemInput::load() {
 	data().clear();
 	
 	if (_target.isEmpty()) {
-		CV::Util::Spatialite::Connection cnn;
 		try {
-			cnn.open(QString(uri() + QDir::separator() + SQL::database).toStdString());
-		} catch (CV::Util::Spatialite::spatialite_error& err) {
-			Q_UNUSED(err)
-			return false;
-		}
-	
-		try {
+			CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 			Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 			CV::Util::Spatialite::Recordset set = q->select(
 				QStringList() << "ID" << "URI",

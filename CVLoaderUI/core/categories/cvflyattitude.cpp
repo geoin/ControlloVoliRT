@@ -34,14 +34,8 @@ bool CVFlyAttitude::isValid() const {
 
 bool CVFlyAttitude::remove() { //TODO, should use id
 	_data.clear();
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(QString(uri()).toStdString());
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
 
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	bool ret = q->remove(
 		"ASSETTI", 

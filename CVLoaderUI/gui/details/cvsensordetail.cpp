@@ -236,16 +236,16 @@ void CVSensorDetail::dropEvent(QDropEvent* ev) {
 
 QString CVSensorDetail::_keyToFieldName(const QString& key) {
 	if (key == "FOV") {
-		return QString(tr("Angolo di scansione"));
+		return QString(tr("Angolo di scansione (grad)"));
 	}
 	if (key == "FREQ") {
-		return QString(tr("Frequenza di campionamento"));
+		return QString(tr("Frequenza di campionamento (KHz)"));
 	}
 	if (key == "SCAN_RATE") {
-		return QString(tr("Frequenza di scansione"));
+		return QString(tr("Frequenza di scansione (Hz)"));
 	}
 	if (key == "SPEED") {
-		return QString(tr("Velocità aereo"));
+		return QString(tr("Velocità aereo (m/s)"));
 	}
 	if (key == "IFOV") {
 		return QString(tr("Divergenza fascio"));

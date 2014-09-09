@@ -28,13 +28,7 @@ bool CVCamera::isValid() const {
 }
 
 bool CVCamera::persist() { 
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 	bool ret = cnn.is_valid();
 	if (!ret) {
@@ -86,13 +80,7 @@ bool CVCamera::persist() {
 }
 
 bool CVCamera::load(const QString& mId) {
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 	bool ret = cnn.is_valid();
 	if (!ret) {
@@ -135,13 +123,7 @@ bool CVCamera::load(const QString& mId) {
 }
 
 bool CVCamera::remove() { 
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 
@@ -158,14 +140,7 @@ bool CVCamera::remove() {
 }
 
 bool CVCamera::load() { 
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(uri().toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return false;
-	}
-
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 
 	try {

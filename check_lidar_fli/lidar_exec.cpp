@@ -505,7 +505,7 @@ bool lidar_exec::_read_lidar()
         CV::Util::Spatialite::Statement stm(cnn);
 
         std::stringstream query;
-        query << "select FOV, IFOV, FREQ, SCAN_RATE from SENSOR where PLANNING = ?1";
+        query << "select FOV, IFOV, FREQ, SCAN_RATE, SPEED from SENSOR where PLANNING = ?1";
         stm.prepare(query.str());
 		stm[1] = 1;
         CV::Util::Spatialite::Recordset set = stm.recordset();
@@ -516,6 +516,7 @@ bool lidar_exec::_read_lidar()
         _lidar->ifov(set[1].toDouble());
         _lidar->freq(set[2].toDouble());
         _lidar->scan(set[3].toDouble());
+		_lidar->speed(set[4].toDouble());
      } catch (CV::Util::Spatialite::spatialite_error& err) {
         (void*)&err;
         return false;
@@ -691,7 +692,6 @@ void lidar_exec::_process_strips()
 		}
 
 		Lidar::Sensor::Ptr lidar;
-		double gProj = 0.0;
 		if (_type == FLY_TYPE) {
 			lidar = _lidarsList[mission];
 		} else {
@@ -699,12 +699,10 @@ void lidar_exec::_process_strips()
 		}
 		if (lidar.isNull()) {
 			throw std::runtime_error("Valori lidar non validi");
-		} else {
-			gProj = lidar->tanHalfFov();
-		}
+		} 
 
 		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);
-		stripPtr->fromAxis(axis, ds, gProj);
+		stripPtr->fromAxis(axis, ds, lidar->tanHalfFov());
 
         double dist = axis->length() / 1000;
 		stm[1] = SIGLA_PRJ;

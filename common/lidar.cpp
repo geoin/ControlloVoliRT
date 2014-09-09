@@ -97,6 +97,13 @@ Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
 	return iPtr;
 }
 
+double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
+	DPOINT p = axis()->first();
+	double H = axis()->quota() - dsm->GetQuota(p.x, p.y);
+	_density = 2 * H * s->tanHalfFov() * s->speed()/s->freq();
+	return _density;
+}
+
 double Axis::averageSpeed() const { 
 	Poco::Timestamp start = _firstSample->timestamp();
 	Poco::Timestamp end = _lastSample->timestamp();
@@ -157,10 +164,5 @@ double CloudStrip::computeDensity() {
 	_density = count / area;
 	_factory->Close();
 
-	return _density;
-}
-
-double CloudStrip::computeDensity(Sensor::Ptr s, double speed) {
-	_density = 2*s->tanHalfFov() * speed/s->freq();
 	return _density;
 }

@@ -11,14 +11,7 @@ namespace CV {
 namespace Core {
 
 void CVJournal::add(CVJournalEntry::Entry e) {
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(e->db.toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return;
-	}
-
+	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	if (e->id.isEmpty()) {
 		e->id = QUuid::createUuid().toString();
 	}
@@ -38,16 +31,11 @@ void CVJournal::add(CVJournalEntry::Entry e) {
 
 CVJournalEntry::EntryList CVJournal::last(const QString& db, const QStringList& filters, const QVariantList& binds, int num) {
 	CVJournalEntry::EntryList list;
-	CV::Util::Spatialite::Connection cnn;
-	try {
-		cnn.open(db.toStdString()); 
-	} catch (CV::Util::Spatialite::spatialite_error& err) {
-		Q_UNUSED(err)
-		return list;
-	}
  
-	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	try {
+		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
+		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+
 		Util::Spatialite::Recordset set = q->select(
 			QStringList()  << "ID" << "DATE" << "URI" << "NOTE" << "CONTROL" << "OBJECT",
 			QStringList()  << "JOURNAL", 
@@ -69,6 +57,7 @@ CVJournalEntry::EntryList CVJournal::last(const QString& db, const QStringList& 
 		}
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		Q_UNUSED(err)
+		return CVJournalEntry::EntryList();
 	}
 	return list;
 }
