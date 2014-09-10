@@ -368,9 +368,18 @@ void lidar_exec::_strip_report() {
     std::stringstream ss;
     ss << "Ricoprimento Trasversale compreso tra " << minVal << "% e " << maxVal << "%";
     itl->add_item("listitem")->add_item("para")->append(ss.str());
-    std::stringstream ss1;
-    ss1 << "Massima lunghezza strisciate minore di " << MAX_STRIP_LENGTH << " km";
-    itl->add_item("listitem")->add_item("para")->append(ss1.str());
+	
+	ss.str("");
+    ss << "Massima lunghezza strisciate minore di " << MAX_STRIP_LENGTH << " km";
+    itl->add_item("listitem")->add_item("para")->append(ss.str());
+
+	ss.str("");
+	ss << "Angolo di scansione minore di " << LID_ANG_SCAN << " deg";
+    itl->add_item("listitem")->add_item("para")->append(ss.str());
+
+	ss.str("");
+	ss << "Densita' dei punti al suolo maggiore di " << PT_DENSITY << " pt/mq";
+    itl->add_item("listitem")->add_item("para")->append(ss.str());
 
     std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
     std::string table2 = std::string(Z_STR_OVL) + (_type == PRJ_TYPE ? "P" : "V");
@@ -443,6 +452,8 @@ bool lidar_exec::_read_ref_val()
 		STRIP_OVERLAP_RANGE = pConf->getInt(get_key("STRIP_OVERLAP_RANGE"));
 		MAX_STRIP_LENGTH = pConf->getInt(get_key("MAX_STRIP_LENGTH"));
 		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
+		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
+		LID_ANG_SCAN =  pConf->getDouble(get_key("LID_ANG_SCAN"));
 		//_T_CP = pConf->getDouble(get_key("T_CP"));
 
 	} catch (...) {
@@ -514,7 +525,7 @@ bool lidar_exec::_read_lidar()
         }
         _lidar->fov(set[0].toDouble());
         _lidar->ifov(set[1].toDouble());
-        _lidar->freq(set[2].toDouble());
+        _lidar->freq(set[2].toDouble()*1000);
         _lidar->scan(set[3].toDouble());
 		_lidar->speed(set[4].toDouble());
      } catch (CV::Util::Spatialite::spatialite_error& err) {
@@ -638,7 +649,8 @@ void lidar_exec::_createStripTable() {
 		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
 		"Z_STRIP_YAW FLOAT NOT NULL, " <<		// angolo
 		"Z_MISSION TEXT NOT NULL, " <<	
-		"Z_STRIP_LENGTH DOUBLE NOT NULL)";  // strip length
+		"Z_STRIP_LENGTH DOUBLE NOT NULL, " <<
+		"Z_STRIP_DENSITY DOUBLE NOT NULL)";  // strip length
 	cnn.execute_immediate(sql.str());
 
 	// add the geometry column
@@ -658,8 +670,8 @@ void lidar_exec::_process_strips()
     std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_LENGTH, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_LENGTH, Z_STRIP_DENSITY, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -710,7 +722,8 @@ void lidar_exec::_process_strips()
 		stm[3] = mission;
 		stm[4] = RAD_DEG(axis->angle());
         stm[5] = dist;
-		stm[6].fromBlob(stripPtr->geom());
+		stm[6] = stripPtr->computeDensity(lidar, ds);
+		stm[7].fromBlob(stripPtr->geom());
 		stm.execute();
 
 		_strips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));

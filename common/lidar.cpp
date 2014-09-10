@@ -100,7 +100,8 @@ Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
 double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
 	DPOINT p = axis()->first();
 	double H = axis()->quota() - dsm->GetQuota(p.x, p.y);
-	_density = 2 * H * s->tanHalfFov() * s->speed()/s->freq();
+	double L = 2 * H * s->tanHalfFov();
+	_density = L * s->speed()/s->freq();
 	return _density;
 }
 
@@ -112,7 +113,7 @@ double Axis::averageSpeed() const {
 	Poco::Timestamp::TimeVal elapsed = stamp.epochMicroseconds();
 	
 	double speed_MS = 0;
-	if(elapsed != 0) {
+	if (elapsed != 0) {
 		speed_MS = length() / abs(elapsed / (1000.0 * 1000.0));
 	}
 	return speed_MS;

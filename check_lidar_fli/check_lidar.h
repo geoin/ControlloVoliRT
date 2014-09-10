@@ -54,7 +54,7 @@ public:
 		FLY_TYPE = 1
 	};
 
-	lidar_exec() : STRIP_OVERLAP(0), STRIP_OVERLAP_RANGE(0), MAX_STRIP_LENGTH(0) { }
+	lidar_exec() : STRIP_OVERLAP(0), STRIP_OVERLAP_RANGE(0), MAX_STRIP_LENGTH(0), PT_DENSITY(0), LID_ANG_SCAN(0) { }
 	~lidar_exec();
 
 	bool run(void);
@@ -121,7 +121,7 @@ private:
 	std::string _dem_name;
 	std::string _note;
 
-    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
+    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH, PT_DENSITY, LID_ANG_SCAN;
 	double LID_TOL_Z;
 
 	void _findReferenceColumns();
