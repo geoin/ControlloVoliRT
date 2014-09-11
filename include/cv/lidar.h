@@ -75,6 +75,9 @@ public:
 		_last = DPOINT(_line->getX(1), _line->getY(1), qt);
 	} 
 
+	void id(unsigned int id) { _id = id; }
+	unsigned int id() { return _id; }
+
 	double quota() const { return _qt; }
 
 	const DPOINT& first() const { return _first; }
@@ -116,6 +119,7 @@ private:
 	DPOINT _last;
 	
 	double _qt;
+	unsigned int _id;
 
 	CV::Util::Geometry::OGRGeomPtr _geom;
 	OGRLineString* _line;
@@ -185,6 +189,7 @@ public:
 	bool hasAxis() const { return !_axis.isNull(); }
 
 	double computeDensity(Sensor::Ptr, DSM* dsm);
+	double density() const { return _density; }
 	
 private:
 	std::string _missionName, _name;

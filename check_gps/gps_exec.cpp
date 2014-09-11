@@ -277,7 +277,8 @@ void gps_exec::_createGPSMissionsTables() {
 			PDOP FLOAT NOT NULL,\
 			NBASI INTEGER NOT NULL,\
 			RMS DOUBLE NOT NULL,\
-			MISSION TEXT NOT NULL )";
+			MISSION TEXT NOT NULL, \
+			QUOTA DOUBLE NOT NULL)";
 		cnn.execute_immediate(sql.str());
 
 		sql.str("");
@@ -441,8 +442,8 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	cnn.execute_immediate(sql1.str());*/
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << GPS << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ST_GeomFromWKB(:geom, " << SRIDGEO << ") )";
+	sql2 << "INSERT INTO " << GPS << " (id, DATE, TIME, NSAT, PDOP, NBASI, RMS, MISSION, QUOTA, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ST_GeomFromWKB(:geom, " << SRIDGEO << ") )";
 	
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
@@ -517,7 +518,8 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 		stm[6] = nbasi;
 		stm[7] = rms;
 		stm[8] = mission;
-		stm[9].fromBlob(gp_); 
+		stm[9] = p.z;
+		stm[10].fromBlob(gp_); 
 		stm.execute();
         stm.reset();
 	}

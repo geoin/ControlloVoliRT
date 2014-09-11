@@ -94,7 +94,8 @@ private:
 	void _update_assi_volo();
 
 	void _final_report();
-    void _strip_report();
+    void _strips_comp_report();
+	void _strip_report();
     void _control_points_report();
 
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
@@ -121,8 +122,8 @@ private:
 	std::string _dem_name;
 	std::string _note;
 
-    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH, PT_DENSITY, LID_ANG_SCAN;
-	double LID_TOL_Z;
+    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH, LID_ANG_SCAN;
+	double LID_TOL_Z, PT_DENSITY;
 
 	void _findReferenceColumns();
 	std::string _quotaCol, _stripNameCol;

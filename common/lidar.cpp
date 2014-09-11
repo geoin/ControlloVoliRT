@@ -39,7 +39,11 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 
 	geom(rg);
 	missionName(axis->missionName());
-	name(axis->stripName());
+
+	std::stringstream str;
+	str << axis->stripName() << " (" << axis->id() << ")";
+
+	name(str.str());
 	yaw(axis->angle());
 
 	_axis = axis;
