@@ -47,6 +47,14 @@ public:
 	double scan;
 };*/
 
+struct AxisVertex {
+	CV::GPS::Sample::Ptr sample;
+	double dist;
+
+	AxisVertex() : dist(0.0f) {}
+};
+
+
 class lidar_exec {
 public:
 	enum Check_Type {
@@ -101,7 +109,11 @@ private:
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
 
-	bool _get_photo(void);
+	//bool _get_photo(void);
+
+	void process_end_point_axis_info(const Blob& pt, std::map<std::string, AxisVertex>& epi);
+	bool select_mission(std::map<std::string, AxisVertex>& ep1, std::map<std::string, AxisVertex>& ep2, CV::GPS::Sample::Ptr f, double len);
+	void update_strips(std::vector<CV::GPS::Sample::Ptr>& ft);
 
 	std::string _proj_dir;
 	// spatial lite connection
@@ -122,8 +134,8 @@ private:
 	std::string _dem_name;
 	std::string _note;
 
-    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH, LID_ANG_SCAN;
-	double LID_TOL_Z, PT_DENSITY;
+    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
+	double LID_ANG_SCAN, LID_TOL_Z, PT_DENSITY;
 
 	void _findReferenceColumns();
 	std::string _quotaCol, _stripNameCol;

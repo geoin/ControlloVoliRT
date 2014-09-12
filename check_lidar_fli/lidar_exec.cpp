@@ -827,9 +827,84 @@ Poco::Timestamp from_string(const std::string& date, const std::string& time, co
 	return outDate.timestamp();
 }
 
+
+void lidar_exec::process_end_point_axis_info(const Blob& pt, std::map<std::string, AxisVertex>& epai) {
+    OGRGeomPtr gp = pt;
+	OGRPoint* pti = (OGRPoint*) ((OGRGeometry*) gp);
+
+	std::stringstream sql;
+
+	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo, AsBinary(geom) as geoWGS FROM " << GPS_TABLE_NAME << 
+		" WHERE rowid in( select rowid from SpatialIndex where f_table_name='gps' and  search_frame=MakeCircle(ST_X(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), ST_Y(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), 0.01))";
+
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+
+	stm[1].fromBlob(pt);
+	Recordset rs = stm.recordset();
+	while ( !rs.eof() ) {
+		std::string mission = rs["MISSION"].toString();
+
+		Blob b = rs["geo"].toBlob(); // geometria utm
+        OGRGeomPtr g1 = b;
+		
+		AxisVertex v;
+		v.dist = g1->Distance(gp);
+		v.sample = GPS::Sample::Ptr(new GPS::Sample);
+		v.sample->mission(mission);
+		if ( epai.find(mission) != epai.end() ) {
+			if ( epai[mission].dist > v.dist ) {	
+				v.sample->dateTime(rs["DATE"].toString(), rs["TIME"].toString());
+				v.sample->gpsData(rs["NSAT"].toInt(), rs["NBASI"].toInt(), rs["PDOP"].toDouble());
+				v.sample->point(g1);
+
+				epai[mission] = v;
+			}
+		}
+
+		rs.next();
+	}
+}
+
+bool lidar_exec::select_mission(std::map<std::string, AxisVertex>& ep1, std::map<std::string, AxisVertex>& ep2, CV::GPS::Sample::Ptr f, double len) {
+	bool ret = false;
+	std::map<std::string, AxisVertex>::const_iterator it1 = ep1.begin();
+	std::map<std::string, AxisVertex>::const_iterator it2 = ep2.begin();
+	double d0 = 1e30;
+	double v0 = 10000;
+	for ( it1 = ep1.begin(); it1 != ep1.end(); it1++) {
+		for ( it2 = ep2.begin(); it2 != ep2.end(); it2++) {
+			if ( it1->first == it2->first ) {
+				// same mission
+				double d1 = it1->second.dist;
+				double d2 = it2->second.dist;
+				double d = sqrt(d1 * d1 + d2 * d2);
+
+				Poco::Timespan tspan = it1->second.sample->timestamp() - it2->second.sample->timestamp();
+				double dtime = abs(tspan.totalSeconds());
+				double v = fabs(3.6 * len / dtime - 250); 
+
+				if ( v < v0 ) {
+					f = it1->second.sample;
+					//f.time2 = it2->second.time;
+					d0 = d;
+					v0 = v;
+					ret = true;
+				}
+				break;
+			}
+		}
+	}
+	return ret;
+}
+
 void lidar_exec::_update_assi_volo()
 {
 	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
+
+	std::stringstream sqla;
+	sqla << "SELECT CreateSpatialIndex('" << GPS_TABLE_NAME << "', 'geom')";
+	cnn.execute_immediate(sqla.str());
 
 	std::string table = ASSI_VOLO + std::string("V");
 
@@ -843,51 +918,38 @@ void lidar_exec::_update_assi_volo()
 	add_column(cnn, table, "PDOP DOUBLE");
 	add_column(cnn, table, "GPS_GAP INTEGER");
 
-	// query to associate to the first and last point of each flight line the nearest point of the gps track
-	std::stringstream sql;
-	sql << "SELECT a." << STRIP_NAME << " as strip, b.*, AsBinary(b.geom) as geo, min(st_Distance(st_PointN(ST_Transform(a.geom," << SRIDGEO << "), ?1), b.geom)) FROM " <<
-        table << " a, " << GPS_TABLE_NAME << " b group by strip";
-
+	std::stringstream sqli;
+	sqli << "SELECT " << STRIP_NAME << ", ST_Length(geom), AsBinary(StartPoint(geom)), AsBinary(EndPoint(geom)) FROM "  << table;
 	Statement stm(cnn);
-	stm.prepare(sql.str());
-
-	stm[1] = 1;
-	Recordset rs = stm.recordset();
+	stm.prepare(sqli.str());
 
 	// for every strip get the GPS time of the first point
-	std::vector<GPS::Sample::Ptr> ft1;
-	while ( !rs.eof() ) {
-		GPS::Sample::Ptr f(new GPS::Sample);
-        f->strip(rs["strip"].toString());
-        f->mission(rs["MISSION"].toString());
-        f->dateTime(rs["DATE"].toString(), rs["TIME"].toString());
-		f->gpsData(rs["NSAT"].toInt(), rs["NBASI"].toInt(), rs["PDOP"].toDouble());
-        Blob blob = rs["geo"].toBlob();
-		f->point(blob);
-		ft1.push_back(f);
-
-		_strips[f->strip()]->axis()->addFirstSample(f);
-		rs.next();
-	}
-	stm.reset();
-	stm[1] = 2;
-	rs = stm.recordset();
-
-	// for every strip get the GPS time of the last point
-	std::vector<GPS::Sample::Ptr> ft2;
+	std::vector<GPS::Sample::Ptr> ft;
+	
+	Recordset rs = stm.recordset();
 	while (!rs.eof()) {
-		GPS::Sample::Ptr f(new GPS::Sample);
-        f->strip(rs["strip"].toString());
-        f->mission(rs["MISSION"].toString());
-        f->dateTime(rs["DATE"].toString(), rs["TIME"].toString());
-		f->gpsData(rs["NSAT"].toInt(), rs["NBASI"].toInt(), rs["PDOP"].toDouble());
-        Blob blob = rs["geo"].toBlob();
-		f->point(blob);
-		ft2.push_back(f);
+		std::map<std::string, AxisVertex> ep1;
+		std::map<std::string, AxisVertex> ep2;
 
-		_strips[f->strip()]->axis()->addLastSample(f);
+		process_end_point_axis_info(rs[2].toBlob(), ep1);
+		process_end_point_axis_info(rs[3].toBlob(), ep2);
+
+		std::string s = rs[0].toString();
+		double len = rs[1].toDouble();
+		
+		CV::GPS::Sample::Ptr f(new CV::GPS::Sample);
+		if (select_mission(ep1, ep2, f, len)) {
+			f->strip(rs[0].toString());
+			ft.push_back(f);
+		}
 		rs.next();
 	}
+	
+	update_strips(ft);
+}
+
+void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
+		/*UPDATE STRIP
 
 	std::stringstream sql1;
 	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << STRIP_NAME  << "=?9";
@@ -958,6 +1020,7 @@ void lidar_exec::_update_assi_volo()
 		}
 	}
 	cnn.commit_transaction();
+	*/
 }
 
 void lidar_exec::_process_block()

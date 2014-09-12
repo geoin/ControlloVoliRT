@@ -236,7 +236,7 @@ void CVSensorDetail::dropEvent(QDropEvent* ev) {
 
 QString CVSensorDetail::_keyToFieldName(const QString& key) {
 	if (key == "FOV") {
-		return QString(tr("Angolo di scansione (grad)"));
+		return QString(tr("Angolo di scansione (deg)"));
 	}
 	if (key == "FREQ") {
 		return QString(tr("Frequenza di campionamento (KHz)"));

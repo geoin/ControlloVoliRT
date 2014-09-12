@@ -14,12 +14,12 @@ namespace Details {
 CVLidarFlyDetail::CVLidarFlyDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
 	int i = 0;
 
-	CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(i));
+	/*CVFlyAxis_p* axis = new CVFlyAxis_p(p, c->at(i));
     addTab(axis, "");
     setTabToolTip(i, tr("Assi di volo"));
 	setTabIcon(i, QIcon(":/graphics/icons/plan/axis.png"));
 
-	i++;
+	i++;*/
 
 	CVAreaDetail* area = new CVAreaDetail(p, c->at(i), c->type());
     addTab(area, "");

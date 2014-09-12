@@ -162,13 +162,13 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 	ctrl->uri(proj->db());
 
 	//NOTE: now used only in lidar projects. 
-	CVShapeLayer* axis = new CVShapeLayer(proj);
+	/*CVShapeLayer* axis = new CVShapeLayer(proj);
 	axis->uri(proj->path);
 	axis->type(CVObject::AVOLOV);
 	axis->controlType(fly_t);
 	axis->table("AVOLOV");
 	//axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
-	ctrl->insert(axis);
+	ctrl->insert(axis);*/
 
 	ctrl->insert(plan->at(2));
 	ctrl->insert(plan->at(3), false);
