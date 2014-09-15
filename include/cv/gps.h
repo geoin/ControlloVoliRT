@@ -63,6 +63,9 @@ public:
 		return _ts;
 	}
 
+	//TODO: as in photo, but as to be changed
+	std::string time2;
+
 private:
 	void _timestamp() {
 		std::stringstream stream;

@@ -99,14 +99,19 @@ bool lidar_exec::run()
 		if ( _type == FLY_TYPE ) {
 			// legge i dati del sensore in base alla missione
 			_read_lidar_from_mission();
+			if (!_read_strip_folder()) {
+				throw std::runtime_error("Invalid strip folder");
+			}
+
 		} else {
 			// legge i dati del sensore di progetto
 			_read_lidar();
 		}
 		// read digital terrain model
 		//_dem_name = Path(_proj_dir, DEM).toString();
-		if ( !_read_dem() )
+		if (!_read_dem()) {
 			throw std::runtime_error("Modello numerico non trovato");
+		}
 
 		_process_strips();
 		_process_block();
@@ -147,9 +152,52 @@ bool lidar_exec::run()
 		std::cout << "Procedura terminata:" << std::endl;
 
 		return true;
+
 	} catch(const std::exception& ex) {
 		std::string msg = ex.what();
 		return false; //TODO
+	}
+}
+
+double lidar_exec::read_proj_speed() {
+	CV::Util::Spatialite::Statement stm(cnn);
+	try {
+
+		std::stringstream query;
+		query << "select SPEED from SENSOR where PLANNING=1";
+		stm.prepare(query.str());
+
+		CV::Util::Spatialite::Recordset set = stm.recordset();
+		if (set.eof()) {
+			return false;
+		}
+
+		double speed = set[0].toDouble();
+		return speed;
+	} catch (...) {
+		throw std::runtime_error("Valore velocità progetto non valido.");
+	}
+}
+
+bool lidar_exec::_read_strip_folder() {
+	CV::Util::Spatialite::Statement stm(cnn);
+
+	try {
+
+		std::stringstream query;
+		query << "select FOLDER from STRIP_RAW_DATA";
+		stm.prepare(query.str());
+
+		CV::Util::Spatialite::Recordset set = stm.recordset();
+		if (set.eof()) {
+			return false;
+		}
+
+		_cloudsFolder = set[0].toString();
+		return _cloudsFolder.size() != 0;
+
+	} catch (...) {
+		return false;
 	}
 }
 
@@ -872,6 +920,9 @@ bool lidar_exec::select_mission(std::map<std::string, AxisVertex>& ep1, std::map
 	std::map<std::string, AxisVertex>::const_iterator it2 = ep2.begin();
 	double d0 = 1e30;
 	double v0 = 10000;
+
+	double speed = read_proj_speed();
+
 	for ( it1 = ep1.begin(); it1 != ep1.end(); it1++) {
 		for ( it2 = ep2.begin(); it2 != ep2.end(); it2++) {
 			if ( it1->first == it2->first ) {
@@ -882,11 +933,11 @@ bool lidar_exec::select_mission(std::map<std::string, AxisVertex>& ep1, std::map
 
 				Poco::Timespan tspan = it1->second.sample->timestamp() - it2->second.sample->timestamp();
 				double dtime = abs(tspan.totalSeconds());
-				double v = fabs(3.6 * len / dtime - 250); 
+				double v = fabs(len / dtime - speed); 
 
 				if ( v < v0 ) {
 					f = it1->second.sample;
-					//f.time2 = it2->second.time;
+					f->time2 = it2->second.sample->time();
 					d0 = d;
 					v0 = v;
 					ret = true;
@@ -949,7 +1000,7 @@ void lidar_exec::_update_assi_volo()
 }
 
 void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
-		/*UPDATE STRIP
+	std::string table = ASSI_VOLO + std::string("V");
 
 	std::stringstream sql1;
 	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << STRIP_NAME  << "=?9";
@@ -958,69 +1009,67 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 	cnn.begin_transaction();
 
 	// per ogni strip determina i parametri gps con cui è stata acquisita
-	for ( size_t i = 0; i < ft1.size(); i++) {
-		const std::string& val = ft1[i]->strip();
+	for ( size_t i = 0; i < ft.size(); i++) {
+		const std::string& val = ft[i]->strip();
 		std::string dateStr;
-
-		std::string t1 = ft1[i]->time();
-		for ( size_t j = 0; j < ft2.size(); j++) {
-			if ( ft2[j]->strip() == ft1[i]->strip() ) {
-				std::string t2 = ft2[j]->time();
-				if (t1 > t2) {
-					std::swap(t1, t2);
-				}
-
-				std::stringstream sql;
-				sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' ORDER BY TIME";
-				stm.prepare(sql.str());
-				rs = stm.recordset();
-				bool first = true;
-				
-				Poco::Timestamp tm0, tm1;
-				double dt0 = 0.;
-				int nsat, nbasi;
-				double pdop;
-				while (!rs.eof()) {
-					if (first) {
-						dateStr = rs["DATE"].toString();
-
-						stm1[1] = (std::string const &) rs["MISSION"]; // mission
-						stm1[2] = dateStr; // date
-						stm1[3] = t1; // istante di inizio acquisizione
-						stm1[4] = t2; // istante di fine acquisizione
-
-						nsat = rs["NSAT"].toInt();
-						pdop = rs["PDOP"].toDouble();
-						nbasi = rs["NBASI"].toInt();
-						stm1[9] = val;
-						first = false;
-					} else {
-						nsat = std::min(nsat, rs["NSAT"].toInt());
-						pdop = std::max(pdop, rs["PDOP"].toDouble());
-						nbasi = std::min(nbasi, rs["NBASI"].toInt());
-						tm1 = from_string(dateStr, rs["TIME"]);
-						double dt = (double) (tm1 - tm0) / 1000000;
-						tm0 = tm1;
-						if (dt > dt0) {
-							dt0 = dt;
-						}
-					}
-					rs.next();
-				}
-				if (first) {
-					return;
-				}
-				stm1[5] = nsat; // minimal number of satellite
-				stm1[6] = pdop; // max pdop
-				stm1[7] = nbasi; // number of bases
-				stm1[8] = (int) dt0;
-				stm1.execute();
-				stm1.reset();
-			}
+		std::string t1 = ft[i]->time();
+		std::string t2 = ft[i]->time2; //TODO: check this
+		
+		if ( t1 > t2 ) {
+			std::swap(t1, t2);
 		}
-	}
+
+		std::stringstream sql;
+		sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' and MISSION= '" <<
+			ft[i]->mission() << "' ORDER BY TIME";
+		
+		Statement stm(cnn);
+		stm.prepare(sql.str());
+		Recordset rs = stm.recordset();
+		bool first = true;
+				
+		Poco::Timestamp tm0, tm1;
+		double dt0 = 0.;
+		int nsat, nbasi;
+		double pdop;
+		while (!rs.eof()) {
+				if (first) {
+					dateStr = rs["DATE"].toString();
+
+					stm1[1] = (std::string const &) rs["MISSION"]; // mission
+					stm1[2] = dateStr; // date
+					stm1[3] = t1; // istante di inizio acquisizione
+					stm1[4] = t2; // istante di fine acquisizione
+
+					nsat = rs["NSAT"].toInt();
+					pdop = rs["PDOP"].toDouble();
+					nbasi = rs["NBASI"].toInt();
+					stm1[9] = val;
+					first = false;
+				} else {
+					nsat = std::min(nsat, rs["NSAT"].toInt());
+					pdop = std::max(pdop, rs["PDOP"].toDouble());
+					nbasi = std::min(nbasi, rs["NBASI"].toInt());
+					tm1 = from_string(dateStr, rs["TIME"]);
+					double dt = (double) (tm1 - tm0) / 1000000;
+					tm0 = tm1;
+					if (dt > dt0) {
+						dt0 = dt;
+					}
+				}
+				rs.next();
+			}
+			if (first) {
+				return;
+			}
+			stm1[5] = nsat; // minimal number of satellite
+			stm1[6] = pdop; // max pdop
+			stm1[7] = nbasi; // number of bases
+			stm1[8] = (int) dt0;
+			stm1.execute();
+			stm1.reset();
+		}
 	cnn.commit_transaction();
-	*/
 }
 
 void lidar_exec::_process_block()

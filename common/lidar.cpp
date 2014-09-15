@@ -103,9 +103,16 @@ Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
 
 double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
 	DPOINT p = axis()->first();
-	double H = axis()->quota() - dsm->GetQuota(p.x, p.y);
-	double L = 2 * H * s->tanHalfFov();
-	_density = L * s->speed()/s->freq();
+	double q = dsm->GetQuota(p.x, p.y);
+	if (q == Z_NOVAL) {
+		_density = Z_NOVAL;
+	} else if (q == Z_OUT) {
+		_density = Z_OUT;
+	} else {
+		double H = axis()->quota() - q;
+		double L = 2 * H * s->tanHalfFov();
+		_density = L * s->speed()/s->freq();
+	}
 	return _density;
 }
 

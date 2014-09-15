@@ -178,6 +178,12 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 		fa->uri(proj->path);
 		ctrl->insert(fa);
 	} else {
+		CVFolderInput* folder = new CVFolderInput(ctrl);
+		folder->controlType(fly_t);
+		folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
+		folder->table("STRIP_RAW_DATA");
+		ctrl->insert(folder);
+
 		CVFileInput* file = new CVCloudSampleInput(ctrl);
 		file->uri(proj->path); 
 		file->control(plan_t);

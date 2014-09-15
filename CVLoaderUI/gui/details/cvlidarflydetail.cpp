@@ -6,6 +6,7 @@
 #include "cvareadetail.h"
 #include "cvcontrolpointsdetail.h"
 #include "cvcloudsampledetail.h"
+#include "cvrawstripfolderdetail.h"
 
 namespace CV {
 namespace GUI {
@@ -32,6 +33,12 @@ CVLidarFlyDetail::CVLidarFlyDetail(QWidget* p, Core::CVControl* c, TabPosition p
 	addTab(dem, "");
     setTabToolTip(i, tr("DEM"));
 	setTabIcon(i, QIcon(":/graphics/icons/plan/dem.png"));
+	
+	i++;
+	
+	addTab(new CVRawStripDetail(this, c->at(i)), "");
+    setTabToolTip(i, tr("Dati grezzi"));
+	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
 
 	i++;
 

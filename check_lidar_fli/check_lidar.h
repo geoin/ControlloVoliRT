@@ -50,6 +50,7 @@ public:
 struct AxisVertex {
 	CV::GPS::Sample::Ptr sample;
 	double dist;
+	std::string time2;
 
 	AxisVertex() : dist(0.0f) {}
 };
@@ -70,15 +71,16 @@ public:
 	void set_checkType(Check_Type t);
 
 private:
-	void _process_strips(void);
+	void _process_strips();
 	void _createStripTable(); 
 
-	void _process_block(void);
-	void _get_dif(void);
+	void _process_block();
+	void _get_dif();
 
 	void _get_overlaps(const std::map<std::string, CV::Lidar::Strip::Ptr>&);
 
-	bool _read_lidar(void);
+	bool _read_lidar();
+	bool _read_strip_folder();
 	bool _read_lidar_from_mission();
 
 	void _compare_axis();
@@ -111,6 +113,7 @@ private:
 
 	//bool _get_photo(void);
 
+	double read_proj_speed();
 	void process_end_point_axis_info(const Blob& pt, std::map<std::string, AxisVertex>& epi);
 	bool select_mission(std::map<std::string, AxisVertex>& ep1, std::map<std::string, AxisVertex>& ep2, CV::GPS::Sample::Ptr f, double len);
 	void update_strips(std::vector<CV::GPS::Sample::Ptr>& ft);
@@ -139,6 +142,8 @@ private:
 
 	void _findReferenceColumns();
 	std::string _quotaCol, _stripNameCol;
+
+	std::string _cloudsFolder;
 };
 
 class check_lidar: public Poco::Util::Application {
