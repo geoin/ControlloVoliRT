@@ -17,7 +17,7 @@
 #include "geom.h"
 #include "exports.h"
 
-#define Z_NOVAL -99999.
+#define Z_NOVAL -9999.
 #define Z_OUT -8888.
 #define DEM_EXT "nod"
 
@@ -139,11 +139,12 @@ public:
 			VecOri V0(0, 0, z); // un punto del piano
 			double s = n % (V0 - P0) /  (n % u);
 			VecOri v = P0 + (u * s);
-			double zt = GetQuota(v.GetX(), v.GetY(), z);
-			if ( zt == Z_OUT ) {
+			double zt = GetQuota(v.GetX(), v.GetY());
+			if ( zt == Z_OUT || zt == Z_NOVAL) {
 				pt.z = zt;
 				return false;
 			}
+
 			dz = fabs(zt - z);
 			dx = fabs(v.GetX() - x);
 			dy = fabs(v.GetY() - y);

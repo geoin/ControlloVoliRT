@@ -155,7 +155,8 @@ bool lidar_exec::run()
 
 	} catch(const std::exception& ex) {
 		std::string msg = ex.what();
-		return false; //TODO
+		std::cout << msg << std::endl;
+		return false; 
 	}
 }
 
@@ -832,18 +833,23 @@ void lidar_exec::_process_strips()
 
 		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);
 		stripPtr->fromAxis(axis, ds, lidar->tanHalfFov());
-		stripPtr->computeDensity(lidar, ds);
 
-        double dist = axis->length() / 1000;
-		stm[1] = SIGLA_PRJ;
-		stm[2] = strip;
-		stm[3] = mission;
-		stm[4] = RAD_DEG(axis->angle());
-        stm[5] = dist;
-		stm[6].fromBlob(stripPtr->geom());
-		stm.execute();
+		if (stripPtr->isValid()) {
+			stripPtr->computeDensity(lidar, ds);
 
-		_strips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));
+			double dist = axis->length() / 1000;
+			stm[1] = SIGLA_PRJ;
+			stm[2] = strip;
+			stm[3] = mission;
+			stm[4] = RAD_DEG(axis->angle());
+			stm[5] = dist;
+			stm[6].fromBlob(stripPtr->geom());
+			stm.execute();
+			
+			_strips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));
+		} else {
+			_invalidStrips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));
+		}
 
 		stm.reset();
 		rs.next();

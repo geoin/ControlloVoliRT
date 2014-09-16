@@ -7,7 +7,7 @@ using namespace CV::Util::Geometry;
 
 //TODO: creare la strisciata a blocchi
 void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
-	MatOri m(0, 0, axis->angle());
+	MatOri m(0, 0, -axis->angle());
 
 	OGRGeomPtr gp_ = OGRGeometryFactory::createGeometry(wkbLinearRing);
 	OGRGeometry* g = gp_;
@@ -22,12 +22,12 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 
 		DPOINT pt;
 		if (!dsm->RayIntersect(pa, pd, pt)) {
-			if (!dsm->IsInside(pt.z)) {
-				std::stringstream ss;
-				ss << "la strisciata " << axis->stripName() << " della missione " << axis->missionName() << " cade al di fuori del dem";
-				throw std::runtime_error(ss.str());
+			if (!dsm->IsValid(pt.z)) {
+				std::cout << "la strisciata " << axis->stripName() << " con id " << axis->id() << " cade al di fuori del dem" << std::endl;
+				this->isValid(false);
 			}
 		}
+
 		gp->addPoint(pt.x, pt.y);
 	}
 	gp->closeRings();
@@ -37,14 +37,14 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 	p->setCoordinateDimension(2);
 	p->addRing(gp);
 
-	geom(rg);
-	missionName(axis->missionName());
+	this->geom(rg);
+	this->missionName(axis->missionName());
 
 	std::stringstream str;
 	str << axis->stripName() << " (" << axis->id() << ")";
 
-	name(str.str());
-	yaw(axis->angle());
+	this->name(str.str());
+	this->yaw(axis->angle());
 
 	_axis = axis;
 }
@@ -56,7 +56,7 @@ bool Strip::isParallel(Strip::Ptr other, int p) const {
 }
 
 bool Strip::intersect(Strip::Ptr other) const {
-	OGRGeomPtr sourceGeom = geom();
+	OGRGeomPtr sourceGeom = this->geom();
 	OGRGeomPtr targetGeom = other->geom();
 	OGRBoolean b = sourceGeom->Intersect(targetGeom);
 	return b ? true : false;
@@ -64,7 +64,7 @@ bool Strip::intersect(Strip::Ptr other) const {
 
 int Strip::intersectionPercentage(Strip::Ptr other) const {
 	int p = 0;
-	Util::Geometry::OGRGeomPtr sourceGeom = geom();
+	Util::Geometry::OGRGeomPtr sourceGeom = this->geom();
 	OGRGeomPtr intersection = sourceGeom->Intersection(other->geom());
 	if (intersection->getGeometryType() == wkbPolygon) {
 		double srcMajorAxis, srcMinorAxis;

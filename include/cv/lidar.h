@@ -99,7 +99,7 @@ public:
 
 	double length() const { return _line ? _line->get_Length() : 0.0; }
 
-	double angle() const { return -(_last.angdir(_first)); }
+	double angle() const { return _last.angdir(_first); }
 
 	void stripName(const std::string& s) { _stripName = s; }
 	const std::string& stripName() const { return _stripName; }
@@ -138,7 +138,7 @@ public:
 
 	Strip() : _yaw(0.0), _length(0.0) {}
 
-	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0), _density(0.0) {
+	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0), _density(0.0), _isValid(true) {
 		geom(g);
 	}
 
@@ -190,8 +190,13 @@ public:
 
 	double computeDensity(Sensor::Ptr, DSM* dsm);
 	double density() const { return _density; }
+
+	bool isValid() const { return _isValid; }
+	void isValid(bool b) { _isValid = b;}
 	
 private:
+	bool _isValid;
+
 	std::string _missionName, _name;
 	double _length;
 	double _yaw;

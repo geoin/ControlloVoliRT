@@ -130,6 +130,7 @@ private:
 	CV::Lidar::Sensor::Ptr _lidar;
 	std::map<std::string, CV::Lidar::Sensor::Ptr> _lidarsList;
 	std::map<std::string, CV::Lidar::Strip::Ptr> _strips;
+	std::map<std::string, CV::Lidar::Strip::Ptr> _invalidStrips;
 	std::vector<CV::Lidar::ControlPoint::Ptr> _controlVal;
 
 	docbook _dbook;
