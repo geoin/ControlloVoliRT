@@ -1,7 +1,7 @@
 #ifndef CV_CONTROL_POINTS_DETAIL_H
 #define CV_CONTROL_POINTS_DETAIL_H
 
-#include "core/categories/cvshapelayer.h"
+#include "core/categories/cvcsvinput.h"
 
 #include "cvbasedetail.h"
 
@@ -27,7 +27,7 @@ public:
 	virtual void searchFile();
 	virtual void importAll(QStringList&);
 	
-	inline Core::CVShapeLayer* layer() const { return static_cast<Core::CVShapeLayer*>(controller()); }
+	inline Core::CVCsvInput* input() const { return static_cast<Core::CVCsvInput*>(controller()); }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

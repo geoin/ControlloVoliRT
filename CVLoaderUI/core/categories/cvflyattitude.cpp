@@ -83,14 +83,14 @@ bool CVFlyAttitude::persist() {
 		if (line.isEmpty()) { 
 			continue;
 		}
-		QStringList l = line.split(QRegExp("[\\t*\\s*]"), QString::SkipEmptyParts);
+		QStringList l = line.split(QRegExp("\\s*"), QString::SkipEmptyParts);
 		if (l.size() != 7) {
 			continue;
 		}
 
 		QString key = l.at(0);
 		QStringList id = key.split("_");
-		if (id.length() != 2) { //TODO: check, this is probably not true anymore (len must be >= 2)
+		if (id.length() >= 2) { //TODO: check, this is probably not true anymore (len must be >= 2)
 			continue;
 		}
 

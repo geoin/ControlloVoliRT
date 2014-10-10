@@ -13,6 +13,7 @@
 #include "core/categories/cvfileinput.h"
 #include "core/categories/cvmissionobject.h"
 #include "core/categories/cvfolderinput.h"
+#include "core/categories/cvcsvinput.h"
 #include "core/cvcore_utils.h"
 
 #include "CVUtil/cvspatialite.h"
@@ -161,15 +162,6 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 	CVControl* ctrl = new CVControl(fly_t, proj);
 	ctrl->uri(proj->db());
 
-	//NOTE: now used only in lidar projects. 
-	/*CVShapeLayer* axis = new CVShapeLayer(proj);
-	axis->uri(proj->path);
-	axis->type(CVObject::AVOLOV);
-	axis->controlType(fly_t);
-	axis->table("AVOLOV");
-	//axis->columns(QStringList() << "A_VOL_ENTE" << "A_VOL_DT" << "A_VOL_RID");
-	ctrl->insert(axis);*/
-
 	ctrl->insert(plan->at(2));
 	ctrl->insert(plan->at(3), false);
 	
@@ -190,11 +182,11 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 		file->object(CVObject::TEST_CLOUD);
 		ctrl->insert(file, false);
 
-		CVShapeLayer* controlPoint = new CVShapeLayer(proj);
+		CVCsvInput* controlPoint = new CVCsvInput(proj);
 		controlPoint->uri(proj->path);
 		controlPoint->type(CVObject::CLOUD_CONTROL_POINTS);
 		controlPoint->controlType(CVControl::LIDAR_FLY);
-		controlPoint->table("CONTROL_CLOUD");
+		//controlPoint->table("CONTROL_CLOUD");
 		//controlPoint->columns(QStringList());
 		ctrl->insert(controlPoint);
 	}

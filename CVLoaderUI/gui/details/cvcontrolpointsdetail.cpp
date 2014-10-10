@@ -25,7 +25,6 @@ CVControlPointsDetail::CVControlPointsDetail(QWidget* p, Core::CVObject* l) : CV
 
 	title(tr("Punti di controllo"));
 	description(tr("File shape"));
-
 	
     QFormLayout* form = new QFormLayout;
 
@@ -56,19 +55,20 @@ void CVControlPointsDetail::clearAll() {
 void CVControlPointsDetail::searchFile() {
 	QString uri = QFileDialog::getOpenFileName(
         this,
-        tr("Importa contorno regione"),
+        tr("Importa punti di controllo"),
 		Core::CVSettings::get("/paths/search").toString(),
-        "(*.shp)"
+        ""
     );
+
 	if (!uri.isEmpty()) {
-		QFileInfo shp(uri);
-		Core::CVSettings::set("/paths/search", shp.absolutePath());
-		importAll(QStringList() << shp.absolutePath() + QDir::separator() + shp.baseName());
+		QFileInfo csv(uri);
+		Core::CVSettings::set("/paths/search", csv.absolutePath());
+		importAll(QStringList() << csv.absoluteFilePath());
 	}
 }
 
 void CVControlPointsDetail::importAll(QStringList& uri) {
-	layer()->shape(uri.at(0));
+	input()->setCsv(uri.at(0));
 	if (controller()->persist()) {
 		_labels.at(0)->setText(tr("Dati inseriti"));
 	} else {
@@ -85,12 +85,7 @@ void CVControlPointsDetail::dragEnterEvent(QDragEnterEvent* ev) {
     } else {
         _uri = list.at(0).toLocalFile();
         _file.reset(new QFileInfo(_uri));
-        if (_file->suffix().toLower() != "shp") {
-            _file.reset();
-            ev->ignore();
-        } else {
-            ev->accept();
-        }
+		ev->accept();
     }
 }
 
@@ -104,7 +99,7 @@ void CVControlPointsDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
 
 void CVControlPointsDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
-	importAll(QStringList() << _file->absolutePath() + QDir::separator() + _file->baseName());
+	importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);
 }
 

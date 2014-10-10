@@ -7,9 +7,17 @@
 #include <QVariant>
 #include <QUuid>
 
+#include <QSharedPointer>
+#include <QTextStream>
+#include <QRegExp>
+#include <QStringList>
+#include <QFile>
+
 #include <Poco/Zip/Compress.h>
 #include <Poco/Zip/Decompress.h>
 #include <fstream>
+
+
 
 namespace CV {
 namespace Core {
@@ -109,6 +117,52 @@ public:
 		return QSettings().value(k, v);
 	}
 
+};
+
+class Csv {
+public:
+	typedef QSharedPointer<Csv> Ptr;
+
+	Csv(const QString& n);
+	Csv(const QString&, QIODevice::OpenMode);
+    virtual ~Csv() { close(); }
+	
+    bool open(QIODevice::OpenMode = QIODevice::ReadOnly);
+    void close();
+
+    QDir dir() const;
+    QString name() const;
+    QString suffix() const;
+    QString ext() const;
+
+    inline const QString& separator() const { return _sep; }
+    inline const QString& delim() const { return _delim; }
+
+    void setSeparator(const QString&);
+    void setDelim(const QString&);
+
+    QString readLine();
+    QString readAll();
+    void writeLine(const QString& str);
+    bool seek(int);
+
+	inline bool atEnd() const {
+		return _stream.atEnd();
+	}
+
+    void splitAndFormat(const QString& src, QStringList& out, const QString sep, const QString delim = QString());
+    void splitAndFormat(const QString& src, QStringList& out);
+
+private:
+    void _setFile(const QString& name);
+    bool _open(const QString& name, QIODevice::OpenMode);
+
+    QFile _file;
+    QTextStream _stream;
+
+    QString _sep, _delim;
+
+	Q_DISABLE_COPY(Csv);
 };
 
 }
