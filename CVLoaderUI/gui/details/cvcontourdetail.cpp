@@ -57,12 +57,12 @@ void CVContourDetail::searchFile() {
 	QString uri = QFileDialog::getOpenFileName(
         this,
         tr("Importa contorno regione"),
-		Core::CVSettings::get("/paths/search").toString(),
+		Core::CVSettings::get(CV_PATH_SEARCH).toString(),
         "(*.shp)"
     );
 	if (!uri.isEmpty()) {
 		QFileInfo shp(uri);
-		Core::CVSettings::set("/paths/search", shp.absolutePath());
+		Core::CVSettings::set(CV_PATH_SEARCH, shp.absolutePath());
 		importAll(QStringList() << shp.absolutePath() + QDir::separator() + shp.baseName());
 	}
 }

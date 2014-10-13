@@ -86,14 +86,14 @@ void CVProjectDialog::changeProjectType(int idx) {
 void CVProjectDialog::selectConfiguration() {
 	QString ref = QFileDialog::getOpenFileName(this, 
 		tr("Importa valori di riferimento"), 
-		Core::CVSettings::get("/paths/project").toString(),
+		Core::CVSettings::get(CV_PATH_PROJECT).toString(),
 		tr("*.xml")
 	);
 	_conf->setText(ref);
 }
 
 void CVProjectDialog::selectProjectFolder() {
-	QDir d(Core::CVSettings::get("/paths/project").toString());
+	QDir d(Core::CVSettings::get(CV_PATH_PROJECT).toString());
 	d.cdUp();
 
 	QString dir = QFileDialog::getExistingDirectory(

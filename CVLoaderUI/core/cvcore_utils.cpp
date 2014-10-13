@@ -51,9 +51,15 @@ QString Csv::readAll(){
 void Csv::splitAndFormat(const QString& src, QStringList& out, const QString separator, const QString delim) {
 	out.clear();
 
-    QString r = "%1";
-    //QRegExp rg(r.arg(separator));
-    QStringList list = src.split(r.arg(separator), QString::SkipEmptyParts);
+	QStringList list;
+	if (separator.length() == 1) {
+		list = src.split(separator, QString::SkipEmptyParts);
+	} else if (separator.length() > 1) {
+		QString r = "%1";
+		QRegExp rg(r.arg(separator));
+		list = src.split(rg, QString::SkipEmptyParts);
+	} 
+
     foreach (QString col, list) {
         QString c = col.simplified();
 		if (!delim.isNull() && c.startsWith(delim) && c.endsWith(delim)) {
@@ -64,7 +70,9 @@ void Csv::splitAndFormat(const QString& src, QStringList& out, const QString sep
 }
 
 void Csv::splitAndFormat(const QString& src, QStringList& out) {
-    splitAndFormat(src, out, _sep, _delim);
+	if (_sep.length()) {
+		splitAndFormat(src, out, _sep, _delim);
+	}
 }
 
 bool Csv::seek(int i){

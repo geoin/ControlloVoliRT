@@ -172,12 +172,12 @@ void CVCameraDetail::searchFile() {
     QString uri = QFileDialog::getOpenFileName(
         this,
         tr("Importa parametri fotocamera"),
-		Core::CVSettings::get("/paths/search").toString(),
+		Core::CVSettings::get(CV_PATH_SEARCH).toString(),
         "(*.xml)"
     );
 	if (!uri.isEmpty()) {
 		QFileInfo info(uri);
-		Core::CVSettings::set("/paths/search", info.absolutePath());
+		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
 		importAll(QStringList() << uri);
 	}
 }

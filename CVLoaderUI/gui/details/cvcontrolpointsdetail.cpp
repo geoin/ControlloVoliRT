@@ -24,19 +24,21 @@ CVControlPointsDetail::CVControlPointsDetail(QWidget* p, Core::CVObject* l) : CV
 	setAcceptDrops(true);
 
 	title(tr("Punti di controllo"));
-	description(tr("File shape"));
+	description(tr("Coordinate punti di controllo"));
 	
-    QFormLayout* form = new QFormLayout;
+    QVBoxLayout* form = new QVBoxLayout;
 
-	QLabel* lab, * info;
-	createRow(this, tr(""), lab, info);
-	_labels << info;
-	form->addRow(lab, info);
+	_table = new QTableWidget(this);
+	_table->setColumnCount(4);
+	_table->setHorizontalHeaderLabels(QStringList() << "X" << "Y" << "Z" << "Nome");
+
+	form->addWidget(_table);
 
 	body(form);
 
 	if (controller()->isValid()) {
-		_labels.at(0)->setText(tr("Dati inseriti"));
+		controller()->load();
+		updateTable();
 	}
 }
 
@@ -44,25 +46,38 @@ CVControlPointsDetail::~CVControlPointsDetail() {
 
 }
 
+void CVControlPointsDetail::updateTable() {
+	int i = 0;
+			
+	_table->setRowCount(input()->data().size());
+
+	Q_FOREACH(const QStringList& l, input()->data()) {
+		for (int j = 0; j < l.size(); j++) {
+			QTableWidgetItem* item = new QTableWidgetItem(l.at(j));
+			item->setTextAlignment(Qt::AlignRight | Qt::AlignCenter);
+			item->setFlags(item->flags() ^ Qt::ItemIsEditable);
+			_table->setItem(i, j, item);
+		}
+		i++;
+	}
+}
+
 void CVControlPointsDetail::clearAll() {
 	controller()->remove();
-	for (int i = 0; i < _labels.size(); ++i) {
-		QLabel* lab = _labels.at(i);
-		lab->setText("");
-	}
+	_table->clear();
 }
 
 void CVControlPointsDetail::searchFile() {
 	QString uri = QFileDialog::getOpenFileName(
         this,
         tr("Importa punti di controllo"),
-		Core::CVSettings::get("/paths/search").toString(),
+		Core::CVSettings::get(CV_PATH_SEARCH).toString(),
         ""
     );
 
 	if (!uri.isEmpty()) {
 		QFileInfo csv(uri);
-		Core::CVSettings::set("/paths/search", csv.absolutePath());
+		Core::CVSettings::set(CV_PATH_SEARCH, csv.absolutePath());
 		importAll(QStringList() << csv.absoluteFilePath());
 	}
 }
@@ -70,9 +85,10 @@ void CVControlPointsDetail::searchFile() {
 void CVControlPointsDetail::importAll(QStringList& uri) {
 	input()->setCsv(uri.at(0));
 	if (controller()->persist()) {
-		_labels.at(0)->setText(tr("Dati inseriti"));
-	} else {
-		_labels.at(0)->setText(tr(""));
+		if (controller()->isValid()) {
+			controller()->load();
+			updateTable();
+		}
 	}
 }
 

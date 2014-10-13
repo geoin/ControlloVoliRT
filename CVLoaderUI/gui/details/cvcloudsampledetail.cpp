@@ -57,12 +57,12 @@ void CVCloudSampleDetail::searchFile() {
 	QString uri = QFileDialog::getOpenFileName(
         this,
         tr("Importa nuovola di punti area di test"),
-		Core::CVSettings::get("/paths/search").toString(),
+		Core::CVSettings::get(CV_PATH_SEARCH).toString(),
         ""
     );
 	if (!uri.isEmpty()) {
 		QFileInfo shp(uri);
-		Core::CVSettings::set("/paths/search", shp.absolutePath());
+		Core::CVSettings::set(CV_PATH_SEARCH, shp.absolutePath());
 		importAll(QStringList() << shp.absoluteFilePath());
 	}
 }

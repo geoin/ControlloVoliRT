@@ -195,7 +195,7 @@ void CVRinexDetail::searchFile() {
 	QStringList uri = QFileDialog::getOpenFileNames(
         this,
         tr("Importa dati GPS"),
-		Core::CVSettings::get("/paths/search").toString(),
+		Core::CVSettings::get(CV_PATH_SEARCH).toString(),
         "(*.*n *.*o *.zip)"
     );
 
@@ -206,7 +206,7 @@ void CVRinexDetail::searchFile() {
 			ext << info.completeSuffix().toLower();
 			if (_station.isEmpty()) {
 				_station = info.baseName();
-				Core::CVSettings::set("/paths/search", info.absolutePath());
+				Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
 			}
 		}
 		if (ext.size() == 1 && ext.contains("zip")) { //one or more zip

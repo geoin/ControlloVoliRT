@@ -9,6 +9,7 @@
 #include <QScopedPointer>
 #include <QFileInfo>
 #include <QList>
+#include <QTableWidget>
 
 class QLabel;
 
@@ -29,6 +30,8 @@ public:
 	
 	inline Core::CVCsvInput* input() const { return static_cast<Core::CVCsvInput*>(controller()); }
 
+	void updateTable();
+
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
     virtual void dragMoveEvent(QDragMoveEvent*);
@@ -39,6 +42,8 @@ private:
     QScopedPointer<QFileInfo> _file;
 	QString _uri;
 	QList<QLabel*> _labels;
+
+	QTableWidget* _table;
 };
 
 } // namespace Details

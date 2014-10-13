@@ -17,10 +17,26 @@
 #include <Poco/Zip/Decompress.h>
 #include <fstream>
 
-
-
 namespace CV {
 namespace Core {
+	
+#define CV_PATH_PROJECT "/paths/project"
+#define CV_PATH_SEARCH "/paths/search"
+
+#define CV_CSV_HEADER "/csv/header"
+#define CV_CSV_SEPARATOR "/csv/separator"
+
+class CVSettings {
+public:
+	static void set(const QString& k, const QVariant& value) {
+		QSettings().setValue(k, value);
+	}
+
+	static QVariant get(const QString& k, const QVariant& v = QVariant()) {
+		return QSettings().value(k, v);
+	}
+
+};
 
 static bool removeDir(const QString& dirName) {
 	bool result = false;
@@ -105,18 +121,6 @@ public:
 			return false;
 		}
 	}
-};
-
-class CVSettings {
-public:
-	static void set(const QString& k, const QVariant& value) {
-		QSettings().setValue(k, value);
-	}
-
-	static QVariant get(const QString& k, const QVariant& v = QVariant()) {
-		return QSettings().value(k, v);
-	}
-
 };
 
 class Csv {

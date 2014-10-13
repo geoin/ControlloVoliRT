@@ -68,11 +68,11 @@ void CVRawStripDetail::searchFile() {
 	QString uri = QFileDialog::getExistingDirectory(
         this,
         tr("Importa cartella strip lidar"),
-		Core::CVSettings::get("/paths/search").toString()
+		Core::CVSettings::get(CV_PATH_SEARCH).toString()
     );
 	if (!uri.isEmpty()) {
 		QFileInfo info(uri);
-		Core::CVSettings::set("/paths/search", info.absolutePath());
+		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
 		importAll(QStringList() << uri);
 	}
 }
