@@ -22,7 +22,6 @@
 #define DEM_EXT "nod"
 
 class LASreader;
-class Progress;
 
 TOOLS_EXPORTS int sign(double val);
 
@@ -116,7 +115,7 @@ public:
 	virtual const TRIANGLE& Triangle(unsigned int i) const = 0;
 	virtual const SEGMENT& Segment(unsigned int i) const = 0;
 	virtual int FindTriangle(double X, double Y, int trIdx = -1) const = 0;
-	virtual bool Open(const std::string& nome, bool verbose, Progress* prb = NULL) = 0;
+	virtual bool Open(const std::string& nome, bool verbose, bool tria) = 0;
 	virtual void Close(void) = 0;
 	virtual int GetAdiacent(unsigned int tri, int nod, std::set<unsigned int>& lst) = 0;
 	//virtual size_t GetBorder(std::vector<DPOINT>& vec) = 0;
@@ -280,8 +279,8 @@ public:
 	double GetZ(int i) const { return quote[i]; }
 
 	int FindTriangle(double X, double Y, int trIdx = -1) const;
-	bool Open(const std::string& nome, bool verbose, Progress* prb = NULL);
-	bool Save(const std::string& nome, Progress* prb = NULL);
+	bool Open(const std::string& nome, bool verbose, bool = false);
+	bool Save(const std::string& nome);
 	void Set(double xmin, double ymin, int nx, int ny, double stepx, double _z0);
 	long nx(void) const { return _nx; }
 	long ny(void) const { return _ny; }
@@ -295,8 +294,8 @@ public:
 	//size_t GetBorder(std::vector<DPOINT>& vec);
 	bool GetProperties(const std::string& nome);
 	void AddQuote(float z);
-	bool Merge(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome, Progress* prb = NULL);
-	bool Diff(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome, Progress* prb = NULL);
+	bool Merge(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome);
+	bool Diff(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome);
 	void Filter(void);
 
 private:
@@ -326,7 +325,7 @@ public:
 	~DSM_Factory(void) {
 		Close();
 	}
-	bool Open(const std::string nome, bool verbose, Progress* prb = NULL);
+	bool Open(const std::string nome, bool verbose = false, bool tria = false);
 	//void SetEps(double eps) {
 	//	_eps = eps;
 	//	if ( _dsm != NULL )

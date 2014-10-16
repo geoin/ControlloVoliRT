@@ -329,7 +329,7 @@ int DSM_Grid::GetAdiacent(unsigned int tri, int nod, std::set<unsigned int>& lst
 //	return 0;
 //}
 
-bool DSM_Grid::Save(const std::string& nome, Progress* prb)
+bool DSM_Grid::Save(const std::string& nome)
 {
     std::fstream txf;
     txf.open(nome.c_str(), std::fstream::out | std::fstream::trunc);
@@ -403,7 +403,7 @@ bool DSM_Grid::GetProperties(const std::string& nome)
 	return true;
 }
 
-bool DSM_Grid::Open(const std::string& nome, bool verbose, Progress* prb)
+bool DSM_Grid::Open(const std::string& nome, bool verbose, bool)
 {
 	// acquisisce i parametri del grid
 	if ( !GetProperties(nome) )
@@ -472,7 +472,7 @@ void DSM_Grid::Close()
 	quote.clear();
 	_nx = _ny = 0;
 }
-bool DSM_Grid::Merge(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome, Progress* prb)
+bool DSM_Grid::Merge(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome)
 {
 	_x0 = std::min(dsm1.Xmin(), dsm2.Xmin());
 	_y0 = std::min(dsm1.Ymin(), dsm2.Ymin());
@@ -525,7 +525,7 @@ bool DSM_Grid::Merge(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome, Progres
 	//	delete prg;
 	return !error;
 }
-bool DSM_Grid::Diff(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome, Progress* prb)
+bool DSM_Grid::Diff(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome)
 {
 	_x0 = std::max(dsm1.Xmin(), dsm2.Xmin());
 	_y0 = std::max(dsm1.Ymin(), dsm2.Ymin());
@@ -563,17 +563,17 @@ bool DSM_Grid::Diff(DSM_Grid& dsm1, DSM& dsm2, const std::string& nome, Progress
 		error = true;
 	}
 	if ( !error )
-		Save(nome, prb);
+		Save(nome);
 	return !error;
 }
 /********************************************************/
-bool DSM_Factory::Open(const std::string nome, bool verbose, Progress* prb)
+bool DSM_Factory::Open(const std::string nome, bool verbose, bool tria)
 {
 	DSM::DSM_Type ty = GetType(nome);
 
 	if ( ty == DSM::DSM_GRID ) {
 		_dsm = new DSM_Grid;
-		return _dsm->Open(nome, verbose, prb);
+		return _dsm->Open(nome, verbose, tria);
 	}
 	if ( ty == DSM::DSM_TIN ) {
 		// file di tipo tin;
@@ -581,7 +581,7 @@ bool DSM_Factory::Open(const std::string nome, bool verbose, Progress* prb)
 		_dsm->SetEcho(_lidar_echo);
 		_dsm->SetMask(fm);
 
-		return _dsm->Open(nome, verbose, prb);
+		return _dsm->Open(nome, verbose, tria);
 	}
 	return false; // formato non riconosciuto
 }

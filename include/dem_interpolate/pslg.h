@@ -305,8 +305,20 @@ public:
 		}
 		return -(_pln[0] * X + _pln[1] * Y + _pln[3]) / _pln[2];
 	}
+	
+	const DPOINT& getLeftMostBottomPoint() const { return _pMinXMinY;  }
+	const DPOINT& getLeftMostUpperPoint() const { return _pMinXMaxY;  }
 
-	bool ReadFileNod(const std::string& DemName, Progress* Prg = NULL) {
+	const DPOINT& getBottomMostLeftPoint() const { return _pMinYMinX;  }
+	const DPOINT& getBottomMostRightPoint() const { return _pMinYMaxX;  }
+	
+	const DPOINT& getTopMostLeftPoint() const { return _pMaxYMinX;  }
+	const DPOINT& getTopMostRightPoint() const { return _pMaxYMaxX;  }
+	
+	const DPOINT& getRightMostUpperPoint() const { return _pMaxXMaxY;  }
+	const DPOINT& getRightMostBottomPoint() const { return _pMaxXMinY;  }
+
+	bool ReadFileNod(const std::string& DemName) {
         FILE* fptr = fopen(DemName.c_str(), "r" );
 		if ( fptr == NULL )
 			return false;
@@ -381,7 +393,7 @@ public:
 		_open = true;
 		return true;
 	}
-	bool WriteFileNod(const std::string& DemName, Progress* Prg = NULL) {
+	bool WriteFileNod(const std::string& DemName) {
 		FILE* fptr = fopen(DemName.c_str(), "w");
 		if ( fptr == NULL )
 			return false;
@@ -411,18 +423,18 @@ public:
 		fclose(fptr);
 		return true;
 	}
-	bool Open(const std::string& nome, bool verbose, Progress* prb) {
+	bool Open(const std::string& nome, bool verbose, bool tria) {
 		_lastTri = -1;
 		_nprev = -1;
 		std::string ext = Poco::Path(nome).getExtension();
 		if ( !Poco::icompare(ext, "las") )
-			return GetDemFromLas(nome, verbose, prb);
+			return GetDemFromLas(nome, verbose, tria);
 		if ( !Poco::icompare(ext, "nod") )
-			return GetDemFromNod(nome, verbose, prb);
+			return GetDemFromNod(nome, verbose, tria);
 
-		return GetDemFromASCII(nome, verbose, prb);
+		return GetDemFromASCII(nome, verbose, tria);
 	}
-	bool GetDemFromASCII(const std::string& nome, bool verbose, Progress* Prg) {
+	bool GetDemFromASCII(const std::string& nome, bool verbose, bool tria) {
 	
 		if ( _open ) {
 			Release();
@@ -507,7 +519,7 @@ public:
 			return false;
 		}
 	}
-	bool GetDemFromLas(const std::string& nome, bool verbose, Progress* Prg) {
+	bool GetDemFromLas(const std::string& nome, bool verbose, bool tria) {
 		if ( _open ) {
 			Release();
 			Init();
@@ -525,6 +537,18 @@ public:
 		ml.get_max(_xmax, _ymax, _zmax);
 		_set_off_scale();
 
+		_pMinXMinY.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0.0);
+		_pMinXMaxY.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::min(), 0.0);
+		
+		_pMaxXMinY.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::max(), 0.0);
+		_pMaxXMaxY.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0.0);
+
+		_pMinYMinX.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0.0);
+		_pMinYMaxX.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::max(), 0.0);
+
+		_pMaxYMinX.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::min(), 0.0);
+		_pMaxYMaxX.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0.0);
+
 		DPOINT pt;
 		while ( ml.get_next_point(pt) ) {
 			if ( _echo != 0 && !( _echo & ml.get_echo()) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
@@ -534,6 +558,42 @@ public:
 			node[Org_Nod].y = pt.y;
 			node[Org_Nod].z = pt.z;
 
+			// min X
+			if (pt.x < _pMinXMinY.x || (pt.x == _pMinXMinY.x && pt.y <= _pMinXMinY.y) ) {
+				_pMinXMinY.set(pt.x, pt.y, pt.z);
+			}
+
+			if (pt.x < _pMinXMaxY.x || (pt.x == _pMinXMaxY.x && pt.y >= _pMinXMaxY.y)) {
+				_pMinXMaxY.set(pt.x, pt.y, pt.z);
+			}
+
+			// max X
+			if (pt.x > _pMaxXMinY.x || (pt.x == _pMaxXMinY.x && pt.y <= _pMaxXMinY.y)) {
+				_pMaxXMinY.set(pt.x, pt.y, pt.z);
+			}
+
+			if (pt.x > _pMaxXMaxY.x || (pt.x == _pMaxXMaxY.x  && pt.y >= _pMaxXMaxY.y)) {
+				_pMaxXMaxY.set(pt.x, pt.y, pt.z);
+			}
+
+			// min Y
+			if (pt.y < _pMinYMinX.y || (pt.y == _pMinYMinX.y && pt.x <= _pMinYMinX.x)) {
+				_pMinYMinX.set(pt.x, pt.y, pt.z);
+			}
+
+			if (pt.y < _pMinYMaxX.y || (pt.y == _pMinYMaxX.y && pt.x >= _pMinYMaxX.x)) {
+				_pMinYMaxX.set(pt.x, pt.y, pt.z);
+			}
+
+			// max Y
+			if (pt.y > _pMaxYMinX.y || (pt.y == _pMaxYMinX.y && pt.x <= _pMaxYMinX.x)) {
+				_pMaxYMinX.set(pt.x, pt.y, pt.z);
+			}
+
+			if (pt.y > _pMaxYMaxX.y || (pt.y == _pMaxYMaxX.y && pt.x >= _pMaxYMaxX.x)) {
+				_pMaxYMaxX.set(pt.x, pt.y, pt.z);
+			}
+
 			_normalize(Org_Nod++);
 		}
 
@@ -542,22 +602,23 @@ public:
 		node.resize(Org_Nod);
 		_npt = Org_Nod;
 
-		bool retval = _triCalc();
-		if ( retval ) {
-			_open = true;
+		if (!tria) {
 			return true;
-		} else {
-			Release();
-			return false;
 		}
+
+		bool retval = _triCalc();
+		if (!retval) {
+			Release();
+		}
+		return retval;
 	}
 
-	bool GetDemFromNod(const std::string& path, bool verbose, Progress* prg = NULL) {
+	bool GetDemFromNod(const std::string& path, bool verbose, bool tria) {
 		if ( _open ) {
 			Release();
 			Init();
 		}
-		if ( !ReadFileNod(path, prg) )
+		if ( !ReadFileNod(path) )
 			return false;
 
 		_npt = Org_Nod;
@@ -835,6 +896,8 @@ private:
 		_err_mes = mes;
 		ReleaseStruct(&inData);
 		ReleaseStruct(&outData);
+
+		_open = ret;
 		return ret;
 	}
 
@@ -939,6 +1002,8 @@ private:
 	std::vector<ND>			node;
 	std::vector<NT>			triangle;
 	std::vector<SEGMENT>	seg;
+
+	DPOINT _pMinXMinY, _pMinXMaxY, _pMinYMinX, _pMinYMaxX, _pMaxXMinY, _pMaxXMaxY, _pMaxYMinX, _pMaxYMaxX;
 };
 
 typedef tPSLG<NODE, TRIANGLE> PSLG;
