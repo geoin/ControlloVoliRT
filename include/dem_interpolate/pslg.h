@@ -31,6 +31,88 @@
 static void fn_lst(char* mes) {
 }
 
+class InertialEllipse {
+public:
+	InertialEllipse() 
+		: _xc(0.0), _yc(0.0), _n(0), Ixx(0.0), Iyy(0.0), Ixy(0.0), ra(0.0), rb(0.0), theta(0.0) 
+	{}
+
+	InertialEllipse(const double& xc, const double& yc) 
+		: _xc(xc), _yc(yc), _n(0), Ixx(0.0), Iyy(0.0), Ixy(0.0), ra(0.0), rb(0.0), theta(0.0) 
+	{}
+
+	
+	inline void setCenter(const double& x, const double& y) {
+		_xc = x;
+		_yc = y;
+	}
+
+	inline void push(const double& xi, const double& yi) {
+		double x = xi - _xc;
+		double y = yi - _yc;
+
+		Ixx += x * x;
+		Iyy += y * y;
+		Ixy += x * y;
+
+		_n++;
+	}
+
+	inline void compute() {
+		Ixx /= _n;
+		Iyy /= _n;
+		Ixy /= _n;
+
+		double c = sqrt( pow(Ixx - Iyy, 2.) + 4 * pow(Ixy, 2.));
+		ra = sqrt(2.) * sqrt(Ixx + Iyy + c);
+		rb = sqrt(2.) * sqrt(Ixx + Iyy - c);
+		theta = atan2(Ixx - Iyy, 2 * Ixy) / 2;
+	}
+
+	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
+		p1.set(_xc - ra/2 * cos(theta), _yc - ra/2*sin(theta));
+		p2.set(_xc + ra/2 * cos(theta), _yc - ra/2*sin(theta));
+	} 
+
+private:
+	unsigned long _n; // numero punti processati
+	double _xc, _yc; // centro dell'ellisse
+	
+	double Ixx, Iyy, Ixy; // momenti d'inerzia
+
+	double ra, rb; // semiassi
+	double theta; // angolo rispetto all'asse x;
+};
+/*
+Inertia_ellipse::Inertia_ellipse(FVDATA& fv) 
+{
+	xc = yc = 0.;
+	Ixx = Iyy = Ixy = 0.;
+	int n = fv.GetCount();
+	for (int i = 0; i < n; i++) {
+		xc += fv[i].p[0];
+		yc += fv[i].p[1];
+
+	}
+	xc /= n;
+	yc /= n;
+	for (int i = 0; i < n; i++) {
+		double x = fv[i].p[0] - xc;
+		double y = fv[i].p[1] - yc;
+
+		Ixx += x * x;
+		Iyy += y * y;
+		Ixy += x * y;
+	}
+	Ixx /= n;
+	Iyy /= n;
+	Ixy /= n;
+	double c = sqrt( pow(Ixx - Iyy, 2.) + 4 * pow(Ixy, 2.));
+	ra = sqrt(2.) * sqrt(Ixx + Iyy + c);
+	rb = sqrt(2.) * sqrt(Ixx + Iyy - c);
+	theta = atan2(Ixx - Iyy, 2 * Ixy) / 2;
+}*/
+
 class TOOLS_EXPORTS Bbox {
 public:
 	Bbox() {}
@@ -305,18 +387,6 @@ public:
 		}
 		return -(_pln[0] * X + _pln[1] * Y + _pln[3]) / _pln[2];
 	}
-	
-	const DPOINT& getLeftMostBottomPoint() const { return _pMinXMinY;  }
-	const DPOINT& getLeftMostUpperPoint() const { return _pMinXMaxY;  }
-
-	const DPOINT& getBottomMostLeftPoint() const { return _pMinYMinX;  }
-	const DPOINT& getBottomMostRightPoint() const { return _pMinYMaxX;  }
-	
-	const DPOINT& getTopMostLeftPoint() const { return _pMaxYMinX;  }
-	const DPOINT& getTopMostRightPoint() const { return _pMaxYMaxX;  }
-	
-	const DPOINT& getRightMostUpperPoint() const { return _pMaxXMaxY;  }
-	const DPOINT& getRightMostBottomPoint() const { return _pMaxXMinY;  }
 
 	bool ReadFileNod(const std::string& DemName) {
         FILE* fptr = fopen(DemName.c_str(), "r" );
@@ -537,19 +607,10 @@ public:
 		ml.get_max(_xmax, _ymax, _zmax);
 		_set_off_scale();
 
-		_pMinXMinY.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0.0);
-		_pMinXMaxY.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::min(), 0.0);
-		
-		_pMaxXMinY.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::max(), 0.0);
-		_pMaxXMaxY.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0.0);
-
-		_pMinYMinX.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0.0);
-		_pMinYMaxX.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::max(), 0.0);
-
-		_pMaxYMinX.set(std::numeric_limits<double>::max(), std::numeric_limits<double>::min(), 0.0);
-		_pMaxYMaxX.set(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0.0);
-
 		DPOINT pt;
+
+		_ie = InertialEllipse((_xmax + _xmin)/2, (_ymax + _ymin)/2);
+
 		while ( ml.get_next_point(pt) ) {
 			if ( _echo != 0 && !( _echo & ml.get_echo()) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 				continue;
@@ -558,44 +619,12 @@ public:
 			node[Org_Nod].y = pt.y;
 			node[Org_Nod].z = pt.z;
 
-			// min X
-			if (pt.x < _pMinXMinY.x || (pt.x == _pMinXMinY.x && pt.y <= _pMinXMinY.y) ) {
-				_pMinXMinY.set(pt.x, pt.y, pt.z);
-			}
-
-			if (pt.x < _pMinXMaxY.x || (pt.x == _pMinXMaxY.x && pt.y >= _pMinXMaxY.y)) {
-				_pMinXMaxY.set(pt.x, pt.y, pt.z);
-			}
-
-			// max X
-			if (pt.x > _pMaxXMinY.x || (pt.x == _pMaxXMinY.x && pt.y <= _pMaxXMinY.y)) {
-				_pMaxXMinY.set(pt.x, pt.y, pt.z);
-			}
-
-			if (pt.x > _pMaxXMaxY.x || (pt.x == _pMaxXMaxY.x  && pt.y >= _pMaxXMaxY.y)) {
-				_pMaxXMaxY.set(pt.x, pt.y, pt.z);
-			}
-
-			// min Y
-			if (pt.y < _pMinYMinX.y || (pt.y == _pMinYMinX.y && pt.x <= _pMinYMinX.x)) {
-				_pMinYMinX.set(pt.x, pt.y, pt.z);
-			}
-
-			if (pt.y < _pMinYMaxX.y || (pt.y == _pMinYMaxX.y && pt.x >= _pMinYMaxX.x)) {
-				_pMinYMaxX.set(pt.x, pt.y, pt.z);
-			}
-
-			// max Y
-			if (pt.y > _pMaxYMinX.y || (pt.y == _pMaxYMinX.y && pt.x <= _pMaxYMinX.x)) {
-				_pMaxYMinX.set(pt.x, pt.y, pt.z);
-			}
-
-			if (pt.y > _pMaxYMaxX.y || (pt.y == _pMaxYMaxX.y && pt.x >= _pMaxYMaxX.x)) {
-				_pMaxYMaxX.set(pt.x, pt.y, pt.z);
-			}
+			_ie.push(pt.x, pt.y);
 
 			_normalize(Org_Nod++);
 		}
+
+		_ie.compute();
 
 		if ( Org_Nod == 0 )
 			return false;
@@ -612,6 +641,10 @@ public:
 		}
 		return retval;
 	}
+
+	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
+		_ie.getMajorAxis(p1, p2);
+	} 
 
 	bool GetDemFromNod(const std::string& path, bool verbose, bool tria) {
 		if ( _open ) {
@@ -1003,7 +1036,7 @@ private:
 	std::vector<NT>			triangle;
 	std::vector<SEGMENT>	seg;
 
-	DPOINT _pMinXMinY, _pMinXMaxY, _pMinYMinX, _pMinYMaxX, _pMaxXMinY, _pMaxXMaxY, _pMaxYMinX, _pMaxYMaxX;
+	InertialEllipse _ie;
 };
 
 typedef tPSLG<NODE, TRIANGLE> PSLG;

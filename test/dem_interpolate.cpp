@@ -76,25 +76,8 @@ TEST (DemTest, Las) {
     ASSERT_TRUE(f.Open(path + "S1C1_strip32.las", false, false));
     PSLG* d = static_cast<PSLG*>(f.GetDsm());
 
-	const DPOINT& lb = d->getLeftMostBottomPoint();
-	const DPOINT& lt = d->getLeftMostUpperPoint();
-
-	EXPECT_DOUBLE_EQ(lb.x, lt.x);
-	
-	const DPOINT& bl = d->getBottomMostLeftPoint();
-	const DPOINT& br = d->getBottomMostRightPoint();
-
-	EXPECT_DOUBLE_EQ(bl.y, br.y);
-	
-	const DPOINT& tl = d->getTopMostLeftPoint();
-	const DPOINT& tr = d->getTopMostRightPoint();
-
-	EXPECT_DOUBLE_EQ(tr.y, tr.y);
-	
-	const DPOINT& rb = d->getRightMostBottomPoint();
-	const DPOINT& rt = d->getRightMostUpperPoint();
-
-	EXPECT_DOUBLE_EQ(rb.x, rt.x);
+	DPOINT p1, p2;
+	d->getMajorAxis(p1, p2);
 
 	//ASSERT_TRUE(d->TriCalc());
 
