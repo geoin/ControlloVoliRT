@@ -101,6 +101,8 @@ public:
 		DSM_TIN = 1
 	};
 	_DSM(void): _xmin(0.), _ymin(0.), _zmin(0.), _xmax(0.), _ymax(0.), _zmax(0.), _z_noVal(Z_NOVAL) {}
+	virtual ~_DSM() {}
+
 	virtual double GetQuota(double x, double y, double z = Z_NOVAL, double zo = Z_OUT) const = 0;
 	virtual double GetQm(double x, double y, double dx, double dy, double z = Z_NOVAL, double zo = Z_OUT) const = 0;
 	virtual DSM_Type GetType(void) const = 0;
@@ -250,6 +252,8 @@ public:
 	void Xmax(double val) { _xmin = val; }
 	void Ymax(double val) { _ymin = val; }
 	void Zmax(double val) { _zmin = val; }
+
+	virtual void getMajorAxis(DPOINT&, DPOINT&) const {}
 protected:
 	std::string	_err_mes;
 	double	_xmin, _ymin, _zmin;

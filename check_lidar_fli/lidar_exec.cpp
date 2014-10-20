@@ -29,6 +29,8 @@
 #include "Poco/StringTokenizer.h"
 #include "Poco/AutoPtr.h"
 #include "Poco/Path.h"
+#include "Poco/File.h"
+#include "Poco/String.h"
 #include "Poco/SharedPtr.h"
 #include <fstream>
 #include <sstream>
@@ -102,7 +104,9 @@ bool lidar_exec::run()
 			if (!_read_strip_folder()) {
 				throw std::runtime_error("Invalid strip folder");
 			}
-
+			
+			_createAvolov();
+			_buildAxis();
 		} else {
 			// legge i dati del sensore di progetto
 			_read_lidar();
@@ -160,6 +164,25 @@ bool lidar_exec::run()
 	}
 }
 
+void lidar_exec::_createAvolov() {
+	std::string table = ASSI_VOLO + std::string("V");
+	cnn.remove_layer(table);
+
+	std::stringstream sql;
+	sql << "CREATE TABLE " << table << 
+		"(NAME TEXT NOT NULL)";
+	cnn.execute_immediate(sql.str());
+
+	// add the geom column
+	std::stringstream sql1;
+	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+		"'GEOM'," <<
+		SRID << "," <<
+		"'LINESTRING'," <<
+		"'XY')";
+	cnn.execute_immediate(sql1.str());
+}
+
 double lidar_exec::read_proj_speed() {
 	CV::Util::Spatialite::Statement stm(cnn);
 	try {
@@ -200,6 +223,43 @@ bool lidar_exec::_read_strip_folder() {
 	} catch (...) {
 		return false;
 	}
+}
+
+void lidar_exec::_buildAxis() {
+	Poco::File lasClouds(_cloudsFolder);
+	std::vector<Poco::File> files;
+    lasClouds.list(files);
+
+	std::vector<Poco::File>::iterator it = files.begin(), end = files.end();
+
+	std::stringstream sql2;
+	sql2 << "INSERT INTO AVOLOV (NAME, GEOM) \
+		VALUES (?1, ST_GeomFromWKB(?2, " << SRID << ") )";
+	Statement stm(cnn);
+	cnn.begin_transaction();
+	stm.prepare(sql2.str());
+
+	for (; it != end; it++) {
+		Poco::File& f = *it;
+		Poco::Path p(f.path());
+		
+		if (Poco::toLower(p.getExtension()) == "las") {
+			Lidar::Axis::Ptr axis(new Lidar::Axis);
+			axis->stripName(p.getBaseName());
+
+			bool ret = axis->fromCloud(p.toString());
+			if (ret) {
+				stm[1] = axis->stripName();
+
+				OGRGeomPtr buf = axis->geom();
+				stm[2].fromBlob(buf);
+
+				stm.execute();
+				stm.reset();
+			}
+		}
+	}
+	cnn.commit_transaction();
 }
 
 // TODO (CHECK): removing mission for now

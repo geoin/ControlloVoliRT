@@ -79,6 +79,7 @@ public:
 	unsigned int id() { return _id; }
 
 	double quota() const { return _qt; }
+	CV::Util::Geometry::OGRGeomPtr geom() const { return _geom; }
 
 	const DPOINT& first() const { return _first; }
 	const DPOINT& last() const { return _last; }
@@ -113,6 +114,8 @@ public:
 	void addLastSample(GPS::Sample::Ptr s) { _lastSample = s; }
 
 	double averageSpeed() const;
+
+	bool fromCloud(const std::string& las); 
 
 private:
 	DPOINT _first;

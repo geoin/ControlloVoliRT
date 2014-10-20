@@ -71,7 +71,7 @@ public:
 
 	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
 		p1.set(_xc - ra/2 * cos(theta), _yc - ra/2*sin(theta));
-		p2.set(_xc + ra/2 * cos(theta), _yc - ra/2*sin(theta));
+		p2.set(_xc + ra/2 * cos(theta), _yc + ra/2*sin(theta));
 	} 
 
 private:
@@ -136,7 +136,7 @@ public:
 		_nPrev(-5), _lastTri(-1), _nprev(-1),
 		_nSize(0), _p_off(), _p_scale(1., 1., 1.),
 		_echo(0), _trEps(TR_EPS) {}
-	~tPSLG() {
+	virtual ~tPSLG() {
 		Release();
 	}
 	unsigned int Npt(void) const {
@@ -630,6 +630,7 @@ public:
 			return false;
 		node.resize(Org_Nod);
 		_npt = Org_Nod;
+		_open = true;
 
 		if (!tria) {
 			return true;
@@ -642,7 +643,7 @@ public:
 		return retval;
 	}
 
-	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
+	virtual void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
 		_ie.getMajorAxis(p1, p2);
 	} 
 

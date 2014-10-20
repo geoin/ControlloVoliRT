@@ -71,6 +71,8 @@ public:
 	void set_checkType(Check_Type t);
 
 private:
+	void _createAvolov();
+	void _buildAxis();
 	void _process_strips();
 	void _createStripTable(); 
 

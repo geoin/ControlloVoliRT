@@ -1,5 +1,6 @@
 #include "cv/lidar.h"
 
+#include <iostream>
 #include <sstream>
 
 using namespace CV::Lidar;
@@ -128,6 +129,26 @@ double Axis::averageSpeed() const {
 		speed_MS = length() / abs(elapsed / (1000.0 * 1000.0));
 	}
 	return speed_MS;
+}
+
+bool Axis::fromCloud(const std::string& las) {
+    DSM_Factory f;
+	if (!f.Open(las, false, false)) {
+		return false;
+	}
+
+	f.GetDsm()->getMajorAxis(_first, _last);
+
+	_geom = OGRGeometryFactory::createGeometry(wkbLineString);
+	
+	OGRGeometry* og = _geom;
+	reinterpret_cast<OGRLineString*>(og)->addPoint(_first.x, _first.y);
+	reinterpret_cast<OGRLineString*>(og)->addPoint(_last.x, _last.y);
+	
+	_line = toLineString();
+	
+	f.Close();
+	return true;
 }
 
 void Block::add(Strip::Ptr strip) {

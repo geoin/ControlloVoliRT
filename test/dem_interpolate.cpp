@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include <dem_interpolate/dsm.h>
-#include <dem_interpolate/pslg.h>
 
 #include <iostream>
 #include <fstream>
@@ -74,7 +73,7 @@ TEST (DemTest, Triangulation) {
 TEST (DemTest, Las) {
     DSM_Factory f;
     ASSERT_TRUE(f.Open(path + "S1C1_strip32.las", false, false));
-    PSLG* d = static_cast<PSLG*>(f.GetDsm());
+    DSM* d = f.GetDsm();
 
 	DPOINT p1, p2;
 	d->getMajorAxis(p1, p2);

@@ -25,7 +25,7 @@ namespace Details {
 
 CVRawStripDetail::CVRawStripDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	title(tr("Strip lidar - RAW"));
-	description(tr("Cartella contentente le nuovole delle strisciate"));
+	description(tr("Cartella contentente le nuvole delle strisciate"));
 	
     QFormLayout* form = new QFormLayout;
 
