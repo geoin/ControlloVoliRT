@@ -70,8 +70,9 @@ public:
 	}
 
 	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
-		p1.set(_xc - ra/2 * cos(theta), _yc - ra/2*sin(theta));
-		p2.set(_xc + ra/2 * cos(theta), _yc + ra/2*sin(theta));
+		double angle = M_PI/2.0 - theta;
+		p1.set(_xc - ra/2 * cos(angle), _yc - ra/2*sin(angle));
+		p2.set(_xc + ra/2 * cos(angle), _yc + ra/2*sin(angle));
 	} 
 
 private:

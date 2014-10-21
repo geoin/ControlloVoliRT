@@ -107,6 +107,7 @@ bool lidar_exec::run()
 			
 			_createAvolov();
 			_buildAxis();
+			_update_assi_volo();
 		} else {
 			// legge i dati del sensore di progetto
 			_read_lidar();
@@ -122,7 +123,6 @@ bool lidar_exec::run()
 		
 		if ( _type == FLY_TYPE ) {
 			_check_sample_cloud();
-			_update_assi_volo();
 		}
 
 		// se volo lidar confronta gli assi progettati con quelli effettivi
@@ -170,7 +170,9 @@ void lidar_exec::_createAvolov() {
 
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
-		"(NAME TEXT NOT NULL)";
+		"(" << _stripNameCol << "  TEXT NOT NULL, " <<
+		_quotaCol << " REAL " << 
+		")";
 	cnn.execute_immediate(sql.str());
 
 	// add the geom column
@@ -233,7 +235,7 @@ void lidar_exec::_buildAxis() {
 	std::vector<Poco::File>::iterator it = files.begin(), end = files.end();
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO AVOLOV (NAME, GEOM) \
+	sql2 << "INSERT INTO AVOLOV (" << _stripNameCol << ", GEOM) \
 		VALUES (?1, ST_GeomFromWKB(?2, " << SRID << ") )";
 	Statement stm(cnn);
 	cnn.begin_transaction();
@@ -750,8 +752,11 @@ bool lidar_exec::_check_sample_cloud() {
 
 		CV::Util::Spatialite::Recordset set = _read_control_points();
 		while (!set.eof()) {
-			Blob b = set["GEOM"].toBlob();
-			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(b, set["Z_QUOTA"].toDouble()));
+			double x = set["X"].toDouble();
+			double y = set["Y"].toDouble();
+			double z = set["Z"].toDouble();
+
+			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(x, y, z));
 			point->name(set["NAME"].toString());
 
 			point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT
@@ -770,7 +775,7 @@ CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {
 	CV::Util::Spatialite::Statement stm(cnn);
 
     std::stringstream query;
-	query << "select Z_QUOTA, NAME, AsBinary(GEOM) as GEOM FROM CONTROL_CLOUD";
+	query << "select X, Y, Z, NAME FROM CONTROL_POINTS";
 	stm.prepare(query.str());
 
     CV::Util::Spatialite::Recordset set = stm.recordset();
@@ -856,7 +861,7 @@ void lidar_exec::_process_strips()
 	// select data from flight lines
 	table = std::string(ASSI_VOLO) + (_type == PRJ_TYPE ? "P" : "V");
 	std::stringstream sql3;
-	sql3 << "SELECT ROWID, " << _quotaCol << ", " << _stripNameCol << /*", mission*/", AsBinary(geom) geom from " << table;
+	sql3 << "SELECT ROWID, " << _quotaCol << ", "  << _stripNameCol << (_type != PRJ_TYPE ? ", mission ": "") << ", AsBinary(geom) geom from " << table;
 	Statement stm1(cnn);
 	stm1.prepare(sql3.str());
 	Recordset rs = stm1.recordset();
@@ -870,7 +875,14 @@ void lidar_exec::_process_strips()
         OGRGeomPtr pol = blob;
 		double z = rs[1];
 		std::string strip = rs[2];
-		std::string mission = "";//rs[2];
+		std::string mission = "";
+		if (_type != PRJ_TYPE) {
+			mission = rs[3];
+
+			if (mission == "") {
+				continue;
+			}
+		}
 
 		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));
 		axis->stripName(strip);
@@ -966,21 +978,27 @@ void lidar_exec::process_end_point_axis_info(const Blob& pt, std::map<std::strin
 		v.dist = g1->Distance(gp);
 		v.sample = GPS::Sample::Ptr(new GPS::Sample);
 		v.sample->mission(mission);
-		if ( epai.find(mission) != epai.end() ) {
-			if ( epai[mission].dist > v.dist ) {	
-				v.sample->dateTime(rs["DATE"].toString(), rs["TIME"].toString());
-				v.sample->gpsData(rs["NSAT"].toInt(), rs["NBASI"].toInt(), rs["PDOP"].toDouble());
-				v.sample->point(g1);
 
-				epai[mission] = v;
+		bool insert = true;
+		if ( epai.find(mission) != epai.end() ) {
+			if (epai[mission].dist < v.dist ) {	
+				insert = false;
 			}
+		}
+
+		if (insert) {
+			v.sample->dateTime(rs["DATE"].toString(), rs["TIME"].toString());
+			v.sample->gpsData(rs["NSAT"].toInt(), rs["NBASI"].toInt(), rs["PDOP"].toDouble());
+			v.sample->point(g1);
+
+			epai[mission] = v;
 		}
 
 		rs.next();
 	}
 }
 
-bool lidar_exec::select_mission(std::map<std::string, AxisVertex>& ep1, std::map<std::string, AxisVertex>& ep2, CV::GPS::Sample::Ptr f, double len) {
+bool lidar_exec::select_mission(std::map<std::string, AxisVertex>& ep1, std::map<std::string, AxisVertex>& ep2, CV::GPS::Sample::Ptr& f, double len) {
 	bool ret = false;
 	std::map<std::string, AxisVertex>::const_iterator it1 = ep1.begin();
 	std::map<std::string, AxisVertex>::const_iterator it2 = ep2.begin();
@@ -1036,7 +1054,7 @@ void lidar_exec::_update_assi_volo()
 	add_column(cnn, table, "GPS_GAP INTEGER");
 
 	std::stringstream sqli;
-	sqli << "SELECT " << STRIP_NAME << ", ST_Length(geom), AsBinary(StartPoint(geom)), AsBinary(EndPoint(geom)) FROM "  << table;
+	sqli << "SELECT " << _stripNameCol << ", ST_Length(geom), AsBinary(StartPoint(geom)), AsBinary(EndPoint(geom)) FROM "  << table;
 	Statement stm(cnn);
 	stm.prepare(sqli.str());
 
@@ -1056,7 +1074,7 @@ void lidar_exec::_update_assi_volo()
 		
 		CV::GPS::Sample::Ptr f(new CV::GPS::Sample);
 		if (select_mission(ep1, ep2, f, len)) {
-			f->strip(rs[0].toString());
+			f->strip(s);
 			ft.push_back(f);
 		}
 		rs.next();
@@ -1069,7 +1087,7 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 	std::string table = ASSI_VOLO + std::string("V");
 
 	std::stringstream sql1;
-	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << STRIP_NAME  << "=?9";
+	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << _stripNameCol  << "=?9";
 	Statement stm1(cnn);
 	stm1.prepare(sql1.str());
 	cnn.begin_transaction();
@@ -1335,8 +1353,12 @@ void lidar_exec::_get_dif()
 }
 
 void lidar_exec::_findReferenceColumns() {
+	int control, type;
+	control = 3;
+	type = 2;
+
 	std::stringstream sql;
-	sql << "SELECT TARGET FROM _META_COLUMNS_ WHERE CONTROL = 3 AND OBJECT = 2 and REF = ?1";
+	sql << "SELECT TARGET FROM _META_COLUMNS_ WHERE CONTROL = " << control << " AND OBJECT = " << type << " and REF = ?1";
 	Statement stm(cnn);
 
 	stm.prepare(sql.str());

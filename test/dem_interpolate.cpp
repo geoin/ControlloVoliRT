@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <dem_interpolate/dsm.h>
+#include <dem_interpolate/pslg.h>
 
 #include <iostream>
 #include <fstream>
@@ -69,6 +70,21 @@ TEST (DemTest, Triangulation) {
 
     f.Close();
 }
+
+TEST (DemTest, Ellipse) {
+	double xmin = 645851, xmax = 651620, ymin = 4879637, ymax = 4881067;
+   InertialEllipse el((xmin + xmax)/2.0, (ymin + ymax)/2.0);
+   el.push(xmin, ymin);
+   el.push(xmin, ymax);
+   el.push(xmax, ymax);
+   el.push(xmax, ymin);
+
+   el.compute();
+
+   DPOINT x, y;
+   el.getMajorAxis(x, y);
+}
+
 
 TEST (DemTest, Las) {
     DSM_Factory f;

@@ -117,7 +117,7 @@ private:
 
 	double read_proj_speed();
 	void process_end_point_axis_info(const Blob& pt, std::map<std::string, AxisVertex>& epi);
-	bool select_mission(std::map<std::string, AxisVertex>& ep1, std::map<std::string, AxisVertex>& ep2, CV::GPS::Sample::Ptr f, double len);
+	bool select_mission(std::map<std::string, AxisVertex>& ep1, std::map<std::string, AxisVertex>& ep2, CV::GPS::Sample::Ptr& f, double len);
 	void update_strips(std::vector<CV::GPS::Sample::Ptr>& ft);
 
 	std::string _proj_dir;

@@ -248,18 +248,8 @@ public:
 
 	typedef Poco::SharedPtr<ControlPoint> Ptr;
 
-	ControlPoint(CV::Util::Geometry::OGRGeomPtr g) : _geom(g), _quota(0.0), _diff(std::numeric_limits<double>::max()), _status(UNKNOWN) {}
-	ControlPoint(CV::Util::Geometry::OGRGeomPtr g, double q) : _geom(g), _quota(q), _diff(std::numeric_limits<double>::max()), _status(UNKNOWN) {}
-
-	inline OGRPoint* toPoint() {
-		OGRGeometry* og = _geom;
-		return reinterpret_cast<OGRPoint*>(og);
-	}
-
-	inline const OGRPoint* toPoint() const {
-		const OGRGeometry* og = _geom;
-		return reinterpret_cast<const OGRPoint*>(og);
-	}
+	ControlPoint(const double& x, const double& y) : _geom(x, y), _quota(0.0), _diff(std::numeric_limits<double>::max()), _status(UNKNOWN) {}
+	ControlPoint(const double& x, const double& y, const double& q) : _geom(x, y), _quota(q), _diff(std::numeric_limits<double>::max()), _status(UNKNOWN) {}
 
 	void quota(double q) { _quota = q; }
 	double quota() const { return _quota; }
@@ -278,7 +268,7 @@ public:
 	inline Status status() const { return _status; }
 
 private:
-	CV::Util::Geometry::OGRGeomPtr _geom;
+	DPOINT _geom;
 	std::string _name;
 	double _quota;
 

@@ -117,7 +117,7 @@ public:
 	virtual const TRIANGLE& Triangle(unsigned int i) const = 0;
 	virtual const SEGMENT& Segment(unsigned int i) const = 0;
 	virtual int FindTriangle(double X, double Y, int trIdx = -1) const = 0;
-	virtual bool Open(const std::string& nome, bool verbose, bool tria) = 0;
+	virtual bool Open(const std::string& nome, bool verbose, bool tria = true) = 0;
 	virtual void Close(void) = 0;
 	virtual int GetAdiacent(unsigned int tri, int nod, std::set<unsigned int>& lst) = 0;
 	//virtual size_t GetBorder(std::vector<DPOINT>& vec) = 0;
@@ -329,7 +329,7 @@ public:
 	~DSM_Factory(void) {
 		Close();
 	}
-	bool Open(const std::string nome, bool verbose = false, bool tria = false);
+	bool Open(const std::string nome, bool verbose = false, bool tria = true);
 	//void SetEps(double eps) {
 	//	_eps = eps;
 	//	if ( _dsm != NULL )

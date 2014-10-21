@@ -160,8 +160,7 @@ void Block::add(Strip::Ptr strip) {
 }
 
 ControlPoint::Status ControlPoint::zDiffFrom(DSM* dsm) {
-	const OGRPoint* p = toPoint();
-	double q = dsm->GetQuota(p->getX(), p->getY());
+	double q = dsm->GetQuota(_geom.x, _geom.y);
 	if (q == Z_NOVAL) {
 		_status = NO_VAL;
 	} else if (q == Z_OUT) {
