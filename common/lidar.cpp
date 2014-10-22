@@ -24,7 +24,6 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 		DPOINT pt;
 		if (!dsm->RayIntersect(pa, pd, pt)) {
 			if (!dsm->IsValid(pt.z)) {
-				std::cout << "la strisciata " << axis->stripName() << " con id " << axis->id() << " cade al di fuori del dem" << std::endl;
 				this->isValid(false);
 			}
 		}

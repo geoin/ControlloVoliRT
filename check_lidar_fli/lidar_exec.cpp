@@ -423,10 +423,14 @@ void lidar_exec::_final_report() {
 }
 
 void lidar_exec::_control_points_report() {
+	if (_controlVal.size() == 0) {
+		return;
+	}
+
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Punti di controllo");
 
-    sec->add_item("para")->append("Validità punti di controllo");
+    sec->add_item("para")->append("Validita' punti di controllo");
 
     Doc_Item tab = sec->add_item("table");
     tab->add_item("title")->append("Punti di controllo");
@@ -880,6 +884,7 @@ void lidar_exec::_process_strips()
 			mission = rs[3];
 
 			if (mission == "") {
+				rs.next();
 				continue;
 			}
 		}
@@ -920,6 +925,7 @@ void lidar_exec::_process_strips()
 			
 			_strips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));
 		} else {
+			std::cout << "la strisciata " << axis->stripName() << " con id " << axis->id() << " cade al di fuori del dem" << std::endl;
 			_invalidStrips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));
 		}
 
@@ -1087,7 +1093,7 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 	std::string table = ASSI_VOLO + std::string("V");
 
 	std::stringstream sql1;
-	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8 where " << _stripNameCol  << "=?9";
+	sql1 << "UPDATE " << table << " SET MISSION=?1, DATE=?2, TIME_S=?3, TIME_E=?4, NSAT=?5, PDOP=?6, NBASI=?7, GPS_GAP=?8, " <<  _quotaCol <<"=?9 where " << _stripNameCol  << "=?10";
 	Statement stm1(cnn);
 	stm1.prepare(sql1.str());
 	cnn.begin_transaction();
@@ -1104,7 +1110,7 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 		}
 
 		std::stringstream sql;
-		sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' and MISSION= '" <<
+		sql << "SELECT MISSION, DATE, TIME, NSAT, PDOP, NBASI, QUOTA from " << GPS_TABLE_NAME << " where TIME >= '" << t1 << "' and TIME <= '" << t2 << "' and MISSION= '" <<
 			ft[i]->mission() << "' ORDER BY TIME";
 		
 		Statement stm(cnn);
@@ -1115,7 +1121,7 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 		Poco::Timestamp tm0, tm1;
 		double dt0 = 0.;
 		int nsat, nbasi;
-		double pdop;
+		double pdop, quota;
 		while (!rs.eof()) {
 				if (first) {
 					dateStr = rs["DATE"].toString();
@@ -1128,7 +1134,9 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 					nsat = rs["NSAT"].toInt();
 					pdop = rs["PDOP"].toDouble();
 					nbasi = rs["NBASI"].toInt();
-					stm1[9] = val;
+					quota = rs["QUOTA"].toDouble();
+
+					stm1[10] = val;
 					first = false;
 				} else {
 					nsat = std::min(nsat, rs["NSAT"].toInt());
@@ -1140,6 +1148,7 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 					if (dt > dt0) {
 						dt0 = dt;
 					}
+					quota = rs["QUOTA"].toDouble();
 				}
 				rs.next();
 			}
@@ -1150,6 +1159,7 @@ void lidar_exec::update_strips(std::vector<CV::GPS::Sample::Ptr>& ft) {
 			stm1[6] = pdop; // max pdop
 			stm1[7] = nbasi; // number of bases
 			stm1[8] = (int) dt0;
+			stm1[9] = quota;
 			stm1.execute();
 			stm1.reset();
 		}
@@ -1184,6 +1194,10 @@ void lidar_exec::_process_block()
 		}
 		rs.next();
 	}*/
+
+	if (_strips.size() == 0) {
+		return;
+	}
 
 	_get_overlaps(_strips);
 
@@ -1323,7 +1337,7 @@ void lidar_exec::_get_dif()
 	stm2.reset();
 
     //OGRPolygon* diffPolygon = (OGRPolygon*) ((OGRGeometry*) dif);
-    std::string tabled = std::string("UNCOVERED_AREA") + (_type == PRJ_TYPE ? "P" : "V");
+    std::string tabled = std::string(Z_UNCOVER) + (_type == PRJ_TYPE ? "P" : "V");
 	cnn.remove_layer(tabled);
 	std::cout << "Layer:" << tabled << std::endl;
 

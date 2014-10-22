@@ -23,8 +23,9 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 		Doc_Item r = row->add_item("entry", attr);
 		r->add_instr("dbfo", "bgcolor=\"red\"");
 		r->append(val);
-	} else
+	} else {
 		row->add_item("entry", attr)->append(val);
+	}
 	return rv;
 }
 
