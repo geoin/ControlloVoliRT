@@ -73,8 +73,10 @@ bool lidar_raw_exec::_initControlPoints() {
 		}
 		
 		while (!set.eof()) {
-			Blob b = set["GEOM"].toBlob();
-			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(b, set["Z_QUOTA"].toDouble()));
+            Util::Geometry::OGRGeomPtr b = set["GEOM"].toBlob();
+            OGRGeometry* bp = b; OGRPoint* p = static_cast<OGRPoint*>(bp);
+
+            Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(p->getX(), p->getY(), set["Z_QUOTA"].toDouble()));
 			point->name(set["NAME"].toString());
 			_controlVal.push_back(point);
 

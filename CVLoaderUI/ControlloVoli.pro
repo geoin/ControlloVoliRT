@@ -90,7 +90,9 @@ SOURCES += main.cpp \
     gui/details/cvcloudsampledetail.cpp \
     core/categories/cvfolderinput.cpp \
     gui/details/cvlidarrawdetail.cpp \
-    gui/details/cvrawstripfolderdetail.cpp
+    gui/details/cvrawstripfolderdetail.cpp \
+    core/categories/cvcsvinput.cpp \
+    core/cvcore_utils.cpp
 
 HEADERS  += \
     gui/cvmainwindow.h \
@@ -149,7 +151,8 @@ HEADERS  += \
     gui/details/cvcloudsampledetail.h \
     core/categories/cvfolderinput.h \
     gui/details/cvlidarrawdetail.h \
-    gui/details/cvrawstripfolderdetail.h
+    gui/details/cvrawstripfolderdetail.h \
+    core/categories/cvcsvinput.h
 
 RESOURCES += \
     data/data.qrc

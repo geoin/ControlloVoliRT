@@ -257,7 +257,7 @@ public:
 	void name(const std::string& n) { _name = n; }
 	const std::string& name() const { return _name; }
 
-	Status ControlPoint::zDiffFrom(DSM* dsm);
+    Status zDiffFrom(DSM* dsm);
 	double zDiff() const { 
 		if (_status == UNKNOWN) { throw std::runtime_error("Uninitialized control point"); }
 		return _diff; 

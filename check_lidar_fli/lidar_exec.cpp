@@ -881,7 +881,7 @@ void lidar_exec::_process_strips()
 		std::string strip = rs[2];
 		std::string mission = "";
 		if (_type != PRJ_TYPE) {
-			mission = rs[3];
+            mission = rs[3].toString();
 
 			if (mission == "") {
 				rs.next();
