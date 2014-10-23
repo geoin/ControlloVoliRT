@@ -69,7 +69,8 @@ Source: "{#MyBinDir}\RT-qgis_plugin.dll"; DestDir: "{app}/plugins"; Flags: ignor
 Source: "{#MyBinDir}\check_photo.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_gps.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyBinDir}\check_ta.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyBinDir}\check_ortho.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\check_ortho.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion         
+Source: "{#MyBinDir}\check_lidar.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyIconDir}\gps.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\lidar.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\Ortho.png"; DestDir: "{app}/icons"; Flags: ignoreversion
