@@ -6,10 +6,10 @@
 #define MyAppPublisher "Geoin S.R.L."
 #define MyAppURL "http://www.geoin.it"
 #define MyAppExeName "ControlloVoliRT"
-#define vcfiles "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT"
+#define vcfiles "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\redist\x64\Microsoft.VC100.CRT"
 #define MyBaseDir "D:\projects\RT\ControlloVoliRT"
-#define MyBinDir "D:\projects\RT\ControlloVoliRT\bin"
-#define MyLibDir "D:\projects\RT\ControlloVoliRT\lib"
+#define MyBinDir "D:\projects\RT\ControlloVoliRT\bin64"
+#define MyLibDir "D:\projects\RT\ControlloVoliRT\lib64"
 #define MyIconDir "D:\projects\RT\ControlloVoliRT\icon"
 #define MyOutDir "C:\OSGeo4W\apps\qgis\"
 #define Qgis GetEnv('QGIS_PREFIX_PATH')
@@ -55,11 +55,11 @@ Name: "Spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "CV_QGIS_PREFIX_PATH"; ValueData: {app}\
 
 [Files]
-Source: "{#MyBinDir}\PocoFoundation.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyBinDir}\PocoXML.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyBinDir}\PocoUtil.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyBinDir}\PocoZip.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
-Source: "{#MyBinDir}\gdal.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoFoundation64.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoXML64.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoUtil64.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\PocoZip64.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
+;Source: "{#MyBinDir}\gdal.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyBinDir}\ziplib.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyLibDir}\rtklib.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyLibDir}\dem_interpolate.dll"; DestDir: "{app}/plugins"; Flags: ignoreversion
@@ -82,8 +82,8 @@ Source: "{#MyIconDir}\voloPL.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\tria.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\projects.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyBaseDir}\setup\DocBookRT_setup.exe"; DestDir: "{tmp}"; Flags: ignoreversion
-Source: "{#vcfiles}\msvcp90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit
-Source: "{#vcfiles}\msvcr90.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 32bit
+Source: "{#vcfiles}\msvcp100.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 64bit
+Source: "{#vcfiles}\msvcr100.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 64bit
 
 [Run]
 Filename: "{tmp}\DocBookRT_setup.exe"; Flags: waituntilterminated

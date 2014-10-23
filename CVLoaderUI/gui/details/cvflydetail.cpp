@@ -11,17 +11,17 @@ namespace GUI {
 namespace Details {
 
 CVFlyDetail::CVFlyDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
-	CVAreaDetail* area = new CVAreaDetail(p, c->at(1), c->type());
+	CVAreaDetail* area = new CVAreaDetail(p, c->at(0), c->type());
     addTab(area, "");
     setTabToolTip(0, tr("Aree da cartografare"));
 	setTabIcon(0, QIcon(":/graphics/icons/plan/areas.png"));
     
-	CVDemDetail* dem = new CVDemDetail(p, c->at(2), c->type());
+	CVDemDetail* dem = new CVDemDetail(p, c->at(1), c->type());
 	addTab(dem, "");
     setTabToolTip(1, tr("DEM"));
 	setTabIcon(1, QIcon(":/graphics/icons/plan/dem.png"));
 
-	CVFlyAttitudeDetail* fs = new CVFlyAttitudeDetail(p, static_cast<Core::CVFlyAttitude*>(c->at(3)));
+	CVFlyAttitudeDetail* fs = new CVFlyAttitudeDetail(p, static_cast<Core::CVFlyAttitude*>(c->at(2)));
 	addTab(fs, "");
     setTabToolTip(2, tr("File degli assetti"));
 	setTabIcon(2, QIcon(":/graphics/icons/fly/attitude.png"));

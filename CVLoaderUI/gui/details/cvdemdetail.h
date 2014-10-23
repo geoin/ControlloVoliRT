@@ -28,7 +28,7 @@ public:
 	virtual void searchFile();
 	virtual void importAll(QStringList&);
 	
-	inline Core::CVFileInput* file() const { return static_cast<Core::CVFileInput*>(controller()); }
+	inline Core::CVDemInput* file() const { return static_cast<Core::CVDemInput*>(controller()); }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
