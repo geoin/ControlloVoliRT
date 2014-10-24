@@ -63,7 +63,7 @@ bool lidar_raw_exec::_initControlPoints() {
 		CV::Util::Spatialite::Statement stm(cnn);
 
 		std::stringstream query;
-		query << "select Z_QUOTA, NAME, AsBinary(GEOM) as GEOM FROM RAW_CONTROL_CLOUD";
+		query << "select X, Y, Z, NAME FROM CONTROL_POINTS";
 		stm.prepare(query.str());
 
 		CV::Util::Spatialite::Recordset set = stm.recordset();
@@ -73,10 +73,11 @@ bool lidar_raw_exec::_initControlPoints() {
 		}
 		
 		while (!set.eof()) {
-            Util::Geometry::OGRGeomPtr b = set["GEOM"].toBlob();
-            OGRGeometry* bp = b; OGRPoint* p = static_cast<OGRPoint*>(bp);
+			double x = set["X"].toDouble();
+			double y = set["Y"].toDouble();
+			double z = set["Z"].toDouble();
 
-            Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(p->getX(), p->getY(), set["Z_QUOTA"].toDouble()));
+			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(x, y, z));
 			point->name(set["NAME"].toString());
 			_controlVal.push_back(point);
 

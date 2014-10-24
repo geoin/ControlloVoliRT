@@ -15,6 +15,7 @@
 #include <QDropEvent>
 #include <QUrl>
 #include <QDir>
+#include <QHeaderView>
 
 namespace CV {
 namespace GUI {
@@ -30,6 +31,7 @@ CVControlPointsDetail::CVControlPointsDetail(QWidget* p, Core::CVObject* l) : CV
 
 	_table = new QTableWidget(this);
 	_table->setColumnCount(4);
+	_table->horizontalHeader()->setStretchLastSection(true);
 	_table->setHorizontalHeaderLabels(QStringList() << "X" << "Y" << "Z" << "Nome");
 
 	form->addWidget(_table);
