@@ -101,21 +101,6 @@ Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
 	return iPtr;
 }
 
-double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
-	DPOINT p = axis()->first();
-	double q = dsm->GetQuota(p.x, p.y);
-	if (q == Z_NOVAL) {
-		_density = Z_NOVAL;
-	} else if (q == Z_OUT) {
-		_density = Z_OUT;
-	} else {
-		double H = axis()->quota() - q;
-		double L = 2 * H * s->tanHalfFov();
-		_density = L * s->speed()/s->freq();
-	}
-	return _density;
-}
-
 double Axis::averageSpeed() const { 
 	Poco::Timestamp start = _firstSample->timestamp();
 	Poco::Timestamp end = _lastSample->timestamp();
@@ -195,5 +180,20 @@ double CloudStrip::computeDensity() {
 	_density = count / area;
 	_factory->Close();
 
+	return _density;
+}
+
+double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
+	DPOINT p = axis()->first();
+	double q = dsm->GetQuota(p.x, p.y);
+	if (q == Z_NOVAL) {
+		_density = Z_NOVAL;
+	} else if (q == Z_OUT) {
+		_density = Z_OUT;
+	} else {
+		double H = axis()->quota() - q;
+		double L = 2 * H * s->tanHalfFov();
+		_density = L * s->speed()/s->freq();
+	}
 	return _density;
 }

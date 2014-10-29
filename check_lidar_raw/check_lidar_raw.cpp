@@ -70,12 +70,17 @@ int check_lidar_raw::main(const std::vector<std::string>& args) {
     try {
 
 		bool ret = true;
-		ret = _check.openDBConnection();
-        if (ret) {
+		ret = _check.openDBConnection() && _check.readReference();
+        if (ret) {	
 			if (!_check.init()) {
 				throw std::runtime_error("Error while initializing check");
 			}
-            ret = _check.run();
+
+			if (!_check.run()) {
+				throw std::runtime_error("Error while running check");
+			}
+
+			_check.report();
         }
 		
 		return ret ? Application::EXIT_OK : Application::EXIT_SOFTWARE;

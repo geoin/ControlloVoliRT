@@ -1,6 +1,8 @@
 #include "lidar_raw_exec.h"
 
 #include "Poco/File.h"
+#include "Poco/Util/XMLConfiguration.h"
+#include "Poco/AutoPtr.h"
 
 #include <sstream>
 #include <numeric>
@@ -10,6 +12,14 @@
 #define GEO_DB_NAME "geo.sqlite"
 
 using namespace CV;
+using namespace Poco;
+using namespace Poco::Util;
+
+#define LIDAR "Lidar"
+
+std::string get_key(const std::string& val) {
+	return std::string(LIDAR) + "." + val;
+}
 
 void lidar_raw_exec::Error(const std::string& operation, const std::exception& e) {
 	std::cout << "Error [" << operation << "] : " << e.what() << std::endl;
@@ -25,19 +35,37 @@ bool lidar_raw_exec::openDBConnection() {
 		cnn.open(geodb.toString());
 		return true;
 	} catch (const std::exception& e) {
-		Error("opening connection", e);
+		Error("Opening connection..", e);
+		return false;
+	}
+}
+
+bool lidar_raw_exec::readReference() {
+	try {
+		Path ref_file(_proj_dir, "*");
+		ref_file.setFileName("refval.xml");
+		AutoPtr<XMLConfiguration> pConf;
+		pConf = new XMLConfiguration(ref_file.toString());
+		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
+		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
+	} catch (const std::exception& e) {
+		Error("Reading reference values..", e);
 		return false;
 	}
 }
 
 bool lidar_raw_exec::init() {
+	 if (!GetProjData(cnn, _note, std::string())) {
+		return false;
+    }
+
 	if (!_initStripFiles()) {
 		return false;
 	}
 
-	if (!_initControlPoints()) {
+	/*if (!_initControlPoints()) {
 		return false;
-	}
+	}*/
 
 	if (!_initStripsLayer()) {
 		return false;
@@ -53,11 +81,11 @@ bool lidar_raw_exec::run() {
 			
 		return true;
 	} catch (const std::exception& e) {
-		Error("run", e);
+		Error("Running..", e);
 		return false;
 	}
 }
-
+/*
 bool lidar_raw_exec::_initControlPoints() {
 	try {
 		CV::Util::Spatialite::Statement stm(cnn);
@@ -88,7 +116,7 @@ bool lidar_raw_exec::_initControlPoints() {
 		Error("fetching control points", e);
 		return false;
 	}
-}
+}*/
 
 bool lidar_raw_exec::_initStripFiles() {
 	try {
@@ -238,3 +266,182 @@ void lidar_raw_exec::_getStats(const std::vector<double>& diff, Stats& s) {
 	s.mean = mean;
 	s.stdDev = std::sqrt(mm / size);
 }
+
+// report methods
+
+bool lidar_raw_exec::report() {
+	try {
+
+		std::string title ="Collaudo dati grezzi";
+
+		Poco::Path doc_file(_proj_dir, "*");
+		doc_file.setFileName("check_lidar_raw.xml");
+
+		init_document(_dbook, doc_file.toString(), title, _note);
+		char* dtd_ = getenv("DOCBOOKRT");
+		std::string dtd;
+		if (dtd_ != NULL) {
+			dtd = std::string("file:") + dtd_;
+		}
+
+		_dbook.set_dtd(dtd);
+		_article = _dbook.get_item("article");
+
+		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+
+		_density_report();
+		_strip_overlaps_report();
+
+		_dbook.write();	
+
+		return true;
+
+	} catch (const std::exception& e) {
+		Error("Printing report..", e);
+		return false;
+	}
+}
+
+void lidar_raw_exec::_density_report() {
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Striciate");
+
+	
+    sec->add_item("para")->append("Densita' strisciate");
+
+	Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Calcolo densita' strisciate");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "2");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Strisciata");
+    row->add_item("entry", attr)->append("Densita'");
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	std::vector<CV::Lidar::CloudStrip::Ptr>::iterator it = _strips.begin();
+	std::vector<CV::Lidar::CloudStrip::Ptr>::iterator end = _strips.end();
+
+	for (; it != end; it++) {
+		const std::string& name = (*it)->name();
+		const double density = (*it)->density();
+
+		row = tbody->add_item("row");
+        row->add_item("entry", attr)->append(name);
+		print_item(row, attrr, density, abs_less_ty, PT_DENSITY);
+	}
+}
+
+void lidar_raw_exec::_strip_overlaps_report() {
+	if (_statList.size() == 0) {
+		return;
+	}
+	
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Striciate");
+	
+    sec->add_item("para")->append("Sovrapposizione strisciate adiacenti");
+
+	Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Statistiche sovrapposizione nuvole");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "4");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Strisciata 1");
+    row->add_item("entry", attr)->append("Strisciata 2");
+    row->add_item("entry", attr)->append("Media");
+    row->add_item("entry", attr)->append("Deviazione standard");
+    Doc_Item tbody = tab->add_item("tbody");
+
+	
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	std::multimap<std::string, Stats>::iterator it = _statList.begin();
+	std::multimap<std::string, Stats>::iterator end = _statList.end();
+
+	for (; it != end; it++) {
+		const std::string& source = it->first;
+		const Stats& stat = it->second;
+
+		row = tbody->add_item("row");
+        row->add_item("entry", attr)->append(source);
+		row->add_item("entry", attr)->append(stat.target);
+		row->add_item("entry", attr)->append(stat.mean);
+		row->add_item("entry", attr)->append(stat.stdDev);
+	}
+}
+
+/*
+void lidar_raw_exec::_control_points_report() {
+	if (_controlVal.size() == 0) {
+		return;
+	}
+
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Punti di controllo");
+
+    sec->add_item("para")->append("Validita' punti di controllo");
+
+    Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Punti di controllo");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "2");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Punto di controllo");
+    row->add_item("entry", attr)->append("Z diff");
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
+	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
+
+	for (; it != end; it++) {
+		CV::Lidar::ControlPoint::Ptr point = *it;
+		const std::string& name = point->name();
+
+		row = tbody->add_item("row");
+        row->add_item("entry", attr)->append(name);
+		
+		if (point->isValid()) {
+			double diff = point->zDiff();
+			print_item(row, attrr, diff, abs_less_ty, LID_TOL_Z);
+		} else {
+			Doc_Item r = row->add_item("entry", attr);
+			r->add_instr("dbfo", "bgcolor=\"red\"");
+
+			Lidar::ControlPoint::Status status = point->status();
+			if (status == Lidar::ControlPoint::NO_VAL) {
+				r->append("NO_VAL");
+			} else if (status == Lidar::ControlPoint::OUT_VAL) {
+				r->append("OUT_VAL");
+			}
+		}
+    }
+}
+*/
