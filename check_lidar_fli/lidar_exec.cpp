@@ -244,6 +244,11 @@ void lidar_exec::_buildAxis() {
 	for (; it != end; it++) {
 		Poco::File& f = *it;
 		Poco::Path p(f.path());
+
+		if (p.isDirectory()) {
+			_traverseFolder(p, stm);
+			continue;
+		}
 		
 		if (Poco::toLower(p.getExtension()) == "las") {
 			Lidar::Axis::Ptr axis(new Lidar::Axis);
@@ -262,6 +267,34 @@ void lidar_exec::_buildAxis() {
 		}
 	}
 	cnn.commit_transaction();
+}
+
+void lidar_exec::_traverseFolder(const Poco::Path& fold, Statement& stm) {
+	Poco::File lasClouds(fold);
+	std::vector<Poco::File> files;
+    lasClouds.list(files);
+	std::vector<Poco::File>::iterator it = files.begin(), end = files.end();
+
+	for (; it != end; it++) {
+		Poco::File& f = *it;
+		Poco::Path p(f.path());
+		
+		if (Poco::toLower(p.getExtension()) == "las") {
+			Lidar::Axis::Ptr axis(new Lidar::Axis);
+			axis->stripName(p.getBaseName());
+
+			bool ret = axis->fromCloud(p.toString());
+			if (ret) {
+				stm[1] = axis->stripName();
+
+				OGRGeomPtr buf = axis->geom();
+				stm[2].fromBlob(buf);
+
+				stm.execute();
+				stm.reset();
+			}
+		}
+	}
 }
 
 // TODO (CHECK): removing mission for now

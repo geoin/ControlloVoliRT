@@ -74,6 +74,7 @@ private:
 	void _createAvolov();
 	void _buildAxis();
 	void _process_strips();
+	void _traverseFolder(const Poco::Path&, CV::Util::Spatialite::Statement&);
 	void _createStripTable(); 
 
 	void _process_block();

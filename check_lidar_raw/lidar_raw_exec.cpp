@@ -141,8 +141,12 @@ bool lidar_raw_exec::_initStripFiles() {
 		std::vector<std::string>::iterator end = folderContent.end();
 		for (; it != end; it++) {
 			Poco::Path p = Poco::Path(fPath).append(*it);
-			std::string name = p.getBaseName();
-			_cloudStripList.insert(std::pair<std::string, Poco::Path>(name, p));
+			if (p.isDirectory()) {
+				_traverseFolder(p);
+			} else {
+				std::string name = p.getBaseName();
+				_cloudStripList.insert(std::pair<std::string, Poco::Path>(name, p));
+			}
 		}
 
 		stm.reset();
@@ -150,6 +154,19 @@ bool lidar_raw_exec::_initStripFiles() {
 	} catch (const std::exception& e) {
 		Error("fetching strips", e);
 		return false;
+	}
+}
+
+void lidar_raw_exec::_traverseFolder(const Poco::Path& fPath) {
+	std::vector<std::string> folderContent;
+	Poco::File(fPath).list(folderContent);
+
+	std::vector<std::string>::iterator it = folderContent.begin();
+	std::vector<std::string>::iterator end = folderContent.end();
+	for (; it != end; it++) {
+		Poco::Path p = Poco::Path(fPath).append(*it);
+		std::string name = p.getBaseName();
+		_cloudStripList.insert(std::pair<std::string, Poco::Path>(name, p));
 	}
 }
 

@@ -30,6 +30,7 @@ public:
 
 private:
 	bool _initStripFiles();
+	void _traverseFolder(const Poco::Path& fPath);
 	//bool _initControlPoints();
 	bool _initStripsLayer();
 
