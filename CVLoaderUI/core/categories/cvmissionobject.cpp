@@ -143,6 +143,7 @@ bool CVMissionObject::load() {
 	CVStations* stations = static_cast<CVStations*>(at(2));
 	while (!set.eof()) {
 		CVStation* s = new CVStation(stations, QString(set[0].toString().c_str()));
+		s->type(CVObject::STATION);
 		s->mission(id());
 		s->uri(uri());
 		s->name(QString(set[1].toString().c_str()));
@@ -158,8 +159,10 @@ void CVMissionObject::init() {
 	CVMissionDevice* dev = NULL; 
 	if (missionType() == CVControl::GPS_DATA) {
 		dev = new CVCamera(this);
+		dev->type(CVObject::CAMERA);
 	} else {
 		dev = new CVSensor(this);
+		dev->type(CVObject::SENSOR);
 	}
 	dev->isPlanning(false);
 	dev->uri(uri());
@@ -168,11 +171,13 @@ void CVMissionObject::init() {
 
 	CVRinex* rinex = new CVRinex(this);
 	rinex->uri(uri());
+	rinex->type(CVObject::FLY_RINEX);
 	rinex->mission(id());
 	insert(rinex);
 
 	CVStations* stations = new CVStations(this);
 	stations->mission(id());
+	stations->type(CVObject::STATION);
 	insert(stations);
 }
 	

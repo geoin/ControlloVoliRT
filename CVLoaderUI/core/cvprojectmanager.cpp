@@ -123,6 +123,7 @@ void CVProjectManager::onLoadProject() {
 		foreach (const QString& id, ids) {
 			CVMissionObject* obj = new CVMissionObject(ctrl, id);
 			obj->missionType(ctrl->type());
+			obj->type(CVObject::MISSION);
 			ctrl->insert(obj);
 		}
 		ctrl->load();
@@ -167,6 +168,7 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 	
 	if (proj->type == CVProject::PHOTOGRAMMETRY) {
 		CVFlyAttitude* fa = new CVFlyAttitude(proj);
+		fa->type(CVObject::ATTITUDE);
 		fa->uri(proj->path);
 		ctrl->insert(fa);
 	} else {
@@ -177,9 +179,9 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 		ctrl->insert(folder);
 
 		CVFileInput* file = new CVCloudSampleInput(ctrl);
+		file->type(CVObject::TEST_CLOUD);
 		file->uri(proj->path); 
 		file->control(plan_t);
-		file->object(CVObject::TEST_CLOUD);
 		ctrl->insert(file, false);
 
 		CVCsvInput* controlPoint = new CVCsvInput(proj);
@@ -206,12 +208,14 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 		ctrl->uri(proj->db());
 		CVCamera* cam = new CVCamera(ctrl);
 		cam->isPlanning(true);
+		cam->type(CVObject::CAMERA);
 		ctrl->insert(cam);
 	} else {
 		plan_t = CVControl::LIDAR_PLAN;
 		ctrl = new CVControl(plan_t, proj);
 		ctrl->uri(proj->db());
 		CVSensor* sensor = new CVSensor(ctrl);
+		sensor->type(CVObject::SENSOR);
 		sensor->isPlanning(true);
 		ctrl->insert(sensor);
 	}
@@ -230,9 +234,9 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	ctrl->insert(layer);
 
 	CVFileInput* file = new CVDemInput(ctrl);
+	file->type(CVObject::DEM);
 	file->uri(proj->path); 
 	file->control(plan_t);
-	file->object(CVObject::DEM);
 	ctrl->insert(file, false);
 
 	if (b) {

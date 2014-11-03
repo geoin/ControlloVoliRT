@@ -72,21 +72,21 @@ TEST (DemTest, Triangulation) {
 }
 
 TEST (DemTest, Ellipse) {
-	double xmin = 645851, xmax = 651620, ymin = 4879637, ymax = 4881067;
-   InertialEllipse el((xmin + xmax)/2.0, (ymin + ymax)/2.0);
-   el.push(xmin, ymin);
-   el.push(xmin, ymax);
-   el.push(xmax, ymax);
-   el.push(xmax, ymin);
+   InertialEllipse el;
+   el.push(0, 0);
+   el.push(10, 0);
+   el.push(10, 5);
+   el.push(0, 5);
 
    el.compute();
+   el.Mx;
 
    DPOINT x, y;
-   el.getMajorAxis(x, y);
+   el.getMajorAxis(NULL, x, y);
 }
 
 
-TEST (DemTest, Las) {
+TEST (DemTest, LasAxis) {
     DSM_Factory f;
     ASSERT_TRUE(f.Open(path + "S1C1_strip32.las", false, false));
     DSM* d = f.GetDsm();
@@ -94,8 +94,17 @@ TEST (DemTest, Las) {
 	DPOINT p1, p2;
 	d->getMajorAxis(p1, p2);
 
-	//ASSERT_TRUE(d->TriCalc());
-
 	f.Close();
 }
+
+/*
+TEST (DemTest, LasTria) {
+    DSM_Factory f;
+    ASSERT_TRUE(f.Open(path + "S1C1_strip32.las", false, false));
+    DSM* d = f.GetDsm();
+
+	ASSERT_TRUE(static_cast<PSLG*>(d)->TriCalc());
+
+	f.Close();
+}*/
 

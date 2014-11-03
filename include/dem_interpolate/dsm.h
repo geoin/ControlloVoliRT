@@ -253,7 +253,7 @@ public:
 	void Ymax(double val) { _ymin = val; }
 	void Zmax(double val) { _zmin = val; }
 
-	virtual void getMajorAxis(DPOINT&, DPOINT&) const {}
+	virtual void getMajorAxis(DPOINT&, DPOINT&) {}
 protected:
 	std::string	_err_mes;
 	double	_xmin, _ymin, _zmin;

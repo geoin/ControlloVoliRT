@@ -27,7 +27,6 @@ public:
 	inline Type type() const { return _type; }
 
 	int count() const;
-	CVObject* at(int i) const;
 	void remove(int i);
 	bool isComplete() const;
 	void load();
@@ -40,6 +39,9 @@ public:
 	inline const QString& uri() const { 
 		return _uri;
 	}
+
+	
+	CVObject* at(int i) const;
 
 protected:
 	QList<CVObject*> _objects;
@@ -72,8 +74,8 @@ public:
 		LIDAR_RAW_STRIP_DATA
 	};
 
-	explicit CVObject(QObject* p) : QObject(p) {}
-	virtual ~CVObject() {}
+	explicit CVObject(QObject* p) : QObject(p), _type(UNKNOWN_OBJECT) {}
+	virtual ~CVObject() { Q_ASSERT(_type != UNKNOWN_OBJECT); }
 
 	inline void type(Type t) { _type = t; }
 	inline Type type() const { return _type; }

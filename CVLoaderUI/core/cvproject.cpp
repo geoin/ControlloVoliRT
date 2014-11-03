@@ -226,7 +226,7 @@ bool CVProject::persist() {
 	if (ret) {
 		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
 		e->note = notes;
-		e->control = PHOTOGRAMMETRY;
+		e->control = type;
 		e->uri = name;
 		e->db = _db;
 		Core::CVJournal::add(e);

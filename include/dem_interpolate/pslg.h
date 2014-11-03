@@ -34,55 +34,60 @@ static void fn_lst(char* mes) {
 class InertialEllipse {
 public:
 	InertialEllipse() 
-		: _xc(0.0), _yc(0.0), _n(0), Ixx(0.0), Iyy(0.0), Ixy(0.0), ra(0.0), rb(0.0), theta(0.0) 
+		: _n(0), Ixx(0.0), Iyy(0.0), Ixy(0.0), Mx(0.0), My(0.0), M2x(0.0), M2y(0.0), Mxy(0.0)
 	{}
 
-	InertialEllipse(const double& xc, const double& yc) 
-		: _xc(xc), _yc(yc), _n(0), Ixx(0.0), Iyy(0.0), Ixy(0.0), ra(0.0), rb(0.0), theta(0.0) 
-	{}
+	inline void push(const double& x, const double& y) {
+		size_t n = _n + 1;
 
-	
-	inline void setCenter(const double& x, const double& y) {
-		_xc = x;
-		_yc = y;
-	}
-
-	inline void push(const double& xi, const double& yi) {
-		double x = xi - _xc;
-		double y = yi - _yc;
-
-		Ixx += x * x;
-		Iyy += y * y;
-		Ixy += x * y;
+		double vc = double(n - 1) / n;
+		Mx = vc * Mx + x / n;
+		My = vc * My + y / n;
+		M2x = vc * M2x + x * x / n;
+		M2y = vc * M2y + y * y / n;
+		Mxy = vc * Mxy + x * y / n;
 
 		_n++;
+
+		_points.push_back(DPOINT(x, y));
 	}
 
 	inline void compute() {
-		Ixx /= _n;
-		Iyy /= _n;
-		Ixy /= _n;
-
-		double c = sqrt( pow(Ixx - Iyy, 2.) + 4 * pow(Ixy, 2.));
-		ra = sqrt(2.) * sqrt(Ixx + Iyy + c);
-		rb = sqrt(2.) * sqrt(Ixx + Iyy - c);
-		theta = atan2(Ixx - Iyy, 2 * Ixy) / 2;
+		Ixx = M2x - Mx * Mx;
+		Iyy = M2y - My * My;
+		Ixy = Mxy - Mx * My;
 	}
 
-	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
-		double angle = M_PI/2.0 - theta;
-		p1.set(_xc - ((ra/2.0) * cos(angle)), _yc - ((ra/2.0)*sin(angle)));
-		p2.set(_xc + ((ra/2.0) * cos(angle)), _yc + ((ra/2.0)*sin(angle)));
+	inline void getMajorAxis(DSM* dsm, DPOINT& p1, DPOINT& p2) {
+		double tmin = 1e30;
+		double tmax = -1e30;
+
+		double mod = sqrt(Ixx * Ixx + Ixy * Ixy);
+		Ixx /= mod;
+		Ixy /= mod;
+
+		double n = _points.size(); 
+		for (int i = 0; i < n; i++) {
+			DPOINT p = _points.at(i);
+			double ti = (p.x - Mx) * Ixx + (p.y - My) * Ixy;
+			tmin = std::min(tmin, ti);
+			tmax = std::max (tmax, ti);
+		}
+		
+		p1.set(Mx + tmin * Ixx, My + tmin * Ixy);
+		p2.set(Mx + tmax * Ixx, My + tmax * Ixy);
 	} 
 
+	double Mx, My;
+
 private:
-	unsigned long _n; // numero punti processati
+	size_t _n; // numero punti processati
 	double _xc, _yc; // centro dell'ellisse
 	
 	double Ixx, Iyy, Ixy; // momenti d'inerzia
-
-	double ra, rb; // semiassi
-	double theta; // angolo rispetto all'asse x;
+	
+	double M2x, M2y, Mxy;
+	std::vector<DPOINT> _points;
 };
 /*
 Inertia_ellipse::Inertia_ellipse(FVDATA& fv) 
@@ -610,8 +615,6 @@ public:
 
 		DPOINT pt;
 
-		_ie = InertialEllipse((_xmax + _xmin)/2, (_ymax + _ymin)/2);
-
 		while ( ml.get_next_point(pt) ) {
 			if ( _echo != 0 && !( _echo & ml.get_echo()) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 				continue;
@@ -644,8 +647,8 @@ public:
 		return retval;
 	}
 
-	virtual void getMajorAxis(DPOINT& p1, DPOINT& p2) const {
-		_ie.getMajorAxis(p1, p2);
+	virtual void getMajorAxis(DPOINT& p1, DPOINT& p2) {
+		_ie.getMajorAxis(this, p1, p2);
 	} 
 
 	bool GetDemFromNod(const std::string& path, bool verbose, bool tria) {
