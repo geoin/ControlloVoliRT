@@ -72,6 +72,7 @@ void CVStationsDetail::onDataPersisted() {
 	QString rinex = info.baseName();
 	Core::CVStation::Ptr r(_id.isEmpty() ? new Core::CVStation(this) : new Core::CVStation(this, _id));
 	r->mission(stations()->mission());
+	r->type(Core::CVObject::STATION);
 	r->origin(info.absoluteFilePath());
 	r->uri(stations()->uri());
 	if (r->persist()) {

@@ -911,8 +911,9 @@ void lidar_exec::_process_strips()
         Blob blob =  rs["geom"].toBlob();
         OGRGeomPtr pol = blob;
 		double z = rs[1];
-		std::string strip = rs[2].toString() + "(" + rs[0].toString() + ")";
+		std::string strip = rs[2].toString();
 		std::string mission = "";
+
 		if (_type != PRJ_TYPE) {
             mission = rs[3].toString();
 
@@ -920,6 +921,8 @@ void lidar_exec::_process_strips()
 				rs.next();
 				continue;
 			}
+		} else {
+			strip += "(" + rs[0].toString() + ")";
 		}
 
 		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));

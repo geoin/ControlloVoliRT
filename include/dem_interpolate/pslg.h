@@ -37,56 +37,79 @@ public:
 		: _n(0), Ixx(0.0), Iyy(0.0), Ixy(0.0), Mx(0.0), My(0.0), M2x(0.0), M2y(0.0), Mxy(0.0)
 	{}
 
-	inline void push(const double& x, const double& y) {
+	inline void add(const double& x, const double& y) {
 		size_t n = _n + 1;
 
-		double vc = double(n - 1) / n;
-		Mx = vc * Mx + x / n;
-		My = vc * My + y / n;
+		double vc = double(n - 1) / double(n);
+		Mx  = vc * Mx + x / n;
+		My  = vc * My + y / n;
 		M2x = vc * M2x + x * x / n;
 		M2y = vc * M2y + y * y / n;
 		Mxy = vc * Mxy + x * y / n;
 
 		_n++;
+	}
 
+	void push(const double& x, const double& y) {
+		add(x, y);
 		_points.push_back(DPOINT(x, y));
 	}
 
 	inline void compute() {
 		Ixx = M2x - Mx * Mx;
 		Iyy = M2y - My * My;
-		Ixy = Mxy - Mx * My;
+		//Ixy = Mxy - Mx * My;
+		Ixy = (double(_n) / double(_n - 1)) * (Mxy - Mx * My);
 	}
 
-	inline void getMajorAxis(DSM* dsm, DPOINT& p1, DPOINT& p2) {
+	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) {
 		double tmin = 1e30;
 		double tmax = -1e30;
-
-		double mod = sqrt(Ixx * Ixx + Ixy * Ixy);
-		Ixx /= mod;
-		Ixy /= mod;
+		
+		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+		double vi = cos(theta);
+		double vj = sin(theta);
 
 		double n = _points.size(); 
 		for (int i = 0; i < n; i++) {
 			DPOINT p = _points.at(i);
-			double ti = (p.x - Mx) * Ixx + (p.y - My) * Ixy;
+			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
 			tmin = std::min(tmin, ti);
-			tmax = std::max (tmax, ti);
+			tmax = std::max(tmax, ti);
 		}
 		
-		p1.set(Mx + tmin * Ixx, My + tmin * Ixy);
-		p2.set(Mx + tmax * Ixx, My + tmax * Ixy);
+		p1.set(Mx + tmin * vi, My + tmin * vj);
+		p2.set(Mx + tmax * vi, My + tmax * vj);
 	} 
+
+	inline void getMajorAxis(DSM* dsm, DPOINT& p1, DPOINT& p2) {
+		double tmin = 1e30;
+		double tmax = -1e30;
+		
+		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+		double vi = cos(theta);
+		double vj = sin(theta);
+
+		double n = dsm->Npt(); 
+		for (int i = 0; i < n; i++) {
+			DPOINT p = dsm->Node(i);
+			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
+			tmin = std::min(tmin, ti);
+			tmax = std::max(tmax, ti);
+		}
+		
+		p1.set(Mx + tmin * vi, My + tmin * vj);
+		p2.set(Mx + tmax * vi, My + tmax * vj);
+	} 
+
 
 	double Mx, My;
 
+	double Ixx, Iyy, Ixy; // momenti d'inerzia	
+	double M2x, M2y, Mxy;
+
 private:
 	size_t _n; // numero punti processati
-	double _xc, _yc; // centro dell'ellisse
-	
-	double Ixx, Iyy, Ixy; // momenti d'inerzia
-	
-	double M2x, M2y, Mxy;
 	std::vector<DPOINT> _points;
 };
 /*
@@ -623,7 +646,7 @@ public:
 			node[Org_Nod].y = pt.y;
 			node[Org_Nod].z = pt.z;
 
-			_ie.push(pt.x, pt.y);
+			_ie.add(pt.x, pt.y);
 
 			_normalize(Org_Nod++);
 		}
