@@ -49,6 +49,24 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 	_axis = axis;
 }
 
+void Strip::fromLineRing(Axis::Ptr axis, OGRLinearRing* gp) {
+	OGRGeometry* rg = OGRGeometryFactory::createGeometry(wkbPolygon);
+	OGRPolygon* p = reinterpret_cast<OGRPolygon*>(rg);
+	p->setCoordinateDimension(2);
+	p->addRing(gp);
+
+	this->geom(rg);
+	this->missionName(axis->missionName());
+
+	std::stringstream str;
+	str << axis->stripName() << " (" << axis->id() << ")";
+
+	this->name(str.str());
+	this->yaw(axis->angle());
+
+	_axis = axis;
+}
+
 bool Strip::isParallel(Strip::Ptr other, int p) const {
 	double diff = yaw() - other->yaw();
 	diff = fabs(diff > 180 ? 360 - diff : diff);

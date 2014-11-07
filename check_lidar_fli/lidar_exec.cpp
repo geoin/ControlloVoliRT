@@ -227,6 +227,41 @@ bool lidar_exec::_read_strip_folder() {
 	}
 }
 
+std::string lidar_exec::_findLasByName(const std::string& las) {
+	Poco::File lasClouds(_cloudsFolder);
+	std::vector<Poco::File> files;
+    lasClouds.list(files);
+
+	std::vector<Poco::File>::iterator it = files.begin(), end = files.end();
+	
+	for (; it != end; it++) {
+		Poco::File& f = *it;
+		Poco::Path p(f.path());
+
+		if (f.isDirectory()) {
+			Poco::File innerFold(p);
+			std::vector<Poco::File> innerFiles;
+			innerFold.list(innerFiles);
+
+			std::vector<Poco::File>::iterator it = innerFiles.begin(), end = innerFiles.end();
+	
+			for (; it != end; it++) {
+				Poco::File& f = *it;
+				Poco::Path p(f.path()); 
+				if (Poco::toLower(p.getExtension()) == "las" && p.getBaseName() == las) {
+					return f.path();
+				}
+			}
+		} else {
+			if (Poco::toLower(p.getExtension()) == "las" && p.getBaseName() == las) {
+				return f.path();
+			}
+		}
+	}
+
+	return std::string();
+}
+
 void lidar_exec::_buildAxis() {
 	Poco::File lasClouds(_cloudsFolder);
 	std::vector<Poco::File> files;
@@ -245,7 +280,7 @@ void lidar_exec::_buildAxis() {
 		Poco::File& f = *it;
 		Poco::Path p(f.path());
 
-		if (p.isDirectory()) {
+		if (f.isDirectory()) {
 			_traverseFolder(p, stm);
 			continue;
 		}
@@ -921,9 +956,9 @@ void lidar_exec::_process_strips()
 				rs.next();
 				continue;
 			}
-		} else {
+		}/* else {
 			strip += "(" + rs[0].toString() + ")";
-		}
+		}*/
 
 		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));
 		axis->stripName(strip);
@@ -933,19 +968,46 @@ void lidar_exec::_process_strips()
 		if (!axis->isValid()) { 
 			throw std::runtime_error("Asse di volo non valido");
 		}
-
+		
+		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);
 		Lidar::Sensor::Ptr lidar;
 		if (_type == FLY_TYPE) {
 			lidar = _lidarsList[mission];
+			
+			if (lidar.isNull()) {
+				throw std::runtime_error("Valori lidar non validi");
+			} 
+
+			OGRGeomPtr gp_ = OGRGeometryFactory::createGeometry(wkbLinearRing);
+			OGRGeometry* g = gp_;
+			OGRLinearRing* gp = reinterpret_cast<OGRLinearRing*>(g);
+			gp->setCoordinateDimension(2);
+			
+			DPOINT p1, p2, p3, p4;
+			
+			std::string& path = _findLasByName(strip);
+			DSM_Factory fact;
+			fact.Open(path, false, false);
+			fact.GetDsm()->getBB(p1, p2, p3, p4);
+
+			gp->addPoint(p1.x, p1.y);
+			gp->addPoint(p2.x, p2.y);
+			gp->addPoint(p3.x, p3.y);
+			gp->addPoint(p4.x, p4.y);
+			
+			gp->closeRings();
+			stripPtr->fromLineRing(axis, gp);
+
 		} else {
 			lidar = _lidar; 
-		}
-		if (lidar.isNull()) {
-			throw std::runtime_error("Valori lidar non validi");
-		} 
+			
+			if (lidar.isNull()) {
+				throw std::runtime_error("Valori lidar non validi");
+			} 
 
-		Lidar::Strip::Ptr stripPtr(new Lidar::Strip);
-		stripPtr->fromAxis(axis, ds, lidar->tanHalfFov());
+			stripPtr->fromAxis(axis, ds, lidar->tanHalfFov());
+		}
+
 
 		if (stripPtr->isValid()) {
 			stripPtr->computeDensity(lidar, ds);

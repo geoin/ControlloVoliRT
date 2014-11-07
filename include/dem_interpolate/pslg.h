@@ -82,9 +82,12 @@ public:
 		p2.set(Mx + tmax * vi, My + tmax * vj);
 	} 
 
-	inline void getMajorAxis(DSM* dsm, DPOINT& p1, DPOINT& p2) {
+	inline void getMajorAxis(DSM* dsm) {
 		double tmin = 1e30;
 		double tmax = -1e30;
+
+		double tminB = 1e30;
+		double tmaxB = -1e30;
 		
 		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
 		double vi = cos(theta);
@@ -96,17 +99,29 @@ public:
 			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
 			tmin = std::min(tmin, ti);
 			tmax = std::max(tmax, ti);
+
+			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
+			tminB = std::min(tminB, ti);
+			tmaxB = std::max(tmaxB, ti);
 		}
 		
-		p1.set(Mx + tmin * vi, My + tmin * vj);
-		p2.set(Mx + tmax * vi, My + tmax * vj);
-	} 
+		P1.set(Mx + tmin * vi, My + tmin * vj);
+		P2.set(Mx + tmax * vi, My + tmax * vj);
 
+    // vertici strip
+		V1 = DPOINT(P1.x - tminB * vj, + P1.y + tminB * vi);
+		V2 = DPOINT(P1.x - tmaxB * vj, + P1.y + tmaxB * vi);
+		V3 = DPOINT(P2.x - tmaxB * vj, + P2.y + tmaxB * vi);
+		V4 = DPOINT(P2.x - tminB * vj, + P2.y + tminB * vi);
+	} 
 
 	double Mx, My;
 
 	double Ixx, Iyy, Ixy; // momenti d'inerzia	
 	double M2x, M2y, Mxy;
+
+	DPOINT V1, V2, V3, V4;
+	DPOINT P1, P2;
 
 private:
 	size_t _n; // numero punti processati
@@ -671,7 +686,23 @@ public:
 	}
 
 	virtual void getMajorAxis(DPOINT& p1, DPOINT& p2) {
-		_ie.getMajorAxis(this, p1, p2);
+		if (_ie.P1 == DPOINT() && _ie.P2 == DPOINT()) {
+			_ie.getMajorAxis(this);
+		}
+
+		p1 = _ie.P1;
+		p2 = _ie.P2;
+	} 
+
+	virtual void getBB(DPOINT& p1, DPOINT& p2, DPOINT& p3, DPOINT& p4) {
+		if (_ie.P1 == DPOINT() && _ie.P2 == DPOINT()) {
+			_ie.getMajorAxis(this); 
+		}
+
+		p1 = _ie.V1;
+		p2 = _ie.V2;
+		p3 = _ie.V3;
+		p4 = _ie.V4;
 	} 
 
 	bool GetDemFromNod(const std::string& path, bool verbose, bool tria) {

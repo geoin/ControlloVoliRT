@@ -139,7 +139,7 @@ class Strip {
 public:
 	typedef Poco::SharedPtr<Strip> Ptr;
 
-	Strip() : _yaw(0.0), _length(0.0) {}
+	Strip() : _yaw(0.0), _length(0.0), _density(0.0), _isValid(true) {}
 
 	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0), _density(0.0), _isValid(true) {
 		geom(g);
@@ -160,6 +160,7 @@ public:
 	};
 	
 	void fromAxis(Axis::Ptr axis, DSM* dsm, double tanHalfFov);
+	void fromLineRing(Axis::Ptr axis, OGRLinearRing* gp);
 
 	inline OGRPolygon* toPolygon() {
 		OGRGeometry* og = _geom;

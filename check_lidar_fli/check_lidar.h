@@ -105,6 +105,7 @@ private:
 	Doc_Item _initpg2(void);
 
 	void _update_assi_volo();
+	std::string _findLasByName(const std::string& las);
 
 	void _final_report();
     void _strips_comp_report();

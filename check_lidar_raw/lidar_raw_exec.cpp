@@ -141,7 +141,7 @@ bool lidar_raw_exec::_initStripFiles() {
 		std::vector<std::string>::iterator end = folderContent.end();
 		for (; it != end; it++) {
 			Poco::Path p = Poco::Path(fPath).append(*it);
-			if (p.isDirectory()) {
+			if (Poco::File(p).isDirectory()) {
 				_traverseFolder(p);
 			} else {
 				std::string name = p.getBaseName();
