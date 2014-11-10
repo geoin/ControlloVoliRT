@@ -83,12 +83,12 @@ Source: "{#MyIconDir}\voloP.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\voloPL.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\tria.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\projects.png"; DestDir: "{app}/icons"; Flags: ignoreversion
-Source: "{#MyBaseDir}\setup\DocBookRT_setup.exe"; DestDir: "{tmp}"; Flags: ignoreversion
+;Source: "{#MyBaseDir}\setup\DocBookRT_setup.exe"; DestDir: "{tmp}"; Flags: ignoreversion
 Source: "{#vcfiles}\msvcp100.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 64bit
 Source: "{#vcfiles}\msvcr100.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 64bit
 
 [Run]
-Filename: "{tmp}\DocBookRT_setup.exe"; Flags: waituntilterminated
+;Filename: "{tmp}\DocBookRT_setup.exe"; Flags: waituntilterminated
 
 
 

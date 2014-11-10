@@ -417,7 +417,7 @@ void lidar_exec::_compare_axis_report(std::map<CV::Lidar::Axis::Ptr, CV::Lidar::
 	tab->add_item("title")->append("Accoppiamento tra strisciate progettate e volate");
 
 	Poco::XML::AttributesImpl attr;
-	attr.addAttribute("", "", "cols", "", "64");
+	attr.addAttribute("", "", "cols", "", "4");
 	tab = tab->add_item("tgroup", attr);
 
 	attr.clear();
@@ -478,9 +478,9 @@ void lidar_exec::_final_report() {
 
     int cv = rs[0];
     if ( cv == 0 ) {
-        sec->add_item("para")->append("Tutte le aree da rilevare sono state ricoperte da modelli.");
+        sec->add_item("para")->append("Tutte le aree da rilevare sono state ricoperte da strisciate.");
     } else {
-        sec->add_item("para")->append("Esistono delle aree da rilevare non completamente ricoperte da modelli.");
+        sec->add_item("para")->append("Esistono delle aree da rilevare non completamente ricoperte da strisciate.");
     }
     stm.reset();
 
@@ -815,8 +815,9 @@ bool lidar_exec::_read_lidar_from_mission() {
 }
 
 bool lidar_exec::_check_sample_cloud() {
+	bool ret = false;
 	if (!_read_cloud()) {
-		return false;
+		return ret;
 	}
 
 	try {
@@ -836,11 +837,13 @@ bool lidar_exec::_check_sample_cloud() {
 
 			set.next();
 		}
+		ret = true;
 	} catch (CV::Util::Spatialite::spatialite_error& err) {
 		(void*)&err;
-		return false;
 	}
-	return true;
+
+	_sampleCloudFactory->Close();
+	_sampleCloudFactory.assign(NULL);
 }
 
 CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {

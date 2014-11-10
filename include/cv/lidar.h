@@ -277,16 +277,61 @@ private:
 	Status _status;
 };
 
+class CloudStrip {
+public:
+	typedef Poco::SharedPtr<CloudStrip> Ptr;
+	typedef Poco::SharedPtr<DSM_Factory> DSMPtr;
+
+	CloudStrip(Strip::Ptr p) : _strip(p), _density(0.0) {
+		_factory.assign(new DSM_Factory);
+		_factory->SetEcho(MyLas::first_pulse);
+	}
+
+	~CloudStrip() { 
+		release();
+	}
+
+	void release() {
+		_factory->Close();
+		_factory.assign(NULL);
+	}
+
+	const std::string& name() const { return _strip->name(); } 
+
+	double density() const { return _density; }
+	void density(double d) { _density = d; }
+
+	Strip::Ptr strip() { return _strip; }
+
+	void cloudPath(const std::string& path) { _cloudPath = path; }
+	
+	double computeDensity();
+
+	DSM_Factory* open() { 
+		bool ret = _factory->Open(_cloudPath, false);
+		return ret ? _factory.get() : NULL; 
+	}
+
+private:
+	double _density;
+	Strip::Ptr _strip;
+	DSMPtr _factory;
+
+	std::string _cloudPath;
+
+	CV_DISABLE_DEFAULT_CTOR(CloudStrip);
+	CV_DISABLE_COPY(CloudStrip);
+};
+
 class DSMHandler {
 public:
-	DSMHandler(DSM_Factory* dsm) : _dsm(dsm) {
-		_d = dsm ? dsm->GetDsm() : NULL;
+	DSMHandler(CloudStrip::Ptr strip) : _dsm(strip->open()) {
+		_strip = strip;
+		_d = _dsm->GetDsm();
 	}
 
 	~DSMHandler() { 
-		if (_dsm != NULL) {
-			_dsm->Close();
-		}
+		_strip->release();
 	}
 
 	bool isNull() const { return _dsm == NULL; }
@@ -303,54 +348,10 @@ private:
 	DSM_Factory* _dsm;
 	DSM* _d;
 
+	CloudStrip::Ptr _strip;
+
 	CV_DISABLE_DEFAULT_CTOR(DSMHandler);
 	CV_DISABLE_COPY(DSMHandler);
-};
-
-class CloudStrip {
-public:
-	typedef Poco::SharedPtr<CloudStrip> Ptr;
-	typedef Poco::SharedPtr<DSM_Factory> DSMPtr;
-
-	CloudStrip(Strip::Ptr p) : _strip(p), _density(0.0) {
-		_factory.assign(new DSM_Factory);
-		_factory->SetEcho(MyLas::first_pulse);
-	}
-
-	~CloudStrip() { 
-		if (_factory->GetDsm() != NULL) {
-			_factory->Close();
-		}
-	}
-
-	const std::string& name() const { return _strip->name(); } 
-
-	double density() const { return _density; }
-	void density(double d) { _density = d; }
-
-	Strip::Ptr strip() { return _strip; }
-
-	void cloudPath(const std::string& path) { _cloudPath = path; }
-	
-	double computeDensity();
-
-	DSM_Factory* dsm(bool open = true) { 
-		bool ret = true;
-		if (open) {
-			ret = _factory->Open(_cloudPath, false);
-		}
-		return ret ? _factory.get() : NULL; 
-	}
-
-private:
-	double _density;
-	Strip::Ptr _strip;
-	DSMPtr _factory;
-
-	std::string _cloudPath;
-
-	CV_DISABLE_DEFAULT_CTOR(CloudStrip);
-	CV_DISABLE_COPY(CloudStrip);
 };
 
 }

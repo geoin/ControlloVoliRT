@@ -176,7 +176,6 @@ ControlPoint::Status ControlPoint::zDiffFrom(DSM* dsm) {
 }
 
 double CloudStrip::computeDensity() {
-	//TODO: use RAII handler 
 	if (!_factory->Open(_cloudPath, false)) {
 		throw std::runtime_error("Cannot open " + _cloudPath);
 	}
@@ -185,6 +184,7 @@ double CloudStrip::computeDensity() {
 	double area = pol->get_Area();
 	if (area == 0.0) {
 		_factory->Close();
+		_factory.assign(new DSM_Factory);
 		throw std::runtime_error("Empty strip area");
 	}
 
@@ -192,11 +192,13 @@ double CloudStrip::computeDensity() {
 	unsigned int count = dsm->Npt();
 	if (count == 0) {
 		_factory->Close();
+		_factory.assign(new DSM_Factory);
 		throw std::runtime_error("Empty cloud");
 	}
 
 	_density = count / area;
 	_factory->Close();
+	_factory.assign(new DSM_Factory);
 
 	return _density;
 }

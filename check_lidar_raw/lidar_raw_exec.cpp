@@ -241,12 +241,13 @@ bool lidar_raw_exec::_checkIntersection() {
 				Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
 
 				std::vector<double> diff; 
-				Lidar::DSMHandler srcDsm(cloud->dsm());
+				Lidar::DSMHandler srcDsm(cloud);
+				Lidar::DSMHandler targetDsm(cloudTarget);
+				
 				unsigned int count = srcDsm->Npt();
 				for (unsigned int i = 0; i < count; ++i) {
 					DPOINT pt = srcDsm->Node(i);
 					if (intersection->contains(pt)) {
-						Lidar::DSMHandler targetDsm(cloudTarget->dsm());
 						double zTrg = targetDsm->GetQuota(pt.x, pt.y);
 
 						double dZ = pt.z - zTrg; 
