@@ -193,6 +193,7 @@ public:
 	bool hasAxis() const { return !_axis.isNull(); }
 
 	double computeDensity(Sensor::Ptr, DSM* dsm);
+	double computeDensity(DSM* dsm);
 	double density() const { return _density; }
 
 	bool isValid() const { return _isValid; }
@@ -292,8 +293,10 @@ public:
 	}
 
 	void release() {
-		_factory->Close();
-		_factory.assign(NULL);
+		if (_factory.get()) {
+			_factory->Close();
+			_factory.assign(NULL);
+		}
 	}
 
 	const std::string& name() const { return _strip->name(); } 

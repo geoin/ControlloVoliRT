@@ -105,8 +105,11 @@ bool lidar_exec::run()
 				throw std::runtime_error("Invalid strip folder");
 			}
 			
+			std::cout << "Creazione assi di volo..";
 			_createAvolov();
 			_buildAxis();
+			std::cout << std::endl;
+
 			_update_assi_volo();
 		} else {
 			// legge i dati del sensore di progetto
@@ -114,14 +117,20 @@ bool lidar_exec::run()
 		}
 		// read digital terrain model
 		//_dem_name = Path(_proj_dir, DEM).toString();
+
+		std::cout << "Lettura dem" << std::endl;
 		if (!_read_dem()) {
 			throw std::runtime_error("Modello numerico non trovato");
 		}
-
+		
+		std::cout << "Elaborazione strisciate" << std::endl;
 		_process_strips();
+
+		std::cout << "Elaborazione blocchi" << std::endl;
 		_process_block();
 		
 		if ( _type == FLY_TYPE ) {
+			std::cout << "Verifica punti di controllo su area di test" << std::endl;
 			_check_sample_cloud();
 		}
 
@@ -153,7 +162,7 @@ bool lidar_exec::run()
 
 		// write the result on the docbook report
 		_dbook.write();
-		std::cout << "Procedura terminata:" << std::endl;
+		std::cout << "Procedura terminata" << std::endl;
 
 		return true;
 
@@ -286,6 +295,8 @@ void lidar_exec::_buildAxis() {
 		}
 		
 		if (Poco::toLower(p.getExtension()) == "las") {
+			std::cout << " * Analisi strisciata " << p.getBaseName();
+
 			Lidar::Axis::Ptr axis(new Lidar::Axis);
 			axis->stripName(p.getBaseName());
 
@@ -315,6 +326,8 @@ void lidar_exec::_traverseFolder(const Poco::Path& fold, Statement& stm) {
 		Poco::Path p(f.path());
 		
 		if (Poco::toLower(p.getExtension()) == "las") {
+			std::cout << " * Analisi strisciata " << p.getBaseName();
+
 			Lidar::Axis::Ptr axis(new Lidar::Axis);
 			axis->stripName(p.getBaseName());
 
@@ -461,7 +474,8 @@ void lidar_exec::_compare_axis_report(std::map<CV::Lidar::Axis::Ptr, CV::Lidar::
 
 void lidar_exec::_final_report() {
     if ( _type == FLY_TYPE ) {
-		_compare_axis();
+		//_compare_axis();
+		_gps_report();
 		_control_points_report();
     }
 
@@ -490,6 +504,72 @@ void lidar_exec::_final_report() {
 	_strip_report();
 }
 
+void lidar_exec::_gps_report() {
+	Doc_Item sec = _article->add_item("section");
+	sec->add_item("title")->append("Verifica traccia GPS");
+
+	sec->add_item("para")->append("Valori di riferimento:");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Minimo numero di satelli con angolo sull'orizzonte superiore a " << MIN_SAT_ANG << " deg non inferiore a " << MIN_SAT;
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
+	std::stringstream ss1;
+	ss1 << "Massimo PDOP non superiore a " << MAX_PDOP;
+	itl->add_item("listitem")->add_item("para")->append(ss1.str());
+	std::stringstream ss2;
+	ss2 << "Minimo numero di stazioni permanenti entro " << MAX_DIST / 1000 << " km non inferiore a " << NBASI;
+	itl->add_item("listitem")->add_item("para")->append(ss2.str());
+
+	// check finale
+	std::string assi = ASSI_VOLO + std::string("V");
+	std::stringstream sql;
+	sql << "SELECT " << _stripNameCol << ", MISSION, DATE, NSAT, PDOP, NBASI, GPS_GAP from " << assi <<  " where NSAT<" << MIN_SAT <<
+		" OR PDOP >" << MAX_PDOP << " OR NBASI <" << NBASI << " order by " << _stripNameCol;
+
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	if ( rs.fields_count() == 0 ) {
+		sec->add_item("para")->append("Durante l'acquisizione delle strisciate i parametri del GPS rientrano nei range previsti");
+		return;
+	}
+
+	sec->add_item("para")->append("Le seguenti strisciate presentano dei parametri che non rientrano nei range previsti");
+	
+	Doc_Item tab = sec->add_item("table");
+	tab->add_item("title")->append("Strisciate acquisite con parametri GPS fuori range");
+
+	Poco::XML::AttributesImpl attr;
+	attr.addAttribute("", "", "cols", "", "4");
+	tab = tab->add_item("tgroup", attr);
+
+	Doc_Item thead = tab->add_item("thead");
+	Doc_Item row = thead->add_item("row");
+
+	attr.clear();
+	attr.addAttribute("", "", "align", "", "center");
+	row->add_item("entry", attr)->append("Strip");
+	row->add_item("entry", attr)->append("N. sat.");
+	row->add_item("entry", attr)->append("PDOP");
+	row->add_item("entry", attr)->append("N. staz.");
+
+	Doc_Item tbody = tab->add_item("tbody");
+
+	Poco::XML::AttributesImpl attrr;
+	attrr.addAttribute("", "", "align", "", "right");
+
+	while ( !rs.eof() ) {
+		row = tbody->add_item("row");
+
+		row->add_item("entry", attr)->append(rs[_stripNameCol].toString());
+		
+		print_item(row, attrr, rs["NSAT"], great_ty, MIN_SAT-1);
+		print_item(row, attrr, rs["PDOP"], less_ty, MAX_PDOP);
+		print_item(row, attrr, rs["NBASI"], great_ty, NBASI-1);
+		rs.next();
+	}
+}
+
 void lidar_exec::_control_points_report() {
 	if (_controlVal.size() == 0) {
 		return;
@@ -497,6 +577,12 @@ void lidar_exec::_control_points_report() {
 
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Punti di controllo");
+
+	sec->add_item("para")->append("Valori di riferimento:");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Tolleranza dei punti di controllo altimetrici: " << LID_TOL_A << " m";
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 
     sec->add_item("para")->append("Validita' punti di controllo");
 
@@ -522,6 +608,8 @@ void lidar_exec::_control_points_report() {
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
 
+	double med = 0;
+
 	for (; it != end; it++) {
 		CV::Lidar::ControlPoint::Ptr point = *it;
 		const std::string& name = point->name();
@@ -531,7 +619,8 @@ void lidar_exec::_control_points_report() {
 		
 		if (point->isValid()) {
 			double diff = point->zDiff();
-			print_item(row, attrr, diff, abs_less_ty, LID_TOL_Z);
+			med += diff;
+			print_item(row, attrr, diff, abs_less_ty, LID_TOL_A);
 		} else {
 			Doc_Item r = row->add_item("entry", attr);
 			r->add_instr("dbfo", "bgcolor=\"red\"");
@@ -544,6 +633,23 @@ void lidar_exec::_control_points_report() {
 			}
 		}
     }
+
+	med /= _controlVal.size();
+	it = _controlVal.begin();
+
+	double sum = 0;
+	for (; it != end; it++) { 
+		sum += std::pow((*it)->zDiff() - med, 2);
+	}
+
+	double val = std::sqrt(sum/_controlVal.size());
+
+	if (val <= LID_TOL_A ) {
+		sec->add_item("para")->append("I valori rientrano nella tolleranza");
+	} else {
+		sec->add_item("para")->append("I valori non rientrano nella tolleranza");
+	}
+
     return;
 }
 
@@ -703,10 +809,16 @@ bool lidar_exec::_read_ref_val()
 		STRIP_OVERLAP = pConf->getInt(get_key("STRIP_OVERLAP"));
 		STRIP_OVERLAP_RANGE = pConf->getInt(get_key("STRIP_OVERLAP_RANGE"));
 		MAX_STRIP_LENGTH = pConf->getInt(get_key("MAX_STRIP_LENGTH"));
-		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
+		LID_TOL_A = pConf->getDouble(get_key("LID_TOL_A"));
 		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
 		LID_ANG_SCAN =  pConf->getDouble(get_key("LID_ANG_SCAN"));
 		//_T_CP = pConf->getDouble(get_key("T_CP"));
+
+		MAX_PDOP = pConf->getInt(get_key("MAX_PDOP"));
+		MIN_SAT = pConf->getInt(get_key("MIN_SAT"));
+		MAX_DIST = pConf->getDouble(get_key("MAX_DIST"));
+		MIN_SAT_ANG = pConf->getInt(get_key("MIN_SAT_ANG"));
+		NBASI = pConf->getInt(get_key("NBASI"));
 
 	} catch (...) {
 		return false;
@@ -844,6 +956,7 @@ bool lidar_exec::_check_sample_cloud() {
 
 	_sampleCloudFactory->Close();
 	_sampleCloudFactory.assign(NULL);
+	return ret;
 }
 
 CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {
@@ -907,6 +1020,7 @@ void lidar_exec::_createStripTable() {
 		"Z_STRIP_CS TEXT NOT NULL, " <<		// strisciata
 		"Z_STRIP_YAW FLOAT NOT NULL, " <<		// angolo
 		"Z_MISSION TEXT NOT NULL, " <<	
+		"Z_STRIP_DENSITY DOUBLE NOT NULL, " <<	
 		"Z_STRIP_LENGTH DOUBLE NOT NULL)";  // strip length
 	cnn.execute_immediate(sql.str());
 
@@ -927,8 +1041,8 @@ void lidar_exec::_process_strips()
     std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_LENGTH, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_DENSITY, Z_STRIP_LENGTH, geom) \
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -959,9 +1073,9 @@ void lidar_exec::_process_strips()
 				rs.next();
 				continue;
 			}
-		}/* else {
+		} else {
 			strip += "(" + rs[0].toString() + ")";
-		}*/
+		}
 
 		Lidar::Axis::Ptr axis(new Lidar::Axis(blob, z));
 		axis->stripName(strip);
@@ -991,7 +1105,8 @@ void lidar_exec::_process_strips()
 			std::string& path = _findLasByName(strip);
 			DSM_Factory fact;
 			fact.Open(path, false, false);
-			fact.GetDsm()->getBB(p1, p2, p3, p4);
+			DSM* dsm = fact.GetDsm();
+			dsm->getBB(p1, p2, p3, p4);
 
 			gp->addPoint(p1.x, p1.y);
 			gp->addPoint(p2.x, p2.y);
@@ -1000,6 +1115,8 @@ void lidar_exec::_process_strips()
 			
 			gp->closeRings();
 			stripPtr->fromLineRing(axis, gp);
+			stripPtr->computeDensity(dsm);
+			fact.Close();
 
 		} else {
 			lidar = _lidar; 
@@ -1009,19 +1126,19 @@ void lidar_exec::_process_strips()
 			} 
 
 			stripPtr->fromAxis(axis, ds, lidar->tanHalfFov());
+			stripPtr->computeDensity(lidar, ds);
 		}
 
 
 		if (stripPtr->isValid()) {
-			stripPtr->computeDensity(lidar, ds);
-
 			double dist = axis->length() / 1000;
 			stm[1] = SIGLA_PRJ;
 			stm[2] = strip;
 			stm[3] = mission;
 			stm[4] = RAD_DEG(axis->angle());
-			stm[5] = dist;
-			stm[6].fromBlob(stripPtr->geom());
+			stm[5] = stripPtr->density();
+			stm[6] = dist;
+			stm[7].fromBlob(stripPtr->geom());
 			stm.execute();
 			
 			_strips.insert(std::pair<std::string, Lidar::Strip::Ptr>(stripPtr->name(), stripPtr));
@@ -1300,7 +1417,7 @@ void lidar_exec::_process_block()
 		return;
 	}
 
-	_get_overlaps(_strips);
+	//_get_overlaps(_strips);
 
 	Lidar::Block block;
 	std::map<std::string, Lidar::Strip::Ptr>::const_iterator it = _strips.begin();

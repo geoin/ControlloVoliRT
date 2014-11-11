@@ -41,7 +41,7 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 	this->missionName(axis->missionName());
 
 	std::stringstream str;
-	str << axis->stripName() << " (" << axis->id() << ")";
+	str << axis->stripName();// << " (" << axis->id() << ")";
 
 	this->name(str.str());
 	this->yaw(axis->angle());
@@ -59,7 +59,7 @@ void Strip::fromLineRing(Axis::Ptr axis, OGRLinearRing* gp) {
 	this->missionName(axis->missionName());
 
 	std::stringstream str;
-	str << axis->stripName() << " (" << axis->id() << ")";
+	str << axis->stripName();// << " (" << axis->id() << ")";
 
 	this->name(str.str());
 	this->yaw(axis->angle());
@@ -215,5 +215,20 @@ double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
 		double L = 2 * H * s->tanHalfFov();
 		_density = L * s->speed()/s->freq();
 	}
+	return _density;
+}
+
+double Strip::computeDensity(DSM* dsm) {
+	double area = toPolygon()->get_Area();
+	if (area == 0.0) {
+		throw std::runtime_error("Empty strip area");
+	}
+
+	unsigned int count = dsm->Npt();
+	if (count == 0) {
+		throw std::runtime_error("Empty cloud");
+	}
+
+	_density = count / area;
 	return _density;
 }
