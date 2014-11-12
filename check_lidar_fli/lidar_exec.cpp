@@ -105,7 +105,7 @@ bool lidar_exec::run()
 				throw std::runtime_error("Invalid strip folder");
 			}
 			
-			std::cout << "Creazione assi di volo..";
+			std::cout << "Creazione assi di volo.." << std::endl;
 			_createAvolov();
 			_buildAxis();
 			std::cout << std::endl;
@@ -295,7 +295,7 @@ void lidar_exec::_buildAxis() {
 		}
 		
 		if (Poco::toLower(p.getExtension()) == "las") {
-			std::cout << " * Analisi strisciata " << p.getBaseName();
+			std::cout << " * Analisi strisciata " << p.getBaseName() << std::endl;
 
 			Lidar::Axis::Ptr axis(new Lidar::Axis);
 			axis->stripName(p.getBaseName());
@@ -326,7 +326,7 @@ void lidar_exec::_traverseFolder(const Poco::Path& fold, Statement& stm) {
 		Poco::Path p(f.path());
 		
 		if (Poco::toLower(p.getExtension()) == "las") {
-			std::cout << " * Analisi strisciata " << p.getBaseName();
+			std::cout << " * Analisi strisciata " << p.getBaseName() << std::endl;
 
 			Lidar::Axis::Ptr axis(new Lidar::Axis);
 			axis->stripName(p.getBaseName());
@@ -517,7 +517,7 @@ void lidar_exec::_gps_report() {
 	ss1 << "Massimo PDOP non superiore a " << MAX_PDOP;
 	itl->add_item("listitem")->add_item("para")->append(ss1.str());
 	std::stringstream ss2;
-	ss2 << "Minimo numero di stazioni permanenti entro " << MAX_DIST / 1000 << " km non inferiore a " << NBASI;
+	ss2 << "Minimo numero di stazioni permanenti non inferiore a " << NBASI;
 	itl->add_item("listitem")->add_item("para")->append(ss2.str());
 
 	// check finale
@@ -1417,7 +1417,7 @@ void lidar_exec::_process_block()
 		return;
 	}
 
-	//_get_overlaps(_strips);
+	_get_overlaps(_strips);
 
 	Lidar::Block block;
 	std::map<std::string, Lidar::Strip::Ptr>::const_iterator it = _strips.begin();

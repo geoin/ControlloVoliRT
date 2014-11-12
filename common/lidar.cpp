@@ -85,13 +85,13 @@ int Strip::intersectionPercentage(Strip::Ptr other) const {
 	Util::Geometry::OGRGeomPtr sourceGeom = this->geom();
 	OGRGeomPtr intersection = sourceGeom->Intersection(other->geom());
 	if (intersection->getGeometryType() == wkbPolygon) {
-		double srcMajorAxis, srcMinorAxis;
-		get_elong(sourceGeom, yaw(), &srcMajorAxis, &srcMinorAxis);
+		double srcAxis1, srcAxis2;
+		get_ellipse_elong(sourceGeom, srcAxis1, srcAxis2);
 		
-		double targetMajorAxis, targetMinorAxis;
-		get_elong(intersection, other->yaw(), &targetMajorAxis, &targetMinorAxis);
+		double targetAxis1, targetAxis2;
+		get_ellipse_elong(intersection, targetAxis1, targetAxis2);
 
-		p = static_cast<int>(100 * (targetMajorAxis / srcMajorAxis));
+		p = static_cast<int>(100 * (targetAxis2 / srcAxis2));
 	}
 	return p;
 }

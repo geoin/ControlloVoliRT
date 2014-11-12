@@ -62,9 +62,12 @@ public:
 		Ixy = (double(_n) / double(_n - 1)) * (Mxy - Mx * My);
 	}
 
-	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) {
+	inline void getAxisLen(double& l1, double& l2) {
 		double tmin = 1e30;
 		double tmax = -1e30;
+
+		double tminB = 1e30;
+		double tmaxB = -1e30;
 		
 		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
 		double vi = cos(theta);
@@ -76,6 +79,37 @@ public:
 			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
 			tmin = std::min(tmin, ti);
 			tmax = std::max(tmax, ti);
+			
+			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
+			tminB = std::min(tminB, ti);
+			tmaxB = std::max(tmaxB, ti);
+		}
+
+		l1 = 2*tmax;
+		l2 = 2*tmaxB;
+	}
+
+	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) {
+		double tmin = 1e30;
+		double tmax = -1e30;
+
+		double tminB = 1e30;
+		double tmaxB = -1e30;
+		
+		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+		double vi = cos(theta);
+		double vj = sin(theta);
+
+		double n = _points.size(); 
+		for (int i = 0; i < n; i++) {
+			DPOINT p = _points.at(i);
+			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
+			tmin = std::min(tmin, ti);
+			tmax = std::max(tmax, ti);
+			
+			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
+			tminB = std::min(tminB, ti);
+			tmaxB = std::max(tmaxB, ti);
 		}
 		
 		p1.set(Mx + tmin * vi, My + tmin * vj);

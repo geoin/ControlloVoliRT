@@ -607,6 +607,26 @@ Check_lidar::Check_lidar(QgisInterface* mi, int type): dbox(mi)
 
     _init(qvb);
 }
+/**********************************************************/
+
+Check_lidar_raw::Check_lidar_raw(QgisInterface* mi): dbox(mi)
+{
+    setWindowTitle("Controllo lidar dati grezzi");
+    _check_name = "check_lidar_raw";
+
+    // prepare the parameters
+    _args << QString(PARAM_PREFIX("d")); // project dir
+
+    QString name = _check_name;// + ".exe";
+
+    QFileInfo qf(_plugin_dir, name);
+    _executable = qf.filePath();
+
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    _init(qvb);
+}
+
 /*******************************************/
 QString icon_path; //("C:/Google Drive/Regione Toscana Tools/icons");
 
@@ -740,6 +760,8 @@ void QgsRTtoolsPlugin::ver_lidar()
 }
 void QgsRTtoolsPlugin::ver_raw_lidar()
 {
+    Check_lidar_raw* db = new Check_lidar_raw(mIface);
+    db->open();
 }
 void QgsRTtoolsPlugin::ver_prod_lidar()
 {
