@@ -68,9 +68,9 @@ void Strip::fromLineRing(Axis::Ptr axis, OGRLinearRing* gp) {
 }
 
 bool Strip::isParallel(Strip::Ptr other, int p) const {
-	double diff = yaw() - other->yaw();
+	double diff = RAD_DEG(yaw()) - RAD_DEG(other->yaw());
 	diff = fabs(diff > 180 ? 360 - diff : diff);
-	return diff < p || diff > 180 - p;
+	return diff < p || (diff > (180 - p));
 }
 
 bool Strip::intersect(Strip::Ptr other) const {
@@ -213,7 +213,7 @@ double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
 	} else {
 		double H = axis()->quota() - q;
 		double L = 2 * H * s->tanHalfFov();
-		_density = L * s->speed()/s->freq();
+		_density = s->freq()/(L * s->speed());
 	}
 	return _density;
 }
