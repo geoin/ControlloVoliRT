@@ -161,6 +161,15 @@ void Block::add(Strip::Ptr strip) {
 	}
 }
 
+void Block::split(std::vector<CV::Util::Geometry::OGRGeomPtr>& p) {
+	const OGRMultiPolygon* pol = toMultiPolygon();
+	int num = pol->getNumGeometries();
+	for (int i = 0; i < num; i++) {
+		CV::Util::Geometry::OGRGeomPtr geom = pol->getGeometryRef(i)->clone();
+		p.push_back(geom);
+	}
+}
+
 ControlPoint::Status ControlPoint::zDiffFrom(DSM* dsm) {
 	double q = dsm->GetQuota(_geom.x, _geom.y);
 	if (q == Z_NOVAL) {

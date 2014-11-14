@@ -185,6 +185,7 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 		ctrl->insert(file, false);
 
 		CVCsvInput* controlPoint = new CVCsvInput(proj);
+		controlPoint->setTable("CONTROL_POINTS");
 		controlPoint->uri(proj->path);
 		controlPoint->type(CVObject::CLOUD_CONTROL_POINTS);
 		controlPoint->controlType(CVControl::LIDAR_FLY);
@@ -273,9 +274,8 @@ CVControl* CVProjectManager::_rawLidar(CVProject* proj, bool load) {
 	CVControl* ctrl = new CVControl(CVControl::LIDAR_RAW, proj);
 	ctrl->uri(proj->db());
 
-	CVShapeLayer* layer = new CVShapeLayer(ctrl);
-	layer->columns(QStringList());
-	layer->table("RAW_CONTROL_POINTS");
+	CVCsvInput* layer = new CVCsvInput(ctrl);
+	layer->setTable("RAW_CONTROL_POINTS");
 	layer->controlType(CVControl::LIDAR_RAW);
 	layer->type(CVObject::RAW_CONTROL_POINTS);
 	ctrl->insert(layer);

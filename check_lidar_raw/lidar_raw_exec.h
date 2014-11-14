@@ -21,6 +21,7 @@ public:
 	bool readReference();
 
 	static void Error(const std::string& operation, const std::exception& e); 
+	static void Error(const std::string& operation); 
 
 	struct Stats {
 		std::string target;
@@ -31,24 +32,26 @@ public:
 private:
 	bool _initStripFiles();
 	void _traverseFolder(const Poco::Path& fPath);
-	//bool _initControlPoints();
+	bool _initControlPoints();
 	bool _initStripsLayer();
+	bool _initBlocks();
 
 	bool _checkDensity();
 	bool _checkIntersection();
 
 	void _getStats(const std::vector<double>& diff, Stats&);
 
-	//void _control_points_report();
+	void _control_points_report();
 	void _strip_overlaps_report();
 	void _density_report();
 
     std::string _proj_dir;
+	CV::Lidar::Block::Ptr _block;
 	
 	CV::Util::Spatialite::Connection cnn;
 
 	std::map<std::string, Poco::Path> _cloudStripList;
-	//std::vector<CV::Lidar::ControlPoint::Ptr> _controlVal;
+	std::vector<CV::Lidar::ControlPoint::Ptr> _controlVal;
 	std::vector<CV::Lidar::CloudStrip::Ptr> _strips;
 	std::multimap<std::string, Stats> _statList;
 

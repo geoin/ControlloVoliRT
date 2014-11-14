@@ -25,6 +25,10 @@ void lidar_raw_exec::Error(const std::string& operation, const std::exception& e
 	std::cout << "Error [" << operation << "] : " << e.what() << std::endl;
 }
 
+void lidar_raw_exec::Error(const std::string& operation) {
+	std::cout << "Error [" << operation << "]" << std::endl;
+}
+
 void lidar_raw_exec::set_proj_dir(const std::string& proj) {
     _proj_dir = proj;
 }
@@ -48,28 +52,64 @@ bool lidar_raw_exec::readReference() {
 		pConf = new XMLConfiguration(ref_file.toString());
 		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
 		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
+		return true;
 	} catch (const std::exception& e) {
 		Error("Reading reference values..", e);
 		return false;
 	}
 }
 
+bool lidar_raw_exec::_initBlocks() {
+	CV::Util::Spatialite::Statement stm(cnn);
+
+	std::stringstream query;
+	query << "select AsBinary(GEOM) FROM BLOCKV";
+	stm.prepare(query.str());
+	CV::Util::Spatialite::Recordset set = stm.recordset();
+	if (set.eof()) {
+		ERROR("Blocco non presente");
+		return false;
+	}
+	
+	Blob b = set[0].toBlob();
+	CV::Util::Geometry::OGRGeomPtr geom = b;
+	_block.assign(new CV::Lidar::Block(geom));
+	
+	std::vector<CV::Util::Geometry::OGRGeomPtr> parts;
+	_block->split(parts);
+
+	std::vector<CV::Util::Geometry::OGRGeomPtr>::iterator it = parts.begin();
+	std::vector<CV::Util::Geometry::OGRGeomPtr>::iterator end = parts.end();
+	
+	OGREnvelope env;
+	for (; it != end; it++) {
+		(*it)->getEnvelope(&env);
+	}
+
+	return true;
+}
+
 bool lidar_raw_exec::init() {
-	 if (!GetProjData(cnn, _note, std::string())) {
+	if (!GetProjData(cnn, _note, std::string())) {
 		return false;
     }
+	 
+	if (!_initBlocks()) {
+		return false;
+	}
 
 	if (!_initStripFiles()) {
 		return false;
 	}
 
-	/*if (!_initControlPoints()) {
+	if (!_initControlPoints()) {
 		return false;
-	}*/
+	}
 
 	if (!_initStripsLayer()) {
 		return false;
 	}
+
 
 	return true;
 }
@@ -85,7 +125,7 @@ bool lidar_raw_exec::run() {
 		return false;
 	}
 }
-/*
+
 bool lidar_raw_exec::_initControlPoints() {
 	try {
 		CV::Util::Spatialite::Statement stm(cnn);
@@ -116,7 +156,7 @@ bool lidar_raw_exec::_initControlPoints() {
 		Error("fetching control points", e);
 		return false;
 	}
-}*/
+}
 
 bool lidar_raw_exec::_initStripFiles() {
 	try {

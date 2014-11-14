@@ -215,10 +215,19 @@ private:
 class Block {
 public:
 	typedef Poco::SharedPtr<Block> Ptr;
+	Block() {}
+	Block(CV::Util::Geometry::OGRGeomPtr g) : _geom(g) {}
 	
 	void add(Strip::Ptr);
+
+	void split(std::vector<CV::Util::Geometry::OGRGeomPtr>&);
 	
 	CV::Util::Geometry::OGRGeomPtr geom() const { return _geom; }
+
+	inline const OGRMultiPolygon* toMultiPolygon() const {
+		const OGRGeometry* og = _geom;
+		return reinterpret_cast<const OGRMultiPolygon*>(og);
+	}
 
 private:
 	CV::Util::Geometry::OGRGeomPtr _geom;
