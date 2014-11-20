@@ -111,6 +111,17 @@ bool Strip::Intersection::contains(DPOINT& pt) {
 	return contains(x, y);
 }
 
+void Strip::Intersection::getAxisFromGeom(double& a, double& b, double& theta) {
+	if (_geom->getGeometryType() != wkbPolygon) {
+		return; // something wrong here
+	}
+
+	OGRGeometry* p_ = _geom;
+	OGRPolygon* pol = reinterpret_cast<OGRPolygon*>(p_);
+	
+	get_ellipse_elong(_geom, a, b, theta);
+}
+
 Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
 	Util::Geometry::OGRGeomPtr sourceGeom = geom();
 	Util::Geometry::OGRGeomPtr i = sourceGeom->Intersection(other->geom());

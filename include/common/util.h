@@ -33,6 +33,7 @@ bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHEC
 char* get_typestring(const CV::Util::Geometry::OGRGeomPtr geom);
 void get_elong(const CV::Util::Geometry::OGRGeomPtr fv0, double ka, double* d1, double* d2);
 void get_ellipse_elong(const CV::Util::Geometry::OGRGeomPtr fv0, double& d1, double& d2);
+void get_ellipse_elong(const CV::Util::Geometry::OGRGeomPtr fv0, double& d1, double& d2, double& theta);
 void add_column(CV::Util::Spatialite::Connection& cnn, const std::string& table, const std::string& col_name);
 void init_document(docbook& dbook, const std::string& nome, const std::string& title, const std::string& note);
 bool GetProjData(CV::Util::Spatialite::Connection& cnn, std::string& note, std::string& scale);

@@ -7,6 +7,8 @@
 
 #include "cv/lidar.h"
 
+#define INTERSECTION_DENSITY 5.0/100.0
+
 class lidar_raw_exec {
 public:
 	lidar_raw_exec() : LID_TOL_Z(0.0), PT_DENSITY(0.0) {}
@@ -34,7 +36,6 @@ private:
 	void _traverseFolder(const Poco::Path& fPath);
 	bool _initControlPoints();
 	bool _initStripsLayer();
-	bool _initBlocks();
 
 	bool _checkDensity();
 	bool _checkIntersection();
@@ -45,15 +46,22 @@ private:
 	void _strip_overlaps_report();
 	void _density_report();
 
+	void _getIntersectionDiff(CV::Lidar::DSMHandler&, std::vector<DPOINT>&, std::vector<double>&); 
+	void _checkControlPoints(const std::string&, CV::Lidar::DSMHandler&);
+
     std::string _proj_dir;
-	CV::Lidar::Block::Ptr _block;
+
+	//bool _initBlocks();
+	//CV::Lidar::Block::Ptr _block;
 	
 	CV::Util::Spatialite::Connection cnn;
 
 	std::map<std::string, Poco::Path> _cloudStripList;
-	std::vector<CV::Lidar::ControlPoint::Ptr> _controlVal;
 	std::vector<CV::Lidar::CloudStrip::Ptr> _strips;
 	std::multimap<std::string, Stats> _statList;
+	
+	std::vector<CV::Lidar::ControlPoint::Ptr> _controlVal;
+	std::map< std::string, std::vector<double> > _controlInfoList;
 
 	docbook _dbook;
 	Doc_Item _article;

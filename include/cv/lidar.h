@@ -155,6 +155,13 @@ public:
 			bool contains(double x, double y);
 			bool contains(DPOINT&);
 
+			void getAxisFromGeom(double& a, double& b, double& beta);
+
+			OGRPolygon* toPolygon() { 
+				OGRGeometry* g_ = _geom;
+				return reinterpret_cast<OGRPolygon*>(g_);
+			}
+
 		private:
 			CV::Util::Geometry::OGRGeomPtr _geom;
 	};
@@ -195,6 +202,7 @@ public:
 	double computeDensity(Sensor::Ptr, DSM* dsm);
 	double computeDensity(DSM* dsm);
 	double density() const { return _density; }
+	void density(double d) { _density = d; }
 
 	bool isValid() const { return _isValid; }
 	void isValid(bool b) { _isValid = b;}
@@ -278,6 +286,10 @@ public:
 
 	inline Status status() const { return _status; }
 
+	const DPOINT& point() {
+		return _geom;
+	}
+
 private:
 	DPOINT _geom;
 	std::string _name;
@@ -292,13 +304,19 @@ public:
 	typedef Poco::SharedPtr<CloudStrip> Ptr;
 	typedef Poco::SharedPtr<DSM_Factory> DSMPtr;
 
-	CloudStrip(Strip::Ptr p) : _strip(p), _density(0.0) {
-		_factory.assign(new DSM_Factory);
-		_factory->SetEcho(MyLas::first_pulse);
+	CloudStrip(Strip::Ptr p) : _factory(NULL), _strip(p), _density(0.0) {
+		init();
 	}
 
 	~CloudStrip() { 
 		release();
+	}
+
+	void init() {
+		if (!_factory.get()) {
+			_factory.assign(new DSM_Factory);
+			_factory->SetEcho(MyLas::first_pulse);
+		}
 	}
 
 	void release() {
@@ -319,8 +337,8 @@ public:
 	
 	double computeDensity();
 
-	DSM_Factory* open() { 
-		bool ret = _factory->Open(_cloudPath, false);
+	DSM_Factory* open(bool tria) { 
+		bool ret = _factory->Open(_cloudPath, false, tria);
 		return ret ? _factory.get() : NULL; 
 	}
 
@@ -337,13 +355,16 @@ private:
 
 class DSMHandler {
 public:
-	DSMHandler(CloudStrip::Ptr strip) : _dsm(strip->open()) {
+	DSMHandler(CloudStrip::Ptr strip, bool tria = true) {
 		_strip = strip;
+
+		strip->init();
+		_dsm = strip->open(tria);
 		_d = _dsm->GetDsm();
 	}
 
 	~DSMHandler() { 
-		_strip->release();
+		release();
 	}
 
 	bool isNull() const { return _dsm == NULL; }
@@ -354,6 +375,10 @@ public:
 
 	const DSM* operator -> () const {
 		return _d;
+	}
+
+	void release() {
+		_strip->release();
 	}
 
 private:

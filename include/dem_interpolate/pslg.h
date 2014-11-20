@@ -62,14 +62,14 @@ public:
 		Ixy = (double(_n) / double(_n - 1)) * (Mxy - Mx * My);
 	}
 
-	inline void getAxisLen(double& l1, double& l2) {
+	inline void getAxisLen(double& l1, double& l2, double& theta) {
 		double tmin = 1e30;
 		double tmax = -1e30;
 
 		double tminB = 1e30;
 		double tmaxB = -1e30;
 		
-		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+		theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
 		double vi = cos(theta);
 		double vj = sin(theta);
 
@@ -85,8 +85,14 @@ public:
 			tmaxB = std::max(tmaxB, ti);
 		}
 
-		l1 = 2*tmax;
-		l2 = 2*tmaxB;
+		l1 = std::abs(tmax)  + std::abs(tmin);
+		l2 = std::abs(tmaxB)  + std::abs(tminB);
+	}
+
+	
+	inline void getAxisLen(double& l1, double& l2) {
+		double t_;
+		getAxisLen(l1, l2, t_);
 	}
 
 	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) {
@@ -161,35 +167,6 @@ private:
 	size_t _n; // numero punti processati
 	std::vector<DPOINT> _points;
 };
-/*
-Inertia_ellipse::Inertia_ellipse(FVDATA& fv) 
-{
-	xc = yc = 0.;
-	Ixx = Iyy = Ixy = 0.;
-	int n = fv.GetCount();
-	for (int i = 0; i < n; i++) {
-		xc += fv[i].p[0];
-		yc += fv[i].p[1];
-
-	}
-	xc /= n;
-	yc /= n;
-	for (int i = 0; i < n; i++) {
-		double x = fv[i].p[0] - xc;
-		double y = fv[i].p[1] - yc;
-
-		Ixx += x * x;
-		Iyy += y * y;
-		Ixy += x * y;
-	}
-	Ixx /= n;
-	Iyy /= n;
-	Ixy /= n;
-	double c = sqrt( pow(Ixx - Iyy, 2.) + 4 * pow(Ixy, 2.));
-	ra = sqrt(2.) * sqrt(Ixx + Iyy + c);
-	rb = sqrt(2.) * sqrt(Ixx + Iyy - c);
-	theta = atan2(Ixx - Iyy, 2 * Ixy) / 2;
-}*/
 
 class TOOLS_EXPORTS Bbox {
 public:
