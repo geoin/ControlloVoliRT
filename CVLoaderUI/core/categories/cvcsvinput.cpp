@@ -91,6 +91,9 @@ bool CVCsvInput::persist() {
 
 		while (!_csv->atEnd()) {
 			QString line = _csv->readLine();
+			if (line.length() == 0) {
+				continue;
+			}
 			QStringList out;
 			_csv->splitAndFormat(line, out);
 			

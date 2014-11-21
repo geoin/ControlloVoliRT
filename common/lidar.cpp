@@ -122,9 +122,10 @@ void Strip::Intersection::getAxisFromGeom(double& a, double& b, double& theta) {
 	get_ellipse_elong(_geom, a, b, theta);
 }
 
-Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
+Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other, double dist) const {
 	Util::Geometry::OGRGeomPtr sourceGeom = geom();
 	Util::Geometry::OGRGeomPtr i = sourceGeom->Intersection(other->geom());
+	i = i->Buffer(dist);
 	Strip::Intersection::Ptr iPtr;
 	iPtr.assign(new Strip::Intersection(i));
 	return iPtr;

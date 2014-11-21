@@ -51,7 +51,7 @@ bool lidar_raw_exec::readReference() {
 		AutoPtr<XMLConfiguration> pConf;
 		pConf = new XMLConfiguration(ref_file.toString());
 		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
-		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
+		LID_TOL_A = pConf->getDouble(get_key("LID_TOL_A"));
 		return true;
 	} catch (const std::exception& e) {
 		Error("Reading reference values..", e);
@@ -312,9 +312,6 @@ bool lidar_raw_exec::_checkIntersection() {
 
 				double stepX = a/nx, stepY = b/ny;
 
-				std::fstream out;
-				out.open(source->name() + "_" + target->name() + ".csv", std::fstream::out);
-
 				std::vector<DPOINT> intersectionGrid; 
 				intersectionGrid.reserve(np);
 
@@ -324,12 +321,10 @@ bool lidar_raw_exec::_checkIntersection() {
 						double yi = center->getY() + j*stepY*vn[1] + i*stepX*v[1];
 
 						if (intersection->contains(xi, yi)) {
-							out << xi << "," << yi << std::endl;
 							intersectionGrid.push_back(DPOINT(xi, yi));
 						}
 					}
 				}
-				out.close();
 
 				std::vector<double> zSrc; 
 				_getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
@@ -340,11 +335,20 @@ bool lidar_raw_exec::_checkIntersection() {
 				targetDsm.release();
 
 				std::vector<double> diff; 
+				
+				//std::fstream out;
+				//out.open("diff_" +  source->name() + "_" + target->name() + " .csv", std::fstream::out);
+
 				for (size_t i = 0; i < intersectionGrid.size(); i++) {
 					double sVal = zSrc.at(i);
 					double tVal = zTrg.at(i);
+					//out << intersectionGrid.at(i).x << ", " << intersectionGrid.at(i).y << ", " << sVal << ", " << tVal << ", ";
 					if (sVal != Z_NOVAL && sVal != Z_OUT && tVal != Z_NOVAL && tVal != Z_OUT) {
-						diff.push_back(zSrc.at(i) - zTrg.at(i));
+						double d = sVal - tVal;
+						if (std::abs(d) < 20) {
+							diff.push_back(d);
+						}
+						//out << zSrc.at(i) - zTrg.at(i) << std::endl;
 					}
 				}
 
@@ -406,7 +410,7 @@ void lidar_raw_exec::_getStats(const std::vector<double>& diff, Stats& s) {
 	double mm = 0.0;
 	for (; j != end; j++) {
 		double val = *j;
-		mm += std::pow(val - mean, 2.0);
+		mm += std::pow(val - mean, 2);
 	}
 
 	s.mean = mean;
@@ -448,7 +452,7 @@ bool lidar_raw_exec::report() {
 		return false;
 	}
 }
-
+/*
 void lidar_raw_exec::_density_report() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Striciate");
@@ -486,7 +490,7 @@ void lidar_raw_exec::_density_report() {
         row->add_item("entry", attr)->append(name);
 		print_item(row, attrr, density, abs_less_ty, PT_DENSITY);
 	}
-}
+}*/
 
 void lidar_raw_exec::_strip_overlaps_report() {
 	if (_statList.size() == 0) {
@@ -496,6 +500,12 @@ void lidar_raw_exec::_strip_overlaps_report() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Striciate");
 	
+	sec->add_item("para")->append("Valori di riferimento");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Tolleranza differenza di quota tra punti comuni a due strisciate, media inferiore a " << LID_TOL_Z;
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
+
     sec->add_item("para")->append("Sovrapposizione strisciate adiacenti");
 
 	Doc_Item tab = sec->add_item("table");
@@ -535,7 +545,6 @@ void lidar_raw_exec::_strip_overlaps_report() {
 	}
 }
 
-
 void lidar_raw_exec::_control_points_report() {
 	if (_controlVal.size() == 0) {
 		return;
@@ -543,6 +552,12 @@ void lidar_raw_exec::_control_points_report() {
 
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Punti di controllo");
+
+	sec->add_item("para")->append("Valori di riferimento");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Tolleranza dei punti di controllo altimetrici, valori inferiori a " << LID_TOL_A;
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
 
     sec->add_item("para")->append("Validita' punti di controllo");
 
@@ -586,7 +601,7 @@ void lidar_raw_exec::_control_points_report() {
 
 				row = tbody->add_item("row");
 				row->add_item("entry", attr)->append(strip);
-				print_item(row, attrr, diff, abs_less_ty, LID_TOL_Z);
+				print_item(row, attrr, diff, abs_less_ty, LID_TOL_A);
 			}
 		}
 		if (!hasHeader) {

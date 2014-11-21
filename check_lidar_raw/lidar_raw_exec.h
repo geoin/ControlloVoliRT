@@ -11,7 +11,7 @@
 
 class lidar_raw_exec {
 public:
-	lidar_raw_exec() : LID_TOL_Z(0.0), PT_DENSITY(0.0) {}
+	lidar_raw_exec() : LID_TOL_Z(0.0), LID_TOL_A(0.0) {}
 
     void set_proj_dir(const std::string&);
 
@@ -67,7 +67,7 @@ private:
 	Doc_Item _article;
 	std::string _note;
 
-	double LID_TOL_Z, PT_DENSITY;
+	double LID_TOL_Z, LID_TOL_A;
 };
 
 #endif
