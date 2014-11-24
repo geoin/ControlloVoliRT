@@ -156,6 +156,7 @@ public:
 			bool contains(DPOINT&);
 
 			void getAxisFromGeom(double& a, double& b, double& beta);
+			void Strip::Intersection::toBuffer(double = -150);
 
 			OGRPolygon* toPolygon() { 
 				OGRGeometry* g_ = _geom;
@@ -194,7 +195,7 @@ public:
 	bool isParallel(Strip::Ptr other, int p = 10) const;
 	bool intersect(Strip::Ptr other) const;
 	int intersectionPercentage(Strip::Ptr other) const;
-	Strip::Intersection::Ptr intersection(Strip::Ptr other,  double = -150) const;
+	Strip::Intersection::Ptr intersection(Strip::Ptr other) const;
 
 	Axis::Ptr axis() const { return _axis; }
 	bool hasAxis() const { return !_axis.isNull(); }

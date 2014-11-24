@@ -292,19 +292,20 @@ bool lidar_raw_exec::_checkIntersection() {
 				Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
 				double a = 0.0, b = 0.0, theta = 0.0;
 				intersection->getAxisFromGeom(a, b, theta);
+				intersection->toBuffer(b/4.0);
 
 				double v[2] = { std::cos(theta), std::sin(theta) };
 				double vn[2] = { -std::sin(theta), std::cos(theta) };
 
 				double densityS = source->density(), densityT = target->density();
 				OGRPolygon* intersectionPol = intersection->toPolygon();
-				double area = intersectionPol->get_Area();
 
 				CV::Util::Geometry::OGRGeomPtr ptr = OGRGeometryFactory::createGeometry(wkbPoint);
 				OGRGeometry* cen_ = ptr;
 				OGRPoint* center = reinterpret_cast<OGRPoint*>(cen_);
 				intersectionPol->Centroid(center);
-
+				
+				double area = intersectionPol->get_Area();
 				double np = area * std::max(densityS, densityT) * INTERSECTION_DENSITY;
 
 				double ny = std::sqrt((b/a) * np);
@@ -335,20 +336,15 @@ bool lidar_raw_exec::_checkIntersection() {
 				targetDsm.release();
 
 				std::vector<double> diff; 
-				
-				//std::fstream out;
-				//out.open("diff_" +  source->name() + "_" + target->name() + " .csv", std::fstream::out);
 
 				for (size_t i = 0; i < intersectionGrid.size(); i++) {
 					double sVal = zSrc.at(i);
 					double tVal = zTrg.at(i);
-					//out << intersectionGrid.at(i).x << ", " << intersectionGrid.at(i).y << ", " << sVal << ", " << tVal << ", ";
 					if (sVal != Z_NOVAL && sVal != Z_OUT && tVal != Z_NOVAL && tVal != Z_OUT) {
 						double d = sVal - tVal;
 						if (std::abs(d) < 20) {
 							diff.push_back(d);
 						}
-						//out << zSrc.at(i) - zTrg.at(i) << std::endl;
 					}
 				}
 
@@ -401,7 +397,6 @@ void lidar_raw_exec::_getIntersectionDiff(CV::Lidar::DSMHandler& dsm, std::vecto
 }
 
 void lidar_raw_exec::_getStats(const std::vector<double>& diff, Stats& s) {
-	//TODO
 	double size = static_cast<double>(diff.size());
 	double mean = std::accumulate(diff.begin(), diff.end(), 0.0) / size;
 
