@@ -292,7 +292,7 @@ bool lidar_raw_exec::_checkIntersection() {
 				Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
 				double a = 0.0, b = 0.0, theta = 0.0;
 				intersection->getAxisFromGeom(a, b, theta);
-				intersection->toBuffer(b/4.0);
+				intersection->toBuffer(-b/4.0);
 
 				double v[2] = { std::cos(theta), std::sin(theta) };
 				double vn[2] = { -std::sin(theta), std::cos(theta) };
