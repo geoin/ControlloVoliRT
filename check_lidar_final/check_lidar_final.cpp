@@ -4,6 +4,8 @@
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Util/HelpFormatter.h"
 
+#include "cv_version.h"
+
 using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
@@ -63,6 +65,12 @@ void check_lidar_final::displayHelp() {
 }
 
 int check_lidar_final::main(const std::vector<std::string>& args) {
+	if (_helpRequested) {
+		return Application::EXIT_OK;
+	}
+
+	CV::Version::print();
+
     try {
         if ( !_helpRequested ) {
             _check.run();
