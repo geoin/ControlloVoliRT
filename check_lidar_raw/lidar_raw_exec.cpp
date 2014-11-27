@@ -280,6 +280,8 @@ bool lidar_raw_exec::_checkIntersection() {
 	for (; it != end; it++) {
 		Lidar::CloudStrip::Ptr cloud = *it;
 		
+		std::cout << " * Analisi nuvola " << cloud->name() << std::endl;
+
 		Lidar::DSMHandler srcDsm(cloud);
 		_checkControlPoints(cloud->name(), srcDsm);
 
@@ -565,11 +567,13 @@ void lidar_raw_exec::_control_points_report() {
 		bool hasHeader = false;
 		Doc_Item tab;
 		Doc_Item thead;
+		Doc_Item tbody;
 		Poco::XML::AttributesImpl attr;
 		attr.addAttribute("", "", "cols", "", "2");
 
 		std::map< std::string, std::vector<double> >::iterator it = _controlInfoList.begin();
 		std::map< std::string, std::vector<double> >::iterator end = _controlInfoList.end();
+
 		for (; it != end; it++) {
 			std::string strip = it->first;
 			double diff = it->second.at(i);
@@ -580,21 +584,24 @@ void lidar_raw_exec::_control_points_report() {
 					tab->add_item("title")->append("Punto di controllo " + name);
 					tab = tab->add_item("tgroup", attr);
 					thead = tab->add_item("thead");
+					
+					Doc_Item row = thead->add_item("row");
+					
+					Poco::XML::AttributesImpl attrr;
+					attr.addAttribute("", "", "align", "", "center");
+
+					row->add_item("entry", attr)->append("Strip");
+					row->add_item("entry", attr)->append("Z diff");
+					tbody = tab->add_item("tbody");
+
 
 					hasHeader = true;
 				}
-				Doc_Item row = thead->add_item("row");
-
-				attr.clear();
-				attr.addAttribute("", "", "align", "", "center");
-				row->add_item("entry", attr)->append("Strip");
-				row->add_item("entry", attr)->append("Z diff");
-				Doc_Item tbody = tab->add_item("tbody");
-
+				
 				Poco::XML::AttributesImpl attrr;
 				attrr.addAttribute("", "", "align", "", "right");
 
-				row = tbody->add_item("row");
+				Doc_Item row = tbody->add_item("row");
 				row->add_item("entry", attr)->append(strip);
 				print_item(row, attrr, diff, abs_less_ty, LID_TOL_A);
 			}

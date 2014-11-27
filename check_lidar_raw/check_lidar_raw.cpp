@@ -4,6 +4,8 @@
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Util/HelpFormatter.h"
 
+#include "cv_version.h"
+
 using Poco::Util::Application;
 using Poco::Util::Option;
 using Poco::Util::OptionSet;
@@ -66,20 +68,25 @@ int check_lidar_raw::main(const std::vector<std::string>& args) {
 	if (_helpRequested) {
 		return Application::EXIT_OK;
 	}
-
-    try {
+	
+	CV::Version::print();
+    
+	try {
 
 		bool ret = true;
 		ret = _check.openDBConnection() && _check.readReference();
         if (ret) {	
+
+			std::cout << "Inizializzazione in corso.." << std::endl;
 			if (!_check.init()) {
 				throw std::runtime_error("Error while initializing check");
 			}
-
+			
+			std::cout << "Esecuzione controllo.." << std::endl;
 			if (!_check.run()) {
 				throw std::runtime_error("Error while running check");
 			}
-
+			
 			_check.report();
         }
 		
