@@ -7,6 +7,7 @@
 #include "gui/details/cvlidarplandetail.h"
 #include "gui/details/cvlidarflydetail.h"
 #include "gui/details/cvlidarrawdetail.h"
+#include "gui/details/cvlidarfinaldetail.h"
 
 #include "core/categories/cvcontrol.h"
 
@@ -42,7 +43,7 @@ QWidget* CVDetailsFactory::build(QWidget* p, Core::CVControl::Type t, CV::Core::
             detail = new Details::CVLidarRawDetail(p, control);
            break;
 		case Core::CVControl::LIDAR_FINAL:
-            detail = new QWidget(p);
+            detail = new Details::CVLidarFinalDetail(p, control);
            break;
         default:
 			detail = new QWidget(p);
