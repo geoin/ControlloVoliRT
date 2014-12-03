@@ -71,10 +71,16 @@ int check_lidar_final::main(const std::vector<std::string>& args) {
 
 	CV::Version::print();
 
+	if (!_check.openDBConnection()) {
+		return Application::EXIT_IOERR;
+	}
+
     try {
-        if ( !_helpRequested ) {
-            _check.run();
-        }
+		_check.readFolders();
+
+		_check.run();
+		_check.createReport();
+
     } catch (const std::exception& ex) {
         std::cout << ex.what() << std::endl;
         return Application::EXIT_SOFTWARE;
