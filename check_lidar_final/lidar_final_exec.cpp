@@ -319,6 +319,7 @@ unsigned long lidar_final_exec::_checkFolderWithRaw(const std::string& folder, c
 }
 
 void lidar_final_exec::_checkResamples() {
+	unsigned long mismatch = 0;
 	for (int i = 0; i < 2; i++) {
 		const std::string& corner = _groundOrtoList.at(rand() % (_groundOrtoList.size() - 1));
 		std::string groundPath = _fileFromCorner(_groundOrto, "xyzic", corner);
