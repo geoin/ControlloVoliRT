@@ -31,7 +31,8 @@ public:
 		all_pulses = 0,
 		first_pulse = 1,
 		last_pulse = 2,
-		intermediate_pulse = 4
+		intermediate_pulse = 4,
+		single_pulse = 5
 	};
 	MyLas(): _lasreader(NULL) {}
 	~MyLas();

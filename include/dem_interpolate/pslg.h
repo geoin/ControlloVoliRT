@@ -612,6 +612,9 @@ public:
 					echo |= MyLas::last_pulse;
 				if ( echo == MyLas::all_pulses )
 					echo = MyLas::intermediate_pulse;
+				if (nt == 1) {
+					echo |= MyLas::single_pulse;
+				}
 				nprec = ne;
 				if ( !(_echo & echo) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 					continue;
@@ -635,14 +638,17 @@ public:
 			_normalize(i);
 
 		_npt = Org_Nod;
-		bool retval = _triCalc();
-		if ( retval ) {
-			_open = true;
+		_open = true;
+
+		if (!tria) {
 			return true;
-		} else {
-			Release();
-			return false;
 		}
+
+		bool retval = _triCalc();
+		if (!retval) {
+			Release();
+		}
+		return retval;
 	}
 	bool GetDemFromLas(const std::string& nome, bool verbose, bool tria) {
 		if ( _open ) {
