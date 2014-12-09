@@ -21,7 +21,7 @@ using namespace CV;
 using namespace CV::Util::Geometry;
 
 
-lidar_final_exec::lidar_final_exec() : _total(0), _missed(0) {
+lidar_final_exec::lidar_final_exec() {
 	srand (time(NULL));
 }
 
@@ -31,9 +31,12 @@ void lidar_final_exec::set_proj_dir(const std::string& proj) {
 
 bool lidar_final_exec::run() {
     //_checkBlock();
-	//_checkEquality();
+	_checkEquality();
+
 	//_checkRawRandom();
-	//_checkEllipsoidicData();
+
+	_checkEllipsoidicData();
+
 	_checkResamples();
     return true;
 }
@@ -62,13 +65,13 @@ void lidar_final_exec::readFolders() {
 	_getCoordNameList(_overgroundOrto, "xyzic", _overgroundOrtoList);
 	
 	_mds = _getFolder("FINAL_MDS");
-	_getCoordNameList(_mds, "asc", _mdsList);
+	_getCoordNameList(_mds, "asc", _mdsList, true);
 
 	_mdt = _getFolder("FINAL_MDT");
-	_getCoordNameList(_mdt, "asc", _mdtList);
+	_getCoordNameList(_mdt, "asc", _mdtList, true);
 
 	_intensity = _getFolder("FINAL_INTENSITY");
-	_getCoordNameList(_intensity, "tif", _intensityList);
+	_getCoordNameList(_intensity, "tif", _intensityList, true);
 }
 
 std::string lidar_final_exec::_getFolder(const std::string& table) {
@@ -103,7 +106,7 @@ bool lidar_final_exec::openDBConnection() {
 	}
 }
 
-void lidar_final_exec::_getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list) {
+void lidar_final_exec::_getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list, bool complete) {
     Poco::Path fPath(fold);
 	
 	std::vector<std::string> folderContent;
@@ -116,17 +119,38 @@ void lidar_final_exec::_getCoordNameList(const std::string& fold, const std::str
 		Poco::Path p = Poco::Path(fPath).append(*it);
 		if (Poco::toLower(p.getExtension()) == ext) {
 			std::string name = p.getBaseName();
-			list.push_back(name.substr(name.size() - 8));
+			if (complete) {
+				list.push_back(name);
+			} else {
+				list.push_back(name.substr(name.size() - 8));
+			}
 		}
 	}
 }
 
+
+
 bool lidar_final_exec::_sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2) {
-	std::vector<std::string>::const_iterator it = list1.begin();
-	std::vector<std::string>::const_iterator end = list1.end();
 	std::sort(list1.begin(), list1.end());
 	std::sort(list2.begin(), list2.end());
-	return list1 == list2;
+	if (list1 == list2) {
+		return true;
+	}
+	
+	std::vector<std::string>::const_iterator it = list1.begin();
+	std::vector<std::string>::const_iterator end = list1.end();
+
+	for (; it != end; it++) {
+		std::string val = *it;
+		if (std::find_if(list2.begin(), list2.end(), [&val] (std::string in) -> bool {
+			bool ret = in.find(val) != std::string::npos;
+			return ret;
+		}) == list2.end()) {
+			return false;
+		};
+	}
+
+	return true;
 }
 
 void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
@@ -163,7 +187,7 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 			str.push_back(strip);
 		}
 	} catch (const std::exception& ex) {
-		std::cout << "Errore durante il reperimento delle strisciate, dati in inseriti" << std::endl;
+		std::cout << "Errore durante il reperimento delle strisciate, dati non inseriti" << std::endl;
 	}
 }
 
@@ -261,6 +285,8 @@ void lidar_final_exec::_checkRawRandom() {
 
 	std::vector<std::string>::iterator it = folderContent.begin();
 	std::vector<std::string>::iterator end = folderContent.end();
+
+	std::map< std::string, std::vector<NODE> > points;
 	
 	for (; it != end; it++) {
 		Poco::Path p = Poco::Path(fPath).append(*it);
@@ -270,18 +296,35 @@ void lidar_final_exec::_checkRawRandom() {
 		}
 
 		DSM* dsm = f.GetDsm();
-		for (int i = 0; i < 100; i++, _total++) {
-			const NODE& n = dsm->Node(rand() % (dsm->Npt() - 1));
+		for (int i = 0; i < 100; i++) {
+			NODE n = dsm->Node(rand() % (dsm->Npt() - 1));
+			points[p.getBaseName()].push_back(n);
+		}
+	}
 
-			std::vector<Lidar::Strip::Ptr>::const_iterator sit = strips.begin();
-			std::vector<Lidar::Strip::Ptr>::const_iterator send = strips.end();
-			bool con = false;
-			for (; sit != send; sit++) {
+	std::vector<Lidar::Strip::Ptr>::const_iterator sit = strips.begin();
+	std::vector<Lidar::Strip::Ptr>::const_iterator send = strips.end();
+	bool con = false;
+	for (; sit != send; sit++) {
+		Poco::Path path(_stripFolder);
+		path.append((*sit)->name() + ".las");
+		
+		DSM_Factory f;
+		f.Open(path.toString());
+
+		std::map< std::string, std::vector<NODE> >::iterator gIt = points.begin();
+		std::map< std::string, std::vector<NODE> >::iterator gEnd = points.end();
+		for (; gIt != gEnd; gIt++) {
+			std::vector<NODE>::iterator pIt = gIt->second.begin();
+			std::vector<NODE>::iterator pEnd = gIt->second.end();
+			for (; pIt != pEnd; pIt++) {
+				const NODE& n = *pIt;
 				OGRPoint pt(n.x, n.y);
-				con |= (*sit)->geom()->Contains(&pt);
-			}
-			if (!con) {
-				_missed++;
+
+				bool contains = (*sit)->geom()->Contains(&pt);
+				if (contains) {
+					double diff = f.GetDsm()->GetQuota(n.x, n.y);
+				}
 			}
 		}
 	}
@@ -293,6 +336,8 @@ void lidar_final_exec::_checkEllipsoidicData() {
 }
 
 unsigned long lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data) {
+	std::map< std::string, std::vector<NODE> > points;
+
 	unsigned long mismatch = 0;
 	for (int i = 0; i < 2; i++) {
 		const std::string& corner = data.at(rand() % (data.size() - 1));
@@ -304,15 +349,40 @@ unsigned long lidar_final_exec::_checkFolderWithRaw(const std::string& folder, c
 		f.SetMask(mask);
 		bool ret = f.Open(path, false, false);
 		
-		DSM_Factory s;
-		s.Open(_fileFromCorner(_raw, "las", corner));
-
 		for (int j = 0; j < 10; j++) {
 			const NODE& n = f.GetDsm()->Node(rand() % (f.GetDsm()->Npt() - 1));
-			double z = s.GetDsm()->GetQuota(n.x, n.y);
-			if (abs(z - n.z) > 0.1) {
-				mismatch++;
+			points[corner].push_back(n);
+		}
+	}
+
+	std::map< std::string, std::vector<NODE> >::iterator gIt = points.begin();
+	std::map< std::string, std::vector<NODE> >::iterator gEnd = points.end();
+	for (; gIt != gEnd; gIt++) {		
+		DSM_Factory s;
+		std::string path = _fileFromCorner(_raw, "las", gIt->first);
+		if (!s.Open(path)) {
+			std::cout << "Impossibile aprire " << path << std::endl;
+			continue;
+		}
+		
+		DSM* dsm = s.GetDsm();
+
+		std::vector<NODE>::iterator pIt = gIt->second.begin();
+		std::vector<NODE>::iterator pEnd = gIt->second.end();
+		for (; pIt != pEnd; pIt++) {
+			const NODE& n = *pIt;
+
+			for (unsigned int idx = 0; idx < dsm->Npt(); idx++) {
+				const NODE& t = dsm->Node(idx);
+				if (abs(t.x - n.x) < 0.00001 && abs(t.y - n.y) < 0.00001){
+					double z = s.GetDsm()->GetQuota(n.x, n.y);
+					if (abs(z - n.z) > 0.1) {
+						mismatch++;
+					}
+				}
 			}
+
+			
 		}
 	}
 	return mismatch;
@@ -324,15 +394,26 @@ void lidar_final_exec::_checkResamples() {
 		const std::string& corner = _groundOrtoList.at(rand() % (_groundOrtoList.size() - 1));
 		std::string groundPath = _fileFromCorner(_groundOrto, "xyzic", corner);
 		DSM_Factory gr;
-		gr.Open(groundPath, false, true);
+		File_Mask mask(5, 1, 2, 3, 1, 1);
+		gr.SetMask(mask);
+		if (!gr.Open(groundPath, false, true)) {
+			std::cout << "Impossibile aprire " << groundPath << std::endl;
+			continue;
+		}
 
 		std::string mdtPath = _fileFromCorner(_mdt, "asc", corner);
 		DSM_Factory m;
-		m.Open(mdtPath, false, true);
+		if (!m.Open(mdtPath, false, true)) {
+			std::cout << "Impossibile aprire " << mdtPath << std::endl;
+			continue;
+		}
 
-		
 		for (int j = 0; j < 10; j++) {
-			const NODE& n = gr.GetDsm()->Node(rand() % (gr.GetDsm()->Npt() - 1));
+			unsigned int size = gr.GetDsm()->Npt();
+			unsigned int randomIdx = rand() % (size - 1);
+			assert(randomIdx < size);
+
+			const NODE& n = gr.GetDsm()->Node(randomIdx);
 			double z = m.GetDsm()->GetQuota(n.x, n.y);
 			if (abs(z - n.z) > 0.1) {
 				mismatch++;

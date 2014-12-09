@@ -24,7 +24,7 @@ public:
 	static void Error(const std::string& operation); 
 
 private:
-	void _getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list);
+	void _getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list, bool complete = false);
 	bool _sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2);
 	
 	std::string _fileFromCorner(const std::string& folder, const std::string& ext, const std::string& corner);
@@ -48,8 +48,6 @@ private:
 	unsigned int _step;
 
 	std::vector<std::string> _rawList, _mdsList, _mdtList, _intensityList, _groundEllList, _groundOrtoList, _overgroundEllList, _overgroundOrtoList;
-
-	unsigned long _total, _missed;
 };
 
 #endif
