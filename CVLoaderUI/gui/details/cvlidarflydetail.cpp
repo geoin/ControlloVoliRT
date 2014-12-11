@@ -36,7 +36,7 @@ CVLidarFlyDetail::CVLidarFlyDetail(QWidget* p, Core::CVControl* c, TabPosition p
 	
 	i++;
 	
-	addTab(new CVRawStripDetail(this, c->at(i)), "");
+	addTab(new CVFolderDetail(this, c->at(i)), "");
     setTabToolTip(i, tr("Dati grezzi"));
 	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
 

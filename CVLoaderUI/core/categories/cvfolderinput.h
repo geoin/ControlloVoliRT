@@ -29,10 +29,18 @@ public:
 
 	QStringList& data() { return _data; }
 
+	void setFolder(QString f) {
+		_folder = f;
+	} 
+
+	const QString& folder() const { return _folder; } 
+
 private:
 	QString _table;
 	QString _origin;
 	QStringList _data;
+
+	QString _folder;
 };
 
 } // namespace Core

@@ -23,7 +23,7 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-CVRawStripDetail::CVRawStripDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
+CVFolderDetail::CVFolderDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	title(tr("Strip lidar - RAW"));
 	description(tr("Cartella contentente le nuvole delle strisciate"));
 	
@@ -53,21 +53,21 @@ CVRawStripDetail::CVRawStripDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail
 	}
 }
 
-CVRawStripDetail::~CVRawStripDetail() {
+CVFolderDetail::~CVFolderDetail() {
 
 }
 
-void CVRawStripDetail::clearAll() {
+void CVFolderDetail::clearAll() {
 	controller()->remove();
 	for (int i = 0; i < _labels.size(); ++i) {
 		_labels.at(i)->setText("");
 	}
 }
 
-void CVRawStripDetail::searchFile() {
+void CVFolderDetail::searchFile() {
 	QString uri = QFileDialog::getExistingDirectory(
         this,
-        tr("Importa cartella strip lidar"),
+        tr("Importa cartella"),
 		Core::CVSettings::get(CV_PATH_SEARCH).toString()
     );
 	if (!uri.isEmpty()) {
@@ -77,7 +77,7 @@ void CVRawStripDetail::searchFile() {
 	}
 }
 
-void CVRawStripDetail::importAll(QStringList& uri) {
+void CVFolderDetail::importAll(QStringList& uri) {
 	CV::GUI::CVScopedCursor cur;
 
 	folder()->origin(uri.at(0));
@@ -90,7 +90,7 @@ void CVRawStripDetail::importAll(QStringList& uri) {
 	}
 }
 
-void CVRawStripDetail::dragEnterEvent(QDragEnterEvent* ev) {
+void CVFolderDetail::dragEnterEvent(QDragEnterEvent* ev) {
     const QMimeData* mime = ev->mimeData();
     QList<QUrl> list = mime->urls();
 
@@ -108,15 +108,15 @@ void CVRawStripDetail::dragEnterEvent(QDragEnterEvent* ev) {
     }
 }
 
-void CVRawStripDetail::dragMoveEvent(QDragMoveEvent* ev) {
+void CVFolderDetail::dragMoveEvent(QDragMoveEvent* ev) {
     ev->accept();
 }
 
-void CVRawStripDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
+void CVFolderDetail::dragLeaveEvent(QDragLeaveEvent* ev) {
     ev->accept();
 }
 
-void CVRawStripDetail::dropEvent(QDropEvent* ev) {
+void CVFolderDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 	importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);

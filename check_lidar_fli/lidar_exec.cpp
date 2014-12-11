@@ -220,7 +220,7 @@ bool lidar_exec::_read_strip_folder() {
 	try {
 
 		std::stringstream query;
-		query << "select FOLDER from STRIP_RAW_DATA";
+		query << "select FOLDER from RAW_STRIP_DATA";
 		stm.prepare(query.str());
 
 		CV::Util::Spatialite::Recordset set = stm.recordset();

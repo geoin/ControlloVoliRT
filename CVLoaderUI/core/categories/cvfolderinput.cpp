@@ -17,6 +17,8 @@ namespace Core {
 
 CVFolderInput::CVFolderInput(QObject* p) : CVObject(p) {
 	_isValid = false;
+
+	_folder = "FOLDER";
 }
 
 CVFolderInput::~CVFolderInput() {
@@ -61,7 +63,7 @@ bool CVFolderInput::persist() {
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		bool ret = q->insert(
 			table(), 
-			QStringList() << "ID" << "FOLDER",
+			QStringList() << "ID" << folder(),
 			QStringList() << "?1" << "?2" ,
 			QVariantList() << QUuid::createUuid().toString() << info.absoluteFilePath()
 		);
@@ -92,7 +94,7 @@ bool CVFolderInput::load() {
 		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 		CV::Util::Spatialite::Recordset set = q->select(
-			QStringList() << "FOLDER",
+			QStringList() << folder(),
 			QStringList() << table(), 
 			QStringList(),
 			QVariantList()

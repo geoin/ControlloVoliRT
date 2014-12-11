@@ -17,12 +17,12 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-class CVRawStripDetail : public CVBaseDetail {
+class CVFolderDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVRawStripDetail(QWidget *parent, Core::CVObject*);
-	~CVRawStripDetail();
+	CVFolderDetail(QWidget *parent, Core::CVObject*);
+	~CVFolderDetail();
 
 	virtual void clearAll();
 	virtual void searchFile();

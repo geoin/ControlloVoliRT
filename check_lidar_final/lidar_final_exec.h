@@ -36,6 +36,7 @@ private:
 	void _checkEquality();
 	void _checkRawRandom();
 	void _checkResamples();
+	void _checkQuota();
 
 	void _checkEllipsoidicData();
 	unsigned long _checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data);
@@ -43,6 +44,7 @@ private:
 	CV::Util::Spatialite::Connection cnn;
 
     std::string _proj_dir, _stripFolder;
+	std::string _gridFile;
 
 	std::string _raw, _mds, _mdt, _intensity, _groundEll, _groundOrto, _overgroundEll, _overgroundOrto; 
 	unsigned int _step;

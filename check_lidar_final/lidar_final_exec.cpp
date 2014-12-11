@@ -7,12 +7,16 @@
 #include "Poco/AutoPtr.h"
 #include "Poco/NumberParser.h"
 
+#include "proj_api.h"
+#include "PJ_igmi.h"
+
 #include "CVUtil/ogrgeomptr.h"
 
 #include <assert.h>
 #include <algorithm>
 #include <random>
 
+#include <algorithm>
 #include <time.h>
 
 #define GEO_DB_NAME "geo.sqlite"
@@ -30,15 +34,21 @@ void lidar_final_exec::set_proj_dir(const std::string& proj) {
 }
 
 bool lidar_final_exec::run() {
-    //_checkBlock();
+    _checkBlock();
 	_checkEquality();
 
-	//_checkRawRandom();
-
-	_checkEllipsoidicData();
-
+	/*
+	_checkRawRandom();
 	_checkResamples();
-    return true;
+	*/
+	_checkQuota();
+	
+	/*
+	_checkEllipsoidicData();
+	*/
+
+    
+	return true;
 }
 
 bool lidar_final_exec::createReport() {
@@ -49,8 +59,12 @@ bool lidar_final_exec::createReport() {
 void lidar_final_exec::readFolders() {
 	_step = 0;
 
-	_raw = _getRawFolder("FINAL_RAW_STRIP_DATA", _step);
-	_getCoordNameList(_raw, "las", _rawList);
+	try {
+		_raw = _getRawFolder("FINAL_RAW_STRIP_DATA", _step);
+		_getCoordNameList(_raw, "las", _rawList);
+	} catch (const std::exception& ex) { 
+		std::cout << "Dati grezzi non inseriti" << std::endl;
+	}
 	
 	_groundEll = _getFolder("FINAL_GROUND_ELL");
 	_getCoordNameList(_groundEll, "xyzic", _groundEllList);
@@ -86,12 +100,13 @@ std::string lidar_final_exec::_getFolder(const std::string& table) {
 	
 std::string lidar_final_exec::_getRawFolder(const std::string& table, unsigned int& step) {
 	CV::Util::Spatialite::Statement stm(cnn);
-	stm.prepare("SELECT FOLDER, TILE_SIZE FROM " + table);
+	stm.prepare("SELECT FOLDER, TILE_SIZE, GRID FROM " + table);
 	CV::Util::Spatialite::Recordset set = stm.recordset();
 	if (set.eof()) {
 		throw std::runtime_error("No data in " + table);
 	}
 	step = set["TILE_SIZE"].toInt();
+	_gridFile = set["GRID"].toString();
 	return set["FOLDER"].toString();
 }
 
@@ -171,7 +186,7 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 
 	try {
 		CV::Util::Spatialite::Statement stm(cnn);
-		stm.prepare("select NAME, AsBinary(GEOM) as GEOM FROM Z_STRIPV");
+		stm.prepare("select Z_STRIP_CS, AsBinary(GEOM) as GEOM FROM Z_STRIPV");
 		CV::Util::Spatialite::Recordset set = stm.recordset();
 		if (set.eof()) {
 			std::cout << "Nessun dato in Z_STRIPV" << std::endl;
@@ -182,9 +197,11 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 			Blob b = set["GEOM"].toBlob();
 
 			Lidar::Strip::Ptr strip(new Lidar::Strip(b));
-			strip->name(set["NAME"].toString());
+			strip->name(set["Z_STRIP_CS"].toString());
 
 			str.push_back(strip);
+
+			set.next();
 		}
 	} catch (const std::exception& ex) {
 		std::cout << "Errore durante il reperimento delle strisciate, dati non inseriti" << std::endl;
@@ -420,6 +437,92 @@ void lidar_final_exec::_checkResamples() {
 			}
 		}
 	}
+}
+
+void lidar_final_exec::_checkQuota() {
+	std::vector<Poco::Path> files;
+	_gridFile = "G:/ControlloVoli/Grigliati/25.txt";
+
+	vGrid::HGRID_TYPE type;
+	Poco::Path g(_gridFile);
+	if (Poco::toLower(g.getExtension()) == "gk2") {
+		type = vGrid::ty_GK;
+		files.push_back(g);
+	} else if (Poco::toLower(g.getExtension()) == "gr1") {
+		type = vGrid::ty_GR;
+		files.push_back(g);
+	} else {
+		std::fstream in;
+		in.open(_gridFile, std::ios_base::in);
+
+		std::string line;
+		while (std::getline(in, line)) {
+			Poco::Path t(line);
+			if (Poco::toLower(t.getExtension()) == "gk2") {
+				type = vGrid::ty_GK;
+				files.push_back(t);
+			} else if (Poco::toLower(t.getExtension()) == "gr1") {
+				type = vGrid::ty_GR;
+				files.push_back(t);
+			}
+		}
+	}
+	
+	vGrid grid;
+
+	bool ret = true;
+	for (std::vector<Poco::Path>::iterator it = files.begin(); it !=  files.end(); it++) {
+		if (it == files.begin()) {
+			ret |=  grid.Init(it->toString().c_str(), type);
+		} else {
+			ret |= grid.MergeGrid(it->toString().c_str());
+		}
+	}
+
+	projPJ utm = pj_init_plus("+proj=utm +ellps=WGS84 +zone=32 +datum=WGS84 +units=m +no_defs");
+	projPJ wgs84 = pj_init_plus("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
+
+	std::vector<std::string>::iterator it = _groundEllList.begin();
+	std::vector<std::string>::iterator end = _groundEllList.end();
+	for (; it != end; it++) {
+		std::string ell = _fileFromCorner(_groundEll, "xyzic", *it);
+		DSM_Factory ellF; 
+		File_Mask mask(5, 1, 2, 3, 1, 1);
+		ellF.SetMask(mask);
+		bool ok = ellF.Open(ell, false, false);
+
+		std::string orto = _fileFromCorner(_groundOrto, "xyzic", *it);
+		DSM_Factory ortoF; 
+		File_Mask mask1(5, 1, 2, 3, 1, 1);
+		ortoF.SetMask(mask1);
+		ok = ortoF.Open(orto, false, false);
+
+		size_t ortoNpt = ortoF.GetDsm()->Npt(), ellNpt = ellF.GetDsm()->Npt();
+		if (ortoNpt != ellNpt) {
+			std::cout << ell << " e " << orto << " differiscono per numero di punti" << std::endl;
+			continue;
+		}
+
+		size_t s = min(ortoF.GetDsm()->Npt(), ellF.GetDsm()->Npt());
+
+		for (int i = 0; i < 100; i++) {
+			unsigned int index = rand() % (s - 1);
+			const NODE& ellN = ellF.GetDsm()->Node(index);
+			const NODE& ortoN = ortoF.GetDsm()->Node(index);
+
+			double x = ellN.x, y = ellN.y, z = ellN.z;
+			pj_transform(utm, wgs84, 1, 1, &x, &y, &z);
+	
+			double diff = 0;
+			if (grid.GetCorrections(y, x, &diff)) {
+				z -= diff;
+				assert(std::abs(ortoN.z - z) < 0.1);
+			}
+		}
+	}
+
+	pj_free(utm);
+	pj_free(wgs84);
 }
 
 std::string lidar_final_exec::_fileFromCorner(const std::string& folder, const std::string& ext, const std::string& corner) {

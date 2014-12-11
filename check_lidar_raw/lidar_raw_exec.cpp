@@ -167,14 +167,14 @@ bool lidar_raw_exec::_initControlPoints() {
 bool lidar_raw_exec::_initStripFiles() {
 	try {
 		std::stringstream query;
-		query << "select FOLDER from STRIP_RAW_DATA LIMIT 1"; //only one record should be here
+		query << "select FOLDER from RAW_STRIP_DATA LIMIT 1"; //only one record should be here
 		
 		CV::Util::Spatialite::Statement stm(cnn);
 		stm.prepare(query.str());
 		CV::Util::Spatialite::Recordset set = stm.recordset();
 
 		if (set.eof()) {
-			throw std::runtime_error("No data in STRIP_RAW_DATA");
+			throw std::runtime_error("No data in RAW_STRIP_DATA");
 		}
 
 		std::string folder = set["FOLDER"].toString();
