@@ -17,6 +17,7 @@
 #include <random>
 
 #include <algorithm>
+#include <numeric>
 #include <time.h>
 
 #define GEO_DB_NAME "geo.sqlite"
@@ -27,6 +28,7 @@ using namespace CV::Util::Geometry;
 
 lidar_final_exec::lidar_final_exec() {
 	srand (time(NULL));
+	_coversAll = false;
 }
 
 void lidar_final_exec::set_proj_dir(const std::string& proj) {
@@ -34,26 +36,46 @@ void lidar_final_exec::set_proj_dir(const std::string& proj) {
 }
 
 bool lidar_final_exec::run() {
+	if (!GetProjData(cnn, _note, std::string())) {
+		return false;
+	}
+
     _checkBlock();
 	_checkEquality();
 
-	/*
 	_checkRawRandom();
-	_checkResamples();
-	*/
-	_checkQuota();
 	
-	/*
 	_checkEllipsoidicData();
-	*/
+	
+	_checkQuota(_groundEll, _groundOrto, statsGround);
+	_checkQuota(_overgroundEll, _overgroundOrto, statsOverGround);
 
-    
+	_checkResamples(_groundOrto, _groundOrtoList, _mdt, _mdtList, diffMdt);
+	_checkResamples(_overgroundOrto, _overgroundOrtoList, _mds, _mdsList, diffMds);
+
 	return true;
 }
 
-bool lidar_final_exec::createReport() {
-    std::cout << "Report" << std::endl;
-	return true;
+void lidar_final_exec::createReport() {
+    std::string title ="Collaudo dati finali";
+
+	Poco::Path doc_file(_proj_dir, "*");
+	doc_file.setFileName("check_lidar_final.xml");
+
+	init_document(_dbook, doc_file.toString(), title, _note);
+	char* dtd_ = getenv("DOCBOOKRT");
+	std::string dtd;
+	if (dtd_ != NULL) {
+		dtd = std::string("file:") + dtd_;
+	}
+
+	_dbook.set_dtd(dtd);
+	_article = _dbook.get_item("article");
+
+	std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+
+	
+	_dbook.write();	
 }
 
 void lidar_final_exec::readFolders() {
@@ -65,7 +87,6 @@ void lidar_final_exec::readFolders() {
 	} catch (const std::exception& ex) { 
 		std::cout << "Dati grezzi non inseriti" << std::endl;
 	}
-	
 	_groundEll = _getFolder("FINAL_GROUND_ELL");
 	_getCoordNameList(_groundEll, "xyzic", _groundEllList);
 
@@ -100,13 +121,12 @@ std::string lidar_final_exec::_getFolder(const std::string& table) {
 	
 std::string lidar_final_exec::_getRawFolder(const std::string& table, unsigned int& step) {
 	CV::Util::Spatialite::Statement stm(cnn);
-	stm.prepare("SELECT FOLDER, TILE_SIZE, GRID FROM " + table);
+	stm.prepare("SELECT FOLDER, TILE_SIZE FROM " + table);
 	CV::Util::Spatialite::Recordset set = stm.recordset();
 	if (set.eof()) {
 		throw std::runtime_error("No data in " + table);
 	}
 	step = set["TILE_SIZE"].toInt();
-	_gridFile = set["GRID"].toString();
 	return set["FOLDER"].toString();
 }
 
@@ -143,26 +163,24 @@ void lidar_final_exec::_getCoordNameList(const std::string& fold, const std::str
 	}
 }
 
-
-
-bool lidar_final_exec::_sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2) {
+bool lidar_final_exec::_sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2, std::vector<std::string>& diff) {
 	std::sort(list1.begin(), list1.end());
 	std::sort(list2.begin(), list2.end());
-	if (list1 == list2) {
-		return true;
-	}
-	
-	std::vector<std::string>::const_iterator it = list1.begin();
-	std::vector<std::string>::const_iterator end = list1.end();
+	if (list1 != list2) {
+		std::vector<std::string>::const_iterator it = list1.begin();
+		std::vector<std::string>::const_iterator end = list1.end();
 
-	for (; it != end; it++) {
-		std::string val = *it;
-		if (std::find_if(list2.begin(), list2.end(), [&val] (std::string in) -> bool {
-			bool ret = in.find(val) != std::string::npos;
-			return ret;
-		}) == list2.end()) {
-			return false;
-		};
+		for (; it != end; it++) {
+			std::string val = *it;
+			if (std::find_if(list2.begin(), list2.end(), [&val] (std::string in) -> bool {
+				bool ret = in.find(val) != std::string::npos;
+				return ret;
+			}) == list2.end()) {
+				diff.push_back(val);
+			};
+		}	
+
+		return diff.size() == 0;
 	}
 
 	return true;
@@ -209,38 +227,66 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 }
 
 void lidar_final_exec::_checkBlock() {
+	std::string table("FINAL_CARTO_DIFF");
+	std::string rawGrid("Z_RAW_F");
+	cnn.remove_layer(table);
+	cnn.remove_layer(rawGrid);
+
 	std::vector<std::string>::iterator it = _rawList.begin();
 	std::vector<std::string>::iterator end = _rawList.end();
 
 	OGRGeomPtr rg_ = OGRGeometryFactory::createGeometry(wkbPolygon);
 	OGRGeometry* pol = rg_;
 	pol->setCoordinateDimension(2);
+	
+	std::stringstream sql;
+	sql << "CREATE TABLE " << rawGrid << "( ID TEXT )";
+	cnn.execute_immediate(sql.str());
+
+	// add the geom column
+	sql.str("");
+	sql << "SELECT AddGeometryColumn('" << rawGrid << "'," <<
+		"'GEOM'," <<
+		SRID << "," <<
+		"'POLYGON'," <<
+		"'XY')";
+	cnn.execute_immediate(sql.str());
+
+	cnn.begin_transaction();
 
 	for (; it != end; it++) {
 		std::string name = *it;
-		if (name.size() == 8) {
-			int x = Poco::NumberParser::parse(name.substr(0, 4)) * 100;
-			int y = Poco::NumberParser::parse(name.substr(4, 4)) * 1000;
+		int x = Poco::NumberParser::parse(name.substr(0, 4)) * 100;
+		int y = Poco::NumberParser::parse(name.substr(4, 4)) * 1000;
 
-			OGRGeometry* g = OGRGeometryFactory::createGeometry(wkbLinearRing);
-			OGRLinearRing* gp = reinterpret_cast<OGRLinearRing*>(g);
-			gp->setCoordinateDimension(2);
-			gp->addPoint(x, y);
-			gp->addPoint(x + _step, y);
-			gp->addPoint(x + _step, y + _step);
-			gp->addPoint(x, y + _step);
-			gp->closeRings();
+		OGRGeometry* g = OGRGeometryFactory::createGeometry(wkbLinearRing);
+		OGRLinearRing* gp = reinterpret_cast<OGRLinearRing*>(g);
+		gp->setCoordinateDimension(2);
+		gp->addPoint(x, y);
+		gp->addPoint(x + _step, y);
+		gp->addPoint(x + _step, y + _step);
+		gp->addPoint(x, y + _step);
+		gp->closeRings();
 
-			OGRGeomPtr rg_tmp = OGRGeometryFactory::createGeometry(wkbPolygon);
-			OGRGeometry* pol_tmp_ = rg_tmp;
-			OGRPolygon* pol_tmp = reinterpret_cast<OGRPolygon*>(pol_tmp_);
-			pol_tmp->setCoordinateDimension(2);
-			pol_tmp->addRing(gp);
+		OGRGeomPtr rg_tmp = OGRGeometryFactory::createGeometry(wkbPolygon);
+		OGRGeometry* pol_tmp_ = rg_tmp;
+		OGRPolygon* pol_tmp = reinterpret_cast<OGRPolygon*>(pol_tmp_);
+		pol_tmp->setCoordinateDimension(2);
+		pol_tmp->addRing(gp);
 
-			pol = pol->Union(pol_tmp);
-		}
+		std::stringstream sqlc;
+		sqlc << "INSERT INTO " << rawGrid << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID << ") )";
+		CV::Util::Spatialite::Statement stm0(cnn);
+		stm0.prepare(sqlc.str());
+		stm0[1].fromBlob(rg_tmp);
+		stm0.execute();
+
+		rg_ = pol->Union(pol_tmp);
+		pol = rg_;
 	}
-	
+
+	cnn.commit_transaction();
+
 	try {
 		CV::Util::Spatialite::Statement stm(cnn);
 		stm.prepare("select AsBinary(GEOM) as GEOM FROM CARTO");
@@ -250,42 +296,64 @@ void lidar_final_exec::_checkBlock() {
 		if (!set.eof()) {
 			Lidar::Block block(set["GEOM"].toBlob());
 			OGRGeomPtr dif = block.geom()->Difference(pol);
-			if (dif->IsEmpty()) {
+			if (!dif->IsEmpty()) {
 
+				std::stringstream sql;
+				sql << "CREATE TABLE " << table << "( ID TEXT )";
+
+				cnn.execute_immediate(sql.str());
+
+				// add the geom column
+				std::stringstream sql1;
+				sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+					"'GEOM'," <<
+					SRID << "," <<
+					"'" << get_typestring(dif)  << "'," <<
+					"'XY')";
+				cnn.execute_immediate(sql1.str());
+
+				std::stringstream sqlc;
+				sqlc << "INSERT INTO " << table << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID << ") )";
+				CV::Util::Spatialite::Statement stm0(cnn);
+				stm0.prepare(sqlc.str());
+				stm0[1].fromBlob(dif);
+				stm0.execute();
+			} else {
+				_coversAll = true;
 			}
 		}
-	} catch (const std::exception&) {
-		std::cout << "Errore durante il reperimento del blocco" << std::endl;
+	} catch (const std::exception& e) {
+		std::cout << "Errore durante il reperimento del blocco" << e.what() << std::endl;
 	}
 
 }
 
 void lidar_final_exec::_checkEquality() {
-	if (!_sortAndCompare(_rawList, _mdtList)) {
+	if (!_sortAndCompare(_rawList, _mdtList, mdtDiff)) {
 		std::cout << "Dati grezzi ed mdt non compatibili" << std::endl;
 	}
-
-	if (!_sortAndCompare(_rawList, _mdsList)) {
+	
+	if (!_sortAndCompare(_rawList, _mdsList, mdsDiff)) {
 		std::cout << "Dati grezzi ed mds non compatibili" << std::endl;
 	} 
 	
-	if (!_sortAndCompare(_rawList, _intensityList)) {
+	if (!_sortAndCompare(_rawList, _intensityList, intensityDiff)) {
 		std::cout << "Dati grezzi ed intensity non compatibili" << std::endl;
 	}
-
-	if (!_sortAndCompare(_rawList, _groundEllList)) {
+	
+	if (!_sortAndCompare(_rawList, _groundEllList, groundEllDiff)) {
 		std::cout << "Dati grezzi e dati ground ellisoidici non compatibili" << std::endl;
 	}
-
-	if (!_sortAndCompare(_rawList, _groundOrtoList)) {
+	
+	if (!_sortAndCompare(_rawList, _groundOrtoList, groundOrtoDiff)) {
 		std::cout << "Dati grezzi e dati ground ortometrici non compatibili" << std::endl;
 	}
-
-	if (!_sortAndCompare(_rawList, _overgroundEllList)) {
+	
+	if (!_sortAndCompare(_rawList, _overgroundEllList, overGroundEllDiff)) {
 		std::cout << "Dati grezzi e dati overground ellisoidici non compatibili" << std::endl;
 	}
-
-	if (!_sortAndCompare(_rawList, _overgroundOrtoList)) {
+	
+	if (!_sortAndCompare(_rawList, _overgroundOrtoList, overGroundOrtoDiff)) {
 		std::cout << "Dati grezzi e dati overground ortometrici non compatibili" << std::endl;
 	}
 }
@@ -341,6 +409,8 @@ void lidar_final_exec::_checkRawRandom() {
 				bool contains = (*sit)->geom()->Contains(&pt);
 				if (contains) {
 					double diff = f.GetDsm()->GetQuota(n.x, n.y);
+
+					rawRandomDiff[gIt->first].push_back(diff);
 				}
 			}
 		}
@@ -348,14 +418,13 @@ void lidar_final_exec::_checkRawRandom() {
 }
 
 void lidar_final_exec::_checkEllipsoidicData() {
-	unsigned long m = _checkFolderWithRaw(_groundEll, _groundEllList);
-	m += _checkFolderWithRaw(_overgroundEll, _overgroundEllList);
+	_checkFolderWithRaw(_groundEll, _groundEllList);
+	_checkFolderWithRaw(_overgroundEll, _overgroundEllList);
 }
 
-unsigned long lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data) {
+void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data) {
 	std::map< std::string, std::vector<NODE> > points;
 
-	unsigned long mismatch = 0;
 	for (int i = 0; i < 2; i++) {
 		const std::string& corner = data.at(rand() % (data.size() - 1));
 		std::string path = _fileFromCorner(folder, "xyzic", corner);
@@ -386,30 +455,40 @@ unsigned long lidar_final_exec::_checkFolderWithRaw(const std::string& folder, c
 
 		std::vector<NODE>::iterator pIt = gIt->second.begin();
 		std::vector<NODE>::iterator pEnd = gIt->second.end();
+		
+		unsigned int trIdx = -1;
+		unsigned long match = 0;
 		for (; pIt != pEnd; pIt++) {
 			const NODE& n = *pIt;
 
-			for (unsigned int idx = 0; idx < dsm->Npt(); idx++) {
-				const NODE& t = dsm->Node(idx);
-				if (abs(t.x - n.x) < 0.00001 && abs(t.y - n.y) < 0.00001){
+			PointCheck pc;
+			pc.target = gIt->first;
+			pc.group = folder;
+			
+			trIdx = dsm->FindTriangle(n.x, n.y, trIdx);
+			const TRIANGLE& tri = dsm->Triangle(trIdx);
+
+			for (unsigned int idx = 0; idx < 3; idx++) {
+				const NODE& t = dsm->Node(tri.p[idx]);
+				if (abs(t.x - n.x) < 0.1 && abs(t.y - n.y) < 0.1) {
 					double z = s.GetDsm()->GetQuota(n.x, n.y);
-					if (abs(z - n.z) > 0.1) {
-						mismatch++;
+					if (abs(z - n.z) < 0.1) {
+						pc.ok++;
+					} else {
+						pc.ko++;
 					}
+					break;
 				}
 			}
-
-			
+			_pc.push_back(pc);
 		}
 	}
-	return mismatch;
 }
 
-void lidar_final_exec::_checkResamples() {
-	unsigned long mismatch = 0;
+void lidar_final_exec::_checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& stats) { 
 	for (int i = 0; i < 2; i++) {
-		const std::string& corner = _groundOrtoList.at(rand() % (_groundOrtoList.size() - 1));
-		std::string groundPath = _fileFromCorner(_groundOrto, "xyzic", corner);
+		const std::string& corner = _groundOrtoList.at(rand() % (list1.size() - 1));
+		std::string groundPath = _fileFromCorner(folder1, "xyzic", corner);
 		DSM_Factory gr;
 		File_Mask mask(5, 1, 2, 3, 1, 1);
 		gr.SetMask(mask);
@@ -418,28 +497,30 @@ void lidar_final_exec::_checkResamples() {
 			continue;
 		}
 
-		std::string mdtPath = _fileFromCorner(_mdt, "asc", corner);
+		std::string mdtPath = _fileFromCorner(folder2, "asc", corner);
 		DSM_Factory m;
-		if (!m.Open(mdtPath, false, true)) {
+		if (!m.Open(mdtPath, false, false)) {
 			std::cout << "Impossibile aprire " << mdtPath << std::endl;
 			continue;
 		}
-
+		std::vector<double> diff;
 		for (int j = 0; j < 10; j++) {
-			unsigned int size = gr.GetDsm()->Npt();
+			unsigned int size = m.GetDsm()->Npt();
 			unsigned int randomIdx = rand() % (size - 1);
 			assert(randomIdx < size);
 
-			const NODE& n = gr.GetDsm()->Node(randomIdx);
-			double z = m.GetDsm()->GetQuota(n.x, n.y);
-			if (abs(z - n.z) > 0.1) {
-				mismatch++;
-			}
+			const NODE& n = m.GetDsm()->Node(randomIdx);
+			double z = gr.GetDsm()->GetQuota(n.x, n.y);
+			diff.push_back(z - n.z);
 		}
+
+		Stats s = { corner, 0, 0};
+		GetStats(diff, s);
+		stats.push_back(s);
 	}
 }
 
-void lidar_final_exec::_checkQuota() {
+void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>& stats) { 
 	std::vector<Poco::Path> files;
 	_gridFile = "G:/ControlloVoli/Grigliati/25.txt";
 
@@ -482,16 +563,16 @@ void lidar_final_exec::_checkQuota() {
 	projPJ utm = pj_init_plus("+proj=utm +ellps=WGS84 +zone=32 +datum=WGS84 +units=m +no_defs");
 	projPJ wgs84 = pj_init_plus("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
 
-	std::vector<std::string>::iterator it = _groundEllList.begin();
-	std::vector<std::string>::iterator end = _groundEllList.end();
+	std::vector<std::string>::iterator it = _rawList.begin();
+	std::vector<std::string>::iterator end = _rawList.end();
 	for (; it != end; it++) {
-		std::string ell = _fileFromCorner(_groundEll, "xyzic", *it);
+		std::string ell = _fileFromCorner(folder1, "xyzic", *it);
 		DSM_Factory ellF; 
 		File_Mask mask(5, 1, 2, 3, 1, 1);
 		ellF.SetMask(mask);
 		bool ok = ellF.Open(ell, false, false);
 
-		std::string orto = _fileFromCorner(_groundOrto, "xyzic", *it);
+		std::string orto = _fileFromCorner(folder2, "xyzic", *it);
 		DSM_Factory ortoF; 
 		File_Mask mask1(5, 1, 2, 3, 1, 1);
 		ortoF.SetMask(mask1);
@@ -499,12 +580,13 @@ void lidar_final_exec::_checkQuota() {
 
 		size_t ortoNpt = ortoF.GetDsm()->Npt(), ellNpt = ellF.GetDsm()->Npt();
 		if (ortoNpt != ellNpt) {
-			std::cout << ell << " e " << orto << " differiscono per numero di punti" << std::endl;
+			std::cout << ell << " e " << orto << " differiscono per numero di punti" << std::endl; //REPORT
 			continue;
 		}
 
-		size_t s = min(ortoF.GetDsm()->Npt(), ellF.GetDsm()->Npt());
+		size_t s = ortoF.GetDsm()->Npt(); //TODO: cambia
 
+		std::vector<double> diffData;
 		for (int i = 0; i < 100; i++) {
 			unsigned int index = rand() % (s - 1);
 			const NODE& ellN = ellF.GetDsm()->Node(index);
@@ -516,9 +598,14 @@ void lidar_final_exec::_checkQuota() {
 			double diff = 0;
 			if (grid.GetCorrections(y, x, &diff)) {
 				z -= diff;
-				assert(std::abs(ortoN.z - z) < 0.1);
+				diffData.push_back(ortoN.z - z); 
 			}
 		}
+
+		Stats st = { *it, 0, 0 };
+		GetStats(diffData, st);
+
+		stats.push_back(st);
 	}
 
 	pj_free(utm);
@@ -542,11 +629,100 @@ std::string lidar_final_exec::_fileFromCorner(const std::string& folder, const s
 	throw std::runtime_error("File from corner failed");
 }
 
+size_t lidar_final_exec::_getRandomSamplesCount(size_t minVal, size_t maxVal, size_t size) {
+	size_t count = size * 0.1;
+
+	count = min(count, maxVal);
+	count = max(count, minVal);
+	return count;
+}
+
 void lidar_final_exec::Error(const std::string& operation, const std::exception& e) {
 	std::cout << "Error [" << operation << "] : " << e.what() << std::endl;
 }
 
 void lidar_final_exec::Error(const std::string& operation) {
 	std::cout << "Error [" << operation << "]" << std::endl;
+}
+
+void lidar_final_exec::GetStats(const std::vector<double>& diff, Stats& s) {
+	double size = static_cast<double>(diff.size());
+	double mean = std::accumulate(diff.begin(), diff.end(), 0.0) / size;
+
+	std::vector<double>::const_iterator j = diff.begin();
+	std::vector<double>::const_iterator end = diff.end();
+	double mm = 0.0;
+	for (; j != end; j++) {
+		double val = *j;
+		mm += std::pow(val - mean, 2);
+	}
+
+	s.mean = mean;
+	s.stdDev = std::sqrt(mm / size);
+}
+
+void lidar_final_exec::_reportBlock() {
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Copertura aree da rilevare");
+	if (_coversAll) {
+		sec->add_item("para")->append("Le aree da rilevare sono coperte da dati grezzi");
+	} else {
+		sec->add_item("para")->append("Presenti zone da rilevare non ricoperte da dati grezzi");
+	}
+}
+	
+void lidar_final_exec::_reportEquality() {
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Completezza dati");
+
+	if (mdtDiff.size()) {
+		sec->add_item("para")->append("Dati mdt non completi");
+	}
+
+	if (mdsDiff.size()) {
+		sec->add_item("para")->append("Dati mdt non completi");
+
+	}
+
+	if (intensityDiff.size()) {
+		sec->add_item("para")->append("Dati mdt non completi");
+	}
+
+	if (groundEllDiff.size()) {
+		sec->add_item("para")->append("Dati mdt non completi");
+	}
+
+	if (overGroundEllDiff.size()) {
+		sec->add_item("para")->append("Dati mdt non completi");
+	}
+
+	if (overGroundOrtoDiff.size()) {
+		sec->add_item("para")->append("Dati mdt non completi");
+	}
+}
+	
+void lidar_final_exec::_reportRawRandom() {
+	if (rawRandomDiff.size()) {
+		return;
+	}
+
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Verifica dati grezzi");
+	
+}
+	
+void lidar_final_exec::_reportResamples() {
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Verifica ricampionamento");
+}
+	
+void lidar_final_exec::_reportQuota() {
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Verifica quota");
+}
+	
+void lidar_final_exec::_reportEllipsoidic() {
+	Doc_Item sec = _article->add_item("section");
+    sec->add_item("title")->append("Verifica dati ellissoidici");
 }
 

@@ -1,6 +1,7 @@
 #include "cvlidarfinaldetail.h"
 
 #include "cvrawstripfolderdetail.h"
+#include "cvfinaldatadetail.h"
 
 #include <QFormLayout>
 #include <QLineEdit>
@@ -12,11 +13,11 @@ namespace Details {
 CVLidarFinalDetail::CVLidarFinalDetail(QWidget* p, Core::CVControl* c, TabPosition pos) : CVBaseTabWidget(p, pos) {
 	int i = 0;
 	
-	CVFolderDetail* fold = new CVFolderDetail(this, c->at(i));
+	CVFinalDataDetail* fold = new CVFinalDataDetail(this, c->at(i));
 	fold->title("Dati finali");
 	fold->description("Inserire la cartella radice dei dati");
-	QFormLayout* l = static_cast<QFormLayout*>(fold->body()->layout());
-	l->addRow("Passo tile (Km)", new QLineEdit(this));
+	//QFormLayout* l = static_cast<QFormLayout*>(fold->body()->layout());
+	//l->addRow("Passo tile (Km)", new QLineEdit(this));
 
 	addTab(fold, "");
     setTabToolTip(i, tr("Dati grezzi finali"));
