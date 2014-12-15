@@ -52,44 +52,60 @@ CVFinalDataDetail::CVFinalDataDetail(QWidget* p, Core::CVObject* l) : CVBaseDeta
 	_data["FINAL_OVERGROUND_ORTO"] = w;
 	
 	w = _addFolderPicker("FINAL_MDS");
-	form->addRow("Dati mds", w);
+	form->addRow("Dati mds ortometrici", w);
 	_data["FINAL_MDS"] = w;
 	
 	w = _addFolderPicker("FINAL_MDT");
-	form->addRow("Dati mdt", w);
+	form->addRow("Dati mdt ortometrici", w);
 	_data["FINAL_MDT"] = w;
 	
 	w = _addFolderPicker("FINAL_INTENSITY");
 	form->addRow("Dati intensità", w);
 	_data["FINAL_INTENSITY"] = w;
 	
-	w = _addFolderPicker("FINAL_IGM_GRID");
-	form->addRow("Grigliati", w);
+	w = _addFilePicker("FINAL_IGM_GRID");
+	form->addRow("Grigliati IGMI", w);
 	_data["FINAL_IGM_GRID"] = w;
 
-	form->addRow("Misura tile griglia (Km)", new QSpinBox(this));
+	QSpinBox* box = new QSpinBox(this);
+	box->setRange(0, 10000);
+	box->setSingleStep(1000);
+
+	form->addRow("Misura tile griglia (Km)", box);
+
+	connect(box, SIGNAL(valueChanged(int)), this, SLOT(onTileSizeChanged(int)));
 
 	body(form);
 
-	/*
 	if (controller()->isValid()) {
 		QStringList& data = input()->data();
-		assert(data.size() == _labels.size());
-		for (int i = 0; i < data.size(); ++i) {
-			_labels.at(i)->setText(data.at(i));
+		QStringList& tables = input()->tables();
+		assert(data.size() >= _editors.size());
+		for (int i = 0; i < _editors.size(); ++i) {
+			_editors[tables.at(i)]->setText(data.at(i));
 		}
+
+		box->setValue(input()->tileSize());
 	}
-	*/
 }
 
 CVFinalDataDetail::~CVFinalDataDetail() {
 
 }
 
+void CVFinalDataDetail::onTileSizeChanged(int size) {
+	input()->set("FINAL_RAW_STRIP_DATA", "TILE_SIZE", size);
+	input()->persist();
+}
+
 QWidget* CVFinalDataDetail::_addFolderPicker(QString table, QString column) {
 	QWidget* filePicker = new QWidget(this);
 	QHBoxLayout* fbox = new QHBoxLayout;
+	
 	QLineEdit* path = new QLineEdit(this);
+	path->setReadOnly(true);
+	_editors[table] = path;
+
 	fbox->addWidget(path, 2);
 	QPushButton* fileBtn = new QPushButton(this);
 	fbox->addWidget(fileBtn);
@@ -98,6 +114,7 @@ QWidget* CVFinalDataDetail::_addFolderPicker(QString table, QString column) {
 
 	fileBtn->setProperty("TABLE", table);
 	fileBtn->setProperty("COLUMN", column);
+	fileBtn->setProperty("INDEX", _editors.size() - 1);
 	
 	filePicker->setFixedHeight(32);
 	path->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
@@ -107,55 +124,85 @@ QWidget* CVFinalDataDetail::_addFolderPicker(QString table, QString column) {
 	return filePicker;
 }
 
+QWidget* CVFinalDataDetail::_addFilePicker(QString table, QString column) {
+	QWidget* filePicker = new QWidget(this);
+	QHBoxLayout* fbox = new QHBoxLayout;
+	
+	QLineEdit* path = new QLineEdit(this);
+	path->setReadOnly(true);
+	_editors[table] = path;
+
+	fbox->addWidget(path, 2);
+	QPushButton* fileBtn = new QPushButton(this);
+	fbox->addWidget(fileBtn);
+	fbox->setContentsMargins(0, 0, 0, 0);
+	filePicker->setLayout(fbox);
+
+	fileBtn->setProperty("TABLE", table);
+	fileBtn->setProperty("COLUMN", column);
+	fileBtn->setProperty("INDEX", _editors.size() - 1);
+	
+	filePicker->setFixedHeight(32);
+	path->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
+
+	connect(fileBtn, SIGNAL(clicked()), this, SLOT(finalFile()));
+
+	return filePicker;
+}
+
 void CVFinalDataDetail::finalFolder() {
 	QString ref = QFileDialog::getExistingDirectory(this, 
 		tr("Trova cartella"), 
-		Core::CVSettings::get(CV_PATH_PROJECT).toString()
+		Core::CVSettings::get(CV_PATH_SEARCH).toString()
 	);
 
-	if (ref.isEmpty()) {
-		return;
-	}
+	if (!ref.isEmpty()) {
+		QFileInfo info(ref);
+		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
 
-	QString table = sender()->property("TABLE").toString();
-	QString folder = sender()->property("COLUMN").toString();
+		QString table = sender()->property("TABLE").toString();
+		QString folder = sender()->property("COLUMN").toString();
 	
-	qobject_cast<QLineEdit*>(_data[table])->setText(ref);
 
+		input()->set(table, folder, ref);
+		_editors[table]->setText(ref);
+		controller()->persist();
+	}
 }
+
+void CVFinalDataDetail::finalFile() {
+	QString ref = QFileDialog::getOpenFileName(this, 
+		tr("Trova file"), 
+		Core::CVSettings::get(CV_PATH_SEARCH).toString()
+	);
+
+	if (!ref.isEmpty()) {
+		QFileInfo info(ref);
+		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
+
+		QString table = sender()->property("TABLE").toString();
+		QString folder = sender()->property("COLUMN").toString();
+	
+		
+		input()->set(table, folder, ref);
+		_editors[table]->setText(ref);
+		controller()->persist();	
+	}
+}
+
 
 void CVFinalDataDetail::clearAll() {
 	controller()->remove();
-	for (int i = 0; i < _labels.size(); ++i) {
-		_labels.at(i)->setText("");
+	QMap<QString, QLineEdit*>::iterator it = _editors.begin();
+	QMap<QString, QLineEdit*>::iterator end = _editors.end();
+	for (; it != end; it++) {
+		it.value()->setText("");
 	}
 }
 
-void CVFinalDataDetail::searchFile() {
-	QString uri = QFileDialog::getExistingDirectory(
-        this,
-        tr("Importa cartella"),
-		Core::CVSettings::get(CV_PATH_SEARCH).toString()
-    );
-	if (!uri.isEmpty()) {
-		QFileInfo info(uri);
-		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
-		importAll(QStringList() << uri);
-	}
-}
+void CVFinalDataDetail::searchFile() {}
 
-void CVFinalDataDetail::importAll(QStringList& uri) {
-	CV::GUI::CVScopedCursor cur;
-
-	input()->origin(uri.at(0));
-	if (controller()->persist()) {
-		QStringList& data = input()->data();
-		assert(data.size() == _labels.size());
-		for (int i = 0; i < data.size(); ++i) {
-			_labels.at(i)->setText(data.at(i));
-		}
-	}
-}
+void CVFinalDataDetail::importAll(QStringList& uri) {}
 
 void CVFinalDataDetail::dragEnterEvent(QDragEnterEvent* ev) {}
 

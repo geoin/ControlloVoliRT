@@ -594,7 +594,6 @@ void lidar_raw_exec::_control_points_report() {
 					row->add_item("entry", attr)->append("Z diff");
 					tbody = tab->add_item("tbody");
 
-
 					hasHeader = true;
 				}
 				

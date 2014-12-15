@@ -13,6 +13,7 @@
 #include "core/categories/cvfileinput.h"
 #include "core/categories/cvmissionobject.h"
 #include "core/categories/cvfolderinput.h"
+#include "core/categories/cvlidarfinalinput.h"
 #include "core/categories/cvcsvinput.h"
 #include "core/cvcore_utils.h"
 
@@ -296,13 +297,17 @@ CVControl* CVProjectManager::_finalLidar(CVProject* proj, bool load) {
 	CVControl* ctrl = new CVControl(CVControl::LIDAR_FINAL, proj);
 	ctrl->uri(proj->db());
 
-	CVFolderInput* folder = new CVFolderInput(ctrl);
-	folder->controlType(CVControl::LIDAR_FINAL);
-	folder->type(CVObject::RAW_STRIP_DATA);
-	folder->table("FINAL_RAW_STRIP_DATA");
-	ctrl->insert(folder);
+	CVLidarFinalInput* fin = new CVLidarFinalInput(ctrl);
+	fin->controlType(CVControl::LIDAR_FINAL);
+	fin->type(CVObject::RAW_STRIP_DATA);
+	ctrl->insert(fin);
 
-	folder = new CVFolderInput(ctrl);
+	
+	CVControl* fly = proj->get(CVControl::LIDAR_FLY);
+	ctrl->insert(fly->at(0));
+	ctrl->insert(fly->at(2));
+
+	/*CVFolderInput* folder = new CVFolderInput(ctrl);
 	folder->controlType(CVControl::LIDAR_FINAL);
 	folder->type(CVObject::RAW_STRIP_DATA);
 	folder->table("FINAL_INTENSITY"); 
@@ -342,7 +347,7 @@ CVControl* CVProjectManager::_finalLidar(CVProject* proj, bool load) {
 	folder->controlType(CVControl::LIDAR_FINAL);
 	folder->type(CVObject::RAW_STRIP_DATA);
 	folder->table("FINAL_MDT"); 
-	ctrl->insert(folder);
+	ctrl->insert(folder);*/
 
 	if (load) {
 		ctrl->load();

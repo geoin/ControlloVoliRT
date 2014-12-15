@@ -2,6 +2,8 @@
 
 #include "cvrawstripfolderdetail.h"
 #include "cvfinaldatadetail.h"
+#include "cvareadetail.h"
+#include "cvrawstripfolderdetail.h"
 
 #include <QFormLayout>
 #include <QLineEdit>
@@ -15,9 +17,7 @@ CVLidarFinalDetail::CVLidarFinalDetail(QWidget* p, Core::CVControl* c, TabPositi
 	
 	CVFinalDataDetail* fold = new CVFinalDataDetail(this, c->at(i));
 	fold->title("Dati finali");
-	fold->description("Inserire la cartella radice dei dati");
-	//QFormLayout* l = static_cast<QFormLayout*>(fold->body()->layout());
-	//l->addRow("Passo tile (Km)", new QLineEdit(this));
+	fold->description("Inserire cartelle dati finali lidar");
 
 	addTab(fold, "");
     setTabToolTip(i, tr("Dati grezzi finali"));
@@ -25,44 +25,15 @@ CVLidarFinalDetail::CVLidarFinalDetail(QWidget* p, Core::CVControl* c, TabPositi
 
 	i++;
 
-	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati intensità"));
+	CVAreaDetail* area = new CVAreaDetail(p, c->at(i), c->type());
+    addTab(area, "");
+    setTabToolTip(i, tr("Aree da cartografare"));
 	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
-
+    
 	i++;
-
+	
 	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati ground ellissoidici"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
-
-	i++;
-
-	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati ground ortometrici"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
-
-	i++;
-
-	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati overground ellissoidici"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
-
-	i++;
-
-	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati overground ortometrici"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
-
-	i++;
-
-	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati mds"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
-
-	i++;
-
-	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati mdt"));
+    setTabToolTip(i, tr("Dati grezzi"));
 	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
 }
 

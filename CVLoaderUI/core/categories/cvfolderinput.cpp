@@ -89,6 +89,7 @@ bool CVFolderInput::persist() {
 
 bool CVFolderInput::load() {
 	_isValid = false;
+	_data.clear();
 	
 	try {
 		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();

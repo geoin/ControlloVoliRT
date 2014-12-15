@@ -32,6 +32,8 @@ public:
 
 public slots:
 	void finalFolder();
+	void finalFile();
+	void onTileSizeChanged(int);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -41,12 +43,14 @@ protected:
 
 private:
 	QWidget* _addFolderPicker(QString, QString = "FOLDER");
+	QWidget* _addFilePicker(QString, QString = "GRID");
 
     QScopedPointer<QFileInfo> _file;
 	QString _uri;
-	QList<QLabel*> _labels;
 
 	QMap<QString, QWidget*> _data;
+
+	QMap<QString, QLineEdit*> _editors;
 };
 
 } // namespace Details

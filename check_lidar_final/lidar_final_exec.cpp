@@ -27,7 +27,7 @@ using namespace CV::Util::Geometry;
 
 
 lidar_final_exec::lidar_final_exec() {
-	srand (time(NULL));
+	srand(time(NULL));
 	_coversAll = false;
 }
 
@@ -73,8 +73,14 @@ void lidar_final_exec::createReport() {
 	_article = _dbook.get_item("article");
 
 	std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
-
 	
+	_reportBlock();
+	_reportEquality();
+	_reportRawRandom();
+	_reportResamples();
+	_reportQuota();
+	_reportEllipsoidic();
+
 	_dbook.write();	
 }
 
@@ -107,6 +113,7 @@ void lidar_final_exec::readFolders() {
 
 	_intensity = _getFolder("FINAL_INTENSITY");
 	_getCoordNameList(_intensity, "tif", _intensityList, true);
+	_getCoordNameList(_intensity, "tiff", _intensityList, true);
 }
 
 std::string lidar_final_exec::_getFolder(const std::string& table) {
@@ -240,7 +247,7 @@ void lidar_final_exec::_checkBlock() {
 	pol->setCoordinateDimension(2);
 	
 	std::stringstream sql;
-	sql << "CREATE TABLE " << rawGrid << "( ID TEXT )";
+	sql << "CREATE TABLE " << rawGrid << "( NAME TEXT )";
 	cnn.execute_immediate(sql.str());
 
 	// add the geom column
@@ -275,7 +282,7 @@ void lidar_final_exec::_checkBlock() {
 		pol_tmp->addRing(gp);
 
 		std::stringstream sqlc;
-		sqlc << "INSERT INTO " << rawGrid << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID << ") )";
+		sqlc << "INSERT INTO " << rawGrid << " (NAME, GEOM) VALUES ('" << name << "', ST_GeomFromWKB(:geom, " << SRID << ") )";
 		CV::Util::Spatialite::Statement stm0(cnn);
 		stm0.prepare(sqlc.str());
 		stm0[1].fromBlob(rg_tmp);
@@ -455,15 +462,16 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 
 		std::vector<NODE>::iterator pIt = gIt->second.begin();
 		std::vector<NODE>::iterator pEnd = gIt->second.end();
+
+		
+		PointCheck pc;
+		pc.target = gIt->first;
+		pc.group = folder;
 		
 		unsigned int trIdx = -1;
 		unsigned long match = 0;
 		for (; pIt != pEnd; pIt++) {
 			const NODE& n = *pIt;
-
-			PointCheck pc;
-			pc.target = gIt->first;
-			pc.group = folder;
 			
 			trIdx = dsm->FindTriangle(n.x, n.y, trIdx);
 			const TRIANGLE& tri = dsm->Triangle(trIdx);
@@ -634,7 +642,7 @@ size_t lidar_final_exec::_getRandomSamplesCount(size_t minVal, size_t maxVal, si
 
 	count = min(count, maxVal);
 	count = max(count, minVal);
-	return count;
+	return count < size ? count : size - 1;
 }
 
 void lidar_final_exec::Error(const std::string& operation, const std::exception& e) {
@@ -674,30 +682,70 @@ void lidar_final_exec::_reportBlock() {
 void lidar_final_exec::_reportEquality() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Completezza dati");
+	sec->add_item("para")->append("Verifica delle cartelle consegnate");
 
 	if (mdtDiff.size()) {
-		sec->add_item("para")->append("Dati mdt non completi");
+		sec->add_item("para")->append("Dati mdt non completi:");
+		Doc_Item itl = sec->add_item("itemizedlist");
+
+		for (int i = 0; i < mdtDiff.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(mdtDiff.at(i));
+		}
 	}
 
 	if (mdsDiff.size()) {
-		sec->add_item("para")->append("Dati mdt non completi");
+		sec->add_item("para")->append("Dati mds non completi");
+		Doc_Item itl = sec->add_item("itemizedlist");
 
+		for (int i = 0; i < mdsDiff.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(mdsDiff.at(i));
+		}
 	}
 
 	if (intensityDiff.size()) {
-		sec->add_item("para")->append("Dati mdt non completi");
+		sec->add_item("para")->append("Dati intensita' non completi");
+
+		Doc_Item itl = sec->add_item("itemizedlist");
+		for (int i = 0; i < intensityDiff.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(intensityDiff.at(i));
+		}
 	}
 
 	if (groundEllDiff.size()) {
-		sec->add_item("para")->append("Dati mdt non completi");
+		sec->add_item("para")->append("Dati ground ellissoidici non completi");
+
+		Doc_Item itl = sec->add_item("itemizedlist");
+		for (int i = 0; i < groundEllDiff.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(groundEllDiff.at(i));
+		}
+	}
+
+	if (groundOrtoDiff.size()) {
+		sec->add_item("para")->append("Dati ground ortometrici non completi");
+
+		Doc_Item itl = sec->add_item("itemizedlist");
+		for (int i = 0; i < groundEllDiff.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(groundOrtoDiff.at(i));
+		}
 	}
 
 	if (overGroundEllDiff.size()) {
-		sec->add_item("para")->append("Dati mdt non completi");
+		sec->add_item("para")->append("Dati overground ellissoidici non completi");
+
+		Doc_Item itl = sec->add_item("itemizedlist");
+		for (int i = 0; i < overGroundEllDiff.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(overGroundEllDiff.at(i));
+		}
 	}
 
+
 	if (overGroundOrtoDiff.size()) {
-		sec->add_item("para")->append("Dati mdt non completi");
+		sec->add_item("para")->append("Dati overground ortometrici non completi");
+
+		Doc_Item itl = sec->add_item("itemizedlist");
+		for (int i = 0; i < overGroundEllDiff.size(); i++) {
+			itl->add_item("listitem")->add_item("para")->append(overGroundOrtoDiff.at(i));
+		}
 	}
 }
 	
@@ -708,21 +756,190 @@ void lidar_final_exec::_reportRawRandom() {
 
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Verifica dati grezzi");
-	
+
+	Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Statistiche dati grezzi");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "3");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Foglio");
+    row->add_item("entry", attr)->append("Media");
+    row->add_item("entry", attr)->append("Deviazione standard");
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	for (std::map< std::string, std::vector<double> >::iterator it = rawRandomDiff.begin(); it != rawRandomDiff.end(); it++) {
+		Stats s = { s.target = it->first, 0, 0 };
+		GetStats(it->second, s);
+
+		row = tbody->add_item("row");
+		row->add_item("entry", attr)->append(s.target);
+		row->add_item("entry", attr)->append(s.mean);
+		row->add_item("entry", attr)->append(s.stdDev);
+	}
 }
 	
 void lidar_final_exec::_reportResamples() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Verifica ricampionamento");
+
+	Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Statistiche ricampionamento MDT");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "3");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Foglio");
+    row->add_item("entry", attr)->append("Media");
+    row->add_item("entry", attr)->append("Deviazione standard");
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	for (std::vector< Stats >::iterator it = diffMdt.begin(); it != diffMdt.end(); it++) {
+		row = tbody->add_item("row");
+		row->add_item("entry", attr)->append(it->target);
+		row->add_item("entry", attr)->append(it->mean);
+		row->add_item("entry", attr)->append(it->stdDev);
+	}
+
+	tab = sec->add_item("table");
+    tab->add_item("title")->append("Statistiche ricampionamento MDS");
+	
+	attr.clear();
+    attr.addAttribute("", "", "cols", "", "3");
+    tab = tab->add_item("tgroup", attr);
+
+    thead = tab->add_item("thead");
+    row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Foglio");
+    row->add_item("entry", attr)->append("Media");
+    row->add_item("entry", attr)->append("Deviazione standard");
+    tbody = tab->add_item("tbody");
+
+	attrr.clear();
+    attrr.addAttribute("", "", "align", "", "right");
+
+	for (std::vector< Stats >::iterator it = diffMds.begin(); it != diffMds.end(); it++) {
+		row = tbody->add_item("row");
+		row->add_item("entry", attr)->append(it->target);
+		row->add_item("entry", attr)->append(it->mean);
+		row->add_item("entry", attr)->append(it->stdDev);
+	}
 }
 	
 void lidar_final_exec::_reportQuota() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Verifica quota");
+
+	Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Statistiche quote ground");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "3");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Foglio");
+    row->add_item("entry", attr)->append("Media");
+    row->add_item("entry", attr)->append("Deviazione standard");
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	for (std::vector< Stats >::iterator it = statsGround.begin(); it != statsGround.end(); it++) {
+		row = tbody->add_item("row");
+		row->add_item("entry", attr)->append(it->target);
+		row->add_item("entry", attr)->append(it->mean);
+		row->add_item("entry", attr)->append(it->stdDev);
+	}
+
+	tab = sec->add_item("table");
+    tab->add_item("title")->append("Statistiche quote overground");
+	
+	attr.clear();
+    attr.addAttribute("", "", "cols", "", "3");
+    tab = tab->add_item("tgroup", attr);
+
+    thead = tab->add_item("thead");
+    row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Foglio");
+    row->add_item("entry", attr)->append("Media");
+    row->add_item("entry", attr)->append("Deviazione standard");
+    tbody = tab->add_item("tbody");
+
+	attrr.clear();
+    attrr.addAttribute("", "", "align", "", "right");
+
+	for (std::vector< Stats >::iterator it = statsOverGround.begin(); it != statsOverGround.end(); it++) {
+		row = tbody->add_item("row");
+		row->add_item("entry", attr)->append(it->target);
+		row->add_item("entry", attr)->append(it->mean);
+		row->add_item("entry", attr)->append(it->stdDev);
+	}
 }
 	
 void lidar_final_exec::_reportEllipsoidic() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Verifica dati ellissoidici");
+
+	Doc_Item tab = sec->add_item("table");
+    tab->add_item("title")->append("Statistiche quote ground");
+
+    Poco::XML::AttributesImpl attr;
+    attr.addAttribute("", "", "cols", "", "4");
+    tab = tab->add_item("tgroup", attr);
+
+    Doc_Item thead = tab->add_item("thead");
+    Doc_Item row = thead->add_item("row");
+
+    attr.clear();
+    attr.addAttribute("", "", "align", "", "center");
+    row->add_item("entry", attr)->append("Foglio");
+    row->add_item("entry", attr)->append("Gruppo");
+    row->add_item("entry", attr)->append("OK");
+    row->add_item("entry", attr)->append("KO");
+    Doc_Item tbody = tab->add_item("tbody");
+
+    Poco::XML::AttributesImpl attrr;
+    attrr.addAttribute("", "", "align", "", "right");
+
+	for (std::vector< PointCheck >::iterator it = _pc.begin(); it != _pc.end(); it++) {
+		row = tbody->add_item("row");
+		row->add_item("entry", attr)->append(it->target);
+		row->add_item("entry", attr)->append(it->group);
+
+		std::stringstream str; str << it->ok;
+		row->add_item("entry", attr)->append(str.str());
+		str.str(""); str << it->ko;
+		row->add_item("entry", attr)->append(str.str());
+	}
 }
 

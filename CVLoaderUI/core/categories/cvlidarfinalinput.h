@@ -32,11 +32,24 @@ public:
 
 	const QString& folder() const { return _folder; } 
 
+	void set(const QString& table, const QString& column, const QString& value);
+	void set(const QString& table, const QString& column, const int& value);
+
+	QStringList tables() const { return _tables; }
+
+	int tileSize() const { return _tileSize; }
+
 private:
 	QString _origin;
 	QStringList _data;
 
 	QString _folder;
+
+	QMap<QString, QStringList> _tablesInfo;
+	QList<QString> _tables;
+	
+	QString _tileTable, _tileColumn;
+	int _tileSize;
 };
 
 } // namespace Core
