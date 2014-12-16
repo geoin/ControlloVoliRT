@@ -21,6 +21,7 @@
 #include "fastparser.h"
 
 #include <cstdio>
+#include <cmath>
 
 #ifndef INF
 #define INF	1.e30

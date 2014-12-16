@@ -92,7 +92,10 @@ SOURCES += main.cpp \
     gui/details/cvlidarrawdetail.cpp \
     gui/details/cvrawstripfolderdetail.cpp \
     core/categories/cvcsvinput.cpp \
-    core/cvcore_utils.cpp
+    core/cvcore_utils.cpp \
+    gui/details/cvlidarfinaldetail.cpp \
+    core/categories/cvlidarfinalinput.cpp \
+    gui/details/cvfinaldatadetail.cpp
 
 HEADERS  += \
     gui/cvmainwindow.h \
@@ -152,7 +155,10 @@ HEADERS  += \
     core/categories/cvfolderinput.h \
     gui/details/cvlidarrawdetail.h \
     gui/details/cvrawstripfolderdetail.h \
-    core/categories/cvcsvinput.h
+    core/categories/cvcsvinput.h \
+    gui/details/cvlidarfinaldetail.h \
+    core/categories/cvlidarfinalinput.h \
+    gui/details/cvfinaldatadetail.h
 
 RESOURCES += \
     data/data.qrc
