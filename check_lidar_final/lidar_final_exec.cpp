@@ -37,7 +37,8 @@ void lidar_final_exec::set_proj_dir(const std::string& proj) {
 }
 
 bool lidar_final_exec::run() {
-	if (!GetProjData(cnn, _note, std::string())) {
+    std::string str;
+    if (!GetProjData(cnn, _note, str)) {
 		return false;
 	}
 

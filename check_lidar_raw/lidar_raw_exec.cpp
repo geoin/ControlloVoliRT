@@ -102,7 +102,8 @@ bool lidar_raw_exec::_initBlocks() {
 }*/
 
 bool lidar_raw_exec::init() {
-	if (!GetProjData(cnn, _note, std::string())) {
+    std::string str;
+    if (!GetProjData(cnn, _note, str)) {
 		return false;
 	}
 

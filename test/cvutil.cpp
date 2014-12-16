@@ -2,8 +2,8 @@
 
 #include <cstdio>
 
-#include <CVUtil\cvspatialite.h>
-#include <CVUtil\ogrgeomptr.h>
+#include <CVUtil/cvspatialite.h>
+#include <CVUtil/ogrgeomptr.h>
 
 const std::string path = "../data/";
 

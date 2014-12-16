@@ -79,7 +79,7 @@ CVFinalDataDetail::CVFinalDataDetail(QWidget* p, Core::CVObject* l) : CVBaseDeta
 
 	if (controller()->isValid()) {
 		QStringList& data = input()->data();
-		QStringList& tables = input()->tables();
+        QStringList tables = input()->tables();
 		assert(data.size() >= _editors.size());
 		for (int i = 0; i < _editors.size(); ++i) {
 			_editors[tables.at(i)]->setText(data.at(i));

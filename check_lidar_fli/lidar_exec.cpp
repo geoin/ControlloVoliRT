@@ -41,6 +41,7 @@
 #include <iostream>
 
 #include "cv_version.h"
+#include <cmath>
 
 #define SRID 32632
 #define SIGLA_PRJ "CSTP"
@@ -1102,7 +1103,7 @@ void lidar_exec::_process_strips()
 			
 			DPOINT p1, p2, p3, p4;
 			
-			std::string& path = _findLasByName(strip);
+            std::string path = _findLasByName(strip);
 			DSM_Factory fact;
 			fact.Open(path, false, false);
 			DSM* dsm = fact.GetDsm();

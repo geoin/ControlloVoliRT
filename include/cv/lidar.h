@@ -156,7 +156,7 @@ public:
 			bool contains(DPOINT&);
 
 			void getAxisFromGeom(double& a, double& b, double& beta);
-			void Strip::Intersection::toBuffer(double = -150);
+            void toBuffer(double = -150);
 
 			OGRPolygon* toPolygon() { 
 				OGRGeometry* g_ = _geom;
