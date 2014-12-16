@@ -48,7 +48,7 @@ private:
 	std::string _getRawFolder(const std::string& table, unsigned int& step);
 	void _getStrips(std::vector<CV::Lidar::Strip::Ptr>&);
 
-	size_t _getRandomSamplesCount(size_t min, size_t max, size_t size);
+	size_t _getSamplesCount(size_t min, size_t max, size_t size);
 	void _checkBlock();
 	void _checkEquality();
 	void _checkRawRandom();

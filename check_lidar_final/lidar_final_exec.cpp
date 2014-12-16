@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <numeric>
 #include <time.h>
+#include <set>
 
 #define GEO_DB_NAME "geo.sqlite"
 
@@ -388,8 +389,11 @@ void lidar_final_exec::_checkRawRandom() {
 		}
 
 		DSM* dsm = f.GetDsm();
-		for (int i = 0; i < 100; i++) {
-			NODE n = dsm->Node(rand() % (dsm->Npt() - 1));
+		size_t size = dsm->Npt();
+
+		size_t c = _getSamplesCount(100, 1000, size);
+		for (int i = 0; i < c; i++) {
+			NODE n = dsm->Node(rand() % (size - 1));
 			points[p.getBaseName()].push_back(n);
 		}
 	}
@@ -431,9 +435,17 @@ void lidar_final_exec::_checkEllipsoidicData() {
 
 void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data) {
 	std::map< std::string, std::vector<NODE> > points;
+	
+	std::set<std::string> set;
 
-	for (int i = 0; i < 2; i++) {
-		const std::string& corner = data.at(rand() % (data.size() - 1));
+	size_t c = _getSamplesCount(4, 200, data.size());
+	for (int i = 0; i < c; i++) {
+		std::string corner = data.at(rand() % (data.size() - 1));
+		while (set.find(corner) != set.end()) {
+			corner = data.at(rand() % (data.size() - 1));
+		}
+		set.insert(corner);
+
 		std::string path = _fileFromCorner(folder, "xyzic", corner);
 		DSM_Factory f;
 		f.SetEcho(MyLas::single_pulse);
@@ -442,6 +454,7 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 		f.SetMask(mask);
 		bool ret = f.Open(path, false, false);
 		
+		size_t c = _getSamplesCount(10, 1000, f.GetDsm()->Npt());
 		for (int j = 0; j < 10; j++) {
 			const NODE& n = f.GetDsm()->Node(rand() % (f.GetDsm()->Npt() - 1));
 			points[corner].push_back(n);
@@ -488,14 +501,22 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 					break;
 				}
 			}
-			_pc.push_back(pc);
 		}
+		_pc.push_back(pc);
 	}
 }
 
 void lidar_final_exec::_checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& stats) { 
-	for (int i = 0; i < 2; i++) {
-		const std::string& corner = _groundOrtoList.at(rand() % (list1.size() - 1));
+	std::set<std::string> set;
+
+	size_t c = _getSamplesCount(4, 100, list1.size());
+	for (int i = 0; i < c; i++) {
+		std::string corner = list1.at(rand() % (list1.size() - 1));
+		while (set.find(corner) != set.end()) {
+			corner = list1.at(rand() % (list1.size() - 1));
+		}
+		set.insert(corner);
+
 		std::string groundPath = _fileFromCorner(folder1, "xyzic", corner);
 		DSM_Factory gr;
 		File_Mask mask(5, 1, 2, 3, 1, 1);
@@ -512,8 +533,9 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 			continue;
 		}
 		std::vector<double> diff;
-		for (int j = 0; j < 10; j++) {
-			unsigned int size = m.GetDsm()->Npt();
+		unsigned int size = m.GetDsm()->Npt();
+		size_t c = _getSamplesCount(4, 100, size);
+		for (int j = 0; j < c; j++) {
 			unsigned int randomIdx = rand() % (size - 1);
 			assert(randomIdx < size);
 
@@ -595,7 +617,8 @@ void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string
 		size_t s = ortoF.GetDsm()->Npt(); //TODO: cambia
 
 		std::vector<double> diffData;
-		for (int i = 0; i < 100; i++) {
+		size_t c = _getSamplesCount(50, 1000, s);
+		for (int i = 0; i < c; i++) {
 			unsigned int index = rand() % (s - 1);
 			const NODE& ellN = ellF.GetDsm()->Node(index);
 			const NODE& ortoN = ortoF.GetDsm()->Node(index);
@@ -637,7 +660,7 @@ std::string lidar_final_exec::_fileFromCorner(const std::string& folder, const s
 	throw std::runtime_error("File from corner failed");
 }
 
-size_t lidar_final_exec::_getRandomSamplesCount(size_t minVal, size_t maxVal, size_t size) {
+size_t lidar_final_exec::_getSamplesCount(size_t minVal, size_t maxVal, size_t size) {
 	size_t count = size * 0.1;
 
 	count = min(count, maxVal);
@@ -750,7 +773,7 @@ void lidar_final_exec::_reportEquality() {
 }
 	
 void lidar_final_exec::_reportRawRandom() {
-	if (rawRandomDiff.size()) {
+	if (!rawRandomDiff.size()) {
 		return;
 	}
 
@@ -767,7 +790,7 @@ void lidar_final_exec::_reportRawRandom() {
     Doc_Item thead = tab->add_item("thead");
     Doc_Item row = thead->add_item("row");
 
-    attr.clear();
+	attr.clear();
     attr.addAttribute("", "", "align", "", "center");
     row->add_item("entry", attr)->append("Foglio");
     row->add_item("entry", attr)->append("Media");
@@ -778,7 +801,7 @@ void lidar_final_exec::_reportRawRandom() {
     attrr.addAttribute("", "", "align", "", "right");
 
 	for (std::map< std::string, std::vector<double> >::iterator it = rawRandomDiff.begin(); it != rawRandomDiff.end(); it++) {
-		Stats s = { s.target = it->first, 0, 0 };
+		Stats s = { it->first, 0, 0 };
 		GetStats(it->second, s);
 
 		row = tbody->add_item("row");
@@ -923,7 +946,7 @@ void lidar_final_exec::_reportEllipsoidic() {
     attr.clear();
     attr.addAttribute("", "", "align", "", "center");
     row->add_item("entry", attr)->append("Foglio");
-    row->add_item("entry", attr)->append("Gruppo");
+    row->add_item("entry", attr)->append("Origine");
     row->add_item("entry", attr)->append("OK");
     row->add_item("entry", attr)->append("KO");
     Doc_Item tbody = tab->add_item("tbody");
