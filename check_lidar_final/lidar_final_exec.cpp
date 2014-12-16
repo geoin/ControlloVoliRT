@@ -41,17 +41,28 @@ bool lidar_final_exec::run() {
 		return false;
 	}
 
+	std::cout << "Analisi copertura aree da rilevare.." << std::endl;
     _checkBlock();
+	
+	std::cout << "Analisi completezza dati.." << std::endl;
 	_checkEquality();
-
+	
+	std::cout << "Analisi dati grezzi.." << std::endl;
 	_checkRawRandom();
 	
+	std::cout << "Analisi quote ellissoidiche.." << std::endl;
 	_checkEllipsoidicData();
 	
+	std::cout << "Analisi conversione quote ground.." << std::endl;
 	_checkQuota(_groundEll, _groundOrto, statsGround);
+	
+	std::cout << "Analisi conversione quote overground.." << std::endl;
 	_checkQuota(_overgroundEll, _overgroundOrto, statsOverGround);
-
+	
+	std::cout << "Analisi ricampionamento ground ortometrico.." << std::endl;
 	_checkResamples(_groundOrto, _groundOrtoList, _mdt, _mdtList, diffMdt);
+
+	std::cout << "Analisi ricampionamento overground ortometrico.." << std::endl;
 	_checkResamples(_overgroundOrto, _overgroundOrtoList, _mds, _mdsList, diffMds);
 
 	return true;
@@ -295,6 +306,8 @@ void lidar_final_exec::_checkBlock() {
 
 	cnn.commit_transaction();
 
+	std::cout << "Layer:" << rawGrid << std::endl;
+
 	try {
 		CV::Util::Spatialite::Statement stm(cnn);
 		stm.prepare("select AsBinary(GEOM) as GEOM FROM CARTO");
@@ -333,7 +346,8 @@ void lidar_final_exec::_checkBlock() {
 	} catch (const std::exception& e) {
 		std::cout << "Errore durante il reperimento del blocco" << e.what() << std::endl;
 	}
-
+	
+	std::cout << "Layer:" << table << std::endl;
 }
 
 void lidar_final_exec::_checkEquality() {
@@ -934,7 +948,7 @@ void lidar_final_exec::_reportEllipsoidic() {
     sec->add_item("title")->append("Verifica dati ellissoidici");
 
 	Doc_Item tab = sec->add_item("table");
-    tab->add_item("title")->append("Statistiche quote ground");
+    tab->add_item("title")->append("Statistiche quote");
 
     Poco::XML::AttributesImpl attr;
     attr.addAttribute("", "", "cols", "", "4");
@@ -957,7 +971,7 @@ void lidar_final_exec::_reportEllipsoidic() {
 	for (std::vector< PointCheck >::iterator it = _pc.begin(); it != _pc.end(); it++) {
 		row = tbody->add_item("row");
 		row->add_item("entry", attr)->append(it->target);
-		row->add_item("entry", attr)->append(it->group);
+		row->add_item("entry", attr)->append(Poco::Path(it->group).getBaseName());
 
 		std::stringstream str; str << it->ok;
 		row->add_item("entry", attr)->append(str.str());
