@@ -496,7 +496,7 @@ void lidar_raw_exec::_strip_overlaps_report() {
 	}
 	
 	Doc_Item sec = _article->add_item("section");
-    sec->add_item("title")->append("Striciate");
+    sec->add_item("title")->append("Strisciate volate");
 	
 	sec->add_item("para")->append("Valori di riferimento");
 	Doc_Item itl = sec->add_item("itemizedlist");

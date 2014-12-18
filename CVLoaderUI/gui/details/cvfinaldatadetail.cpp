@@ -71,7 +71,7 @@ CVFinalDataDetail::CVFinalDataDetail(QWidget* p, Core::CVObject* l) : CVBaseDeta
 	box->setRange(0, 10000);
 	box->setSingleStep(1000);
 
-	form->addRow("Misura tile griglia (Km)", box);
+	form->addRow("Misura tile griglia (m)", box);
 
 	connect(box, SIGNAL(valueChanged(int)), this, SLOT(onTileSizeChanged(int)));
 
