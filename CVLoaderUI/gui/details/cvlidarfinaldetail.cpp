@@ -21,7 +21,7 @@ CVLidarFinalDetail::CVLidarFinalDetail(QWidget* p, Core::CVControl* c, TabPositi
 
 	addTab(fold, "");
     setTabToolTip(i, tr("Dati grezzi finali"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
+	setTabIcon(i, QIcon(":/graphics/icons/lidar/final.png"));
 
 	i++;
 
@@ -34,7 +34,7 @@ CVLidarFinalDetail::CVLidarFinalDetail(QWidget* p, Core::CVControl* c, TabPositi
 	
 	addTab(new CVFolderDetail(this, c->at(i)), "");
     setTabToolTip(i, tr("Dati grezzi"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
+	setTabIcon(i, QIcon(":/graphics/icons/lidar/strip.png"));
 }
 
 CVLidarFinalDetail::~CVLidarFinalDetail() {

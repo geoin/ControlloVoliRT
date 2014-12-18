@@ -12,13 +12,13 @@ CVLidarRawDetail::CVLidarRawDetail(QWidget* p, Core::CVControl* c, TabPosition p
 
 	addTab(new CVControlPointsDetail(this, c->at(i)), "");
     setTabToolTip(i, tr("Punti di controllo"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/axis.png"));
+	setTabIcon(i, QIcon(":/graphics/icons/lidar/points.png"));
 
 	i++;
 
 	addTab(new CVFolderDetail(this, c->at(i)), "");
     setTabToolTip(i, tr("Dati grezzi"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
+	setTabIcon(i, QIcon(":/graphics/icons/lidar/strip.png"));
 }
 
 CVLidarRawDetail::~CVLidarRawDetail() {

@@ -14,6 +14,7 @@ public:
 		std::string target;
 		double mean;
 		double stdDev;
+		unsigned int count;
 	};
 
 	struct PointCheck {
@@ -56,7 +57,7 @@ private:
 	void _checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>&);
 
 	void _checkEllipsoidicData();
-	void _checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data);
+	void _checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data, const std::string&);
 
 	CV::Util::Spatialite::Connection cnn;
 

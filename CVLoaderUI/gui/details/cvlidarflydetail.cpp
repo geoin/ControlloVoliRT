@@ -38,21 +38,21 @@ CVLidarFlyDetail::CVLidarFlyDetail(QWidget* p, Core::CVControl* c, TabPosition p
 	
 	addTab(new CVFolderDetail(this, c->at(i)), "");
     setTabToolTip(i, tr("Dati grezzi"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/areas.png"));
+	setTabIcon(i, QIcon(":/graphics/icons/lidar/strip.png"));
 
 	i++;
 
 	CVCloudSampleDetail* cloud = new CVCloudSampleDetail(p, c->at(i));
 	addTab(cloud, "");
     setTabToolTip(i, tr("Nuvola area di test"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/cloud.png"));
+	setTabIcon(i, QIcon(":/graphics/icons/lidar/test_cloud.png"));
 
 	i++;
 
 	CVControlPointsDetail* points = new CVControlPointsDetail(p, c->at(i));
 	addTab(points, "");
     setTabToolTip(i, tr("Punti di controllo"));
-	setTabIcon(i, QIcon(":/graphics/icons/plan/dem.png"));
+	setTabIcon(i, QIcon(":/graphics/icons/lidar/points.png"));
 }
 
 CVLidarFlyDetail::~CVLidarFlyDetail() {
