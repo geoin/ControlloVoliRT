@@ -18,6 +18,7 @@ win32 {
     $$OSGEO4W_DIR/include
 
     DEFINES += WIN32
+    DESTDIR = ../bin64
 }
 unix {
     LIBS += -L../lib
@@ -25,6 +26,7 @@ unix {
     /usr/include/gdal   \
     /usr/include/qgis
 
+    DESTDIR = ../bin
 }
 
 DEFINES += GUI_EXPORT=""
@@ -37,5 +39,4 @@ CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
 }
 
-DESTDIR = ../bin64
 
