@@ -112,7 +112,7 @@ try:
 except:
     pass
 
-ico = installDir + "/icons"
+ico = installDir + "/icon"
 copyAllFiles(ico, iconsDir)
 
 print "\n"
