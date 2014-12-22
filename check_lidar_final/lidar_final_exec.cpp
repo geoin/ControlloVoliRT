@@ -46,13 +46,13 @@ bool lidar_final_exec::run() {
     _checkBlock();
 	
 	std::cout << "Analisi completezza dati.." << std::endl;
-	_checkEquality();
+    _checkEquality();
 	
 	std::cout << "Analisi tile grezze.." << std::endl;
-	_checkRawRandom();
+    _checkRawRandom();
 	
 	std::cout << "Analisi classificazione.." << std::endl;
-	_checkEllipsoidicData();
+    _checkEllipsoidicData();
 	
 	std::cout << "Analisi conversione quote ground.." << std::endl;
 	_checkQuota(_groundEll, _groundOrto, statsGround);
@@ -581,6 +581,38 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 	}
 }
 
+std::istream& _Getline(std::istream& is, std::string& t) {
+    t.clear();
+
+    // The characters in the stream are read one-by-one using a std::streambuf.
+    // That is faster than reading them one-by-one using the std::istream.
+    // Code that uses streambuf this way must be guarded by a sentry object.
+    // The sentry object performs various tasks,
+    // such as thread synchronization and updating the stream state.
+
+    std::istream::sentry se(is, true);
+    std::streambuf* sb = is.rdbuf();
+
+    for(;;) {
+        int c = sb->sbumpc();
+        switch (c) {
+        case '\n':
+            return is;
+        case '\r':
+            if(sb->sgetc() == '\n')
+                sb->sbumpc();
+            return is;
+        case EOF:
+            // Also handle the case when the last line has no line ending
+            if(t.empty())
+                is.setstate(std::ios::eofbit);
+            return is;
+        default:
+            t += (char)c;
+        }
+    }
+}
+
 void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>& stats) { 
 	std::vector<Poco::Path> files;
 
@@ -594,15 +626,15 @@ void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string
 		files.push_back(g);
 	} else {
 		std::fstream in;
-		in.open(_gridFile, std::ios_base::in);
+        in.open(_gridFile, std::ios_base::in);
 
 		std::string line;
-		while (std::getline(in, line)) {
+        while (_Getline(in, line)) {
 			Poco::Path t(line);
-			if (Poco::toLower(g.getExtension()) == "gk1" || Poco::toLower(g.getExtension()) == "gk2") {
+            if (Poco::toLower(t.getExtension()) == "gk1" || Poco::toLower(t.getExtension()) == "gk2") {
 				type = vGrid::ty_GK;
 				files.push_back(t);
-			} else if (Poco::toLower(g.getExtension()) == "gr1" || Poco::toLower(g.getExtension()) == "gr2") {
+            } else if (Poco::toLower(t.getExtension()) == "gr1" || Poco::toLower(t.getExtension()) == "gr2") {
 				type = vGrid::ty_GR;
 				files.push_back(t);
 			}
