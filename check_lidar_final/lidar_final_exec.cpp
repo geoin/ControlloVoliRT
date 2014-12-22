@@ -444,8 +444,9 @@ void lidar_final_exec::_checkRawRandom() {
 				bool contains = (*sit)->geom()->Contains(&pt);
 				if (contains) {
 					double z = f.GetDsm()->GetQuota(n.x, n.y);	
-					if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT) {
-						rawRandomDiff[gIt->first].push_back(n.z - z);
+					double diff = n.z - z;
+					if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT && std::abs(diff) < 20.f) {
+						rawRandomDiff[gIt->first].push_back(diff);
 					}
 				}
 			}
