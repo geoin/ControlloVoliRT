@@ -22,6 +22,8 @@ public:
 	CVCsvInput(QObject *parent);
 	virtual ~CVCsvInput();
 
+	void setTable(QString t) { _table = t; }
+
 	virtual bool isValid() const;
 	virtual bool persist();
 	virtual bool load();	
@@ -36,6 +38,8 @@ public:
 private:
 	Csv::Ptr _csv;
 	QList<QStringList> _samples;
+	
+	QString _table;
 };
 
 class CsvParsingDialog : public QDialog {

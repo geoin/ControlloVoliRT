@@ -33,7 +33,8 @@ SOURCES += \
     check_lidar_raw.cpp \
     lidar_raw_exec.cpp \
     ../common/lidar.cpp \
-    ../common/geo_util.cpp
+    ../common/geo_util.cpp \
+    ../common/doc_book_util.cpp
 
 HEADERS += \
     check_lidar_raw.h \

@@ -25,6 +25,10 @@ void lidar_raw_exec::Error(const std::string& operation, const std::exception& e
 	std::cout << "Error [" << operation << "] : " << e.what() << std::endl;
 }
 
+void lidar_raw_exec::Error(const std::string& operation) {
+	std::cout << "Error [" << operation << "]" << std::endl;
+}
+
 void lidar_raw_exec::set_proj_dir(const std::string& proj) {
     _proj_dir = proj;
 }
@@ -47,36 +51,76 @@ bool lidar_raw_exec::readReference() {
 		AutoPtr<XMLConfiguration> pConf;
 		pConf = new XMLConfiguration(ref_file.toString());
 		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
-		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
+		LID_TOL_A = pConf->getDouble(get_key("LID_TOL_A"));
+		return true;
 	} catch (const std::exception& e) {
 		Error("Reading reference values..", e);
 		return false;
 	}
 }
+/*
+bool lidar_raw_exec::_initBlocks() {
+	CV::Util::Spatialite::Statement stm(cnn);
+
+	std::stringstream query;
+	query << "select AsBinary(GEOM) FROM BLOCKV";
+	stm.prepare(query.str());
+	CV::Util::Spatialite::Recordset set = stm.recordset();
+	if (set.eof()) {
+		ERROR("Blocco non presente");
+		return false;
+	}
+	
+	Blob b = set[0].toBlob();
+	CV::Util::Geometry::OGRGeomPtr geom = b;
+	_block.assign(new CV::Lidar::Block(geom));
+	
+	std::vector<CV::Util::Geometry::OGRGeomPtr> parts;
+	_block->split(parts);
+
+	std::vector<CV::Util::Geometry::OGRGeomPtr>::iterator it = parts.begin();
+	std::vector<CV::Util::Geometry::OGRGeomPtr>::iterator end = parts.end();
+	
+	for (; it != end; it++) {
+		OGREnvelope env;
+		(*it)->getEnvelope(&env);
+
+		OGRLinearRing* ls = static_cast<OGRLinearRing*>(OGRGeometryFactory::createGeometry(wkbLinearRing));
+		ls->addPoint(env.MinX, env.MinY);
+		ls->addPoint(env.MaxX, env.MinY);
+		ls->addPoint(env.MaxX, env.MaxY);
+		ls->addPoint(env.MinX, env.MaxY);
+		ls->closeRings();
+
+		OGRPolygon* pol = static_cast<OGRPolygon*>(OGRGeometryFactory::createGeometry(wkbPolygon));
+		CV::Util::Geometry::OGRGeomPtr polPtr(pol);
+
+		pol->addRingDirectly(ls);
+	}
+
+	return true;
+}*/
 
 bool lidar_raw_exec::init() {
-	 if (!GetProjData(cnn, _note, std::string())) {
+    std::string str;
+    if (!GetProjData(cnn, _note, str)) {
 		return false;
-    }
+	}
 
 	if (!_initStripFiles()) {
 		return false;
 	}
 
-	/*if (!_initControlPoints()) {
-		return false;
-	}*/
+	_initControlPoints();
 
 	if (!_initStripsLayer()) {
 		return false;
 	}
-
 	return true;
 }
 
 bool lidar_raw_exec::run() {
 	try {
-		_checkDensity();
 		_checkIntersection();
 			
 		return true;
@@ -85,19 +129,19 @@ bool lidar_raw_exec::run() {
 		return false;
 	}
 }
-/*
+
 bool lidar_raw_exec::_initControlPoints() {
 	try {
 		CV::Util::Spatialite::Statement stm(cnn);
 
 		std::stringstream query;
-		query << "select X, Y, Z, NAME FROM CONTROL_POINTS";
+		query << "select X, Y, Z, NAME FROM RAW_CONTROL_POINTS";
 		stm.prepare(query.str());
 
 		CV::Util::Spatialite::Recordset set = stm.recordset();
 
 		if (set.eof()) {
-			throw std::runtime_error("No data in RAW_CONTROL_CLOUD");
+			throw std::runtime_error("No data in RAW_CONTROL_POINTS");
 		}
 		
 		while (!set.eof()) {
@@ -111,24 +155,27 @@ bool lidar_raw_exec::_initControlPoints() {
 
 			set.next();
 		}
+
+		//_controlInfoList.resize(_controlVal.size());
+
 		return true;
 	} catch (const std::exception& e) {
 		Error("fetching control points", e);
 		return false;
 	}
-}*/
+}
 
 bool lidar_raw_exec::_initStripFiles() {
 	try {
 		std::stringstream query;
-		query << "select FOLDER from STRIP_RAW_DATA LIMIT 1"; //only one record should be here
+		query << "select FOLDER from RAW_STRIP_DATA LIMIT 1"; //only one record should be here
 		
 		CV::Util::Spatialite::Statement stm(cnn);
 		stm.prepare(query.str());
 		CV::Util::Spatialite::Recordset set = stm.recordset();
 
 		if (set.eof()) {
-			throw std::runtime_error("No data in STRIP_RAW_DATA");
+			throw std::runtime_error("No data in RAW_STRIP_DATA");
 		}
 
 		std::string folder = set["FOLDER"].toString();
@@ -141,7 +188,7 @@ bool lidar_raw_exec::_initStripFiles() {
 		std::vector<std::string>::iterator end = folderContent.end();
 		for (; it != end; it++) {
 			Poco::Path p = Poco::Path(fPath).append(*it);
-			if (p.isDirectory()) {
+			if (Poco::File(p).isDirectory()) {
 				_traverseFolder(p);
 			} else {
 				std::string name = p.getBaseName();
@@ -175,7 +222,7 @@ bool lidar_raw_exec::_initStripsLayer() {
 		CV::Util::Spatialite::Statement stm(cnn);
 
 		std::stringstream query;
-		query << "select Z_STRIP_CS, Z_STRIP_YAW, Z_MISSION, Z_STRIP_LENGTH, AsBinary(GEOM) as GEOM FROM Z_STRIPV";
+		query << "select Z_STRIP_CS, Z_STRIP_YAW, Z_MISSION, Z_STRIP_LENGTH, Z_STRIP_DENSITY, AsBinary(GEOM) as GEOM FROM Z_STRIPV";
 		stm.prepare(query.str());
 
 		CV::Util::Spatialite::Recordset set = stm.recordset();
@@ -187,9 +234,10 @@ bool lidar_raw_exec::_initStripsLayer() {
 		while (!set.eof()) {
 			Blob b = set["GEOM"].toBlob();
 			Lidar::Strip::Ptr strip(new Lidar::Strip(b));
-			strip->yaw(set["Z_STRIP_YAW"].toDouble());
+			strip->yaw(DEG_RAD(set["Z_STRIP_YAW"].toDouble()));
 			strip->missionName(set["Z_MISSION"].toString());
 			strip->name(set["Z_STRIP_CS"].toString());
+			strip->density(set["Z_STRIP_DENSITY"].toDouble());
 
 			Lidar::CloudStrip::Ptr cloud(new Lidar::CloudStrip(strip));
 			std::map<std::string, Poco::Path>::iterator el = _cloudStripList.find(cloud->name());
@@ -232,6 +280,12 @@ bool lidar_raw_exec::_checkIntersection() {
 	
 	for (; it != end; it++) {
 		Lidar::CloudStrip::Ptr cloud = *it;
+		
+		std::cout << " * Analisi nuvola " << cloud->name() << std::endl;
+
+		Lidar::DSMHandler srcDsm(cloud);
+		_checkControlPoints(cloud->name(), srcDsm);
+
 		Lidar::Strip::Ptr source = cloud->strip();
 		std::vector<Lidar::CloudStrip::Ptr>::const_iterator next = it;
 		for (next++; next != end; next++) {
@@ -239,36 +293,113 @@ bool lidar_raw_exec::_checkIntersection() {
 			Lidar::Strip::Ptr target = cloudTarget->strip();
 			if (source->isParallel(target) && source->intersect(target)) {
 				Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
+				double a = 0.0, b = 0.0, theta = 0.0;
+				intersection->getAxisFromGeom(a, b, theta);
+				intersection->toBuffer(-b/4.0);
 
-				std::vector<double> diff; 
-				Lidar::DSMHandler srcDsm(cloud->dsm());
-				unsigned int count = srcDsm->Npt();
-				for (unsigned int i = 0; i < count; ++i) {
-					DPOINT pt = srcDsm->Node(i);
-					if (intersection->contains(pt)) {
-						Lidar::DSMHandler targetDsm(cloudTarget->dsm());
-						double zTrg = targetDsm->GetQuota(pt.x, pt.y);
+				double v[2] = { std::cos(theta), std::sin(theta) };
+				double vn[2] = { -std::sin(theta), std::cos(theta) };
 
-						double dZ = pt.z - zTrg; 
-						diff.push_back(dZ);
+				double densityS = source->density(), densityT = target->density();
+				OGRPolygon* intersectionPol = intersection->toPolygon();
+
+				CV::Util::Geometry::OGRGeomPtr ptr = OGRGeometryFactory::createGeometry(wkbPoint);
+				OGRGeometry* cen_ = ptr;
+				OGRPoint* center = reinterpret_cast<OGRPoint*>(cen_);
+				intersectionPol->Centroid(center);
+				
+				double area = intersectionPol->get_Area();
+				double np = area * std::max(densityS, densityT) * INTERSECTION_DENSITY;
+
+				double ny = std::sqrt((b/a) * np);
+				double nx = (a/b) * ny;
+
+				double stepX = a/nx, stepY = b/ny;
+
+				std::vector<DPOINT> intersectionGrid; 
+				intersectionGrid.reserve(np);
+
+				for (double i = -nx/2; i <= nx/2; i++) {
+					for (double j = -ny/2; j <= (ny/2); j++) {
+						double xi = center->getX() + j*stepY*vn[0] + i*stepX*v[0];
+						double yi = center->getY() + j*stepY*vn[1] + i*stepX*v[1];
+
+						if (intersection->contains(xi, yi)) {
+							intersectionGrid.push_back(DPOINT(xi, yi));
+						}
 					}
 				}
-				if (!diff.size()) {
-					continue;
-				}
-				
-				Stats s = { target->name(), 0.0, 0.0 };
-				_getStats(diff, s);
 
-				_statList.insert(std::pair<std::string, Stats>(source->name(), s));
+				std::vector<double> zSrc; 
+				_getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
+				
+				std::vector<double> zTrg; 
+				Lidar::DSMHandler targetDsm(cloudTarget);
+				_getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
+				targetDsm.release();
+
+				std::vector<double> diff; 
+
+				for (size_t i = 0; i < intersectionGrid.size(); i++) {
+					double sVal = zSrc.at(i);
+					double tVal = zTrg.at(i);
+					if (sVal != Z_NOVAL && sVal != Z_OUT && tVal != Z_NOVAL && tVal != Z_OUT) {
+						double d = sVal - tVal;
+						if (std::abs(d) < 20) {
+							diff.push_back(d);
+						}
+					}
+				}
+
+				intersectionGrid = std::vector<DPOINT>();
+				zSrc = std::vector<double>(); 
+				zTrg = std::vector<double>();
+				
+				if (diff.size()) {		
+					Stats s = { target->name(), 0.0, 0.0 };
+					_getStats(diff, s);
+
+					_statList.insert(std::pair<std::string, Stats>(source->name(), s));
+				}
 			}
 		}
+		srcDsm.release();
 	}
 	return true;
 }
 
+void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DSMHandler& dsm) {
+	std::map< std::string, std::vector<double> >::iterator pair = _controlInfoList.find(strip);
+	if (pair != _controlInfoList.end()) {
+		return;
+	}
+
+	_controlInfoList.insert(std::pair< std::string, std::vector<double> > (strip, std::vector<double>()));
+	pair = _controlInfoList.find(strip);
+
+	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
+	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
+	for (; it != end; it++) {
+		CV::Lidar::ControlPoint::Ptr cp = *it;
+
+		const DPOINT& p = cp->point();
+		double z = dsm->GetQuota(p.x, p.y);
+		if (z == Z_NOVAL || z == Z_OUT) {
+			pair->second.push_back(z);
+		} else {
+			pair->second.push_back(cp->quota() - z);
+		}
+	}
+}
+
+void lidar_raw_exec::_getIntersectionDiff(CV::Lidar::DSMHandler& dsm, std::vector<DPOINT>& intersectionGrid, std::vector<double>& diff) {
+	for (std::vector<DPOINT>::iterator it = intersectionGrid.begin(); it != intersectionGrid.end(); it++) {
+		double z = dsm->GetQuota(it->x, it->y);
+		diff.push_back(z);
+	}
+}
+
 void lidar_raw_exec::_getStats(const std::vector<double>& diff, Stats& s) {
-	//TODO
 	double size = static_cast<double>(diff.size());
 	double mean = std::accumulate(diff.begin(), diff.end(), 0.0) / size;
 
@@ -277,7 +408,7 @@ void lidar_raw_exec::_getStats(const std::vector<double>& diff, Stats& s) {
 	double mm = 0.0;
 	for (; j != end; j++) {
 		double val = *j;
-		mm += std::pow(val - mean, 2.0);
+		mm += std::pow(val - mean, 2);
 	}
 
 	s.mean = mean;
@@ -306,8 +437,9 @@ bool lidar_raw_exec::report() {
 
 		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
 
-		_density_report();
+		//_density_report();
 		_strip_overlaps_report();
+		_control_points_report();
 
 		_dbook.write();	
 
@@ -318,7 +450,7 @@ bool lidar_raw_exec::report() {
 		return false;
 	}
 }
-
+/*
 void lidar_raw_exec::_density_report() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Striciate");
@@ -356,7 +488,7 @@ void lidar_raw_exec::_density_report() {
         row->add_item("entry", attr)->append(name);
 		print_item(row, attrr, density, abs_less_ty, PT_DENSITY);
 	}
-}
+}*/
 
 void lidar_raw_exec::_strip_overlaps_report() {
 	if (_statList.size() == 0) {
@@ -364,8 +496,14 @@ void lidar_raw_exec::_strip_overlaps_report() {
 	}
 	
 	Doc_Item sec = _article->add_item("section");
-    sec->add_item("title")->append("Striciate");
+    sec->add_item("title")->append("Strisciate volate");
 	
+	sec->add_item("para")->append("Valori di riferimento");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Tolleranza differenza di quota tra punti comuni a due strisciate, media inferiore a " << LID_TOL_Z;
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
+
     sec->add_item("para")->append("Sovrapposizione strisciate adiacenti");
 
 	Doc_Item tab = sec->add_item("table");
@@ -405,7 +543,6 @@ void lidar_raw_exec::_strip_overlaps_report() {
 	}
 }
 
-/*
 void lidar_raw_exec::_control_points_report() {
 	if (_controlVal.size() == 0) {
 		return;
@@ -414,51 +551,79 @@ void lidar_raw_exec::_control_points_report() {
 	Doc_Item sec = _article->add_item("section");
     sec->add_item("title")->append("Punti di controllo");
 
+	sec->add_item("para")->append("Valori di riferimento");
+	Doc_Item itl = sec->add_item("itemizedlist");
+	std::stringstream ss;
+	ss << "Tolleranza dei punti di controllo altimetrici, valori inferiori a " << LID_TOL_A;
+	itl->add_item("listitem")->add_item("para")->append(ss.str());
+
     sec->add_item("para")->append("Validita' punti di controllo");
 
-    Doc_Item tab = sec->add_item("table");
-    tab->add_item("title")->append("Punti di controllo");
+	std::vector<int> missed;
 
-    Poco::XML::AttributesImpl attr;
-    attr.addAttribute("", "", "cols", "", "2");
-    tab = tab->add_item("tgroup", attr);
-
-    Doc_Item thead = tab->add_item("thead");
-    Doc_Item row = thead->add_item("row");
-
-    attr.clear();
-    attr.addAttribute("", "", "align", "", "center");
-    row->add_item("entry", attr)->append("Punto di controllo");
-    row->add_item("entry", attr)->append("Z diff");
-    Doc_Item tbody = tab->add_item("tbody");
-
-    Poco::XML::AttributesImpl attrr;
-    attrr.addAttribute("", "", "align", "", "right");
-
-	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
-	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
-
-	for (; it != end; it++) {
-		CV::Lidar::ControlPoint::Ptr point = *it;
+	for (int i = 0; i < _controlVal.size(); i++) {
+		CV::Lidar::ControlPoint::Ptr point = _controlVal.at(i);
 		const std::string& name = point->name();
 
-		row = tbody->add_item("row");
-        row->add_item("entry", attr)->append(name);
-		
-		if (point->isValid()) {
-			double diff = point->zDiff();
-			print_item(row, attrr, diff, abs_less_ty, LID_TOL_Z);
-		} else {
-			Doc_Item r = row->add_item("entry", attr);
-			r->add_instr("dbfo", "bgcolor=\"red\"");
+		bool hasHeader = false;
+		Doc_Item tab;
+		Doc_Item thead;
+		Doc_Item tbody;
+		Poco::XML::AttributesImpl attr;
+		attr.addAttribute("", "", "cols", "", "2");
 
-			Lidar::ControlPoint::Status status = point->status();
-			if (status == Lidar::ControlPoint::NO_VAL) {
-				r->append("NO_VAL");
-			} else if (status == Lidar::ControlPoint::OUT_VAL) {
-				r->append("OUT_VAL");
+		std::map< std::string, std::vector<double> >::iterator it = _controlInfoList.begin();
+		std::map< std::string, std::vector<double> >::iterator end = _controlInfoList.end();
+
+		for (; it != end; it++) {
+			std::string strip = it->first;
+			double diff = it->second.at(i);
+
+			if (diff != Z_OUT && diff != Z_NOVAL) {
+				if (!hasHeader) {
+					tab = sec->add_item("table");
+					tab->add_item("title")->append("Punto di controllo " + name);
+					tab = tab->add_item("tgroup", attr);
+					thead = tab->add_item("thead");
+					
+					Doc_Item row = thead->add_item("row");
+					
+					Poco::XML::AttributesImpl attrr;
+					attr.addAttribute("", "", "align", "", "center");
+
+					row->add_item("entry", attr)->append("Strip");
+					row->add_item("entry", attr)->append("Z diff");
+					tbody = tab->add_item("tbody");
+
+					hasHeader = true;
+				}
+				
+				Poco::XML::AttributesImpl attrr;
+				attrr.addAttribute("", "", "align", "", "right");
+
+				Doc_Item row = tbody->add_item("row");
+				row->add_item("entry", attr)->append(strip);
+				print_item(row, attrr, diff, abs_less_ty, LID_TOL_A);
 			}
 		}
+		if (!hasHeader) {
+			missed.push_back(i);
+		}
     }
+
+	if (missed.size()) {
+		sec->add_item("para")->append("Punti di controllo fuori dal blocco");
+
+		Doc_Item itl = sec->add_item("itemizedlist");
+		for (int i = 0; i < missed.size(); i++) {
+			CV::Lidar::ControlPoint::Ptr p = _controlVal.at(missed.at(i));
+			std::stringstream ss;
+			ss << std::fixed;
+
+			DPOINT point = p->point();
+			ss << "Punto " << p->name() << " (" << point.x << ", " << point.y << ", "<< p->quota() << ")";
+			itl->add_item("listitem")->add_item("para")->append(ss.str());
+			
+		}
+	}
 }
-*/

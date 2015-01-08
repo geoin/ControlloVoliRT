@@ -32,7 +32,7 @@ public:
 		_deviceId = t == CVControl::GPS_DATA ? "ID_CAMERA" : "ID_SENSOR";
 	}
 
-	inline const CVControl::Type missionType() const { return _missionType; }
+    inline CVControl::Type missionType() const { return _missionType; }
 
 	inline QString id() const { return _id; }
 

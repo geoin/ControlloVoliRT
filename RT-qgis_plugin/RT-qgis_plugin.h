@@ -149,4 +149,19 @@ public:
     Check_lidar(QgisInterface* mi, int type);
 private:
 };
+
+class Check_lidar_raw: public dbox {
+    Q_OBJECT
+public:
+    Check_lidar_raw(QgisInterface* mi);
+private:
+};
+
+class Check_lidar_final: public dbox {
+    Q_OBJECT
+public:
+    Check_lidar_final(QgisInterface* mi);
+private:
+};
+
 #endif

@@ -21,6 +21,7 @@
 #include "fastparser.h"
 
 #include <cstdio>
+#include <cmath>
 
 #ifndef INF
 #define INF	1.e30
@@ -37,87 +38,136 @@ public:
 		: _n(0), Ixx(0.0), Iyy(0.0), Ixy(0.0), Mx(0.0), My(0.0), M2x(0.0), M2y(0.0), Mxy(0.0)
 	{}
 
-	inline void push(const double& x, const double& y) {
+	inline void add(const double& x, const double& y) {
 		size_t n = _n + 1;
 
-		double vc = double(n - 1) / n;
-		Mx = vc * Mx + x / n;
-		My = vc * My + y / n;
+		double vc = double(n - 1) / double(n);
+		Mx  = vc * Mx + x / n;
+		My  = vc * My + y / n;
 		M2x = vc * M2x + x * x / n;
 		M2y = vc * M2y + y * y / n;
 		Mxy = vc * Mxy + x * y / n;
 
 		_n++;
+	}
 
+	void push(const double& x, const double& y) {
+		add(x, y);
 		_points.push_back(DPOINT(x, y));
 	}
 
 	inline void compute() {
 		Ixx = M2x - Mx * Mx;
 		Iyy = M2y - My * My;
-		Ixy = Mxy - Mx * My;
+		//Ixy = Mxy - Mx * My;
+		Ixy = (double(_n) / double(_n - 1)) * (Mxy - Mx * My);
 	}
 
-	inline void getMajorAxis(DSM* dsm, DPOINT& p1, DPOINT& p2) {
+	inline void getAxisLen(double& l1, double& l2, double& theta) {
 		double tmin = 1e30;
 		double tmax = -1e30;
 
-		double mod = sqrt(Ixx * Ixx + Ixy * Ixy);
-		Ixx /= mod;
-		Ixy /= mod;
+		double tminB = 1e30;
+		double tmaxB = -1e30;
+		
+		theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+		double vi = cos(theta);
+		double vj = sin(theta);
 
 		double n = _points.size(); 
 		for (int i = 0; i < n; i++) {
 			DPOINT p = _points.at(i);
-			double ti = (p.x - Mx) * Ixx + (p.y - My) * Ixy;
+			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
 			tmin = std::min(tmin, ti);
-			tmax = std::max (tmax, ti);
+			tmax = std::max(tmax, ti);
+			
+			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
+			tminB = std::min(tminB, ti);
+			tmaxB = std::max(tmaxB, ti);
+		}
+
+		l1 = std::abs(tmax)  + std::abs(tmin);
+		l2 = std::abs(tmaxB)  + std::abs(tminB);
+	}
+
+	
+	inline void getAxisLen(double& l1, double& l2) {
+		double t_;
+		getAxisLen(l1, l2, t_);
+	}
+
+	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) {
+		double tmin = 1e30;
+		double tmax = -1e30;
+
+		double tminB = 1e30;
+		double tmaxB = -1e30;
+		
+		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+		double vi = cos(theta);
+		double vj = sin(theta);
+
+		double n = _points.size(); 
+		for (int i = 0; i < n; i++) {
+			DPOINT p = _points.at(i);
+			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
+			tmin = std::min(tmin, ti);
+			tmax = std::max(tmax, ti);
+			
+			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
+			tminB = std::min(tminB, ti);
+			tmaxB = std::max(tmaxB, ti);
 		}
 		
-		p1.set(Mx + tmin * Ixx, My + tmin * Ixy);
-		p2.set(Mx + tmax * Ixx, My + tmax * Ixy);
+		p1.set(Mx + tmin * vi, My + tmin * vj);
+		p2.set(Mx + tmax * vi, My + tmax * vj);
+	} 
+
+	inline void getMajorAxis(DSM* dsm) {
+		double tmin = 1e30;
+		double tmax = -1e30;
+
+		double tminB = 1e30;
+		double tmaxB = -1e30;
+		
+		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+		double vi = cos(theta);
+		double vj = sin(theta);
+
+		double n = dsm->Npt(); 
+		for (int i = 0; i < n; i++) {
+			DPOINT p = dsm->Node(i);
+			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
+			tmin = std::min(tmin, ti);
+			tmax = std::max(tmax, ti);
+
+			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
+			tminB = std::min(tminB, ti);
+			tmaxB = std::max(tmaxB, ti);
+		}
+		
+		P1.set(Mx + tmin * vi, My + tmin * vj);
+		P2.set(Mx + tmax * vi, My + tmax * vj);
+
+    // vertici strip
+		V1 = DPOINT(P1.x - tminB * vj, + P1.y + tminB * vi);
+		V2 = DPOINT(P1.x - tmaxB * vj, + P1.y + tmaxB * vi);
+		V3 = DPOINT(P2.x - tmaxB * vj, + P2.y + tmaxB * vi);
+		V4 = DPOINT(P2.x - tminB * vj, + P2.y + tminB * vi);
 	} 
 
 	double Mx, My;
 
+	double Ixx, Iyy, Ixy; // momenti d'inerzia	
+	double M2x, M2y, Mxy;
+
+	DPOINT V1, V2, V3, V4;
+	DPOINT P1, P2;
+
 private:
 	size_t _n; // numero punti processati
-	double _xc, _yc; // centro dell'ellisse
-	
-	double Ixx, Iyy, Ixy; // momenti d'inerzia
-	
-	double M2x, M2y, Mxy;
 	std::vector<DPOINT> _points;
 };
-/*
-Inertia_ellipse::Inertia_ellipse(FVDATA& fv) 
-{
-	xc = yc = 0.;
-	Ixx = Iyy = Ixy = 0.;
-	int n = fv.GetCount();
-	for (int i = 0; i < n; i++) {
-		xc += fv[i].p[0];
-		yc += fv[i].p[1];
-
-	}
-	xc /= n;
-	yc /= n;
-	for (int i = 0; i < n; i++) {
-		double x = fv[i].p[0] - xc;
-		double y = fv[i].p[1] - yc;
-
-		Ixx += x * x;
-		Iyy += y * y;
-		Ixy += x * y;
-	}
-	Ixx /= n;
-	Iyy /= n;
-	Ixy /= n;
-	double c = sqrt( pow(Ixx - Iyy, 2.) + 4 * pow(Ixy, 2.));
-	ra = sqrt(2.) * sqrt(Ixx + Iyy + c);
-	rb = sqrt(2.) * sqrt(Ixx + Iyy - c);
-	theta = atan2(Ixx - Iyy, 2 * Ixy) / 2;
-}*/
 
 class TOOLS_EXPORTS Bbox {
 public:
@@ -563,6 +613,9 @@ public:
 					echo |= MyLas::last_pulse;
 				if ( echo == MyLas::all_pulses )
 					echo = MyLas::intermediate_pulse;
+				if (nt == 1) {
+					echo |= MyLas::single_pulse;
+				}
 				nprec = ne;
 				if ( !(_echo & echo) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 					continue;
@@ -586,14 +639,17 @@ public:
 			_normalize(i);
 
 		_npt = Org_Nod;
-		bool retval = _triCalc();
-		if ( retval ) {
-			_open = true;
+		_open = true;
+
+		if (!tria) {
 			return true;
-		} else {
-			Release();
-			return false;
 		}
+
+		bool retval = _triCalc();
+		if (!retval) {
+			Release();
+		}
+		return retval;
 	}
 	bool GetDemFromLas(const std::string& nome, bool verbose, bool tria) {
 		if ( _open ) {
@@ -623,7 +679,7 @@ public:
 			node[Org_Nod].y = pt.y;
 			node[Org_Nod].z = pt.z;
 
-			_ie.push(pt.x, pt.y);
+			_ie.add(pt.x, pt.y);
 
 			_normalize(Org_Nod++);
 		}
@@ -648,7 +704,23 @@ public:
 	}
 
 	virtual void getMajorAxis(DPOINT& p1, DPOINT& p2) {
-		_ie.getMajorAxis(this, p1, p2);
+		if (_ie.P1 == DPOINT() && _ie.P2 == DPOINT()) {
+			_ie.getMajorAxis(this);
+		}
+
+		p1 = _ie.P1;
+		p2 = _ie.P2;
+	} 
+
+	virtual void getBB(DPOINT& p1, DPOINT& p2, DPOINT& p3, DPOINT& p4) {
+		if (_ie.P1 == DPOINT() && _ie.P2 == DPOINT()) {
+			_ie.getMajorAxis(this); 
+		}
+
+		p1 = _ie.V1;
+		p2 = _ie.V2;
+		p3 = _ie.V3;
+		p4 = _ie.V4;
 	} 
 
 	bool GetDemFromNod(const std::string& path, bool verbose, bool tria) {

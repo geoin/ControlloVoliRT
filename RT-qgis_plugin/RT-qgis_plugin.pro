@@ -7,9 +7,9 @@ QT += xml gui core
 #unix:LIBS += -L/$$QGIS_DIR/lib -lqgis_core -lqgis_gui
 
 win32 {
-    QGIS_DIR = "C:/OSGeo4W/apps/qgis"
-    COMP_DIR = "C:/ControlloVoliRT_Tools"
-    OSGEO4W_DIR = "C:/OSGeo4W"
+    QGIS_DIR = "C:/OSGeo4W64/apps/qgis"
+    COMP_DIR = "C:/OSGeo4W64"
+    OSGEO4W_DIR = "C:/OSGeo4W64"
 
     LIBS += $$QGIS_DIR/lib/qgis_core.lib -L$$COMP_DIR/lib
     INCLUDEPATH += \
@@ -18,6 +18,7 @@ win32 {
     $$OSGEO4W_DIR/include
 
     DEFINES += WIN32
+    DESTDIR = ../bin64
 }
 unix {
     LIBS += -L../lib
@@ -25,6 +26,7 @@ unix {
     /usr/include/gdal   \
     /usr/include/qgis
 
+    DESTDIR = ../bin
 }
 
 DEFINES += GUI_EXPORT=""
@@ -33,5 +35,8 @@ DEFINES += CORE_EXPORT=""
 SOURCES = RT-qgis_plugin.cpp
 HEADERS = RT-qgis_plugin.h
 
-DESTDIR = ../bin
+CONFIG(debug, debug|release) {
+    TARGET = $$join(TARGET,,,d)
+}
+
 

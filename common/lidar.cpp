@@ -41,7 +41,25 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 	this->missionName(axis->missionName());
 
 	std::stringstream str;
-	str << axis->stripName() << " (" << axis->id() << ")";
+	str << axis->stripName();// << " (" << axis->id() << ")";
+
+	this->name(str.str());
+	this->yaw(axis->angle());
+
+	_axis = axis;
+}
+
+void Strip::fromLineRing(Axis::Ptr axis, OGRLinearRing* gp) {
+	OGRGeometry* rg = OGRGeometryFactory::createGeometry(wkbPolygon);
+	OGRPolygon* p = reinterpret_cast<OGRPolygon*>(rg);
+	p->setCoordinateDimension(2);
+	p->addRing(gp);
+
+	this->geom(rg);
+	this->missionName(axis->missionName());
+
+	std::stringstream str;
+	str << axis->stripName();// << " (" << axis->id() << ")";
 
 	this->name(str.str());
 	this->yaw(axis->angle());
@@ -50,9 +68,9 @@ void Strip::fromAxis(Axis::Ptr axis, DSM* dsm, double thf) {
 }
 
 bool Strip::isParallel(Strip::Ptr other, int p) const {
-	double diff = yaw() - other->yaw();
+	double diff = RAD_DEG(yaw()) - RAD_DEG(other->yaw());
 	diff = fabs(diff > 180 ? 360 - diff : diff);
-	return diff < p || diff > 180 - p;
+	return diff < p || (diff > (180 - p));
 }
 
 bool Strip::intersect(Strip::Ptr other) const {
@@ -67,13 +85,13 @@ int Strip::intersectionPercentage(Strip::Ptr other) const {
 	Util::Geometry::OGRGeomPtr sourceGeom = this->geom();
 	OGRGeomPtr intersection = sourceGeom->Intersection(other->geom());
 	if (intersection->getGeometryType() == wkbPolygon) {
-		double srcMajorAxis, srcMinorAxis;
-		get_elong(sourceGeom, yaw(), &srcMajorAxis, &srcMinorAxis);
+		double srcAxis1, srcAxis2;
+		get_ellipse_elong(sourceGeom, srcAxis1, srcAxis2);
 		
-		double targetMajorAxis, targetMinorAxis;
-		get_elong(intersection, other->yaw(), &targetMajorAxis, &targetMinorAxis);
+		double targetAxis1, targetAxis2;
+		get_ellipse_elong(intersection, targetAxis1, targetAxis2);
 
-		p = static_cast<int>(100 * (targetMajorAxis / srcMajorAxis));
+		p = static_cast<int>(100 * (targetAxis2 / srcAxis2));
 	}
 	return p;
 }
@@ -93,12 +111,27 @@ bool Strip::Intersection::contains(DPOINT& pt) {
 	return contains(x, y);
 }
 
+void Strip::Intersection::getAxisFromGeom(double& a, double& b, double& theta) {
+	if (_geom->getGeometryType() != wkbPolygon) {
+		return; // something wrong here
+	}
+
+	OGRGeometry* p_ = _geom;
+	OGRPolygon* pol = reinterpret_cast<OGRPolygon*>(p_);
+	
+	get_ellipse_elong(_geom, a, b, theta);
+}
+
 Strip::Intersection::Ptr Strip::intersection(Strip::Ptr other) const {
 	Util::Geometry::OGRGeomPtr sourceGeom = geom();
 	Util::Geometry::OGRGeomPtr i = sourceGeom->Intersection(other->geom());
 	Strip::Intersection::Ptr iPtr;
 	iPtr.assign(new Strip::Intersection(i));
 	return iPtr;
+}
+
+void Strip::Intersection::toBuffer(double dist) {
+	_geom = _geom->Buffer(dist);
 }
 
 double Axis::averageSpeed() const { 
@@ -143,6 +176,15 @@ void Block::add(Strip::Ptr strip) {
 	}
 }
 
+void Block::split(std::vector<CV::Util::Geometry::OGRGeomPtr>& p) {
+	const OGRMultiPolygon* pol = toMultiPolygon();
+	int num = pol->getNumGeometries();
+	for (int i = 0; i < num; i++) {
+		CV::Util::Geometry::OGRGeomPtr geom = pol->getGeometryRef(i)->clone();
+		p.push_back(geom);
+	}
+}
+
 ControlPoint::Status ControlPoint::zDiffFrom(DSM* dsm) {
 	double q = dsm->GetQuota(_geom.x, _geom.y);
 	if (q == Z_NOVAL) {
@@ -158,7 +200,6 @@ ControlPoint::Status ControlPoint::zDiffFrom(DSM* dsm) {
 }
 
 double CloudStrip::computeDensity() {
-	//TODO: use RAII handler 
 	if (!_factory->Open(_cloudPath, false)) {
 		throw std::runtime_error("Cannot open " + _cloudPath);
 	}
@@ -167,6 +208,7 @@ double CloudStrip::computeDensity() {
 	double area = pol->get_Area();
 	if (area == 0.0) {
 		_factory->Close();
+		_factory.assign(new DSM_Factory);
 		throw std::runtime_error("Empty strip area");
 	}
 
@@ -174,11 +216,13 @@ double CloudStrip::computeDensity() {
 	unsigned int count = dsm->Npt();
 	if (count == 0) {
 		_factory->Close();
+		_factory.assign(new DSM_Factory);
 		throw std::runtime_error("Empty cloud");
 	}
 
 	_density = count / area;
 	_factory->Close();
+	_factory.assign(new DSM_Factory);
 
 	return _density;
 }
@@ -193,7 +237,22 @@ double Strip::computeDensity(Sensor::Ptr s, DSM* dsm) {
 	} else {
 		double H = axis()->quota() - q;
 		double L = 2 * H * s->tanHalfFov();
-		_density = L * s->speed()/s->freq();
+		_density = s->freq()/(L * s->speed());
 	}
+	return _density;
+}
+
+double Strip::computeDensity(DSM* dsm) {
+	double area = toPolygon()->get_Area();
+	if (area == 0.0) {
+		throw std::runtime_error("Empty strip area");
+	}
+
+	unsigned int count = dsm->Npt();
+	if (count == 0) {
+		throw std::runtime_error("Empty cloud");
+	}
+
+	_density = count / area;
 	return _density;
 }

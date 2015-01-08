@@ -26,6 +26,8 @@ CVCsvInput::CVCsvInput(QObject* p) : CVObject(p) { }
 CVCsvInput::~CVCsvInput() { }
 
 bool CVCsvInput::isValid() const {
+	Q_ASSERT(_table.size() != 0);
+
 	CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 	bool ret = cnn.is_valid();
 	if (!ret) {
@@ -35,7 +37,7 @@ bool CVCsvInput::isValid() const {
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	CV::Util::Spatialite::Recordset set = q->select(
 		QStringList() << "count(*)",
-		QStringList() << "CONTROL_POINTS", 
+		QStringList() << _table, 
 		QStringList(),
 		QVariantList()
 	);
@@ -57,7 +59,7 @@ bool CVCsvInput::remove() {
 	}
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
-	q->remove("CONTROL_POINTS", QStringList(), QVariantList());
+	q->remove(_table, QStringList(), QVariantList());
 	return false;
 }
 
@@ -89,11 +91,14 @@ bool CVCsvInput::persist() {
 
 		while (!_csv->atEnd()) {
 			QString line = _csv->readLine();
+			if (line.length() == 0) {
+				continue;
+			}
 			QStringList out;
 			_csv->splitAndFormat(line, out);
 			
 			bool ret = q->insert(
-				"CONTROL_POINTS", 
+				_table, 
 				QStringList() << "X" << "Y" << "Z" << "NAME",
 				QStringList() << "?1" << "?2" << "?3" << "?4",
 				QVariantList() << out.at(x - 1).toDouble() << out.at(y - 1).toDouble() << out.at(z - 1).toDouble() << (name != 0 ? out.at(name - 1) : "")
@@ -119,7 +124,7 @@ bool CVCsvInput::load() {
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	CV::Util::Spatialite::Recordset set = q->select(
 		QStringList() << "X" << "Y" << "Z" << "NAME",
-		QStringList() << "CONTROL_POINTS",
+		QStringList() << _table,
 		QStringList(), QVariantList(), QStringList(),
 		10
 	);

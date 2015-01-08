@@ -139,7 +139,7 @@ class Strip {
 public:
 	typedef Poco::SharedPtr<Strip> Ptr;
 
-	Strip() : _yaw(0.0), _length(0.0) {}
+	Strip() : _yaw(0.0), _length(0.0), _density(0.0), _isValid(true) {}
 
 	Strip(CV::Util::Geometry::OGRGeomPtr g) : _yaw(0.0), _length(0.0), _density(0.0), _isValid(true) {
 		geom(g);
@@ -155,11 +155,20 @@ public:
 			bool contains(double x, double y);
 			bool contains(DPOINT&);
 
+			void getAxisFromGeom(double& a, double& b, double& beta);
+            void toBuffer(double = -150);
+
+			OGRPolygon* toPolygon() { 
+				OGRGeometry* g_ = _geom;
+				return reinterpret_cast<OGRPolygon*>(g_);
+			}
+
 		private:
 			CV::Util::Geometry::OGRGeomPtr _geom;
 	};
 	
 	void fromAxis(Axis::Ptr axis, DSM* dsm, double tanHalfFov);
+	void fromLineRing(Axis::Ptr axis, OGRLinearRing* gp);
 
 	inline OGRPolygon* toPolygon() {
 		OGRGeometry* og = _geom;
@@ -192,7 +201,9 @@ public:
 	bool hasAxis() const { return !_axis.isNull(); }
 
 	double computeDensity(Sensor::Ptr, DSM* dsm);
+	double computeDensity(DSM* dsm);
 	double density() const { return _density; }
+	void density(double d) { _density = d; }
 
 	bool isValid() const { return _isValid; }
 	void isValid(bool b) { _isValid = b;}
@@ -213,10 +224,19 @@ private:
 class Block {
 public:
 	typedef Poco::SharedPtr<Block> Ptr;
+	Block() {}
+	Block(CV::Util::Geometry::OGRGeomPtr g) : _geom(g) {}
 	
 	void add(Strip::Ptr);
+
+	void split(std::vector<CV::Util::Geometry::OGRGeomPtr>&);
 	
 	CV::Util::Geometry::OGRGeomPtr geom() const { return _geom; }
+
+	inline const OGRMultiPolygon* toMultiPolygon() const {
+		const OGRGeometry* og = _geom;
+		return reinterpret_cast<const OGRMultiPolygon*>(og);
+	}
 
 private:
 	CV::Util::Geometry::OGRGeomPtr _geom;
@@ -267,6 +287,10 @@ public:
 
 	inline Status status() const { return _status; }
 
+	const DPOINT& point() {
+		return _geom;
+	}
+
 private:
 	DPOINT _geom;
 	std::string _name;
@@ -276,49 +300,30 @@ private:
 	Status _status;
 };
 
-class DSMHandler {
-public:
-	DSMHandler(DSM_Factory* dsm) : _dsm(dsm) {
-		_d = dsm ? dsm->GetDsm() : NULL;
-	}
-
-	~DSMHandler() { 
-		if (_dsm != NULL) {
-			_dsm->Close();
-		}
-	}
-
-	bool isNull() const { return _dsm == NULL; }
-
-	DSM* operator -> () {
-		return _d;
-	}
-
-	const DSM* operator -> () const {
-		return _d;
-	}
-
-private:
-	DSM_Factory* _dsm;
-	DSM* _d;
-
-	CV_DISABLE_DEFAULT_CTOR(DSMHandler);
-	CV_DISABLE_COPY(DSMHandler);
-};
-
 class CloudStrip {
 public:
 	typedef Poco::SharedPtr<CloudStrip> Ptr;
 	typedef Poco::SharedPtr<DSM_Factory> DSMPtr;
 
-	CloudStrip(Strip::Ptr p) : _strip(p), _density(0.0) {
-		_factory.assign(new DSM_Factory);
-		_factory->SetEcho(MyLas::first_pulse);
+	CloudStrip(Strip::Ptr p) : _factory(NULL), _strip(p), _density(0.0) {
+		init();
 	}
 
 	~CloudStrip() { 
-		if (_factory->GetDsm() != NULL) {
+		release();
+	}
+
+	void init() {
+		if (!_factory.get()) {
+			_factory.assign(new DSM_Factory);
+			_factory->SetEcho(MyLas::first_pulse);
+		}
+	}
+
+	void release() {
+		if (_factory.get()) {
 			_factory->Close();
+			_factory.assign(NULL);
 		}
 	}
 
@@ -333,11 +338,8 @@ public:
 	
 	double computeDensity();
 
-	DSM_Factory* dsm(bool open = true) { 
-		bool ret = true;
-		if (open) {
-			ret = _factory->Open(_cloudPath, false);
-		}
+	DSM_Factory* open(bool tria) { 
+		bool ret = _factory->Open(_cloudPath, false, tria);
 		return ret ? _factory.get() : NULL; 
 	}
 
@@ -350,6 +352,48 @@ private:
 
 	CV_DISABLE_DEFAULT_CTOR(CloudStrip);
 	CV_DISABLE_COPY(CloudStrip);
+};
+
+class DSMHandler {
+public:
+	DSMHandler(CloudStrip::Ptr strip, bool tria = true) {
+		_strip = strip;
+
+		strip->init();
+		_dsm = strip->open(tria);
+		_d = _dsm->GetDsm();
+	}
+
+	~DSMHandler() { 
+		release();
+	}
+
+	bool isNull() const { return _dsm == NULL; }
+
+	DSM* operator -> () {
+		return _d;
+	}
+
+	const DSM* operator -> () const {
+		return _d;
+	}
+
+	void release() {
+		_strip->release();
+	}
+
+	std::string name() const {
+		return _strip->name();
+	}
+
+private:
+	DSM_Factory* _dsm;
+	DSM* _d;
+
+	CloudStrip::Ptr _strip;
+
+	CV_DISABLE_DEFAULT_CTOR(DSMHandler);
+	CV_DISABLE_COPY(DSMHandler);
 };
 
 }

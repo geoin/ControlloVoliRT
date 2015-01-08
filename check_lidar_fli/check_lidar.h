@@ -105,11 +105,13 @@ private:
 	Doc_Item _initpg2(void);
 
 	void _update_assi_volo();
+	std::string _findLasByName(const std::string& las);
 
 	void _final_report();
     void _strips_comp_report();
 	void _strip_report();
     void _control_points_report();
+	void _gps_report();
 
 	bool _add_point_to_table(Doc_Item tbody, const std::string& cod, const std::string& nome1, const std::string& nome2, const DPOINT& sc);
 	bool _add_point_to_table(Doc_Item tbody, const std::string& foto, const VecOri& pt, const VecOri& sc);
@@ -141,8 +143,8 @@ private:
 	std::string _dem_name;
 	std::string _note;
 
-    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH;
-	double LID_ANG_SCAN, LID_TOL_Z, PT_DENSITY;
+    int STRIP_OVERLAP, STRIP_OVERLAP_RANGE, MAX_STRIP_LENGTH, MAX_PDOP, MIN_SAT, MIN_SAT_ANG, NBASI;
+	double LID_ANG_SCAN, LID_TOL_A, PT_DENSITY, MAX_DIST;
 
 	void _findReferenceColumns();
 	std::string _quotaCol, _stripNameCol;

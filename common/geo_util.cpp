@@ -1,6 +1,8 @@
 #include "common/util.h"
 #include "Poco/StringTokenizer.h"
 
+#include <dem_interpolate/pslg.h>
+
 using namespace CV::Util::Geometry;
 using namespace CV::Util::Spatialite;
 
@@ -58,6 +60,42 @@ void get_elong(OGRGeomPtr fv0, double ka, double* d1, double* d2)
 		*d1 = l1;
 		*d2 = l2;
 	}
+}
+
+void get_ellipse_elong(OGRGeomPtr fv0, double& d1, double& d2)
+{
+	OGRGeometry* fv = fv0;
+    OGRLinearRing* geom = ((OGRPolygon*) fv)->getExteriorRing();
+
+	InertialEllipse el;
+
+    for (int i = 0; i < geom->getNumPoints(); i++) {
+        double x = geom->getX(i);
+        double y = geom->getY(i);
+		el.push(x, y);
+	}
+
+	el.compute();
+	
+	el.getAxisLen(d1, d2);
+}
+
+void get_ellipse_elong(OGRGeomPtr fv0, double& d1, double& d2, double& t)
+{ 
+	OGRGeometry* fv = fv0;
+    OGRLinearRing* geom = ((OGRPolygon*) fv)->getExteriorRing();
+
+	InertialEllipse el;
+
+    for (int i = 0; i < geom->getNumPoints(); i++) {
+        double x = geom->getX(i);
+        double y = geom->getY(i);
+		el.push(x, y);
+	}
+
+	el.compute();
+	
+	el.getAxisLen(d1, d2, t);
 }
 
 void add_column(Connection& cnn, const std::string& table, const std::string& col_name) 

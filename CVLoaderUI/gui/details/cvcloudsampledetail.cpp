@@ -1,6 +1,7 @@
 #include "cvcloudsampledetail.h"
 
 #include "core/cvcore_utils.h"
+#include "gui/cvgui_utils.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -68,6 +69,8 @@ void CVCloudSampleDetail::searchFile() {
 }
 
 void CVCloudSampleDetail::importAll(QStringList& uri) {
+	CV::GUI::CVScopedCursor cur;
+
 	input()->origin(uri.at(0));
 
 	controller()->persist();

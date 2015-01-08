@@ -71,18 +71,33 @@ TEST (DemTest, Triangulation) {
     f.Close();
 }
 
+InertialEllipse checkEllipse(InertialEllipse& el, double a, double b, double deg) {
+	double alpha = deg * M_PI / 180.0f;
+
+	el.push(0, 0);
+	el.push(a*cos(alpha), a*sin(alpha));
+	el.push(a*cos(alpha) - b*sin(alpha), a*sin(alpha) + b*cos(alpha));
+	el.push(-b*sin(alpha), b*cos(alpha));
+
+	el.compute();
+
+	return el;
+}
+
 TEST (DemTest, Ellipse) {
-   InertialEllipse el;
-   el.push(0, 0);
-   el.push(10, 0);
-   el.push(10, 5);
-   el.push(0, 5);
+	DPOINT p1, p2;
 
-   el.compute();
-   el.Mx;
+	InertialEllipse el;
+	checkEllipse(el, 10, 5, 0);
+	el.getMajorAxis(p1, p2);
 
-   DPOINT x, y;
-   el.getMajorAxis(NULL, x, y);
+	el = InertialEllipse();
+	checkEllipse(el, 10, 5, 45);
+	el.getMajorAxis(p1, p2);
+	
+	el = InertialEllipse();
+	checkEllipse(el, 5, 10, 0);
+	el.getMajorAxis(p1, p2);
 }
 
 

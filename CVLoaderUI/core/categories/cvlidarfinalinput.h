@@ -1,5 +1,5 @@
-#ifndef CV_FOLDER_INPUT_H
-#define CV_FOLDER_INPUT_H
+#ifndef CV_LIDAR_FINAL_INPUT_H
+#define CV_LIDAR_FINAL_INPUT_H
 
 #include "core/categories/cvcontrol.h"
 
@@ -8,12 +8,12 @@
 namespace CV {
 namespace Core {
 
-class CVFolderInput : public CVObject {
+class CVLidarFinalInput : public CVObject {
 	Q_OBJECT
 
 public:
-	CVFolderInput(QObject *parent);
-	~CVFolderInput();
+	CVLidarFinalInput(QObject *parent);
+	~CVLidarFinalInput();
 
 	virtual bool isValid() const;
 	virtual bool persist();
@@ -24,9 +24,6 @@ public:
 	inline void origin(const QString& file) { _origin = file; }
 	inline const QString& origin() const { return _origin; }
 
-	inline void table(const QString& t) { _table = t; }
-	inline const QString& table() const { return _table; }
-
 	QStringList& data() { return _data; }
 
 	void setFolder(QString f) {
@@ -35,15 +32,27 @@ public:
 
 	const QString& folder() const { return _folder; } 
 
+	void set(const QString& table, const QString& column, const QString& value);
+	void set(const QString& table, const QString& column, const int& value);
+
+	QStringList tables() const { return _tables; }
+
+	int tileSize() const { return _tileSize; }
+
 private:
-	QString _table;
 	QString _origin;
 	QStringList _data;
 
 	QString _folder;
+
+	QMap<QString, QStringList> _tablesInfo;
+	QList<QString> _tables;
+	
+	QString _tileTable, _tileColumn;
+	int _tileSize;
 };
 
 } // namespace Core
 } // namespace CV
 
-#endif // CV_FOLDER_INPUT_H
+#endif // CV_LIDAR_FINAL_INPUT_H

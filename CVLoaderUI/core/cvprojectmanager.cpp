@@ -13,6 +13,7 @@
 #include "core/categories/cvfileinput.h"
 #include "core/categories/cvmissionobject.h"
 #include "core/categories/cvfolderinput.h"
+#include "core/categories/cvlidarfinalinput.h"
 #include "core/categories/cvcsvinput.h"
 #include "core/cvcore_utils.h"
 
@@ -71,7 +72,7 @@ void CVProjectManager::onNewProject() {
 			ctrl = _rawLidar(proj, false);
 			proj->insert(ctrl);
 
-			ctrl = _finalLidar(proj, true);
+			ctrl = _finalLidar(proj, false);
 			proj->insert(ctrl);
 		}
 
@@ -174,8 +175,8 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 	} else {
 		CVFolderInput* folder = new CVFolderInput(ctrl);
 		folder->controlType(fly_t);
-		folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
-		folder->table("STRIP_RAW_DATA");
+		folder->type(CVObject::RAW_STRIP_DATA);
+		folder->table("RAW_STRIP_DATA");
 		ctrl->insert(folder);
 
 		CVFileInput* file = new CVCloudSampleInput(ctrl);
@@ -185,6 +186,7 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 		ctrl->insert(file, false);
 
 		CVCsvInput* controlPoint = new CVCsvInput(proj);
+		controlPoint->setTable("CONTROL_POINTS");
 		controlPoint->uri(proj->path);
 		controlPoint->type(CVObject::CLOUD_CONTROL_POINTS);
 		controlPoint->controlType(CVControl::LIDAR_FLY);
@@ -273,17 +275,16 @@ CVControl* CVProjectManager::_rawLidar(CVProject* proj, bool load) {
 	CVControl* ctrl = new CVControl(CVControl::LIDAR_RAW, proj);
 	ctrl->uri(proj->db());
 
-	CVShapeLayer* layer = new CVShapeLayer(ctrl);
-	layer->columns(QStringList());
-	layer->table("RAW_CONTROL_POINTS");
+	CVCsvInput* layer = new CVCsvInput(ctrl);
+	layer->setTable("RAW_CONTROL_POINTS");
 	layer->controlType(CVControl::LIDAR_RAW);
 	layer->type(CVObject::RAW_CONTROL_POINTS);
 	ctrl->insert(layer);
 
 	CVFolderInput* folder = new CVFolderInput(ctrl);
 	folder->controlType(CVControl::LIDAR_RAW);
-	folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
-	folder->table("STRIP_RAW_DATA");
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("RAW_STRIP_DATA");
 	ctrl->insert(folder);
 
 	if (load) {
@@ -296,11 +297,57 @@ CVControl* CVProjectManager::_finalLidar(CVProject* proj, bool load) {
 	CVControl* ctrl = new CVControl(CVControl::LIDAR_FINAL, proj);
 	ctrl->uri(proj->db());
 
-	CVFolderInput* folder = new CVFolderInput(ctrl);
+	CVLidarFinalInput* fin = new CVLidarFinalInput(ctrl);
+	fin->controlType(CVControl::LIDAR_FINAL);
+	fin->type(CVObject::RAW_STRIP_DATA);
+	ctrl->insert(fin);
+
+	
+	CVControl* fly = proj->get(CVControl::LIDAR_FLY);
+	ctrl->insert(fly->at(0));
+	ctrl->insert(fly->at(2));
+
+	/*CVFolderInput* folder = new CVFolderInput(ctrl);
 	folder->controlType(CVControl::LIDAR_FINAL);
-	folder->type(CVObject::LIDAR_RAW_STRIP_DATA);
-	folder->table("STRIP_RAW_DATA"); //TODO change
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("FINAL_INTENSITY"); 
 	ctrl->insert(folder);
+
+	folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_FINAL);
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("FINAL_GROUND_ELL"); 
+	ctrl->insert(folder);
+
+	folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_FINAL);
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("FINAL_GROUND_ORTO");
+	ctrl->insert(folder);
+
+	folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_FINAL);
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("FINAL_OVERGROUND_ELL"); 
+	ctrl->insert(folder);
+
+	folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_FINAL);
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("FINAL_OVERGROUND_ORTO"); 
+	ctrl->insert(folder);
+
+	folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_FINAL);
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("FINAL_MDS"); 
+	ctrl->insert(folder);
+
+	folder = new CVFolderInput(ctrl);
+	folder->controlType(CVControl::LIDAR_FINAL);
+	folder->type(CVObject::RAW_STRIP_DATA);
+	folder->table("FINAL_MDT"); 
+	ctrl->insert(folder);*/
 
 	if (load) {
 		ctrl->load();

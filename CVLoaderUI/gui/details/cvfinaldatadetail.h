@@ -1,7 +1,7 @@
-#ifndef CVRAWSTRIPFOLDERDETAIL_P_H
-#define CVRAWSTRIPFOLDERDETAIL_P_H
+#ifndef CVFINALDATADETAIL_P_H
+#define CVFINALDATADETAIL_P_H
 
-#include "core/categories/cvfolderinput.h"
+#include "core/categories/cvlidarfinalinput.h"
 
 #include "cvbasedetail.h"
 
@@ -17,18 +17,23 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-class CVFolderDetail : public CVBaseDetail {
+class CVFinalDataDetail : public CVBaseDetail {
 	Q_OBJECT
 
 public:
-	CVFolderDetail(QWidget *parent, Core::CVObject*);
-	~CVFolderDetail();
+	CVFinalDataDetail(QWidget *parent, Core::CVObject*);
+	~CVFinalDataDetail();
 
 	virtual void clearAll();
 	virtual void searchFile();
 	virtual void importAll(QStringList&);
 	
-	inline Core::CVFolderInput* folder() const { return static_cast<Core::CVFolderInput*>(controller()); }
+	inline Core::CVLidarFinalInput* input() const { return static_cast<Core::CVLidarFinalInput*>(controller()); }
+
+public slots:
+	void finalFolder();
+	void finalFile();
+	void onTileSizeChanged(int);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -37,13 +42,19 @@ protected:
     virtual void dropEvent(QDropEvent*);
 
 private:
+	QWidget* _addFolderPicker(QString, QString = "FOLDER");
+	QWidget* _addFilePicker(QString, QString = "GRID");
+
     QScopedPointer<QFileInfo> _file;
 	QString _uri;
-	QList<QLabel*> _labels;
+
+	QMap<QString, QWidget*> _data;
+
+	QMap<QString, QLineEdit*> _editors;
 };
 
 } // namespace Details
 } // namespace GUI
 } // namespace CV
 
-#endif // CVDEMDETAIL_P_H
+#endif // CVFINALDATADETAIL_P_H

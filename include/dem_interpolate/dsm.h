@@ -31,7 +31,8 @@ public:
 		all_pulses = 0,
 		first_pulse = 1,
 		last_pulse = 2,
-		intermediate_pulse = 4
+		intermediate_pulse = 4,
+		single_pulse = 5
 	};
 	MyLas(): _lasreader(NULL) {}
 	~MyLas();
@@ -253,6 +254,7 @@ public:
 	void Ymax(double val) { _ymin = val; }
 	void Zmax(double val) { _zmin = val; }
 
+	virtual void getBB(DPOINT&, DPOINT&, DPOINT&, DPOINT&) {}
 	virtual void getMajorAxis(DPOINT&, DPOINT&) {}
 protected:
 	std::string	_err_mes;

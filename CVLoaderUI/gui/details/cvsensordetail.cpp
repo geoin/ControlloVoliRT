@@ -197,7 +197,7 @@ void CVSensorDetail::importAll(QStringList& uri) {
             }
         }
     }
-    if (i == _params.size()) {
+    if (i <= _params.size()) /*No speed for now*/ {
 		save();
 	}
 }
