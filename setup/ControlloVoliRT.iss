@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Controllo Voli RT"
-#define MyAppVersion "1.3.5"
+#define MyAppVersion "1.3.6"
 #define MyAppPublisher "Geoin S.R.L."
 #define MyAppURL "http://www.geoin.it"
 #define MyAppExeName "ControlloVoliRT"
