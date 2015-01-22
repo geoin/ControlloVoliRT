@@ -740,6 +740,7 @@ void photo_exec::_process_photos()
 
 		DPOINT Pc(vdp.Pc);
 		std::vector<DPOINT> dpol;
+		bool failed = false;
 		for ( int i = 0; i < 5; i++) {
 			Collimation ci;
 			ci.xi = ( i == 0 || i == 3 ) ? 0.f : (i != 4) ? (float) vdp.dimx() : (float) (vdp.dimx() / 2.);
@@ -747,10 +748,10 @@ void photo_exec::_process_photos()
 			DPOINT pd, pt;
 			vdp.GetRay(ci, &pd);
 			if ( !ds->RayIntersect(Pc, pd, pt) ) {
-				if ( !ds->IsInside(pt.z) ) {
-					std::stringstream ss;
-					ss << "Il fotogramma " << it->first << " cade al di fuori del dem";
-					throw std::runtime_error(ss.str());
+				if ( !ds->IsValid(pt.z) ) {
+					std::cout << "Il fotogramma " << it->first << " cade al di fuori del dem" << std::endl;
+					failed = true;
+					continue;
 				}
 			}
 			double dp = vdp.pix() * (vdp.Pc.z - pt.z) / vdp.foc();
@@ -759,6 +760,10 @@ void photo_exec::_process_photos()
 			dt += vdp.Pc.z - pt.z;
 			dpol.push_back(pt);
 		}
+		if (failed) {
+			continue;
+		}
+
 		OGRGeometryFactory gf;
 		OGRGeomPtr gp_ = gf.createGeometry(wkbLinearRing);
 
