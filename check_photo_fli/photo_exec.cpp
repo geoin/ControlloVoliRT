@@ -749,8 +749,10 @@ void photo_exec::_process_photos()
 			vdp.GetRay(ci, &pd);
 			if ( !ds->RayIntersect(Pc, pd, pt) ) {
 				if ( !ds->IsValid(pt.z) ) {
-					std::cout << "Il fotogramma " << it->first << " cade al di fuori del dem" << std::endl;
-					failed = true;
+					if (!failed) {
+						std::cout << "Il fotogramma " << it->first << " cade al di fuori del dem" << std::endl;
+						failed = true;
+					}
 					continue;
 				}
 			}
