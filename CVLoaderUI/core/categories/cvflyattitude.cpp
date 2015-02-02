@@ -90,7 +90,7 @@ bool CVFlyAttitude::persist() {
 
 		QString key = l.at(0);
 		QStringList id = key.split("_");
-		if (id.length() >= 2) { //TODO: check, this is probably not true anymore (len must be >= 2)
+		if (id.length() < 2) { //TODO: check, this is probably not true anymore (len must be >= 2)
 			continue;
 		}
 
