@@ -28,7 +28,7 @@ public slots:
 private:
     QLineEdit* _name, *_path, *_conf;
     QPlainTextEdit* _note;
-    QComboBox* _type, * _scale;
+    QComboBox* _type, * _scale, *_epsg;
 };
 
 } // namespace Dialogs
