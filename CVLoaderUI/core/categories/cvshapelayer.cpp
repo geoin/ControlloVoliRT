@@ -68,7 +68,7 @@ bool CVShapeLayer::persist() {
 		e->control = controlType();  
 		e->object = type();
 		e->uri = _shp;
-		e->db = uri();
+		//e->db = uri();
 		Core::CVJournal::add(e);
 	}
 

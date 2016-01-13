@@ -122,6 +122,8 @@ bool CVProjectDialog::getInput(Core::CVProject& proj) {
 		proj.scale = _scale->currentText();
 	}
 
+	proj.datum = _epsg->currentText().toInt();
+
 	QTextDocument* doc = _note->document();
 	QStringList l;
 	for (QTextBlock it = doc->begin(); it != doc->end(); it = it.next()) {

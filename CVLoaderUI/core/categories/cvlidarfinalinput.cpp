@@ -125,7 +125,7 @@ bool CVLidarFinalInput::persist() {
 			e->control = controlType();  
 			e->object = type();
 			e->uri = origin();
-			e->db = uri();
+			//e->db = uri();
 			Core::CVJournal::add(e);
 		}
 

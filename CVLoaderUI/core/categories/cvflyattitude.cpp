@@ -136,7 +136,7 @@ bool CVFlyAttitude::persist() {
 	e->control = Core::CVControl::FLY;  
 	e->object = Core::CVObject::ATTITUDE;
 	e->uri = _origin;
-	e->db = uri();
+	//e->db = uri();
 	Core::CVJournal::add(e);
 
 	emit persisted();

@@ -44,6 +44,8 @@ public:
 	long long timestamp;
     Type type;
 
+	int datum;
+
 private:
 	bool _addResource(const QString& res, CV::Util::Spatialite::Connection&);
 

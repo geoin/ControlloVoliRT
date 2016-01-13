@@ -109,7 +109,7 @@ bool CVStation::persist() {
 		e->control = Core::CVControl::FLY;  
 		e->object = Core::CVObject::STATION;
 		e->uri = origin();
-		e->db = uri();
+		//e->db = uri();
 		Core::CVJournal::add(e);
 	}
 	return ret; //EMPTY

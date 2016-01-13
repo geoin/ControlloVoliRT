@@ -62,9 +62,9 @@ void VDP::Reset()
 void VDP::Init(const DPOINT& p, double pom, double pfi, double pka)
 {
 	Pc = p;//VecOri(p.x, p.y, p.z);
-	om = DEG_RAD(pom);	// omega positivo antiorario
-	fi = -DEG_RAD(pfi); // per convenzione internamente fi e ka sono positivi se orari
-	ka = -DEG_RAD(pka);
+	om = Conv<Angle_t::DEG>::ToRad(pom);	// omega positivo antiorario
+	fi = -Conv<Angle_t::DEG>::ToRad(pfi); // per convenzione internamente fi e ka sono positivi se orari
+	ka = -Conv<Angle_t::DEG>::ToRad(pka);
 	mat = MatOri(om, fi, ka);
 }
 

@@ -74,7 +74,7 @@ bool CVMissionObject::persist() {
 		e->control = Core::CVControl::GPS_DATA;  
 		e->object = Core::CVObject::MISSION;
 		e->uri = name();
-		e->db = db;
+		//e->db = db;
 		Core::CVJournal::add(e);
 	}
 

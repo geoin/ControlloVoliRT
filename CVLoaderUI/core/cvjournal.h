@@ -20,7 +20,7 @@ struct CVJournalEntry {
 	QString id, uri, note;
 	short control, object;
 	QDateTime date;
-	QString db;
+	//QString db;
 };
 
 class CVJournal {

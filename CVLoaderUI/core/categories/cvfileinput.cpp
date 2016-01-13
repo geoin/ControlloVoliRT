@@ -73,7 +73,7 @@ bool CVFileInput::persist() {
 			e->control = _control;  
 			e->object = _object;
 			e->uri = _target;
-			e->db = db;
+			//e->db = db;
 			Core::CVJournal::add(e);
 		} else {
 			return false;

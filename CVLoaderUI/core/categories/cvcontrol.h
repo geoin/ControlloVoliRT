@@ -39,7 +39,6 @@ public:
 	inline const QString& uri() const { 
 		return _uri;
 	}
-
 	
 	CVObject* at(int i) const;
 
@@ -117,7 +116,7 @@ private:
 class CVMissionDevice : public CVObject {
 	Q_OBJECT
 public:
-	explicit CVMissionDevice(QObject* p) : CVObject(p) {}
+	explicit CVMissionDevice(QObject* p) : CVObject(p), _isPlanning(false) {}
 
 	virtual bool load(const QString& mId) = 0;
 

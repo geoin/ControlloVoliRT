@@ -1136,7 +1136,7 @@ void lidar_exec::_process_strips()
 			stm[1] = SIGLA_PRJ;
 			stm[2] = strip;
 			stm[3] = mission;
-			stm[4] = RAD_DEG(axis->angle());
+			stm[4] = Conv<Angle_t::DEG>::FromRad(axis->angle());
 			stm[5] = stripPtr->density();
 			stm[6] = dist;
 			stm[7].fromBlob(stripPtr->geom());

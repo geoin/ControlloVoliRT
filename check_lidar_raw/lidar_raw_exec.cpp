@@ -230,11 +230,11 @@ bool lidar_raw_exec::_initStripsLayer() {
 		if (set.eof()) {
 			throw std::runtime_error("No data in Z_STRIPV");
 		}
-		
+
 		while (!set.eof()) {
 			Blob b = set["GEOM"].toBlob();
 			Lidar::Strip::Ptr strip(new Lidar::Strip(b));
-			strip->yaw(DEG_RAD(set["Z_STRIP_YAW"].toDouble()));
+			strip->yaw(Conv<Angle_t::DEG>::ToRad(set["Z_STRIP_YAW"].toDouble()));
 			strip->missionName(set["Z_MISSION"].toString());
 			strip->name(set["Z_STRIP_CS"].toString());
 			strip->density(set["Z_STRIP_DENSITY"].toDouble());

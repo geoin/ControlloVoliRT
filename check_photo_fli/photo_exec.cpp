@@ -543,7 +543,7 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 			sprintf(nomef, "%s_%04d", strip.c_str(), k);
 			VDP vdp(cam_plan, nomef); // cam is the camera used for planning the flight
 			DPOINT pt(pt0.x + (i - first) * step * cos(alfa), pt0.y + (i - first) * step * sin(alfa), z);
-			vdp.Init(pt, 0, 0, RAD_DEG(alfa));
+			vdp.Init(pt, 0, 0, Conv<Angle_t::DEG>::FromRad(alfa));
 			vdps[vdp.nome] = vdp;
 		}
 		rs.next();
@@ -790,8 +790,8 @@ void photo_exec::_process_photos()
 		stm[2] = get_strip(it->first);
 		stm[3] = it->first;
 		stm[4] = dt;
-		stm[5] = RAD_DEG(vdp.om);
-		stm[6] = RAD_DEG(vdp.fi);
+		stm[5] = Conv<Angle_t::DEG>::FromRad(vdp.om);
+		stm[6] = Conv<Angle_t::DEG>::FromRad(vdp.fi);
 		stm[7].fromBlob(pol);
 
 		stm.execute();
@@ -891,8 +891,8 @@ void photo_exec::_process_models()
 				} else if ( dh < -M_PI ) {
 					dh += 2 * M_PI;
 				}
-				//dh = RAD_DEG(dh);
-				dh = (int)(RAD_DEG(dh) * 1000.) / 1000.;
+				//dh = Conv<Angle_t::DEG>::FromRad(dh);
+				dh = (int)(Conv<Angle_t::DEG>::FromRad(dh) * 1000.) / 1000.;
 				//dh /= 1000.;
 
 				double d1f, d2f, d1m, d2m;
@@ -1130,7 +1130,7 @@ void photo_exec::_process_block()
 			VDP& vdp3 = _vdps[vs[j].first];
 			VDP& vdp4 = _vdps[vs[j].last];
 			VecOri v2(vdp4.Pc - vdp3.Pc);
-			double ct = RAD_DEG(acos((v1 % v2) / (v1.module() * v2.module())));
+			double ct = Conv<Angle_t::DEG>::FromRad(acos((v1 % v2) / (v1.module() * v2.module())));
 			if ( fabs(ct) < 10 || fabs(ct) > 170 ) { // 10 deg difference in the heading means they are parallel
 				OGRGeomPtr g1 = vs[i].geo;
 				OGRGeomPtr g2 = vs[j].geo;

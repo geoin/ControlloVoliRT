@@ -82,7 +82,7 @@ bool CVRinex::persist() {
 		e->control = Core::CVControl::FLY;  
 		e->object = Core::CVObject::FLY_RINEX;
 		e->uri = origin();
-		e->db = uri();
+		//e->db = uri();
 		Core::CVJournal::add(e);
 	}
 
