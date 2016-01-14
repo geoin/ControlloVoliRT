@@ -91,15 +91,6 @@ bool gps_exec::run()
         cnn.open(db_path.toString());
         //cnn.initialize_metdata();
 
-		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
-		//   ASSI_VOLO,
-		//   SHAPE_CHAR_SET,
-		//   SRID,
-		//   "geom",
-		//   true, // to have only XY
-		//   false,
-		//   false);
-
 		_read_ref_val();
 
 		//std::cout << "Layer:" << ASSI_VOLO << std::endl;

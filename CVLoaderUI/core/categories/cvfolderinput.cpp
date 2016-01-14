@@ -71,12 +71,14 @@ bool CVFolderInput::persist() {
 		if (!ret) {
 			return false;
 		} else {
-			Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+			/*Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
 			e->control = controlType();  
 			e->object = type();
 			e->uri = origin();
 			//e->db = uri();
-			Core::CVJournal::add(e);
+			Core::CVJournal::add(e);*/
+
+			log(origin(), "");
 		}
 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {

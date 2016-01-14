@@ -106,6 +106,8 @@ bool CVCsvInput::persist() {
 		}
 
 		cnn.commit_transaction();
+
+		log(_csv->name(), "");
 		return true;
 	} else {
 		return load();
@@ -168,7 +170,6 @@ CsvParsingDialog::CsvParsingDialog(QWidget* p) : QDialog(p) {
 
 	_table = new QTableWidget(10, 10, this);
 
-	
 	gbox = new QFormLayout;
 	_x =  new QComboBox(this);
 	_y =  new QComboBox(this);
@@ -255,7 +256,6 @@ void CsvParsingDialog::_tableFromCsv() {
 		for (int k = 0; k < out.size(); k++) {
 			sel << out.at(k);
 		}
-
 	} else {
 		for (int j = 0; j < out.size(); j++) {
 			QTableWidgetItem* item = new QTableWidgetItem(out.at(j));

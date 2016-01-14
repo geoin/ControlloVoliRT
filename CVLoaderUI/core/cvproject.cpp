@@ -46,7 +46,7 @@ QString CVProject::loadFrom(const QDir& dir) {
 		if (!set.eof()) {
 			notes = QString(set[0].toString().c_str());
 			scale = QString(set[1].toString().c_str());
-			datum = set[1].toInt();
+			datum = set[2].toInt();
 		} 
 
 		return _db;

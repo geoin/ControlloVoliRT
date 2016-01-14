@@ -135,11 +135,13 @@ bool CVSensor::persist() {
 		);
 	}
 	
-	Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+	/*Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
 	e->control = isPlanning() ? Core::CVControl::LIDAR_PLAN : Core::CVControl::LIDAR_GPS_DATA;
 	e->object = Core::CVObject::SENSOR;
 	e->uri = uri();
-	Core::CVJournal::add(e);
+	Core::CVJournal::add(e);*/
+
+	log();
 	return ret;
 }
 

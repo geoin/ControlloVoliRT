@@ -70,12 +70,14 @@ bool CVMissionObject::persist() {
 	);
 
 	if (ret) {
-		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+		/*Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
 		e->control = Core::CVControl::GPS_DATA;  
 		e->object = Core::CVObject::MISSION;
 		e->uri = name();
 		//e->db = db;
-		Core::CVJournal::add(e);
+		Core::CVJournal::add(e);*/
+
+		log("", "Missione " + name());
 	}
 
 	return ret; 
@@ -125,11 +127,13 @@ bool CVMissionObject::load() {
 		}
 		dev->mission(id());
 		dev->load(idDevice);
+		dev->controlType(missionType());
 	}
 
 	if (ba.length() > 2) {
 		CVRinex* r = static_cast<CVRinex*>(at(1));
 		r->mission(id());
+		r->controlType(missionType());
 		r->load();
 	}
 
@@ -144,6 +148,7 @@ bool CVMissionObject::load() {
 	while (!set.eof()) {
 		CVStation* s = new CVStation(stations, QString(set[0].toString().c_str()));
 		s->type(CVObject::STATION);
+		s->controlType(missionType());
 		s->mission(id());
 		s->uri(uri());
 		s->name(QString(set[1].toString().c_str()));

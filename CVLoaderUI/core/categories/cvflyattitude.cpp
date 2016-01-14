@@ -132,12 +132,14 @@ bool CVFlyAttitude::persist() {
 	}
 	_data << QString::number(attData.size()) << QString::number(num);
 
-	Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+	/*Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
 	e->control = Core::CVControl::FLY;  
 	e->object = Core::CVObject::ATTITUDE;
 	e->uri = _origin;
 	//e->db = uri();
-	Core::CVJournal::add(e);
+	Core::CVJournal::add(e);*/
+
+	log(_origin, "");
 
 	emit persisted();
 	return true;

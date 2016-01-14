@@ -102,6 +102,9 @@ void CVCameraDetail::importAll(QStringList& uri) {
     if (!open) {
         return;
     }
+
+	controller()->uri(uri.at(0));
+
     QXmlStreamReader xml(&file);
 	int i = 0;
     while(!xml.atEnd()) {

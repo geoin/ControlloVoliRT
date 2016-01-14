@@ -81,7 +81,7 @@ public:
 		FINAL_MDT
 	};
 
-	explicit CVObject(QObject* p) : QObject(p), _type(UNKNOWN_OBJECT) {}
+	explicit CVObject(QObject* p, CVControl::Type ct = CVControl::UNKNOWN_CATEGORY, Type t = UNKNOWN_OBJECT) : QObject(p), _controlType(ct), _type(t) {}
 	virtual ~CVObject() { Q_ASSERT(_type != UNKNOWN_OBJECT); }
 
 	inline void type(Type t) { _type = t; }
@@ -99,6 +99,9 @@ public:
 	virtual bool remove() = 0;
 	
 	virtual void init() {}
+
+	virtual void log(QString uri, QString note) const;
+	virtual void log(QString note = QString()) const;
 
 signals:
 	void persisted();

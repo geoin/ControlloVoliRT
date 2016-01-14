@@ -77,15 +77,16 @@ bool CVRinex::persist() {
 	);
 	if (!ret) {
 		return false;
-	} else {
-		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
-		e->control = Core::CVControl::FLY;  
-		e->object = Core::CVObject::FLY_RINEX;
-		e->uri = origin();
-		//e->db = uri();
-		Core::CVJournal::add(e);
-	}
+	} 
 
+	/*Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+	e->control = Core::CVControl::FLY;  
+	e->object = Core::CVObject::FLY_RINEX;
+	e->uri = origin();
+	//e->db = uri();
+	Core::CVJournal::add(e);*/
+
+	log(origin(), "");
 	return load();
 }
 

@@ -119,10 +119,10 @@ std::string _set_ref_scale(const std::string& nome)
 		return "RefScale_10000";
 	return "";
 }
-bool GetProjData(Connection& cnn, std::string& note, std::string& scale)
+bool GetProjData(Connection& cnn, std::string& note, std::string& scale, int& datum)
 {
 	std::stringstream sql;
-	sql << "SELECT NOTE, SCALE from PROJECT";
+	sql << "SELECT NOTE, SCALE, DATUM from PROJECT";
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
@@ -131,6 +131,7 @@ bool GetProjData(Connection& cnn, std::string& note, std::string& scale)
 		return false;
     note = rs[0].toString();
 	scale = _set_ref_scale(rs[1]);
+	datum = rs[2].toInt();
 	return true;
 }
 void read_planned_cam(Connection& cnn, Camera& cam)
