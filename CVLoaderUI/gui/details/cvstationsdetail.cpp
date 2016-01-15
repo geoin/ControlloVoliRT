@@ -191,6 +191,10 @@ void CVStationsDetail::importAll(const QStringList& uri) {
     //_dialog.resizeBarWidth(230);
     _dialog.resize(260, 100);
 	_dialog.exec();
+	
+	foreach (QString f, uri) {
+		controller()->log(f, "");
+	}
 }
 
 void CVStationsDetail::onStationSelected(int item) {

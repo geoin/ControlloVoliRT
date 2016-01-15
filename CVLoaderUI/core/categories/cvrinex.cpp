@@ -86,7 +86,8 @@ bool CVRinex::persist() {
 	//e->db = uri();
 	Core::CVJournal::add(e);*/
 
-	log(origin(), "");
+	//tmp dir here, log the origin outside
+	//log(origin(), "");
 	return load();
 }
 

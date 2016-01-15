@@ -387,7 +387,7 @@ void photo_exec::_assi_from_vdp(std::map<std::string, VDP>& vdps)
 	stm.prepare(sql2.str());
 		
 	OGRSpatialReference sr;
-	sr.importFromEPSG(SRID);
+	sr.importFromEPSG(SRID(cnn));
 
 	std::map<std::string, VDP>::iterator it;
 	std::string strip0, fi, ff;
@@ -731,7 +731,7 @@ void photo_exec::_process_photos()
 	std::vector<GSD> vgsd;
 		
 	OGRSpatialReference sr;
-	sr.importFromEPSG(SRID);
+	sr.importFromEPSG(SRID(cnn));
 
 	std::map<std::string, VDP>::iterator it;
 	for (it = _vdps.begin(); it != _vdps.end(); it++) {
@@ -1001,7 +1001,7 @@ void photo_exec::_process_strips()
 		}
 		if ( pol->getGeometryType() == wkbPolygon ) {
 			OGRSpatialReference sr;
-			sr.importFromEPSG(SRID);
+			sr.importFromEPSG(SRID(cnn));
 
 			OGRGeometryFactory gf;
 			OGRGeomPtr gp_ = gf.createGeometry(wkbMultiPolygon);

@@ -20,6 +20,8 @@ void CVJournal::add(CVJournalEntry::Entry e) {
 		e->date = QDateTime::currentDateTimeUtc();
 	}
 
+	Q_ASSERT(e->control > CVControl::UNKNOWN_CATEGORY && e->object > CVObject::UNKNOWN_OBJECT);
+
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	q->insert(
 		"JOURNAL", 

@@ -35,7 +35,7 @@
 #include <iostream>
 #include "common/util.h"
 
-#define SRID 32632
+//#define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CAMERA "camera.xml"
 #define OUT_DOC "check_ta.xml"

@@ -43,7 +43,7 @@
 #include "cv_version.h"
 #include <cmath>
 
-#define SRID 32632
+//#define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define REFSCALE "RefScale_2000"
 #define GEO_DB_NAME "geo.sqlite"
@@ -189,7 +189,7 @@ void lidar_exec::_createAvolov() {
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'GEOM'," <<
-		SRID << "," <<
+		SRID(cnn) << "," <<
 		"'LINESTRING'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
@@ -281,7 +281,7 @@ void lidar_exec::_buildAxis() {
 
 	std::stringstream sql2;
 	sql2 << "INSERT INTO AVOLOV (" << _stripNameCol << ", GEOM) \
-		VALUES (?1, ST_GeomFromWKB(?2, " << SRID << ") )";
+		VALUES (?1, ST_GeomFromWKB(?2, " << SRID(cnn) << ") )";
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -1185,8 +1185,8 @@ void lidar_exec::process_end_point_axis_info(const Blob& pt, std::map<std::strin
 
 	std::stringstream sql;
 
-	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo, AsBinary(geom) as geoWGS FROM " << GPS_TABLE_NAME << 
-		" WHERE rowid in( select rowid from SpatialIndex where f_table_name='gps' and  search_frame=MakeCircle(ST_X(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), ST_Y(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), 0.01))";
+	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID(cnn) << ") ) as geo, AsBinary(geom) as geoWGS FROM " << GPS_TABLE_NAME << 
+		" WHERE rowid in( select rowid from SpatialIndex where f_table_name='gps' and  search_frame=MakeCircle(ST_X(ST_Transform(ST_GeomFromWKB(?1, " << SRID(cnn) << ")," << SRIDGEO << ")), ST_Y(ST_Transform(ST_GeomFromWKB(?1, " << SRID(cnn) << ")," << SRIDGEO << ")), 0.01))";
 
 	Statement stm(cnn);
 	stm.prepare(sql.str());
@@ -1439,13 +1439,13 @@ void lidar_exec::_process_block()
 	std::stringstream sqlb;
 	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn) << "," <<
 		"'" << get_typestring(block.geom()) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sqlb.str());
 	
 	std::stringstream sqlc;
-	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 	Statement stm0(cnn);
 	cnn.begin_transaction();
 	stm0.prepare(sqlc.str());
@@ -1568,13 +1568,13 @@ void lidar_exec::_get_dif()
 	std::stringstream sqlb;
 	sqlb << "SELECT AddGeometryColumn('" << tabled << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn) << "," <<
 		"'" << get_typestring(dif) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sqlb.str());
 	
 	std::stringstream sqlc;
-	sqlc << "INSERT INTO " << tabled << " (DIFF_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sqlc << "INSERT INTO " << tabled << " (DIFF_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 	Statement stm0(cnn);
 	cnn.begin_transaction();
 	stm0.prepare(sqlc.str());

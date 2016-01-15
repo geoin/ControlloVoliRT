@@ -39,7 +39,7 @@
 #include "gdal/ogr_geometry.h"
 #include "common/util.h"
 
-#define SRID 32632
+//#define SRID 32632
 #define SIGLA_PRJ "CSTP"
 //#define SHAPE_CHAR_SET "CP1252"
 #define REFSCALE "RefScale_2000"
@@ -261,7 +261,7 @@ bool ortho_exec::_process_borders()
 
 	int nf = _fogli.size();
 	OGRSpatialReference sr;
-	sr.importFromEPSG(SRID);
+	sr.importFromEPSG(SRID(cnn));
 	for ( size_t i = 0; i < nf; i++) {
 		std::string foglio(_fogli[i]);
 		std::cout << "Elaborazione bordo di " << foglio << " " << 
@@ -353,7 +353,7 @@ bool ortho_exec::_process_imgs()
 	stm.prepare(sql2.str());
 		
 	OGRSpatialReference sr;
-	sr.importFromEPSG(SRID);
+	sr.importFromEPSG(SRID(cnn));
 
 	std::vector<DPOINT> dpol;
 	for ( size_t i = 0; i < vtfw.size(); i++) {

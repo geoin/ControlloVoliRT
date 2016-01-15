@@ -44,7 +44,7 @@
 #define ASSI_VOLO "AVOLOV"
 
 #define REFSCALE "RefScale_2000"
-#define SRID 32632 // SRID UTM32 wgs84
+//#define SRID 32632 // SRID UTM32 wgs84
 #define SRIDGEO 4326 // SRID lat lon wgs84
 #define SHAPE_CHAR_SET "CP1252"
 #define DB_NAME "geo.sqlite"

@@ -69,7 +69,7 @@ public:
 		Prj_type = 0,
 		fli_type = 1
 	};
-	photo_exec(): _df(NULL), _type(fli_type) {}
+	photo_exec(): _df(NULL), _type(fli_type){}
 	~photo_exec();
 	bool run(void);
 	void set_proj_dir(const std::string& nome);

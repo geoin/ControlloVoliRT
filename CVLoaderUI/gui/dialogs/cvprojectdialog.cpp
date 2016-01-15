@@ -49,10 +49,10 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
 	_scale->addItem(tr("10000"));
 
 	_epsg = new QComboBox(this);
-	_epsg->setValidator(new QIntValidator);
 	_epsg->setEditable(true);
-	_epsg->setInsertPolicy(QComboBox::NoInsert);
-	_epsg->addItems(QStringList() << "6704" << "6705" << "6706" << "6707" << "6708" << "4936" << "4937" << "4258" << "25832" << "25833" << "4265" << "3003" << "3004");
+	_epsg->setInsertPolicy(QComboBox::InsertAtTop);
+	_epsg->addItems(QStringList() << "25832" << "6704" << "6705" << "6706" << "6707" << "6708" << "4936" << "4937" << "4258" << "25833" << "4265" << "3003" << "3004");
+	_epsg->setValidator(new QIntValidator(this));
 
     QFormLayout* form = new QFormLayout;
     form->addRow(tr("Nome"), _name);

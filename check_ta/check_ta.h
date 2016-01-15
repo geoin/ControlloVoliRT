@@ -41,7 +41,7 @@ public:
 	typedef std::map<std::string, VDPC> VDP_MAP;
 	typedef std::map<std::string, DPOINT> CPT_MAP;
 	typedef std::multimap<std::string, std::string> CPT_VDP;
-	ta_exec() {}
+	ta_exec(){}
 	~ta_exec();
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
