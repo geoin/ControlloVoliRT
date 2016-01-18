@@ -95,7 +95,9 @@ CVFinalDataDetail::~CVFinalDataDetail() {
 
 void CVFinalDataDetail::onTileSizeChanged(int size) {
 	input()->set("FINAL_RAW_STRIP_DATA", "TILE_SIZE", size);
-	input()->persist();
+	if (input()->persist()) {
+		info();
+	}
 }
 
 QWidget* CVFinalDataDetail::_addFolderPicker(QString table, QString column) {
@@ -157,8 +159,8 @@ void CVFinalDataDetail::finalFolder() {
 	);
 
 	if (!ref.isEmpty()) {
-		QFileInfo info(ref);
-		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
+		QFileInfo in(ref);
+		Core::CVSettings::set(CV_PATH_SEARCH, in.absolutePath());
 
 		QString table = sender()->property("TABLE").toString();
 		QString folder = sender()->property("COLUMN").toString();
@@ -166,7 +168,9 @@ void CVFinalDataDetail::finalFolder() {
 
 		input()->set(table, folder, ref);
 		_editors[table]->setText(ref);
-		controller()->persist();
+		if (controller()->persist()) {
+			info();
+		}
 	}
 }
 
@@ -177,8 +181,8 @@ void CVFinalDataDetail::finalFile() {
 	);
 
 	if (!ref.isEmpty()) {
-		QFileInfo info(ref);
-		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
+		QFileInfo in(ref);
+		Core::CVSettings::set(CV_PATH_SEARCH, in.absolutePath());
 
 		QString table = sender()->property("TABLE").toString();
 		QString folder = sender()->property("COLUMN").toString();
@@ -186,7 +190,9 @@ void CVFinalDataDetail::finalFile() {
 		
 		input()->set(table, folder, ref);
 		_editors[table]->setText(ref);
-		controller()->persist();	
+		if (controller()->persist()) {
+			info();
+		}	
 	}
 }
 

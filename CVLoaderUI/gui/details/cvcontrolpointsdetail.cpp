@@ -91,6 +91,7 @@ void CVControlPointsDetail::importAll(QStringList& uri) {
 			controller()->load();
 			updateTable();
 		}
+		info();
 	}
 }
 

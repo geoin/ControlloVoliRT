@@ -69,8 +69,10 @@ void CVContourDetail::searchFile() {
 
 void CVContourDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
-	controller()->persist();
-	_labels.at(0)->setText(tr("Dati inseriti"));
+	if (controller()->persist()) {
+		info();
+		_labels.at(0)->setText(tr("Dati inseriti"));
+	}
 }
 
 void CVContourDetail::dragEnterEvent(QDragEnterEvent* ev) {

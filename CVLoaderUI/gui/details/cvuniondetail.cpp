@@ -78,7 +78,9 @@ void CVUnionDetail::searchFile() {
 
 void CVUnionDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
-	controller()->persist();
+	if (controller()->persist()) {
+		info();
+	}
 	_labels.at(0)->setText(QString::number(layer()->rows()));
 }
 

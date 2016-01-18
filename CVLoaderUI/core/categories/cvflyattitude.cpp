@@ -83,6 +83,11 @@ bool CVFlyAttitude::persist() {
 		if (line.isEmpty()) { 
 			continue;
 		}
+
+		if (attData.size() == 0 && line.trimmed().startsWith("#")) {
+			//read header
+		}
+
 		QStringList l = line.split(QRegExp("[\\t*\\s*]"), QString::SkipEmptyParts);
 		if (l.size() != 7) {
 			continue;

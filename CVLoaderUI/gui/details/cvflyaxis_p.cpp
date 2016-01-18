@@ -158,6 +158,8 @@ void CVFlyAxis_p::searchFile() {
 void CVFlyAxis_p::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
 	if (controller()->persist()) {
+		info();
+
 		_clearRefCols();
 
 		populateTable();

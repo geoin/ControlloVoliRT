@@ -73,7 +73,9 @@ void CVCloudSampleDetail::importAll(QStringList& uri) {
 
 	input()->origin(uri.at(0));
 
-	controller()->persist();
+	if (controller()->persist()) {
+		info();
+	}
 	_labels.at(0)->setText(tr("Dati inseriti"));
 }
 

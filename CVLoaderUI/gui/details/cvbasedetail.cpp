@@ -45,17 +45,31 @@ CVBaseDetail::CVBaseDetail(QWidget* p, Core::CVObject* c) : QWidget(p), _control
     _descr->setMaximumHeight(36);
     _descr->setStyleSheet("padding: 4px;");
 
+	_path = new QLabel(this);
+    _path->setIndent(24);
+    _path->setMaximumHeight(36);
+    _path->setStyleSheet("padding: 4px;");
+
+	_date = new QLabel(this);
+    _date->setIndent(24);
+    _date->setMaximumHeight(36);
+    _date->setStyleSheet("padding: 4px;");
+
     _body = new QWidget(this);
 
     QVBoxLayout* box = new QVBoxLayout;
     box->addWidget(header);
     box->addWidget(_descr);
+    box->addWidget(_path);
+    box->addWidget(_date);
     box->addWidget(_body, 2);
     setLayout(box);
 
 	QMenu* m = detailMenu();
 	connect(m->addAction(QIcon(""), tr("Apri")), SIGNAL(triggered()), this, SLOT(searchFile()));
 	connect(m->addAction(QIcon(""), tr("Rimuovi")), SIGNAL(triggered()), this, SLOT(clearAll()));
+
+	info();
 }
 
 void CVBaseDetail::createRow(QWidget* p, const QString& label, QLabel*& lab, QLabel*& info) {

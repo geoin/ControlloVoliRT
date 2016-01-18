@@ -199,8 +199,7 @@ QDateTime CVProject::creationDate() {
 }
 	
 QDateTime CVProject::lastModificationDate() {
-	CVJournalEntry::EntryList l = Core::CVJournal::last(
-		_db,
+	CVJournalEntry::EntryList l = Core::CVJournal::lastN(
 		QStringList(),
 		QVariantList(),
 		1

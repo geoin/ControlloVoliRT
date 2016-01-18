@@ -1,5 +1,7 @@
 #include "cvcontrol.h"
 
+#include "core/cvjournal.h"
+
 namespace CV {
 namespace Core {
 

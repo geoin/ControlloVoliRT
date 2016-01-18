@@ -167,6 +167,9 @@ bool CVRinexDetail::_importAllAsync(const QString& tmp, QDir& d, QStringList& ur
 	
 	rinex()->origin(z);
 	bool ret = controller()->persist();
+	if (ret) {
+		info();
+	}
 	emit persisted();
 	return ret;
 }

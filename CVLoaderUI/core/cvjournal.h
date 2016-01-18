@@ -1,6 +1,8 @@
 #ifndef CV_JOURNAL_H
 #define CV_JOURNAL_H
 
+#include "core/categories/cvcontrol.h"
+
 #include <QSharedPointer>
 #include <QObject>
 #include <QList>
@@ -25,7 +27,8 @@ struct CVJournalEntry {
 class CVJournal {
 public:
 	static void add(CVJournalEntry::Entry);
-	static CVJournalEntry::EntryList last(const QString& db, const QStringList& filters, const QVariantList& binds, int num = 1);
+	static CVJournalEntry::EntryList lastN(const QStringList& filters, const QVariantList& binds, int num = 1);
+	static CVJournalEntry::Entry last(CVControl::Type t, CVObject::Type o);
 };
 
 } // namespace Core

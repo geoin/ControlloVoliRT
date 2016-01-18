@@ -135,6 +135,8 @@ void CVDemDetail::importAll(QStringList& uri) {
 
 	file()->origin(uri.at(0));
 	if (controller()->persist()) {
+		info();
+
 		QStringList& data = file()->data();
 		assert(data.size() == _labels.size());
 		for (int i = 0; i < data.size(); ++i) {

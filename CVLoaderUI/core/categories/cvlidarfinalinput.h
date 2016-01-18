@@ -3,6 +3,7 @@
 
 #include "core/categories/cvcontrol.h"
 
+#include <QMap>
 #include <QStringList>
 
 namespace CV {

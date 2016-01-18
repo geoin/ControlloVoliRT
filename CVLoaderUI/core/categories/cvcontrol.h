@@ -5,7 +5,6 @@
 #include <QObject>
 #include <QUuid>
 
-#include "core/cvjournal.h"
 
 namespace CV {
 namespace Core {
