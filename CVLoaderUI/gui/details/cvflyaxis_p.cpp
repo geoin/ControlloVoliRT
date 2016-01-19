@@ -27,15 +27,22 @@ namespace Details {
 CVFlyAxis_p::CVFlyAxis_p(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	title(tr("Assi di volo"));
 	description(tr("File shape"));
+
+	_shape = new ShapeViewer(this);
 	
-    QVBoxLayout* form = new QVBoxLayout;
+    QHBoxLayout* form = new QHBoxLayout;
 	table = new QTableWidget(body());
 
 	if (controller()->isValid()) {
 		populateTable();
+		_shape->loadFromSpatialite(layer()->table());
+	} else {
+		_shape->hide();
 	}
 
-	form->addWidget(table);
+
+	form->addWidget(table, 2);
+	form->addWidget(_shape, 2);
 	body(form);
 
 	connect(this, SIGNAL(refreshGrid()), this, SLOT(populateTable()));
@@ -157,6 +164,9 @@ void CVFlyAxis_p::searchFile() {
 
 void CVFlyAxis_p::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
+
+	_shape->show();
+	_shape->loadFromShp(uri.at(0));
 	if (controller()->persist()) {
 		info();
 
@@ -174,6 +184,7 @@ void CVFlyAxis_p::clearAll() {
 	table->reset();
 
 	_clearRefCols();
+	_shape->hide();
 }
 
 void CVFlyAxis_p::_clearRefCols() {

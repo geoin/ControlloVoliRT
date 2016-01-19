@@ -2,6 +2,7 @@
 #define CVAREADETAIL_H
 
 #include "core/categories/cvshapelayer.h"
+#include "gui/cvshapeviewer.h"
 
 #include "cvbasedetail.h"
 
@@ -52,6 +53,8 @@ private:
 	QList<QLabel*> _labels;
 
 	Core::CVControl::Type _control;
+
+	ShapeViewer* _shape;
 };
 
 } // namespace Details

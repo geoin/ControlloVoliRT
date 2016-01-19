@@ -4,6 +4,7 @@
 #include "core/categories/cvshapelayer.h"
 
 #include "cvbasedetail.h"
+#include "gui/cvshapeviewer.h"
 
 #include <QWidget>
 #include <QScopedPointer>
@@ -39,6 +40,8 @@ private:
     QScopedPointer<QFileInfo> _file;
 	QString _uri;
 	QList<QLabel*> _labels;
+
+	ShapeViewer* _shape;
 };
 
 } // namespace Details

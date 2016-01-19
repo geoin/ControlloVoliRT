@@ -70,6 +70,7 @@ QLabel* CVProjectOverviewDetail::_addDescr(QFormLayout* form, QString label, QSt
 	info->setMinimumHeight(26);
 	info->setMaximumHeight(26);
 	info->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
+	info->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
 	form->addRow(lab, info);
 	return info;

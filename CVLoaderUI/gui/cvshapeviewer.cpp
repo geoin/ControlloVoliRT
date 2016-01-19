@@ -1,12 +1,44 @@
 #include "cvshapeviewer.h"
 
+#include "core/sql/querybuilder.h"
+
 #include <QProcess>
+#include <QTemporaryFile>
+#include <QImage>
+#include <QGraphicsPixmapItem>
 
 using namespace CV::GUI;
 
-void ShapeViewer::loadShape(const QString& path) {
+void ShapeViewer::loadFromShp(const QString& path) {
+	QTemporaryFile output;
+	output.open();
+
 	QStringList args;
-	args << "-burn 0" << "-burn 255" << "-burn 0" << "-of BMP" << "-ot Byte";
-		
-	QProcess::execute("gdal_rasterize");
+	args << "convert.py" << path + ".shp" << output.fileName();
+	QProcess::execute("python", args);
+
+	QImage im(output.fileName(), "BMP");
+	_item->setPixmap(QPixmap::fromImage(im));
+	_item->setTransformationMode(Qt::SmoothTransformation);
+	
+	_scene->setSceneRect(_item->boundingRect());
+	fitInView(_item, Qt::KeepAspectRatioByExpanding);
+}
+
+void ShapeViewer::loadFromSpatialite(const QString& layer) {
+	QTemporaryFile output;
+	output.open();
+
+	QStringList args;
+	args << "convert.py" << Core::SQL::Database::path() << output.fileName() << layer;
+	QProcess::execute("python", args);
+
+	QImage im(output.fileName(), "BMP");
+	_item->setPixmap(QPixmap::fromImage(im));
+	_item->setTransformationMode(Qt::SmoothTransformation);
+}
+
+void ShapeViewer::showEvent(QShowEvent*) {
+	_scene->setSceneRect(_item->boundingRect());
+	fitInView(_item, Qt::KeepAspectRatioByExpanding);
 }

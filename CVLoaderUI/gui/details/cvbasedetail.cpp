@@ -49,6 +49,7 @@ CVBaseDetail::CVBaseDetail(QWidget* p, Core::CVObject* c) : QWidget(p), _control
     _path->setIndent(24);
     _path->setMaximumHeight(36);
     _path->setStyleSheet("padding: 4px;");
+	_path->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
 	_date = new QLabel(this);
     _date->setIndent(24);

@@ -11,6 +11,7 @@ namespace Core {
 namespace SQL {
 
 	CV::Util::Spatialite::Connection Database::cnn;
+	QString Database::_db;
 
 	bool Query::insert(const QString& tab, const QStringList& fields, const QStringList& values, const QVariantList& binds) {
 		QString query("INSERT INTO %1 (%2) VALUES (%3)");

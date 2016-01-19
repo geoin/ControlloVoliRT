@@ -27,7 +27,10 @@ CVUnionDetail::CVUnionDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l)
 
 	title(tr("Quadro di unione"));
 	description(tr("File shape"));
+
+	_shape = new ShapeViewer(this);
 	
+	QVBoxLayout* box = new QVBoxLayout;
     QFormLayout* form = new QFormLayout;
 
 	QLabel* lab = new QLabel("", this);
@@ -36,17 +39,23 @@ CVUnionDetail::CVUnionDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l)
 	lab->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
 	_labels << lab;
 
-	QLabel* n = new QLabel("Fogli inseriti", this);
+	QLabel* n = new QLabel("", this);
 	n->setMinimumHeight(26);
 	n->setMaximumHeight(26);
 	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
 
 	form->addRow(n, lab);
+	box->addLayout(form);
+	box->addWidget(_shape, 2);
 
-	body(form);
+	body(box);
 
 	if (controller()->isValid()) {
 		lab->setText(QString::number(layer()->rows()));
+
+		_shape->loadFromSpatialite(layer()->table());
+	} else {
+		_shape->hide();
 	}
 }
 
@@ -56,6 +65,7 @@ CVUnionDetail::~CVUnionDetail() {
 
 void CVUnionDetail::clearAll() {
 	controller()->remove();
+	_shape->hide();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
@@ -80,8 +90,11 @@ void CVUnionDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
 	if (controller()->persist()) {
 		info();
+
+		_shape->show();
+		_shape->loadFromShp(uri.at(0));
 	}
-	_labels.at(0)->setText(QString::number(layer()->rows()));
+	_labels.at(0)->setText("Fogli inseriti" + QString::number(layer()->rows()));
 }
 
 void CVUnionDetail::dragEnterEvent(QDragEnterEvent* ev) {
