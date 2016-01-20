@@ -1,6 +1,7 @@
 #include "cvshapeviewer.h"
 
 #include "core/sql/querybuilder.h"
+#include "gui/cvgui_utils.h"
 
 #include <QProcess>
 #include <QTemporaryFile>
@@ -10,6 +11,8 @@
 using namespace CV::GUI;
 
 void ShapeViewer::loadFromShp(const QString& path) {
+	CVScopedCursor cur;
+
 	QTemporaryFile output;
 	output.open();
 
@@ -26,6 +29,8 @@ void ShapeViewer::loadFromShp(const QString& path) {
 }
 
 void ShapeViewer::loadFromSpatialite(const QString& layer) {
+	CVScopedCursor cur;
+
 	QTemporaryFile output;
 	output.open();
 

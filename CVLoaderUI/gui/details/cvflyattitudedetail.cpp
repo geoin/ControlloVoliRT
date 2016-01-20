@@ -15,10 +15,49 @@
 #include <QDropEvent>
 #include <QUrl>
 #include <QDir>
+#include <QDialogButtonBox>
+#include <QTableWidget>
 
 namespace CV {
 namespace GUI {
 namespace Details {
+
+class AttitudeDialog : public QDialog {
+public:
+	AttitudeDialog(Core::CVFlyAttitude* ctrl, QWidget* p = NULL) : QDialog(p) {
+		QVBoxLayout* l = new QVBoxLayout;
+		setLayout(l);
+
+		QFormLayout* form = new QFormLayout;
+		l->addLayout(form);
+
+		QComboBox* angle = new QComboBox(this);
+		angle->addItem("DEG");
+		angle->addItem("GON");
+		form->addRow("Unità di misura", angle); 
+
+		Core::CVFlyAttitude::Angle_t u = ctrl->angleUnit();
+		angle->setCurrentIndex(int(u));
+		
+		//TODO: hide horizontal header
+		QList<QStringList> lines = ctrl->readFirstLines(10);
+		QTableWidget* wid = new QTableWidget(10, lines.size(), this);
+		l->addWidget(wid, 2);
+
+		for (int i = 0; i < lines.size(); i++) {
+			const QStringList& line = lines.at(i);
+			for (int j = 0; j < line.size(); j++) {
+				QTableWidgetItem* itm = new QTableWidgetItem(line.at(j));
+				wid->setItem(i, j, itm);
+			}
+		}
+
+		QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok);
+		connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+		connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+		l->addWidget(buttonBox);
+	}
+};
 
 CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	setAcceptDrops(true);
@@ -58,9 +97,13 @@ CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
 }
 
 void CVFlyAttitudeDetail::importAll(QStringList& uri) {
+	layer()->origin(uri.at(0));
+
+	AttitudeDialog dialog(layer());
+	dialog.exec();
+
 	CV::GUI::CVScopedCursor cur;
 
-	layer()->origin(uri.at(0));
 	res = QtConcurrent::run(controller(), &CV::Core::CVObject::persist);
 
 	_dialog.setWindowTitle(tr("Caricamento assetti in corso.."));

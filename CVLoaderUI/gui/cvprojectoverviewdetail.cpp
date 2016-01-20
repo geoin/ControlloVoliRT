@@ -159,6 +159,7 @@ void CVProjectOverviewDetail::onEditProject(bool b) {
 	if (_scale) {
 		_scale->setDisabled(!b);
 	}
+
 	if (b) {
 		_notes->setStyleSheet("");
 	} else {

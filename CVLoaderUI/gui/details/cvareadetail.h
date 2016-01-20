@@ -44,6 +44,11 @@ protected:
 			obj->controlType(_control);
 			QStringList info = layer()->data();
 			_labels.at(0)->setText(QString::number(layer()->rows()));
+
+			if (_shape->isVisible() == false) {
+				_shape->show();
+			}
+			_shape->loadFromSpatialite(layer()->table());
 		}
 	}
 

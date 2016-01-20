@@ -14,8 +14,6 @@
 
 #include <assert.h>
 
-//TODO: this must be the base class, move all specialized logic in derived
-
 namespace CV {
 namespace Core {
 
@@ -45,6 +43,62 @@ bool CVFlyAttitude::remove() { //TODO, should use id
 
 	_count = 0;
 	return ret;
+}
+
+CVFlyAttitude::Angle_t CVFlyAttitude::angleUnit() const {
+	QFile file(_origin);
+	file.open(QIODevice::ReadOnly | QIODevice::Text);
+	
+	QTextStream str(&file);
+	str.setCodec("UTF-8");
+
+	QString line = str.readLine();
+	if (line.trimmed().startsWith("#")) {
+		if (line.toLower().contains("gon")) {
+			return GON;
+		}
+	}
+	return DEG;
+}
+
+QList<QStringList> CVFlyAttitude::readFirstLines(int count) const {
+	QFile file(_origin);
+	file.open(QIODevice::ReadOnly | QIODevice::Text);
+	
+	QTextStream str(&file);
+	str.setCodec("UTF-8");
+
+	QList<QStringList> list;
+	int c = 0;
+	while (!str.atEnd() && c < count) { 
+		QString line = str.readLine();
+		if (line.isEmpty()) { 
+			continue;
+		}
+
+		
+		if (line.trimmed().startsWith("#")) {
+			continue;
+		}
+
+		QStringList l = line.split(QRegExp("[\\t*\\s*]"), QString::SkipEmptyParts);
+		if (l.size() != 7) {
+			continue;
+		}
+
+		bool ok;
+		qreal val;
+		for (int i = 1; i < l.size(); ++i) {
+			val = l.at(i).toDouble(&ok);
+			if (!ok) { break; }
+		}
+		if (!ok) { continue; }
+
+		list.append(l);
+		c++;
+	}
+
+	return list;
 }
 
 bool CVFlyAttitude::persist() {
@@ -82,10 +136,6 @@ bool CVFlyAttitude::persist() {
 		QString line = str.readLine();
 		if (line.isEmpty()) { 
 			continue;
-		}
-
-		if (attData.size() == 0 && line.trimmed().startsWith("#")) {
-			//read header
 		}
 
 		QStringList l = line.split(QRegExp("[\\t*\\s*]"), QString::SkipEmptyParts);
