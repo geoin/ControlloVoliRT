@@ -260,7 +260,7 @@ bool photo_exec::_uncovered(OGRGeomPtr& vs)
 	// create the insertion query
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (Z_UNCOVER_ID, geom) \
-		VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+		VALUES (?1, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 	
 	Statement stm(cnn);
 	cnn.begin_transaction();
@@ -380,7 +380,7 @@ void photo_exec::_assi_from_vdp(std::map<std::string, VDP>& vdps)
 	// create the insertion query
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (A_VOL_ENTE, A_VOL_DT, A_VOL_RID, A_VOL_CS, A_VOL_DR, A_VOL_QT, A_VOL_CCOD, A_VOL_DSTP, A_VOL_NFI, A_VOL_NFF, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ST_GeomFromWKB(:geom, " << SRID << ") )";
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 
 	Statement stm(cnn);
 	cnn.begin_transaction();
@@ -543,7 +543,7 @@ bool photo_exec::_calc_vdp(std::map<std::string, VDP>& vdps)
 			sprintf(nomef, "%s_%04d", strip.c_str(), k);
 			VDP vdp(cam_plan, nomef); // cam is the camera used for planning the flight
 			DPOINT pt(pt0.x + (i - first) * step * cos(alfa), pt0.y + (i - first) * step * sin(alfa), z);
-			vdp.Init(pt, 0, 0, Conv<Angle_t::DEG>::FromRad(alfa));
+			vdp.Init(pt, 0, 0, Conv::FromRad(alfa));
 			vdps[vdp.nome] = vdp;
 		}
 		rs.next();
@@ -664,7 +664,7 @@ void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
 	// create the insertion query
 	std::stringstream sql2;
     sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_STRIP_ID, Z_GSD, geom) \
-        VALUES (?1, ?2, ?3, ST_GeomFromWKB(:geom, " << SRID << ") )";
+        VALUES (?1, ?2, ?3, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 
 	Statement stm(cnn);
 	cnn.begin_transaction();
@@ -722,7 +722,7 @@ void photo_exec::_process_photos()
 	// create the insertion query
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (Z_FOTO_ID, Z_FOTO_CS, Z_FOTO_NF, Z_FOTO_DIMPIX, Z_FOTO_PITCH, Z_FOTO_ROLL, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 
 	Statement stm(cnn);
 	cnn.begin_transaction();
@@ -790,8 +790,8 @@ void photo_exec::_process_photos()
 		stm[2] = get_strip(it->first);
 		stm[3] = it->first;
 		stm[4] = dt;
-		stm[5] = Conv<Angle_t::DEG>::FromRad(vdp.om);
-		stm[6] = Conv<Angle_t::DEG>::FromRad(vdp.fi);
+		stm[5] = Conv::FromRad(vdp.om);
+		stm[6] = Conv::FromRad(vdp.fi);
 		stm[7].fromBlob(pol);
 
 		stm.execute();
@@ -835,7 +835,7 @@ void photo_exec::_process_models()
 	
 	std::stringstream sql2;
     sql2 << "INSERT INTO " << table << " (Z_MODEL_ID, Z_MODEL_CS, Z_MODEL_LEFT, Z_MODEL_RIGHT, Z_MODEL_L_OVERLAP, Z_MODEL_T_OVERLAP, Z_MODEL_D_HEADING, Z_MODEL_USED, geom) \
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ST_GeomFromWKB(:geom, " << SRID << ") )";
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -891,8 +891,8 @@ void photo_exec::_process_models()
 				} else if ( dh < -M_PI ) {
 					dh += 2 * M_PI;
 				}
-				//dh = Conv<Angle_t::DEG>::FromRad(dh);
-				dh = (int)(Conv<Angle_t::DEG>::FromRad(dh) * 1000.) / 1000.;
+				//dh = Conv::FromRad(dh);
+				dh = (int)(Conv::FromRad(dh) * 1000.) / 1000.;
 				//dh /= 1000.;
 
 				double d1f, d2f, d1m, d2m;
@@ -952,7 +952,7 @@ void photo_exec::_process_strips()
 	
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_STRIP_FIRST, Z_STRIP_LAST, Z_STRIP_COUNT, Z_STRIP_LENGTH, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 	CV::Util::Spatialite::Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -1086,7 +1086,7 @@ void photo_exec::_process_block()
         "'XY')";
     cnn.execute_immediate(sqlb.str());
 	std::stringstream sqlc;
-	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+	sqlc << "INSERT INTO " << tableb << " (Z_BLOCK_ID, geom) VALUES (?1, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 	Statement stm0(cnn);
 	cnn.begin_transaction();
 	stm0.prepare(sqlc.str());
@@ -1130,7 +1130,7 @@ void photo_exec::_process_block()
 			VDP& vdp3 = _vdps[vs[j].first];
 			VDP& vdp4 = _vdps[vs[j].last];
 			VecOri v2(vdp4.Pc - vdp3.Pc);
-			double ct = Conv<Angle_t::DEG>::FromRad(acos((v1 % v2) / (v1.module() * v2.module())));
+			double ct = Conv::FromRad(acos((v1 % v2) / (v1.module() * v2.module())));
 			if ( fabs(ct) < 10 || fabs(ct) > 170 ) { // 10 deg difference in the heading means they are parallel
 				OGRGeomPtr g1 = vs[i].geo;
 				OGRGeomPtr g2 = vs[j].geo;
@@ -1174,8 +1174,8 @@ void photo_exec::process_end_point_axis_info(const Blob& pt, end_point_axis_info
 
 	std::stringstream sql;
 
-	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID << ") ) as geo, AsBinary(geom) as geoWGS FROM " << GPS_TABLE_NAME << 
-		" WHERE rowid in( select rowid from SpatialIndex where f_table_name='gps' and  search_frame=MakeCircle(ST_X(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), ST_Y(ST_Transform(ST_GeomFromWKB(?1, " << SRID << ")," << SRIDGEO << ")), 0.01))";
+	sql << "SELECT *, rowid, AsBinary(ST_Transform(geom, " << SRID(cnn) << ") ) as geo, AsBinary(geom) as geoWGS FROM " << GPS_TABLE_NAME << 
+		" WHERE rowid in( select rowid from SpatialIndex where f_table_name='gps' and  search_frame=MakeCircle(ST_X(ST_Transform(ST_GeomFromWKB(?1, " << SRID(cnn) << ")," << SRIDGEO << ")), ST_Y(ST_Transform(ST_GeomFromWKB(?1, " << SRID(cnn) << ")," << SRIDGEO << ")), 0.01))";
 
 	Statement stm(cnn);
 	stm.prepare(sql.str());

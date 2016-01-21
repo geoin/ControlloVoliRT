@@ -175,24 +175,31 @@ void CVFinalDataDetail::finalFolder() {
 }
 
 void CVFinalDataDetail::finalFile() {
-	QString ref = QFileDialog::getOpenFileName(this, 
+	QStringList ref = QFileDialog::getOpenFileNames(this, 
 		tr("Trova file"), 
 		Core::CVSettings::get(CV_PATH_SEARCH).toString()
 	);
 
-	if (!ref.isEmpty()) {
-		QFileInfo in(ref);
-		Core::CVSettings::set(CV_PATH_SEARCH, in.absolutePath());
+	if (ref.size() == 0) { return; }
 
-		QString table = sender()->property("TABLE").toString();
-		QString folder = sender()->property("COLUMN").toString();
+	QString file;
+	if (ref.size() == 1) {
+		file = ref.at(0);
+	} else {
+		//TODO
+	}
+
+	QFileInfo in(file);
+	Core::CVSettings::set(CV_PATH_SEARCH, in.absolutePath());
+
+	QString table = sender()->property("TABLE").toString();
+	QString folder = sender()->property("COLUMN").toString();
 	
 		
-		input()->set(table, folder, ref);
-		_editors[table]->setText(ref);
-		if (controller()->persist()) {
-			info();
-		}	
+	input()->set(table, folder, file);
+	_editors[table]->setText(file);
+	if (controller()->persist()) {
+		info();
 	}
 }
 

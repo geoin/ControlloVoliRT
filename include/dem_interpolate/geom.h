@@ -26,11 +26,10 @@ namespace Angle_t {
 	};
 }
 
-template <Angle_t::_Angle_t factor = DEG>
 class Conv {
 public:
-	static inline double ToRad(double val) { return M_PI * (val) / factor; }
-	static inline double FromRad(double val) { return factor * (val) / M_PI; }
+	static inline double ToRad(double val, double factor= 180) { return M_PI * (val) / factor; }
+	static inline double FromRad(double val, double factor= 180) { return factor * (val) / M_PI; }
 };
 
 class DPOINT;
@@ -189,10 +188,10 @@ public:
         return hypot(x - ptb.x, y - ptb.y);
 	}
 	double dist_lat2D(const DPOINT& ptb) const {
-		double lon1 = Conv<Angle_t::DEG>::ToRad(x);
-		double lat1 = Conv<Angle_t::DEG>::ToRad(y);
-		double lon2 = Conv<Angle_t::DEG>::ToRad(ptb.x);
-		double lat2 = Conv<Angle_t::DEG>::ToRad(ptb.y);
+		double lon1 = Conv::ToRad(x);
+		double lat1 = Conv::ToRad(y);
+		double lon2 = Conv::ToRad(ptb.x);
+		double lat2 = Conv::ToRad(ptb.y);
 		double dlat = lat2 - lat1;
 		double dlng = lon2 - lon1;
 		double a = sin(dlat / 2) * sin(dlat / 2) + cos(lat1) * cos(lat2) * sin(dlng / 2) * sin(dlng / 2);

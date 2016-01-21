@@ -253,7 +253,7 @@ bool ortho_exec::_process_borders()
 	// create the insertion query
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (FOGLIO, geom) \
-		VALUES (?1, ST_GeomFromWKB(:geom, " << SRID << ") )";
+		VALUES (?1, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 
 	Statement stm(cnn);
 	cnn.begin_transaction();
@@ -346,7 +346,7 @@ bool ortho_exec::_process_imgs()
 	// create the insertion query
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (FOGLIO, P_SIZE, geom) \
-		VALUES (?1, ?2, ST_GeomFromWKB(:geom, " << SRID << ") )";
+		VALUES (?1, ?2, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 
 	Statement stm(cnn);
 	cnn.begin_transaction();

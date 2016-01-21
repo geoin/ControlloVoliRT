@@ -51,7 +51,7 @@ public:
 	inline double speed() const { return _speed; }
 
 	inline double tanHalfFov() const {
-		return tan(Conv<Angle_t::DEG>::ToRad(fov() / 2.0));
+		return tan(Conv::ToRad(fov() / 2.0));
 	}
 
 private:

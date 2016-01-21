@@ -1043,7 +1043,7 @@ void lidar_exec::_process_strips()
 
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_DENSITY, Z_STRIP_LENGTH, geom) \
-		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID << ") )";
+		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 	Statement stm(cnn);
 	cnn.begin_transaction();
 	stm.prepare(sql2.str());
@@ -1136,7 +1136,7 @@ void lidar_exec::_process_strips()
 			stm[1] = SIGLA_PRJ;
 			stm[2] = strip;
 			stm[3] = mission;
-			stm[4] = Conv<Angle_t::DEG>::FromRad(axis->angle());
+			stm[4] = Conv::FromRad(axis->angle());
 			stm[5] = stripPtr->density();
 			stm[6] = dist;
 			stm[7].fromBlob(stripPtr->geom());

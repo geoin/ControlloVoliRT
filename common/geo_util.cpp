@@ -143,6 +143,15 @@ int SRID(Connection& cnn) {
 	return rs[0].toInt();
 }
 
+int AttitudeAngleUnit(Connection& cnn) {
+	std::stringstream sql;
+	sql << "SELECT UNIT_CODE from UNITS WHERE OBJECT=9";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	return rs[0].toInt();
+}
+
 void read_planned_cam(Connection& cnn, Camera& cam) {
 	std::stringstream sql;
 	sql << "SELECT * from " << Z_CAMERA << " where PLANNING = 1";

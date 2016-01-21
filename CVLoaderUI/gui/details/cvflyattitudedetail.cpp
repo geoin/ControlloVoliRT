@@ -22,43 +22,6 @@ namespace CV {
 namespace GUI {
 namespace Details {
 
-class AttitudeDialog : public QDialog {
-public:
-	AttitudeDialog(Core::CVFlyAttitude* ctrl, QWidget* p = NULL) : QDialog(p) {
-		QVBoxLayout* l = new QVBoxLayout;
-		setLayout(l);
-
-		QFormLayout* form = new QFormLayout;
-		l->addLayout(form);
-
-		QComboBox* angle = new QComboBox(this);
-		angle->addItem("DEG");
-		angle->addItem("GON");
-		form->addRow("Unità di misura", angle); 
-
-		Core::CVFlyAttitude::Angle_t u = ctrl->angleUnit();
-		angle->setCurrentIndex(int(u));
-		
-		//TODO: hide horizontal header
-		QList<QStringList> lines = ctrl->readFirstLines(10);
-		QTableWidget* wid = new QTableWidget(10, lines.size(), this);
-		l->addWidget(wid, 2);
-
-		for (int i = 0; i < lines.size(); i++) {
-			const QStringList& line = lines.at(i);
-			for (int j = 0; j < line.size(); j++) {
-				QTableWidgetItem* itm = new QTableWidgetItem(line.at(j));
-				wid->setItem(i, j, itm);
-			}
-		}
-
-		QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok);
-		connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-		connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-		l->addWidget(buttonBox);
-	}
-};
-
 CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p, l) {
 	setAcceptDrops(true);
 
@@ -78,14 +41,46 @@ CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBase
 	_labels << info;
 	form->addRow(n, info);
 
-	body(form);
+	_angle = new QComboBox(this);
+	_angle->addItem("DEG");
+	_angle->addItem("GON");
+	form->addRow("Unità di misura", _angle); 
+	connect(_angle, SIGNAL(currentIndexChanged(int)), this, SLOT(onAngleChanged(int)));
+
+	QVBoxLayout* lay = new QVBoxLayout;
+	lay->addLayout(form);
+
+	//TODO: hide horizontal header
+	_table = new QTableWidget(this);
+	lay->addWidget(_table, 2);
+
+	body(lay);
 
 	if (controller()->isValid()) {
+		Core::CVFlyAttitude::Angle_t u = layer()->angleUnit();
+		_angle->setCurrentIndex(int(u));
+		QList<QStringList> lines = layer()->readFirstLines(10);
+		
+		_table->clear();
+		_table->setRowCount(lines.size());
+
+		for (int i = 0; i < lines.size(); i++) {
+			const QStringList& line = lines.at(i);
+			_table->setColumnCount(line.size());
+			for (int j = 0; j < line.size(); j++) {
+				QTableWidgetItem* itm = new QTableWidgetItem(line.at(j));
+				_table->setItem(i, j, itm);
+			}
+		}
+
 		QStringList info = layer()->data();
 		for (int i = 0; i < info.size(); ++i) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
 		}
+	} else {
+		_table->hide();
+		_angle->hide();
 	}
 
 	connect(controller(), SIGNAL(persisted()), this, SLOT(onDataPersisted()));
@@ -99,9 +94,6 @@ CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
 void CVFlyAttitudeDetail::importAll(QStringList& uri) {
 	layer()->origin(uri.at(0));
 
-	AttitudeDialog dialog(layer());
-	dialog.exec();
-
 	CV::GUI::CVScopedCursor cur;
 
 	res = QtConcurrent::run(controller(), &CV::Core::CVObject::persist);
@@ -110,6 +102,25 @@ void CVFlyAttitudeDetail::importAll(QStringList& uri) {
 	_dialog.resize(260, 100);
 	_dialog.resizeBarWidth(230);
 	_dialog.exec();
+
+	_table->show();
+	_angle->show();
+
+	Core::CVFlyAttitude::Angle_t u = layer()->angleUnit();
+	_angle->setCurrentIndex(int(u));
+	QList<QStringList> lines = layer()->readFirstLines(10);
+
+	_table->clear();
+	_table->setRowCount(lines.size());
+
+	for (int i = 0; i < lines.size(); i++) {
+		const QStringList& line = lines.at(i);
+		_table->setColumnCount(line.size());
+		for (int j = 0; j < line.size(); j++) {
+			QTableWidgetItem* itm = new QTableWidgetItem(line.at(j));
+			_table->setItem(i, j, itm);
+		}
+	}
 }
 
 void CVFlyAttitudeDetail::onItemInserted(int el) {
@@ -148,6 +159,9 @@ void CVFlyAttitudeDetail::clearAll() {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
 	}
+	
+	_table->hide();
+	_angle->hide();
 }
 
 void CVFlyAttitudeDetail::dragEnterEvent(QDragEnterEvent* ev) {
@@ -175,6 +189,10 @@ void CVFlyAttitudeDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 	importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);
+}
+
+void CVFlyAttitudeDetail::onAngleChanged(int c) {
+	layer()->setAngleUnit(Core::CVFlyAttitude::Angle_t(c));
 }
 
 } // namespace Details

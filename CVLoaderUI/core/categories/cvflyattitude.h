@@ -25,7 +25,9 @@ public:
 	
 	virtual bool remove();
 
-	Angle_t angleUnit() const;
+	Angle_t angleUnit(QString);
+	Angle_t angleUnit();
+	void setAngleUnit(Angle_t t);
 	QList<QStringList> readFirstLines(int = 7) const;
 
 	inline void origin(const QString& file) { _origin = file; }

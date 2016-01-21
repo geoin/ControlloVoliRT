@@ -234,7 +234,7 @@ bool lidar_raw_exec::_initStripsLayer() {
 		while (!set.eof()) {
 			Blob b = set["GEOM"].toBlob();
 			Lidar::Strip::Ptr strip(new Lidar::Strip(b));
-			strip->yaw(Conv<Angle_t::DEG>::ToRad(set["Z_STRIP_YAW"].toDouble()));
+			strip->yaw(Conv::ToRad(set["Z_STRIP_YAW"].toDouble()));
 			strip->missionName(set["Z_MISSION"].toString());
 			strip->name(set["Z_STRIP_CS"].toString());
 			strip->density(set["Z_STRIP_DENSITY"].toDouble());

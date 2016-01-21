@@ -350,8 +350,8 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 
 		// for every epoch
 		for ( size_t i = 0; i < vg.size(); i++ ) {
-			double x = Conv<Angle_t::DEG>::FromRad(vg[i].pos.x);
-			double y = Conv<Angle_t::DEG>::FromRad(vg[i].pos.y);
+			double x = Conv::FromRad(vg[i].pos.x);
+			double y = Conv::FromRad(vg[i].pos.y);
 			double z = vg[i].pos.z;
 
 			if ( vg[i].data == "base" ) { // means base name and coordinate
