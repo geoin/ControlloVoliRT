@@ -149,6 +149,9 @@ int AttitudeAngleUnit(Connection& cnn) {
 	Statement stm(cnn);
 	stm.prepare(sql.str());
 	Recordset rs = stm.recordset();
+	if (rs.eof()) {
+		return 0;
+	}
 	return rs[0].toInt();
 }
 

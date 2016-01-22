@@ -276,7 +276,7 @@ void lidar_final_exec::_checkBlock() {
 	sql.str("");
 	sql << "SELECT AddGeometryColumn('" << rawGrid << "'," <<
 		"'GEOM'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql.str());
@@ -338,7 +338,7 @@ void lidar_final_exec::_checkBlock() {
 				std::stringstream sql1;
 				sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 					"'GEOM'," <<
-					SRID << "," <<
+					SRID(cnn)<< "," <<
 					"'" << get_typestring(dif)  << "'," <<
 					"'XY')";
 				cnn.execute_immediate(sql1.str());

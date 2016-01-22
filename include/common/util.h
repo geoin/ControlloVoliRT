@@ -45,7 +45,7 @@ std::string get_nome(const std::string& nome);
 
 bool GetProjData(CV::Util::Spatialite::Connection& cnn, std::string& note, std::string& scale);
 int SRID(CV::Util::Spatialite::Connection& cnn);
-int AngleUnit(CV::Util::Spatialite::Connection& cnn);
+int AttitudeAngleUnit(CV::Util::Spatialite::Connection& cnn);
 
 #endif
 

@@ -52,7 +52,7 @@ private:
 	QStringList _info;
 
 	QString _shapeCharSet, _colName;
-	short _utm32_SRID;
+	//short _utm32_SRID;
 	QString _shp;
 
 	int _rows;

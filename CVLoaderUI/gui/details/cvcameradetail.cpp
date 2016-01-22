@@ -59,6 +59,7 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 		
 		if (controller()->isValid()) {
 			view();
+			info(controller()->controlType(), controller()->type());
 		}
 	}
 }
@@ -131,7 +132,6 @@ void CVCameraDetail::importAll(QStringList& uri) {
     
 	if(i == _params.size()) {
 		save();
-		info();
 	}
 }
 
@@ -147,7 +147,7 @@ void CVCameraDetail::save() {
 	c.descr = _note->toPlainText().toStdString();
 	
 	if (controller()->persist()) {
-		info();
+		info(controller()->controlType(), controller()->type());
 	}
 }
 

@@ -7,7 +7,7 @@
 namespace CV {
 namespace Core {
 
-CVShapeLayer::CVShapeLayer(QObject* p) : CVObject(p), _shapeCharSet("CP1252"), _utm32_SRID(32632), _colName("GEOM") {
+CVShapeLayer::CVShapeLayer(QObject* p) : CVObject(p), _shapeCharSet("CP1252"), _colName("GEOM") {
 	_rows = 0;
 	_isValid = false;
 	
@@ -48,11 +48,14 @@ bool CVShapeLayer::persist() {
 	try {
 		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 
+		SQL::Query::Ptr q = SQL::QueryBuilder::build(cnn);
+		Util::Spatialite::Recordset set = q->select(QStringList() << "DATUM", QStringList() << "PROJECT", QStringList(), QVariantList());
+
 		_rows = cnn.load_shapefile(
 			_shp.toStdString(),
 			_table.toStdString(),
 			_shapeCharSet.toStdString(),
-			_utm32_SRID,
+			set[0].toInt(),
 			_colName.toStdString(),
 			true,
 			false,

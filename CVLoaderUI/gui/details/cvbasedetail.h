@@ -31,7 +31,7 @@ public:
 	inline QString title() const { return _title->text(); }
 	
 	inline void info() { 
-		Core::CVJournalEntry::Entry e = Core::CVJournal::last(controller()->controlType(), controller()->type());
+		Core::CVJournalEntry::Entry e = Core::CVJournal::last(/*controller()->controlType(), */controller()->type());
 		if (e != NULL) {
 			_path->setText("Ultimo inserimento: " + e->uri);
 			_date->setText("In data: " + e->date.toString());
@@ -40,6 +40,18 @@ public:
 			_date->setText("");
 		}
 	}
+
+	inline void info(Core::CVControl::Type c, Core::CVObject::Type o) { 
+		Core::CVJournalEntry::Entry e = Core::CVJournal::last(c, o);
+		if (e != NULL) {
+			_path->setText("Ultimo inserimento: " + e->uri);
+			_date->setText("In data: " + e->date.toString());
+		} else {
+			_path->setText("");
+			_date->setText("");
+		}
+	}
+
 
 	inline void description(const QString& descr) { _descr->setText(descr); }
 	inline QString description() const { return _descr->text(); }

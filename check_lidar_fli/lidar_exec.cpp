@@ -1029,7 +1029,7 @@ void lidar_exec::_createStripTable() {
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());

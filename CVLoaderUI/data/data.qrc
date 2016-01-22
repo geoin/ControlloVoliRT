@@ -32,4 +32,7 @@
         <file>icons/lidar/strip.png</file>
         <file>icons/lidar/test_cloud.png</file>
     </qresource>
+    <qresource prefix="/scripts">
+        <file>convert.py</file>
+    </qresource>
 </RCC>

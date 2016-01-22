@@ -186,7 +186,16 @@ void CVFinalDataDetail::finalFile() {
 	if (ref.size() == 1) {
 		file = ref.at(0);
 	} else {
-		//TODO
+		QFileInfo f(ref.at(0));
+		QString path = f.absoluteDir().absolutePath();
+		
+		QFile out(path + QDir::separator() + "grid.txt");
+		out.open(QIODevice::WriteOnly);
+		foreach(QString in, ref) {
+			out.write(QString(in + "\n").toUtf8());
+		}
+
+		file = out.fileName();
 	}
 
 	QFileInfo in(file);
