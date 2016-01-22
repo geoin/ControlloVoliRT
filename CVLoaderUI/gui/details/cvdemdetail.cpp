@@ -28,6 +28,8 @@ namespace Details {
 CVDemDetail::CVDemDetail(QWidget* p, Core::CVObject* l, Core::CVControl::Type t) : CVBaseDetail(p, l), _control(t) {
 	title(tr("DEM"));
 	description(tr("File DEM"));
+
+	l->controlType(_control);
 	
     QFormLayout* form = new QFormLayout;
 
@@ -133,6 +135,8 @@ void CVDemDetail::importAll(QStringList& uri) {
 
 	file()->origin(uri.at(0));
 	if (controller()->persist()) {
+		info();
+
 		QStringList& data = file()->data();
 		assert(data.size() == _labels.size());
 		for (int i = 0; i < data.size(); ++i) {

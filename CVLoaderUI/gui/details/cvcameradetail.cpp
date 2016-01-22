@@ -102,6 +102,9 @@ void CVCameraDetail::importAll(QStringList& uri) {
     if (!open) {
         return;
     }
+
+	controller()->uri(uri.at(0));
+
     QXmlStreamReader xml(&file);
 	int i = 0;
     while(!xml.atEnd()) {
@@ -128,6 +131,7 @@ void CVCameraDetail::importAll(QStringList& uri) {
     
 	if(i == _params.size()) {
 		save();
+		info();
 	}
 }
 
@@ -141,8 +145,10 @@ void CVCameraDetail::save() {
 	c.yp = _params.value("YP")->text().toDouble();
 	
 	c.descr = _note->toPlainText().toStdString();
-
-	controller()->persist();
+	
+	if (controller()->persist()) {
+		info();
+	}
 }
 
 void CVCameraDetail::view() {

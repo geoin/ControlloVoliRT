@@ -169,7 +169,7 @@ void CVMissionListDetails::onAddMission() {
 		e->control = Core::CVControl::GPS_DATA;
 		e->object = Core::CVObject::MISSION;
 		e->uri = name;
-		e->db = obj->uri();
+		//e->db = obj->uri();
 		Core::CVJournal::add(e);
 	}
 }

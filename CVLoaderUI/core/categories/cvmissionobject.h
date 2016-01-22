@@ -29,6 +29,7 @@ public:
 
 	inline void missionType(CVControl::Type t) { 
 		_missionType = t; 
+		controlType(t);
 		_deviceId = t == CVControl::GPS_DATA ? "ID_CAMERA" : "ID_SENSOR";
 	}
 
@@ -42,8 +43,9 @@ public:
 	inline void insert(CVObject* obj, bool setPath = true) { 
 		if (setPath) {
 			obj->uri(uri());
-			_objects.append(obj); 
 		}
+		_objects.append(obj); 
+		obj->controlType(missionType());
 	}
 	
 	inline CVObject* at(int i) const { return _objects.at(i); }

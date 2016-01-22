@@ -60,11 +60,13 @@ bool CVCamera::persist() {
 
 	_isValid = ret;
 	
-	Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+	/*Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
 	e->control = isPlanning() ? Core::CVControl::PLAN : Core::CVControl::GPS_DATA;
 	e->object = Core::CVObject::CAMERA;
-	e->db = uri();
-	Core::CVJournal::add(e);
+	e->uri = uri();
+	Core::CVJournal::add(e);*/
+
+	log();
 
 	if (!isPlanning()) {
 		assert(!_mission.isEmpty());

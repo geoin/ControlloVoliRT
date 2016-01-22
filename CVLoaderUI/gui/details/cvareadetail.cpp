@@ -28,8 +28,12 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l, Core::CVControl::Type 
 	title(tr("Aree da cartografare"));
 	description(tr("File shape"));
 
+	_shape = new ShapeViewer(this);
+
     /*QMenu* menu = new QMenu(this);
     QAction* add = menu->addAction(QIcon(""), "Carica");*/
+
+	QVBoxLayout* box = new QVBoxLayout;
 	
     QFormLayout* form = new QFormLayout;
 
@@ -45,12 +49,18 @@ CVAreaDetail::CVAreaDetail(QWidget* p, Core::CVObject* l, Core::CVControl::Type 
 	n->setAlignment(Qt::AlignLeft | Qt::AlignHCenter);
 
 	form->addRow(n, lab);
+	box->addLayout(form);
+	box->addWidget(_shape, 2);
 
-	body(form);
+	body(box);
 
 	if (controller()->isValid()) {
 		lab->setText(QString::number(layer()->rows()));
+		_shape->loadFromSpatialite(layer()->table());
+	} else {
+		_shape->hide();
 	}
+
 }
 
 CVAreaDetail::~CVAreaDetail() {
@@ -59,6 +69,7 @@ CVAreaDetail::~CVAreaDetail() {
 
 void CVAreaDetail::clearAll() {
 	controller()->remove();
+	_shape->hide();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
@@ -81,7 +92,11 @@ void CVAreaDetail::searchFile() {
 
 void CVAreaDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
-	controller()->persist();
+	if (controller()->persist()) {
+		info();
+		_shape->show();
+		_shape->loadFromShp(uri.at(0));
+	}
 	_labels.at(0)->setText(QString::number(layer()->rows()));
 }
 

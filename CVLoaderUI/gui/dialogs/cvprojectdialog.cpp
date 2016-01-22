@@ -48,6 +48,12 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
 	_scale->addItem(tr("2000"));
 	_scale->addItem(tr("10000"));
 
+	_epsg = new QComboBox(this);
+	_epsg->setEditable(true);
+	_epsg->setInsertPolicy(QComboBox::InsertAtTop);
+	_epsg->addItems(QStringList() << "25832" << "6704" << "6705" << "6706" << "6707" << "6708" << "4936" << "4937" << "4258" << "25833" << "4265" << "3003" << "3004");
+	_epsg->setValidator(new QIntValidator(this));
+
     QFormLayout* form = new QFormLayout;
     form->addRow(tr("Nome"), _name);
 
@@ -75,6 +81,7 @@ CVProjectDialog::CVProjectDialog(QWidget* p) : QDialog(p) {
     form->addRow(tr("Configurazione"), confPicker);
     form->addRow(tr("Tipo"), _type);
     form->addRow(tr("Scala"), _scale);
+    form->addRow(tr("EPSG"), _epsg);
     form->addRow(tr("Note"), _note);
     w->setLayout(form);
 }
@@ -114,6 +121,8 @@ bool CVProjectDialog::getInput(Core::CVProject& proj) {
 	if (proj.type == Core::CVProject::PHOTOGRAMMETRY) {
 		proj.scale = _scale->currentText();
 	}
+
+	proj.datum = _epsg->currentText().toInt();
 
 	QTextDocument* doc = _note->document();
 	QStringList l;

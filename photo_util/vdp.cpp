@@ -59,12 +59,12 @@ void VDP::Reset()
 	mat.Reset();
 	om = fi = ka = 0.;
 }
-void VDP::Init(const DPOINT& p, double pom, double pfi, double pka)
+void VDP::Init(const DPOINT& p, double pom, double pfi, double pka, double factor)
 {
 	Pc = p;//VecOri(p.x, p.y, p.z);
-	om = DEG_RAD(pom);	// omega positivo antiorario
-	fi = -DEG_RAD(pfi); // per convenzione internamente fi e ka sono positivi se orari
-	ka = -DEG_RAD(pka);
+	om = Conv::ToRad(pom, factor);	// omega positivo antiorario
+	fi = -Conv::ToRad(pfi, factor); // per convenzione internamente fi e ka sono positivi se orari
+	ka = -Conv::ToRad(pka, factor);
 	mat = MatOri(om, fi, ka);
 }
 

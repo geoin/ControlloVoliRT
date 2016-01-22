@@ -16,8 +16,21 @@
 #define INF	1.e30
 #endif
 
-#define DEG_RAD(x) M_PI * (x) / 180
-#define RAD_DEG(x) 180 * (x) / M_PI
+//#define DEG_RAD(x) M_PI * (x) / 180
+//#define RAD_DEG(x) 180 * (x) / M_PI
+
+namespace Angle_t {
+	enum _Angle_t {
+		GON = 200,
+		DEG = 180
+	};
+}
+
+class Conv {
+public:
+	static inline double ToRad(double val, double factor= 180) { return M_PI * (val) / factor; }
+	static inline double FromRad(double val, double factor= 180) { return factor * (val) / M_PI; }
+};
 
 class DPOINT;
 class VecOri;
@@ -175,10 +188,10 @@ public:
         return hypot(x - ptb.x, y - ptb.y);
 	}
 	double dist_lat2D(const DPOINT& ptb) const {
-		double lon1 = DEG_RAD(x);
-		double lat1 = DEG_RAD(y);
-		double lon2 = DEG_RAD(ptb.x);
-		double lat2 = DEG_RAD(ptb.y);
+		double lon1 = Conv::ToRad(x);
+		double lat1 = Conv::ToRad(y);
+		double lon2 = Conv::ToRad(ptb.x);
+		double lat2 = Conv::ToRad(ptb.y);
 		double dlat = lat2 - lat1;
 		double dlng = lon2 - lon1;
 		double a = sin(dlat / 2) * sin(dlat / 2) + cos(lat1) * cos(lat2) * sin(dlng / 2) * sin(dlng / 2);

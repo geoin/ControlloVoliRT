@@ -15,6 +15,7 @@
 #include <QFuture>
 
 class QLabel;
+class QTableWidget;
 
 namespace CV {
 namespace GUI {
@@ -36,6 +37,7 @@ public:
 public slots:
 	void onDataPersisted();
 	void onItemInserted(int);
+	void onAngleChanged(int);
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);
@@ -46,6 +48,9 @@ protected:
 private:
     QScopedPointer<QFileInfo> _file;
 	QList<QLabel*> _labels;
+
+	QComboBox* _angle;
+	QTableWidget* _table;
 
 	CVProgressDialog _dialog;
 	QFuture<bool> res;

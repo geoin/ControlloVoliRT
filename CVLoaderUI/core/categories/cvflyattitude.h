@@ -10,8 +10,12 @@ namespace Core {
 
 class CVFlyAttitude : public CVObject {
 	Q_OBJECT
-
 public:
+	enum Angle_t {
+		DEG = 0,
+		GON = 1
+	};
+
 	CVFlyAttitude(QObject *parent);
 	~CVFlyAttitude();
 
@@ -20,6 +24,11 @@ public:
 	virtual bool load();
 	
 	virtual bool remove();
+
+	Angle_t angleUnit(QString);
+	Angle_t angleUnit();
+	void setAngleUnit(Angle_t t);
+	QList<QStringList> readFirstLines(int = 7) const;
 
 	inline void origin(const QString& file) { _origin = file; }
 	inline const QString& origin() const { return _origin; }

@@ -101,7 +101,7 @@ public:
 	void InitIor(const Camera& cam) {
 		_ior.Init(cam);
 	}
-	void Init(const DPOINT& p, double pom, double pfi, double pka);
+	void Init(const DPOINT& p, double pom, double pfi, double pka, double factor = 180);
 	bool IsValid(void) const {
 		return exec != 0;
 	}

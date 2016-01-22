@@ -1,6 +1,5 @@
 #include "cvjournal.h"
 #include "core/sql/querybuilder.h"
-#include "core/categories/cvcontrol.h"
 
 #include "CVUtil/cvspatialite.h"
 
@@ -20,6 +19,8 @@ void CVJournal::add(CVJournalEntry::Entry e) {
 		e->date = QDateTime::currentDateTimeUtc();
 	}
 
+	Q_ASSERT(e->control > CVControl::UNKNOWN_CATEGORY && e->object > CVObject::UNKNOWN_OBJECT);
+
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	q->insert(
 		"JOURNAL", 
@@ -29,7 +30,7 @@ void CVJournal::add(CVJournalEntry::Entry e) {
 	);
 }
 
-CVJournalEntry::EntryList CVJournal::last(const QString& db, const QStringList& filters, const QVariantList& binds, int num) {
+CVJournalEntry::EntryList CVJournal::lastN(const QStringList& filters, const QVariantList& binds, int num) {
 	CVJournalEntry::EntryList list;
  
 	try {
@@ -60,6 +61,25 @@ CVJournalEntry::EntryList CVJournal::last(const QString& db, const QStringList& 
 		return CVJournalEntry::EntryList();
 	}
 	return list;
+}
+
+CVJournalEntry::Entry CVJournal::last(CVControl::Type c, CVObject::Type o) {
+	CVJournalEntry::EntryList list;
+	try {
+		list = lastN(
+			QStringList()  << "OBJECT=?1",
+			QVariantList() << o
+		);
+
+	} catch (CV::Util::Spatialite::spatialite_error& err) {
+		Q_UNUSED(err)
+		return CVJournalEntry::Entry();
+	}
+	if (list.size() == 0) {
+		return CVJournalEntry::Entry();
+	}
+
+	return list.at(0);
 }
 
 } // namespace Core

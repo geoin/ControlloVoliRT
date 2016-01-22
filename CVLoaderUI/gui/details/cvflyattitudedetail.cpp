@@ -15,6 +15,8 @@
 #include <QDropEvent>
 #include <QUrl>
 #include <QDir>
+#include <QDialogButtonBox>
+#include <QTableWidget>
 
 namespace CV {
 namespace GUI {
@@ -39,14 +41,46 @@ CVFlyAttitudeDetail::CVFlyAttitudeDetail(QWidget* p, Core::CVObject* l) : CVBase
 	_labels << info;
 	form->addRow(n, info);
 
-	body(form);
+	_angle = new QComboBox(this);
+	_angle->addItem("DEG");
+	_angle->addItem("GON");
+	form->addRow("Unità di misura", _angle); 
+	connect(_angle, SIGNAL(currentIndexChanged(int)), this, SLOT(onAngleChanged(int)));
+
+	QVBoxLayout* lay = new QVBoxLayout;
+	lay->addLayout(form);
+
+	//TODO: hide horizontal header
+	_table = new QTableWidget(this);
+	lay->addWidget(_table, 2);
+
+	body(lay);
 
 	if (controller()->isValid()) {
+		Core::CVFlyAttitude::Angle_t u = layer()->angleUnit();
+		_angle->setCurrentIndex(int(u));
+		QList<QStringList> lines = layer()->readFirstLines(10);
+		
+		_table->clear();
+		_table->setRowCount(lines.size());
+
+		for (int i = 0; i < lines.size(); i++) {
+			const QStringList& line = lines.at(i);
+			_table->setColumnCount(line.size());
+			for (int j = 0; j < line.size(); j++) {
+				QTableWidgetItem* itm = new QTableWidgetItem(line.at(j));
+				_table->setItem(i, j, itm);
+			}
+		}
+
 		QStringList info = layer()->data();
 		for (int i = 0; i < info.size(); ++i) {
 			QLabel* lab = _labels.at(i);
 			lab->setText(info.at(i));
 		}
+	} else {
+		_table->hide();
+		_angle->hide();
 	}
 
 	connect(controller(), SIGNAL(persisted()), this, SLOT(onDataPersisted()));
@@ -58,15 +92,35 @@ CVFlyAttitudeDetail::~CVFlyAttitudeDetail() {
 }
 
 void CVFlyAttitudeDetail::importAll(QStringList& uri) {
+	layer()->origin(uri.at(0));
+
 	CV::GUI::CVScopedCursor cur;
 
-	layer()->origin(uri.at(0));
 	res = QtConcurrent::run(controller(), &CV::Core::CVObject::persist);
 
 	_dialog.setWindowTitle(tr("Caricamento assetti in corso.."));
 	_dialog.resize(260, 100);
 	_dialog.resizeBarWidth(230);
 	_dialog.exec();
+
+	_table->show();
+	_angle->show();
+
+	Core::CVFlyAttitude::Angle_t u = layer()->angleUnit();
+	_angle->setCurrentIndex(int(u));
+	QList<QStringList> lines = layer()->readFirstLines(10);
+
+	_table->clear();
+	_table->setRowCount(lines.size());
+
+	for (int i = 0; i < lines.size(); i++) {
+		const QStringList& line = lines.at(i);
+		_table->setColumnCount(line.size());
+		for (int j = 0; j < line.size(); j++) {
+			QTableWidgetItem* itm = new QTableWidgetItem(line.at(j));
+			_table->setItem(i, j, itm);
+		}
+	}
 }
 
 void CVFlyAttitudeDetail::onItemInserted(int el) {
@@ -105,6 +159,9 @@ void CVFlyAttitudeDetail::clearAll() {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
 	}
+	
+	_table->hide();
+	_angle->hide();
 }
 
 void CVFlyAttitudeDetail::dragEnterEvent(QDragEnterEvent* ev) {
@@ -132,6 +189,10 @@ void CVFlyAttitudeDetail::dropEvent(QDropEvent* ev) {
     ev->accept();
 	importAll(QStringList() << _file->absoluteFilePath());
     _file.reset(NULL);
+}
+
+void CVFlyAttitudeDetail::onAngleChanged(int c) {
+	layer()->setAngleUnit(Core::CVFlyAttitude::Angle_t(c));
 }
 
 } // namespace Details

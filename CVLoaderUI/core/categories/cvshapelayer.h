@@ -31,6 +31,9 @@ public:
 		_table = tab;
 	}
 
+	QString table() const { Q_ASSERT(_table.isEmpty() == false); return _table; }
+
+
 	void columns(const QStringList& cols) {
 		_cols = cols;
 	}

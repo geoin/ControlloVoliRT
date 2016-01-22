@@ -167,6 +167,9 @@ bool CVRinexDetail::_importAllAsync(const QString& tmp, QDir& d, QStringList& ur
 	
 	rinex()->origin(z);
 	bool ret = controller()->persist();
+	if (ret) {
+		info();
+	}
 	emit persisted();
 	return ret;
 }
@@ -231,6 +234,10 @@ void CVRinexDetail::importAll(const QStringList& uri) {
     //_dialog.resizeBarWidth(230);
     _dialog.resize(260, 100);
 	_dialog.exec();
+
+	foreach (QString f, uri) {
+		controller()->log(f, "");
+	}
 }
 
 } // namespace Details

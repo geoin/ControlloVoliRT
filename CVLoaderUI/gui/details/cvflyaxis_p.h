@@ -2,6 +2,7 @@
 #define CVFLYAXIS_P_H
 
 #include "core/categories/cvshapelayer.h"
+#include "gui/cvshapeviewer.h"
 
 #include "cvbasedetail.h"
 
@@ -51,6 +52,7 @@ private:
 	QList<QComboBox*> _editors;
 
 	QTableWidget* table;
+	ShapeViewer* _shape;
 };
 
 } // namespace Details

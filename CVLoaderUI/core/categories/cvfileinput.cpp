@@ -69,12 +69,12 @@ bool CVFileInput::persist() {
 			QVariantList() << QUuid::createUuid().toString() << name
 		);
 		if (ret) {
-			Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
-			e->control = _control;  
-			e->object = _object;
-			e->uri = _target;
-			e->db = db;
-			Core::CVJournal::add(e);
+			//Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+			//e->control = _control;  
+			//e->object = _object;
+			//e->uri = _target;
+			//Core::CVJournal::add(e);
+			log(_target, "Origine: " + _origin);
 		} else {
 			return false;
 		}

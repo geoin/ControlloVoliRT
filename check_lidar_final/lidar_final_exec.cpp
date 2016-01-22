@@ -304,7 +304,7 @@ void lidar_final_exec::_checkBlock() {
 		pol_tmp->addRing(gp);
 
 		std::stringstream sqlc;
-		sqlc << "INSERT INTO " << rawGrid << " (NAME, GEOM) VALUES ('" << name << "', ST_GeomFromWKB(:geom, " << SRID << ") )";
+		sqlc << "INSERT INTO " << rawGrid << " (NAME, GEOM) VALUES ('" << name << "', ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 		CV::Util::Spatialite::Statement stm0(cnn);
 		stm0.prepare(sqlc.str());
 		stm0[1].fromBlob(rg_tmp);
@@ -344,7 +344,7 @@ void lidar_final_exec::_checkBlock() {
 				cnn.execute_immediate(sql1.str());
 
 				std::stringstream sqlc;
-				sqlc << "INSERT INTO " << table << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID << ") )";
+				sqlc << "INSERT INTO " << table << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
 				CV::Util::Spatialite::Statement stm0(cnn);
 				stm0.prepare(sqlc.str());
 				stm0[1].fromBlob(dif);

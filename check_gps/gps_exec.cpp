@@ -44,7 +44,7 @@
 #define ASSI_VOLO "AVOLOV"
 
 #define REFSCALE "RefScale_2000"
-#define SRID 32632 // SRID UTM32 wgs84
+//#define SRID 32632 // SRID UTM32 wgs84
 #define SRIDGEO 4326 // SRID lat lon wgs84
 #define SHAPE_CHAR_SET "CP1252"
 #define DB_NAME "geo.sqlite"
@@ -90,15 +90,6 @@ bool gps_exec::run()
 		Poco::Path db_path(_proj_dir, DB_NAME);
         cnn.open(db_path.toString());
         //cnn.initialize_metdata();
-
-		//int nrows = cnn.load_shapefile("C:/Google_drive/Regione Toscana Tools/Dati_test/assi volo/avolov",
-		//   ASSI_VOLO,
-		//   SHAPE_CHAR_SET,
-		//   SRID,
-		//   "geom",
-		//   true, // to have only XY
-		//   false,
-		//   false);
 
 		_read_ref_val();
 
@@ -359,8 +350,8 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 
 		// for every epoch
 		for ( size_t i = 0; i < vg.size(); i++ ) {
-			double x = RAD_DEG(vg[i].pos.x);
-			double y = RAD_DEG(vg[i].pos.y);
+			double x = Conv::FromRad(vg[i].pos.x);
+			double y = Conv::FromRad(vg[i].pos.y);
 			double z = vg[i].pos.z;
 
 			if ( vg[i].data == "base" ) { // means base name and coordinate

@@ -95,7 +95,9 @@ CVFinalDataDetail::~CVFinalDataDetail() {
 
 void CVFinalDataDetail::onTileSizeChanged(int size) {
 	input()->set("FINAL_RAW_STRIP_DATA", "TILE_SIZE", size);
-	input()->persist();
+	if (input()->persist()) {
+		info();
+	}
 }
 
 QWidget* CVFinalDataDetail::_addFolderPicker(QString table, QString column) {
@@ -157,8 +159,8 @@ void CVFinalDataDetail::finalFolder() {
 	);
 
 	if (!ref.isEmpty()) {
-		QFileInfo info(ref);
-		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
+		QFileInfo in(ref);
+		Core::CVSettings::set(CV_PATH_SEARCH, in.absolutePath());
 
 		QString table = sender()->property("TABLE").toString();
 		QString folder = sender()->property("COLUMN").toString();
@@ -166,27 +168,38 @@ void CVFinalDataDetail::finalFolder() {
 
 		input()->set(table, folder, ref);
 		_editors[table]->setText(ref);
-		controller()->persist();
+		if (controller()->persist()) {
+			info();
+		}
 	}
 }
 
 void CVFinalDataDetail::finalFile() {
-	QString ref = QFileDialog::getOpenFileName(this, 
+	QStringList ref = QFileDialog::getOpenFileNames(this, 
 		tr("Trova file"), 
 		Core::CVSettings::get(CV_PATH_SEARCH).toString()
 	);
 
-	if (!ref.isEmpty()) {
-		QFileInfo info(ref);
-		Core::CVSettings::set(CV_PATH_SEARCH, info.absolutePath());
+	if (ref.size() == 0) { return; }
 
-		QString table = sender()->property("TABLE").toString();
-		QString folder = sender()->property("COLUMN").toString();
+	QString file;
+	if (ref.size() == 1) {
+		file = ref.at(0);
+	} else {
+		//TODO
+	}
+
+	QFileInfo in(file);
+	Core::CVSettings::set(CV_PATH_SEARCH, in.absolutePath());
+
+	QString table = sender()->property("TABLE").toString();
+	QString folder = sender()->property("COLUMN").toString();
 	
 		
-		input()->set(table, folder, ref);
-		_editors[table]->setText(ref);
-		controller()->persist();	
+	input()->set(table, folder, file);
+	_editors[table]->setText(file);
+	if (controller()->persist()) {
+		info();
 	}
 }
 

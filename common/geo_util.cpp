@@ -119,8 +119,8 @@ std::string _set_ref_scale(const std::string& nome)
 		return "RefScale_10000";
 	return "";
 }
-bool GetProjData(Connection& cnn, std::string& note, std::string& scale)
-{
+
+bool GetProjData(Connection& cnn, std::string& note, std::string& scale) {
 	std::stringstream sql;
 	sql << "SELECT NOTE, SCALE from PROJECT";
 	Statement stm(cnn);
@@ -133,8 +133,26 @@ bool GetProjData(Connection& cnn, std::string& note, std::string& scale)
 	scale = _set_ref_scale(rs[1]);
 	return true;
 }
-void read_planned_cam(Connection& cnn, Camera& cam)
-{
+
+int SRID(Connection& cnn) {
+	std::stringstream sql;
+	sql << "SELECT DATUM from PROJECT";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	return rs[0].toInt();
+}
+
+int AttitudeAngleUnit(Connection& cnn) {
+	std::stringstream sql;
+	sql << "SELECT UNIT_CODE from UNITS WHERE OBJECT=9";
+	Statement stm(cnn);
+	stm.prepare(sql.str());
+	Recordset rs = stm.recordset();
+	return rs[0].toInt();
+}
+
+void read_planned_cam(Connection& cnn, Camera& cam) {
 	std::stringstream sql;
 	sql << "SELECT * from " << Z_CAMERA << " where PLANNING = 1";
 	Statement stm(cnn);

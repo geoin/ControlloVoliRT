@@ -82,6 +82,7 @@ void CVFolderDetail::importAll(QStringList& uri) {
 
 	folder()->origin(uri.at(0));
 	if (controller()->persist()) {
+		info();
 		QStringList& data = folder()->data();
 		assert(data.size() == _labels.size());
 		for (int i = 0; i < data.size(); ++i) {

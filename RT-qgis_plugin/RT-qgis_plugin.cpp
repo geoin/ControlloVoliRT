@@ -50,7 +50,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-#define RT_PLUGIN_VERSION "1.3.3"
+#define RT_PLUGIN_VERSION "1.3.8"
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
@@ -66,8 +66,7 @@
 
 #endif
 
-dbox::dbox(QgisInterface* mi): _mi(mi)
-{
+dbox::dbox(QgisInterface* mi): _mi(mi) {
     // get plugin folder
     QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
     _plugin_dir = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins");
@@ -79,16 +78,15 @@ dbox::dbox(QgisInterface* mi): _mi(mi)
     if ( !qd.exists() )
         qd.mkdir(_set_dir);
 }
-QString dbox::get_last_prj()
-{
+
+QString dbox::get_last_prj() {
     QFileInfo qfs(_set_dir, "rt_tools.cfg");
     QSettings qs(qfs.filePath(), QSettings::IniFormat);
     QString last_prj = qs.value("PROJ_DIR", "").toString();
     return last_prj;
 }
 
-void dbox::_init(QVBoxLayout* qv, bool is_report)
-{
+void dbox::_init(QVBoxLayout* qv, bool is_report) {
     QString last_prj = get_last_prj();
 
     QVBoxLayout* qvb = new QVBoxLayout;
@@ -150,8 +148,8 @@ void dbox::_init(QVBoxLayout* qv, bool is_report)
 
     _args[0] = QString(PARAM_PREFIX("d")) + _prj->text();
 }
-bool dbox::_dirlist(bool)
-{
+
+bool dbox::_dirlist(bool) {
     QFileDialog qf;
     QString dirName = _prj->text();
     dirName = qf.getExistingDirectory(this, tr("Directory"), dirName);
@@ -162,8 +160,8 @@ bool dbox::_dirlist(bool)
     //QString fileName = qf.getOpenFileName(0, "Select a file:", "", "*.shp *.gml");
     return true;
 }
-void dbox::_chiudi(int result)
-{
+
+void dbox::_chiudi(int result) {
     QString last_prj = _prj->text();
     if ( !last_prj.isEmpty() ) {
         QFileInfo qfs(_set_dir, "rt_tools.cfg");
@@ -172,12 +170,12 @@ void dbox::_chiudi(int result)
     }
     deleteLater();
 }
-void dbox::_esci(bool b)
-{
+
+void dbox::_esci(bool b) {
     done(0);
 }
-void dbox::_received()
-{
+
+void dbox::_received() {
     QByteArray qba = _qp.readAllStandardOutput();
     QString qs(qba);
 
@@ -199,8 +197,8 @@ void dbox::_received()
         _out->append(qs);
     }
 }
-void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
-{
+
+void dbox::_terminated(int exitCode, QProcess::ExitStatus a) {
     _qm->done(0);
     delete _qm;
     _qm = NULL;
@@ -211,8 +209,8 @@ void dbox::_terminated(int exitCode, QProcess::ExitStatus a)
 
     //_add_layers_to_legend();
 }
-void dbox::_terminated1(int exitCode, QProcess::ExitStatus a)
-{
+
+void dbox::_terminated1(int exitCode, QProcess::ExitStatus a) {
     _qm->done(0);
     delete _qm;
     _qm = NULL;
@@ -222,8 +220,8 @@ void dbox::_terminated1(int exitCode, QProcess::ExitStatus a)
     QString qs = "file:" + qf.filePath();
     QDesktopServices::openUrl(QUrl(qs));
 }
-void dbox::_add_layers_to_legend()
-{
+
+void dbox::_add_layers_to_legend() {
     QgsDataSourceURI uri;
     QString dir = _prj->text();
     QFileInfo qf(dir, "geo.sqlite");

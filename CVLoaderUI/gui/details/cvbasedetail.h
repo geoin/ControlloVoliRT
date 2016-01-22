@@ -8,9 +8,12 @@
 #include <QScopedPointer>
 #include <QComboBox>
 #include <QFileDialog>
+#include <QDateTime>
 
-#include "core/categories/cvcontrol.h"
+#include "core/cvjournal.h"
 #include "core/cvcore_utils.h"
+
+#include "gui/cvshapeviewer.h"
 
 class QLineEdit;
 
@@ -26,6 +29,17 @@ public:
 
 	inline void title(const QString& title) { _title->setText(title); }
 	inline QString title() const { return _title->text(); }
+	
+	inline void info() { 
+		Core::CVJournalEntry::Entry e = Core::CVJournal::last(controller()->controlType(), controller()->type());
+		if (e != NULL) {
+			_path->setText("Ultimo inserimento: " + e->uri);
+			_date->setText("In data: " + e->date.toString());
+		} else {
+			_path->setText("");
+			_date->setText("");
+		}
+	}
 
 	inline void description(const QString& descr) { _descr->setText(descr); }
 	inline QString description() const { return _descr->text(); }
@@ -54,7 +68,7 @@ public slots: //declared as slots only here, not in derived
 private:
 	Core::CVObject* _controller;
 
-	QLabel* _title, * _descr;
+	QLabel* _title, * _descr, *_path, *_date;
 	QWidget* _body;
 	QMenu* _menu;
 };

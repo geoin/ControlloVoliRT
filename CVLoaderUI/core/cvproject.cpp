@@ -5,7 +5,7 @@
 namespace CV {
 namespace Core {
 
-CVProject::CVProject(QObject *parent) : QObject(parent) {
+CVProject::CVProject(QObject *parent) : QObject(parent), timestamp(0), datum(32632) {
 
 }
 
@@ -37,7 +37,7 @@ QString CVProject::loadFrom(const QDir& dir) {
 		} 
 
 		set = q->select(
-			QStringList() << "NOTE" << "SCALE",
+			QStringList() << "NOTE" << "SCALE" << "DATUM",
 			QStringList() << "PROJECT", 
 			QStringList(),
 			QVariantList()
@@ -46,6 +46,7 @@ QString CVProject::loadFrom(const QDir& dir) {
 		if (!set.eof()) {
 			notes = QString(set[0].toString().c_str());
 			scale = QString(set[1].toString().c_str());
+			datum = set[2].toInt();
 		} 
 
 		return _db;
@@ -135,9 +136,9 @@ bool CVProject::create(const QString& d) {
 
 	q->insert(
 		"PROJECT", 
-		QStringList() << "NAME" << "NOTE" << "SCALE" << "TYPE",
-		QStringList() << "?1" << "?2" << "?3" << "?4",
-		QVariantList() << name << notes << scale << type
+		QStringList() << "NAME" << "NOTE" << "SCALE" << "TYPE" << "DATUM",
+		QStringList() << "?1" << "?2" << "?3" << "?4" << "?5",
+		QVariantList() << name << notes << scale << type << datum
 	);
 
 	return true;
@@ -198,8 +199,7 @@ QDateTime CVProject::creationDate() {
 }
 	
 QDateTime CVProject::lastModificationDate() {
-	CVJournalEntry::EntryList l = Core::CVJournal::last(
-		_db,
+	CVJournalEntry::EntryList l = Core::CVJournal::lastN(
 		QStringList(),
 		QVariantList(),
 		1
@@ -228,7 +228,7 @@ bool CVProject::persist() {
 		e->note = notes;
 		e->control = type;
 		e->uri = name;
-		e->db = _db;
+		//e->db = _db;
 		Core::CVJournal::add(e);
 	}
 	return ret;

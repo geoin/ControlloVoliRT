@@ -156,8 +156,9 @@ void CVSensorDetail::save() {
 	if (sensor()->isPlanning()) {
 		s.speed = _params.value("SPEED")->text().toDouble();
 	}
-
-	controller()->persist();
+	if (controller()->persist()) {
+		info();
+	}
 }
 
 void CVSensorDetail::view() {

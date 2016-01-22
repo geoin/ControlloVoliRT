@@ -115,9 +115,13 @@ except:
 ico = installDir + "/icon"
 copyAllFiles(ico, iconsDir)
 
+subprocess.call("ldconfig")
+
 print "\n"
 print "#########################################"
 print "## Installazione eseguita con successo ##"
 print "#########################################"
 print "\n"
 
+print "Si prega di riavviare il sistema."
+print "\n"

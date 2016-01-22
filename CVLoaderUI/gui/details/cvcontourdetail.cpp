@@ -26,7 +26,9 @@ CVContourDetail::CVContourDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p
 	title(tr("Limiti amministrativi"));
 	description(tr("File shape"));
 
-	
+	_shape = new ShapeViewer(this);
+
+	QVBoxLayout* box = new QVBoxLayout;
     QFormLayout* form = new QFormLayout;
 
 	QLabel* lab, * info;
@@ -34,10 +36,16 @@ CVContourDetail::CVContourDetail(QWidget* p, Core::CVObject* l) : CVBaseDetail(p
 	_labels << info;
 	form->addRow(lab, info);
 
-	body(form);
+	box->addLayout(form);
+	box->addWidget(_shape, 2);
+
+	body(box);
 
 	if (controller()->isValid()) {
 		_labels.at(0)->setText(tr("Dati inseriti"));
+		_shape->loadFromSpatialite(layer()->table());
+	} else {
+		_shape->hide();
 	}
 }
 
@@ -47,6 +55,7 @@ CVContourDetail::~CVContourDetail() {
 
 void CVContourDetail::clearAll() {
 	controller()->remove();
+	_shape->hide();
 	for (int i = 0; i < _labels.size(); ++i) {
 		QLabel* lab = _labels.at(i);
 		lab->setText("");
@@ -69,8 +78,13 @@ void CVContourDetail::searchFile() {
 
 void CVContourDetail::importAll(QStringList& uri) {
 	layer()->shape(uri.at(0));
-	controller()->persist();
-	_labels.at(0)->setText(tr("Dati inseriti"));
+	if (controller()->persist()) {
+		info();
+		_labels.at(0)->setText(tr("Dati inseriti"));
+
+		_shape->show();
+		_shape->loadFromShp(uri.at(0));
+	}
 }
 
 void CVContourDetail::dragEnterEvent(QDragEnterEvent* ev) {

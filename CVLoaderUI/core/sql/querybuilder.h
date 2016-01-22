@@ -20,6 +20,7 @@ public:
 	static bool open(const QString& db) {
 		try {
 			cnn.open(db.toStdString());
+			_db = db;
 			return true;
 		} catch (CV::Util::Spatialite::spatialite_error& err) {
 			Q_UNUSED(err)
@@ -30,6 +31,7 @@ public:
 	static bool create(const QString& db) {
 		try {
 			cnn.create(db.toStdString());
+			_db = db;
 			return true;
 		} catch (CV::Util::Spatialite::spatialite_error& err) {
 			Q_UNUSED(err)
@@ -41,8 +43,13 @@ public:
 		return cnn;
 	}
 
+	static const QString& path() {
+		return _db;
+	}
+
 private:
 	static CV::Util::Spatialite::Connection cnn;
+	static QString _db;
 };
 
 class Query {

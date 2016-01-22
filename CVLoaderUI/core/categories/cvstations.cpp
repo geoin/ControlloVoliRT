@@ -105,12 +105,12 @@ bool CVStation::persist() {
 		);
 	}
 	if (ret) {
-		Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+		/*Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
 		e->control = Core::CVControl::FLY;  
 		e->object = Core::CVObject::STATION;
 		e->uri = origin();
-		e->db = uri();
-		Core::CVJournal::add(e);
+		//e->db = uri();
+		Core::CVJournal::add(e);*/
 	}
 	return ret; //EMPTY
 }

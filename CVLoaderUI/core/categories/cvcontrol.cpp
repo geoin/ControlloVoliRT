@@ -1,5 +1,7 @@
 #include "cvcontrol.h"
 
+#include "core/cvjournal.h"
+
 namespace CV {
 namespace Core {
 
@@ -35,7 +37,21 @@ void CVControl::insert(CVObject* obj, bool setPath) {
 		obj->uri(uri());
 		obj->init();
 	}
+	obj->controlType(type());
 	_objects.append(obj); 
+}
+
+void CVObject::log(QString uri, QString note) const {
+	Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+	e->control = _controlType;  
+	e->object = _type;
+	e->uri = uri;
+	e->note = note;
+	Core::CVJournal::add(e);
+}
+
+void CVObject::log(QString note) const {
+	log(_uri, note);
 }
 
 }

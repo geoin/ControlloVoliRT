@@ -35,7 +35,7 @@
 #include <iostream>
 #include "common/util.h"
 
-#define SRID 32632
+//#define SRID 32632
 #define SIGLA_PRJ "CSTP"
 #define CAMERA "camera.xml"
 #define OUT_DOC "check_ta.xml"
@@ -692,7 +692,7 @@ bool ta_exec::_check_differences()
 				VDP& vdp1 = vdps1[nome];
 				VDP& vdp2 = vdps2[nome];
 				VecOri pc = vdp1.Pc - vdp2.Pc;
-				VecOri at(1000 * RAD_DEG(vdp1.om - vdp2.om), 1000 * RAD_DEG(vdp1.fi - vdp2.fi), 1000 * RAD_DEG(vdp1.ka - vdp2.ka));
+				VecOri at(1000 * Conv::FromRad(vdp1.om - vdp2.om), 1000 * Conv::FromRad(vdp1.fi - vdp2.fi), 1000 * Conv::FromRad(vdp1.ka - vdp2.ka));
 				if (isDiffValid(pc, at) == false) {
 					if (header == false) {
 						Doc_Item tab = tableSec->add_item("table");

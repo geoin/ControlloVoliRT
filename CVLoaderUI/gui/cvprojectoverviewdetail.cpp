@@ -35,6 +35,7 @@ void CVProjectOverviewDetail::addProjectInformations(QVBoxLayout* l) {
 	_addDescr(info, tr("Nome progetto"), _controller->name);
 	_addDescr(info, tr("Tipo"), _controller->type == Core::CVProject::PHOTOGRAMMETRY ? tr("Fotogrammetria") : tr("Lidar"));
 	_addDescr(info, tr("Percorso"), _controller->path);
+	_addDescr(info, tr("Datum"), "EPSG:" + QString::number(_controller->datum));
 	_addDescr(info, tr("Data creazione"), _controller->creationDate().toString());
 	_lastModified = _addDescr(info, tr("Ultima modifica"), _controller->lastModificationDate().toString());
 
@@ -69,6 +70,7 @@ QLabel* CVProjectOverviewDetail::_addDescr(QFormLayout* form, QString label, QSt
 	info->setMinimumHeight(26);
 	info->setMaximumHeight(26);
 	info->setAlignment(Qt::AlignRight | Qt::AlignHCenter);
+	info->setTextInteractionFlags(Qt::TextSelectableByMouse);
 
 	form->addRow(lab, info);
 	return info;
@@ -157,6 +159,7 @@ void CVProjectOverviewDetail::onEditProject(bool b) {
 	if (_scale) {
 		_scale->setDisabled(!b);
 	}
+
 	if (b) {
 		_notes->setStyleSheet("");
 	} else {

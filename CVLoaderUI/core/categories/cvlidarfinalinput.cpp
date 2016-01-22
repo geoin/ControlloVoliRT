@@ -47,7 +47,6 @@ void CVLidarFinalInput::set(const QString& table, const QString& column, const i
 	_tileSize = value;
 }
 
-
 bool CVLidarFinalInput::isValid() const {
 	return _isValid;
 }
@@ -121,12 +120,13 @@ bool CVLidarFinalInput::persist() {
 		if (!ret) {
 			return false;
 		} else {
-			Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
-			e->control = controlType();  
-			e->object = type();
-			e->uri = origin();
-			e->db = uri();
-			Core::CVJournal::add(e);
+			//Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
+			//e->control = controlType();  
+			//e->object = type();
+			//e->uri = origin();
+			//e->db = uri();
+			//Core::CVJournal::add(e);
+			log();
 		}
 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {

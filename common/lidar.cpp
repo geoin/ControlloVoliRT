@@ -68,7 +68,7 @@ void Strip::fromLineRing(Axis::Ptr axis, OGRLinearRing* gp) {
 }
 
 bool Strip::isParallel(Strip::Ptr other, int p) const {
-	double diff = RAD_DEG(yaw()) - RAD_DEG(other->yaw());
+	double diff = Conv::FromRad(yaw()) - Conv::FromRad(other->yaw());
 	diff = fabs(diff > 180 ? 360 - diff : diff);
 	return diff < p || (diff > (180 - p));
 }
