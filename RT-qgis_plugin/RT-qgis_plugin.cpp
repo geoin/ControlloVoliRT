@@ -50,7 +50,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-#define RT_PLUGIN_VERSION "1.3.8"
+#define RT_PLUGIN_VERSION "1.4.0a"
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )

@@ -238,6 +238,7 @@ void CVRinexDetail::importAll(const QStringList& uri) {
 	foreach (QString f, uri) {
 		controller()->log(f, "");
 	}
+	info();
 }
 
 } // namespace Details

@@ -724,8 +724,8 @@ std::string lidar_final_exec::_fileFromCorner(const std::string& folder, const s
 	throw std::runtime_error("File from corner failed");
 }
 
-size_t lidar_final_exec::_getSamplesCount(size_t minVal, size_t maxVal, size_t size) {
-	size_t count = size * 0.1;
+size_t lidar_final_exec::_getSamplesCount(size_t minVal, size_t maxVal, size_t size, double perc) {
+	size_t count = size * perc;
 
 	count = min(count, maxVal);
 	count = max(count, minVal);

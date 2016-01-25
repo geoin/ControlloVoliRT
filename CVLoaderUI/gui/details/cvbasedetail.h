@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QDateTime>
+#include <QLayout>
 
 #include "core/cvjournal.h"
 #include "core/cvcore_utils.h"
@@ -56,7 +57,7 @@ public:
 	inline void description(const QString& descr) { _descr->setText(descr); }
 	inline QString description() const { return _descr->text(); }
 
-	inline void body(QLayout* l) { _body->setLayout(l); }
+	inline void body(QLayout* l) { _body->setLayout(l); l->setAlignment(Qt::AlignTop); }
 	inline QWidget* body() { return _body; }
 	inline QMenu* detailMenu() const { return _menu; }
 

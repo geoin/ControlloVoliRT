@@ -78,7 +78,7 @@ bool CVFolderInput::persist() {
 			//e->db = uri();
 			Core::CVJournal::add(e);*/
 
-			log(origin(), "");
+			log(info.absoluteFilePath(), "");
 		}
 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {

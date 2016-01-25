@@ -34,6 +34,7 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QVector>
+#include <QSpinBox>
 
 class QAction;
 class QgsGeometry;
@@ -162,6 +163,7 @@ class Check_lidar_final: public dbox {
 public:
     Check_lidar_final(QgisInterface* mi);
 private:
+    QSpinBox* _p1;
 };
 
 #endif

@@ -98,6 +98,8 @@ void CVAreaDetail::importAll(QStringList& uri) {
 		_shape->loadFromShp(uri.at(0));
 	}
 	_labels.at(0)->setText(QString::number(layer()->rows()));
+
+	info();
 }
 
 void CVAreaDetail::dragEnterEvent(QDragEnterEvent* ev) {

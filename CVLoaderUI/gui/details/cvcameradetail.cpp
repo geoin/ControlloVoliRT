@@ -59,9 +59,9 @@ CVCameraDetail::CVCameraDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 		
 		if (controller()->isValid()) {
 			view();
-			info(controller()->controlType(), controller()->type());
 		}
 	}
+	info(controller()->controlType(), controller()->type());
 }
 
 void CVCameraDetail::dragEnterEvent(QDragEnterEvent* ev) {

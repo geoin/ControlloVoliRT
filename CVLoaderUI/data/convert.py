@@ -18,7 +18,7 @@ if len(sys.argv) <= 3:
 else:
 	source_layer = source_ds.GetLayer(sys.argv[3])
 	
-sourceSR = source_layer.GetSpatialRef()
+#sourceSR = source_layer.GetSpatialRef()
 
 x_min, x_max, y_min, y_max = source_layer.GetExtent()
 

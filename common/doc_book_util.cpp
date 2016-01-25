@@ -1,5 +1,6 @@
 #include "common/util.h"
-#include "Poco/DateTime.h"
+#include "Poco/LocalDateTime.h"
+
 using namespace CV::Util::Spatialite;
 
 bool print_item(Doc_Item& row, Poco::XML::AttributesImpl& attr, double val, CHECK_TYPE ty, double tol1, double tol2)
@@ -56,8 +57,7 @@ void init_document(docbook& dbook, const std::string& nome, const std::string& t
 	if ( !head1.empty() )
 		sec->add_item("para")->append(head1);
 
-	Poco::DateTime dt;
-	dt.makeLocal(+1);
+	Poco::LocalDateTime dt;
 	std::stringstream ss;
 	ss << "Data: " << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
 	sec->add_item("para")->append(ss.str());

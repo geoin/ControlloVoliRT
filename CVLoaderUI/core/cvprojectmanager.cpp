@@ -207,7 +207,7 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	if (proj->type == CVProject::PHOTOGRAMMETRY) {
 		plan_t = CVControl::PLAN;
 		ctrl = new CVControl(plan_t, proj);
-		ctrl->uri(proj->db());
+		//ctrl->uri(proj->db());
 		CVCamera* cam = new CVCamera(ctrl);
 		cam->isPlanning(true);
 		cam->type(CVObject::CAMERA);
@@ -215,7 +215,7 @@ CVControl* CVProjectManager::_plan(CVProject* proj, bool b) {
 	} else {
 		plan_t = CVControl::LIDAR_PLAN;
 		ctrl = new CVControl(plan_t, proj);
-		ctrl->uri(proj->db());
+		//ctrl->uri(proj->db());
 		CVSensor* sensor = new CVSensor(ctrl);
 		sensor->type(CVObject::SENSOR);
 		sensor->isPlanning(true);

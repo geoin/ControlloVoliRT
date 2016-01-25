@@ -84,6 +84,7 @@ CVSensorDetail::CVSensorDetail(QWidget* p, Core::CVObject* cam) : CVBaseDetail(p
 	if (controller()->isValid()) {
 		view();
 	}
+	info(controller()->controlType(), controller()->type());
 }
 
 CVSensorDetail::~CVSensorDetail() {
@@ -157,7 +158,7 @@ void CVSensorDetail::save() {
 		s.speed = _params.value("SPEED")->text().toDouble();
 	}
 	if (controller()->persist()) {
-		info();
+		info(controller()->controlType(), controller()->type());
 	}
 }
 
@@ -171,6 +172,8 @@ void CVSensorDetail::view() {
 	if (sensor()->isPlanning()) {
 		_params.value("SPEED")->setText(QString::number(s.speed, 'f', CV_MAX_DECIMALS));
 	}
+		
+	info(controller()->controlType(), controller()->type());
 }
 
 void CVSensorDetail::importAll(QStringList& uri) {
@@ -179,6 +182,9 @@ void CVSensorDetail::importAll(QStringList& uri) {
     if (!open) {
         return;
     }
+	
+	controller()->uri(uri.at(0));
+
     QXmlStreamReader xml(&file);
 	int i = 0;
     while(!xml.atEnd()) {

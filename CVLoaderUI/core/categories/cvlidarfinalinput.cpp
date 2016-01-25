@@ -107,6 +107,10 @@ bool CVLidarFinalInput::persist() {
 				QStringList() << "?1" << "?2" ,
 				QVariantList() << QUuid::createUuid().toString() << path
 			);
+
+			if (ret) {
+				log(path, "");
+			}
 		}
 		
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
@@ -119,14 +123,6 @@ bool CVLidarFinalInput::persist() {
 
 		if (!ret) {
 			return false;
-		} else {
-			//Core::CVJournalEntry::Entry e(new Core::CVJournalEntry);
-			//e->control = controlType();  
-			//e->object = type();
-			//e->uri = origin();
-			//e->db = uri();
-			//Core::CVJournal::add(e);
-			log();
 		}
 
 	} catch (CV::Util::Spatialite::spatialite_error& err) {

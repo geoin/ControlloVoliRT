@@ -189,7 +189,7 @@ void CVFinalDataDetail::finalFile() {
 		QFileInfo f(ref.at(0));
 		QString path = f.absoluteDir().absolutePath();
 		
-		QFile out(path + QDir::separator() + "grid.txt");
+		QFile out(path + QDir::separator() + "list.txt");
 		out.open(QIODevice::WriteOnly);
 		foreach(QString in, ref) {
 			out.write(QString(in + "\n").toUtf8());

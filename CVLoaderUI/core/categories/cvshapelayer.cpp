@@ -44,6 +44,8 @@ bool CVShapeLayer::remove() {
 }
 
 bool CVShapeLayer::persist() {
+	remove();
+
 	_isValid = false;
 	try {
 		CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
