@@ -49,7 +49,7 @@ void check_lidar_final::defineOptions(OptionSet& options) {
         Option("tile", "t", "Percentuale punti tile grezze")
             .required(true)
             .repeatable(false)
-            .argument("value")
+            .argument("t")
 			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleTilesPointsPerc)));
 
 	
@@ -57,7 +57,7 @@ void check_lidar_final::defineOptions(OptionSet& options) {
         Option("classF", "cf", "Percentuale file classificazione")
             .required(true)
             .repeatable(false)
-            .argument("value")
+            .argument("cf")
 			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleClassFilesPerc)));
 
 	
@@ -65,14 +65,14 @@ void check_lidar_final::defineOptions(OptionSet& options) {
         Option("classP", "cp", "Percentuale punti classificazione")
             .required(true)
             .repeatable(false)
-            .argument("value")
+            .argument("cp")
 			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleClassPointsPerc)));
 
 	 options.addOption(
         Option("resampleF", "rf", "Percentuale file ricampionamento")
             .required(true)
             .repeatable(false)
-            .argument("value")
+            .argument("rf")
 			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleResampleFilesPerc)));
 
 	
@@ -80,7 +80,7 @@ void check_lidar_final::defineOptions(OptionSet& options) {
         Option("resampleP", "rp", "Percentuale punti ricampionamento")
             .required(true)
             .repeatable(false)
-            .argument("value")
+            .argument("rp")
 			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleResamplePointsPerc)));
 
 	
@@ -88,7 +88,7 @@ void check_lidar_final::defineOptions(OptionSet& options) {
         Option("quota", "q", "Percentuale punti quota")
             .required(true)
             .repeatable(false)
-            .argument("value")
+            .argument("q")
 			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleTilesPointsPerc)));
 }
 

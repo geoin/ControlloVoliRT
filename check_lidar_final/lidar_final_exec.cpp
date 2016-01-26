@@ -32,6 +32,9 @@ using namespace CV::Util::Geometry;
 lidar_final_exec::lidar_final_exec() {
 	srand(time(NULL));
 	_coversAll = false;
+
+	
+	_tilePP = 10, _classFP = 10, _classPP = 10, _resFP = 10, _resPP = 10, _qPP = 10;
 }
 
 void lidar_final_exec::set_proj_dir(const std::string& proj) {
@@ -417,9 +420,14 @@ void lidar_final_exec::_checkRawRandom() {
 		DSM* dsm = f.GetDsm();
 		size_t size = dsm->Npt();
 
-		size_t c = _getSamplesCount(1000, size/2, size);
-		for (int i = 0; i < c; i++) {
-			NODE n = dsm->Node(rand() % (size - 1));
+		//size_t c = _getSamplesCount(1000, size/2, size);
+
+		size_t cnt = _tilePP/100.0f*size;
+		Geoin::Util::Sampler sampler(cnt);
+		sampler.sample(cnt, size);
+		for (auto it = sampler.begin(); it != sampler.end(); it++) {
+			auto index = *it;
+			NODE n = dsm->Node(index);
 			points[p.getBaseName()].push_back(n);
 		}
 	}
@@ -463,16 +471,14 @@ void lidar_final_exec::_checkEllipsoidicData() {
 
 void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data, const std::string& group) {
 	std::map< std::string, std::vector<NODE> > points;
-	
-	std::set<std::string> set;
 
-	size_t c = _getSamplesCount(4, 200, data.size());
-	for (int i = 0; i < c; i++) {
-		std::string corner = data.at(rand() % (data.size() - 1));
-		while (set.find(corner) != set.end()) {
-			corner = data.at(rand() % (data.size() - 1));
-		}
-		set.insert(corner);
+	size_t size = data.size();
+	size_t cnt = _classFP/100.0f * size;
+	Geoin::Util::Sampler sampler(cnt);
+	sampler.sample(cnt, size);
+	for (auto it = sampler.begin(); it != sampler.end(); it++) {
+		size_t index = *it;
+		std::string corner = data.at(index);
 
 		std::string path = _fileFromCorner(folder, "xyzic", corner);
 		DSM_Factory f;
@@ -483,9 +489,12 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 		bool ret = f.Open(path, false, false);
 		
 		unsigned int npt = f.GetDsm()->Npt();
-		size_t c = _getSamplesCount(1000, npt/2, npt);
-		for (int j = 0; j < c; j++) {
-			const NODE& n = f.GetDsm()->Node(rand() % (npt - 1));
+		size_t cntp = _classPP/100.0f * npt;
+		Geoin::Util::Sampler sampler(cntp);
+		sampler.sample(cntp, npt);
+		
+		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
+			const NODE& n = f.GetDsm()->Node(*itp);
 			points[corner].push_back(n);
 		}
 	}
@@ -538,15 +547,14 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 }
 
 void lidar_final_exec::_checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& stats) { 
-	std::set<std::string> set;
 
-	size_t c = _getSamplesCount(4, 100, list1.size());
-	for (int i = 0; i < c; i++) {
-		std::string corner = list1.at(rand() % (list1.size() - 1));
-		while (set.find(corner) != set.end()) {
-			corner = list1.at(rand() % (list1.size() - 1));
-		}
-		set.insert(corner);
+	size_t size = list1.size();
+	size_t cnt = _resFP / 100.f * size;
+	Geoin::Util::Sampler sampler(cnt);
+	sampler.sample(cnt, size);
+	
+	for (auto it = sampler.begin(); it != sampler.end(); it++) {
+		std::string corner = list1.at(*it);
 
 		std::string groundPath = _fileFromCorner(folder1, "xyzic", corner);
 		DSM_Factory gr;
@@ -564,13 +572,13 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 			continue;
 		}
 		std::vector<double> diff;
-		unsigned int size = m.GetDsm()->Npt();
-		size_t c = _getSamplesCount(4, size/2, size);
-		for (int j = 0; j < c; j++) {
-			unsigned int randomIdx = rand() % (size - 1);
-			assert(randomIdx < size);
-
-			const NODE& n = m.GetDsm()->Node(randomIdx);
+		unsigned int npt = m.GetDsm()->Npt();
+		size_t cntp = _resPP/100.0f * npt;
+		Geoin::Util::Sampler sampler(cntp);
+		sampler.sample(cntp, npt);
+		
+		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
+			const NODE& n = m.GetDsm()->Node(*itp);
 			double z = gr.GetDsm()->GetQuota(n.x, n.y);
 			if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT) {
 				diff.push_back(z - n.z);
@@ -677,13 +685,15 @@ void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string
 			std::cout << ell << " e " << orto << " differiscono per numero di punti" << std::endl; //REPORT
 			continue;
 		}
-
-		size_t s = ortoF.GetDsm()->Npt(); 
-
 		std::vector<double> diffData;
-		size_t c = _getSamplesCount(50, s/2, s);
-		for (int i = 0; i < c; i++) {
-			unsigned int index = rand() % (s - 1);
+
+		size_t npt = ortoF.GetDsm()->Npt(); 
+		size_t cntp = _qPP/100.0f * npt;
+		Geoin::Util::Sampler sampler(cntp);
+		sampler.sample(cntp, npt);
+		
+		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
+			auto index = *itp;
 			const NODE& ellN = ellF.GetDsm()->Node(index);
 			const NODE& ortoN = ortoF.GetDsm()->Node(index);
 
