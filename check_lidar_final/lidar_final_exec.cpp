@@ -21,6 +21,8 @@
 #include <time.h>
 #include <set>
 
+#include "sampler.h"
+
 #define GEO_DB_NAME "geo.sqlite"
 
 using namespace CV;
