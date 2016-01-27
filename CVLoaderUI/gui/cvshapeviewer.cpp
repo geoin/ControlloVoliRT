@@ -28,7 +28,7 @@ void ShapeViewer::loadFromShp(const QString& path) {
 	args << out << path + ".shp" << output.fileName();
 	QProcess::execute("python", args);
 	QFile::remove(out);
-	QFile::remove(out + ".aux.xml");
+	QFile::remove(output.fileName() + ".aux.xml");
 
 	QImage im(output.fileName(), "BMP");
 	_item->setPixmap(QPixmap::fromImage(im));
@@ -56,7 +56,7 @@ void ShapeViewer::loadFromSpatialite(const QString& layer) {
 	args << out << Core::SQL::Database::path() << output.fileName() << layer;
 	QProcess::execute("python", args);
 	QFile::remove(out);
-	QFile::remove(out + ".aux.xml");
+	QFile::remove(output.fileName() + ".aux.xml");
 
 	QImage im(output.fileName(), "BMP");
 	_item->setPixmap(QPixmap::fromImage(im));
