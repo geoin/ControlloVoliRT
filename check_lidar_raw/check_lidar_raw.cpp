@@ -46,7 +46,7 @@ void check_lidar_raw::defineOptions(OptionSet& options) {
 
 	
     options.addOption(
-        Option("den", "i", "Specifica la densità di intersezione")
+        Option("iden", "i", "Specifica la densità di intersezione")
             .required(true)
             .repeatable(false)
             .argument("value")

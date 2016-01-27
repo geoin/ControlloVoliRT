@@ -9,8 +9,6 @@ source_layer = 0
 vector_fn = sys.argv[1]
 raster_fn = sys.argv[2]
 
-print vector_fn, raster_fn
-
 source_ds = ogr.Open(vector_fn)
 
 if len(sys.argv) <= 3:
