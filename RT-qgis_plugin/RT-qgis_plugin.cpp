@@ -614,7 +614,8 @@ Check_lidar_raw::Check_lidar_raw(QgisInterface* mi): dbox(mi)
     _check_name = "check_lidar_raw";
 
     // prepare the parameters
-    _args << PARAM_PREFIX("d"); // project dir
+    _args << PARAM_PREFIX("dir"); // project dir
+    _args << PARAM_PREFIX("den") + "10"; // project dir
 
     QString name = _check_name;// + ".exe";
 
@@ -623,7 +624,19 @@ Check_lidar_raw::Check_lidar_raw(QgisInterface* mi): dbox(mi)
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
+    _den = new QSpinBox(this);
+    _den->setValue(10);
+    connect(_den, SIGNAL(valueChanged(int)), this, SLOT(denValueChanged(int)));
+
+    QFormLayout* form = new QFormLayout;
+    form->addRow("Punti intersezione (%)", _den);
+    qvb->addLayout(form);
+
     _init(qvb);
+}
+
+void Check_lidar_raw::denValueChanged(int i) {
+    _args[1] = PARAM_PREFIX("den") + QString::number(i);
 }
 
 Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
@@ -672,12 +685,12 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
     connect(_qP, SIGNAL(valueChanged(int)), this, SLOT(quotaValueChanged(int)));
 
     QFormLayout* form = new QFormLayout;
-    form->addRow("Punti tile grezze", _tileP);
-    form->addRow("Cartelle classificazione", _classF);
-    form->addRow("Punti classificazione", _classP);
-    form->addRow("Cartelle ricampionamento", _resF);
-    form->addRow("Punti ricampionamento", _resP);
-    form->addRow("Punti quota", _qP);
+    form->addRow("Punti tile grezze (%)", _tileP);
+    form->addRow("Cartelle classificazione (%)", _classF);
+    form->addRow("Punti classificazione (%)", _classP);
+    form->addRow("Cartelle ricampionamento (%)", _resF);
+    form->addRow("Punti ricampionamento (%)", _resP);
+    form->addRow("Punti quota (%)", _qP);
     qvb->addLayout(form);
 
     _init(qvb);
@@ -685,14 +698,13 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
 
 
 void Check_lidar_final::tileValueChanged(int i) {
-    std::cout << i << std::endl;
     _args[1] = PARAM_PREFIX("t") + QString::number(i);
 }
-void Check_lidar_final::classFValueChanged(int i) {std::cout << i << std::endl; _args[2] = PARAM_PREFIX("cf") + QString::number(i); }
-void Check_lidar_final::classPValueChanged(int i) {std::cout << i << std::endl; _args[3] = PARAM_PREFIX("cp") + QString::number(i); }
-void Check_lidar_final::resFValueChanged(int i) {std::cout << i << std::endl; _args[4] = PARAM_PREFIX("rf") + QString::number(i); }
-void Check_lidar_final::resPValueChanged(int i) { std::cout << i << std::endl;_args[5] = PARAM_PREFIX("rp") + QString::number(i); }
-void Check_lidar_final::quotaValueChanged(int i) {std::cout << i << std::endl; _args[6] = PARAM_PREFIX("q") + QString::number(i); }
+void Check_lidar_final::classFValueChanged(int i) { _args[2] = PARAM_PREFIX("cf") + QString::number(i); }
+void Check_lidar_final::classPValueChanged(int i) { _args[3] = PARAM_PREFIX("cp") + QString::number(i); }
+void Check_lidar_final::resFValueChanged(int i) { _args[4] = PARAM_PREFIX("rf") + QString::number(i); }
+void Check_lidar_final::resPValueChanged(int i) { _args[5] = PARAM_PREFIX("rp") + QString::number(i); }
+void Check_lidar_final::quotaValueChanged(int i) { _args[6] = PARAM_PREFIX("q") + QString::number(i); }
 
 
 /*******************************************/

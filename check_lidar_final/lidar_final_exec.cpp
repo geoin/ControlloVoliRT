@@ -423,7 +423,11 @@ void lidar_final_exec::_checkRawRandom() {
 		//size_t c = _getSamplesCount(1000, size/2, size);
 
 		size_t cnt = _tilePP/100.0f*size;
-		Geoin::Util::Sampler sampler(cnt);
+		if (cnt == 0) {
+			cnt = 1;
+		}
+
+		Geoin::Util::Sampler sampler(size);
 		sampler.sample(cnt, size);
 		for (auto it = sampler.begin(); it != sampler.end(); it++) {
 			auto index = *it;
@@ -437,7 +441,10 @@ void lidar_final_exec::_checkRawRandom() {
 	bool con = false;
 	for (; sit != send; sit++) {
 		Poco::Path path(_stripFolder);
-		path.append((*sit)->name() + ".las");
+		std::string actual = (*sit)->name() + ".las";
+		path.append(actual);
+
+		std::cout << " * " << actual << std::endl;
 		
 		DSM_Factory f;
 		f.Open(path.toString());
@@ -474,7 +481,10 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 
 	size_t size = data.size();
 	size_t cnt = _classFP/100.0f * size;
-	Geoin::Util::Sampler sampler(cnt);
+	if (cnt == 0) {
+		cnt = 1;
+	}
+	Geoin::Util::Sampler sampler(size);
 	sampler.sample(cnt, size);
 	for (auto it = sampler.begin(); it != sampler.end(); it++) {
 		size_t index = *it;
@@ -490,7 +500,10 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 		
 		unsigned int npt = f.GetDsm()->Npt();
 		size_t cntp = _classPP/100.0f * npt;
-		Geoin::Util::Sampler sampler(cntp);
+		if (cntp == 0) {
+			cntp = 1;
+		}
+		Geoin::Util::Sampler sampler(npt);
 		sampler.sample(cntp, npt);
 		
 		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
@@ -550,7 +563,11 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 
 	size_t size = list1.size();
 	size_t cnt = _resFP / 100.f * size;
-	Geoin::Util::Sampler sampler(cnt);
+	if (cnt == 0) {
+		cnt = 1;
+	}
+
+	Geoin::Util::Sampler sampler(size);
 	sampler.sample(cnt, size);
 	
 	for (auto it = sampler.begin(); it != sampler.end(); it++) {
@@ -574,7 +591,10 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 		std::vector<double> diff;
 		unsigned int npt = m.GetDsm()->Npt();
 		size_t cntp = _resPP/100.0f * npt;
-		Geoin::Util::Sampler sampler(cntp);
+		if (cntp == 0) {
+			cntp = 1;
+		}
+		Geoin::Util::Sampler sampler(npt);
 		sampler.sample(cntp, npt);
 		
 		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
@@ -689,7 +709,11 @@ void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string
 
 		size_t npt = ortoF.GetDsm()->Npt(); 
 		size_t cntp = _qPP/100.0f * npt;
-		Geoin::Util::Sampler sampler(cntp);
+		if (cntp == 0) {
+			cntp = 1;
+		}
+
+		Geoin::Util::Sampler sampler(npt);
 		sampler.sample(cntp, npt);
 		
 		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {

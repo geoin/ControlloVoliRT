@@ -160,7 +160,12 @@ class Check_lidar_raw: public dbox {
     Q_OBJECT
 public:
     Check_lidar_raw(QgisInterface* mi);
+
+public slots:
+    void denValueChanged(int i);
+
 private:
+    QSpinBox* _den;
 };
 
 class Check_lidar_final: public dbox {

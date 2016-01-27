@@ -7,13 +7,13 @@
 
 #include "cv/lidar.h"
 
-#define INTERSECTION_DENSITY 5.0/100.0
 
 class lidar_raw_exec {
 public:
-	lidar_raw_exec() : LID_TOL_Z(0.0), LID_TOL_A(0.0) {}
+	lidar_raw_exec() : LID_TOL_Z(0.0), LID_TOL_A(0.0),  INTERSECTION_DENSITY(5.0/100.0) {}
 
     void set_proj_dir(const std::string&);
+	void setIntersectionDensity(int perc) { INTERSECTION_DENSITY = perc/100.0f; }
 
 	bool init();
     bool run();
@@ -68,6 +68,7 @@ private:
 	std::string _note;
 
 	double LID_TOL_Z, LID_TOL_A;
+	double INTERSECTION_DENSITY;
 };
 
 #endif

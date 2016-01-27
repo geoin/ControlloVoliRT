@@ -43,6 +43,14 @@ void check_lidar_raw::defineOptions(OptionSet& options) {
             .repeatable(false)
             .argument("value")
             .callback(OptionCallback<check_lidar_raw>(this, &check_lidar_raw::handlePrjDir)));
+
+	
+    options.addOption(
+        Option("den", "i", "Specifica la densità di intersezione")
+            .required(true)
+            .repeatable(false)
+            .argument("value")
+            .callback(OptionCallback<check_lidar_raw>(this, &check_lidar_raw::handleDensity)));
 }
 
 void check_lidar_raw::handleHelp(const std::string& name, const std::string& value) {
@@ -54,6 +62,10 @@ void check_lidar_raw::handleHelp(const std::string& name, const std::string& val
 
 void check_lidar_raw::handlePrjDir(const std::string& name, const std::string& value) {
     _check.set_proj_dir(value);
+}
+
+void check_lidar_raw::handleDensity(const std::string&, const std::string& value) {
+    _check.setIntersectionDensity(std::stoi(value));
 }
 
 void check_lidar_raw::displayHelp() {
