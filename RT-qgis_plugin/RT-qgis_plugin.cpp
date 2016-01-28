@@ -57,12 +57,14 @@
 #define QGISEXTERN extern "C" __declspec( dllexport )
 
 #define PARAM_PREFIX(d) QString("/") + QString(d) + QString("=")
+#define PARAM_PREFIX_L(d) QString("/") + QString(d) + QString("=")
 #define FLAG_PREFIX(d) QString("/") + QString(d)
 
 #else
 #define QGISEXTERN extern "C"
 
 #define PARAM_PREFIX(d) QString("-") + QString(d)
+#define PARAM_PREFIX_L(d) QString("--") + QString(d) + QString("=")
 #define FLAG_PREFIX(d) QString("-") + QString(d)
 
 #endif
@@ -645,13 +647,13 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
     _check_name = "check_lidar_final";
 
     // prepare the parameters
-    _args << PARAM_PREFIX("d"); // project dir
-    _args << PARAM_PREFIX("t") + "10";
-    _args << PARAM_PREFIX("cf") + "10";
-    _args << PARAM_PREFIX("cp") + "10";
-    _args << PARAM_PREFIX("rf") + "10";
-    _args << PARAM_PREFIX("rp") + "10";
-    _args << PARAM_PREFIX("q") + "10";
+    _args << PARAM_PREFIX_L("dir"); // project dir
+    _args << PARAM_PREFIX_L("tile") + "10";
+    _args << PARAM_PREFIX_L("cf") + "10";
+    _args << PARAM_PREFIX_L("cp") + "10";
+    _args << PARAM_PREFIX_L("rf") + "10";
+    _args << PARAM_PREFIX_L("rp") + "10";
+    _args << PARAM_PREFIX_L("quota") + "10";
 
     QString name = _check_name;// + ".exe";
 
@@ -697,14 +699,12 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
 }
 
 
-void Check_lidar_final::tileValueChanged(int i) {
-    _args[1] = PARAM_PREFIX("t") + QString::number(i);
-}
-void Check_lidar_final::classFValueChanged(int i) { _args[2] = PARAM_PREFIX("cf") + QString::number(i); }
-void Check_lidar_final::classPValueChanged(int i) { _args[3] = PARAM_PREFIX("cp") + QString::number(i); }
-void Check_lidar_final::resFValueChanged(int i) { _args[4] = PARAM_PREFIX("rf") + QString::number(i); }
-void Check_lidar_final::resPValueChanged(int i) { _args[5] = PARAM_PREFIX("rp") + QString::number(i); }
-void Check_lidar_final::quotaValueChanged(int i) { _args[6] = PARAM_PREFIX("q") + QString::number(i); }
+void Check_lidar_final::tileValueChanged(int i) { _args[1] = PARAM_PREFIX_L("tile") + QString::number(i); }
+void Check_lidar_final::classFValueChanged(int i) { _args[2] = PARAM_PREFIX_L("cf") + QString::number(i); }
+void Check_lidar_final::classPValueChanged(int i) { _args[3] = PARAM_PREFIX_L("cp") + QString::number(i); }
+void Check_lidar_final::resFValueChanged(int i) { _args[4] = PARAM_PREFIX_L("rf") + QString::number(i); }
+void Check_lidar_final::resPValueChanged(int i) { _args[5] = PARAM_PREFIX_L("rp") + QString::number(i); }
+void Check_lidar_final::quotaValueChanged(int i) { _args[6] = PARAM_PREFIX_L("quota") + QString::number(i); }
 
 
 /*******************************************/
