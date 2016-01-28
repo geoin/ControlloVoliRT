@@ -181,14 +181,18 @@ void CVFinalDataDetail::finalFile() {
 	);
 
 	if (ref.size() == 0) { return; }
-
+	
+	QString path = controller()->uri();
 	QString file;
 	if (ref.size() == 1) {
-		file = ref.at(0);
+		QFileInfo in(ref.at(0));
+		file = path + QDir::separator() + in.fileName();
+		QFile::copy(ref.at(0), file);
+
 	} else {
 		QFileInfo f(ref.at(0));
-		QString path = f.absoluteDir().absolutePath();
-		
+		//QString path = f.absoluteDir().absolutePath();
+	
 		QFile out(path + QDir::separator() + "list.txt");
 		out.open(QIODevice::WriteOnly);
 		foreach(QString in, ref) {
@@ -205,7 +209,7 @@ void CVFinalDataDetail::finalFile() {
 	QString folder = sender()->property("COLUMN").toString();
 	
 		
-	input()->set(table, folder, file);
+	input()->set(table, folder, in.fileName());
 	_editors[table]->setText(file);
 	if (controller()->persist()) {
 		info();

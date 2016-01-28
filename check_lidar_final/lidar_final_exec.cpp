@@ -140,7 +140,7 @@ void lidar_final_exec::readFolders() {
 	if (set.eof()) {
 		throw std::runtime_error("No data in FINAL_IGM_GRID");
 	}
-	_gridFile = set["GRID"].toString();
+	_gridFile = _proj_dir + "/" + set["GRID"].toString();
 }
 
 std::string lidar_final_exec::_getFolder(const std::string& table) {

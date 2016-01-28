@@ -295,7 +295,7 @@ CVControl* CVProjectManager::_rawLidar(CVProject* proj, bool load) {
 
 CVControl* CVProjectManager::_finalLidar(CVProject* proj, bool load) {
 	CVControl* ctrl = new CVControl(CVControl::LIDAR_FINAL, proj);
-	ctrl->uri(proj->db());
+	ctrl->uri(proj->path);
 
 	CVLidarFinalInput* fin = new CVLidarFinalInput(ctrl);
 	fin->controlType(CVControl::LIDAR_FINAL);
