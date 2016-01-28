@@ -614,8 +614,8 @@ Check_lidar_raw::Check_lidar_raw(QgisInterface* mi): dbox(mi)
     _check_name = "check_lidar_raw";
 
     // prepare the parameters
-    _args << PARAM_PREFIX("dir"); // project dir
-    _args << PARAM_PREFIX("iden") + "10"; // project dir
+    _args << PARAM_PREFIX("d"); // project dir
+    _args << PARAM_PREFIX("i") + "10"; // project dir
 
     QString name = _check_name;
 
@@ -636,7 +636,7 @@ Check_lidar_raw::Check_lidar_raw(QgisInterface* mi): dbox(mi)
 }
 
 void Check_lidar_raw::denValueChanged(int i) {
-    _args[1] = PARAM_PREFIX("iden") + QString::number(i);
+    _args[1] = PARAM_PREFIX("i") + QString::number(i);
 }
 
 Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
