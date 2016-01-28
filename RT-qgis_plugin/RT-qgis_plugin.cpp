@@ -688,9 +688,9 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
 
     QFormLayout* form = new QFormLayout;
     form->addRow("Punti tile grezze (%)", _tileP);
-    form->addRow("Cartelle classificazione (%)", _classF);
+    form->addRow("File classificazione (%)", _classF);
     form->addRow("Punti classificazione (%)", _classP);
-    form->addRow("Cartelle ricampionamento (%)", _resF);
+    form->addRow("File ricampionamento (%)", _resF);
     form->addRow("Punti ricampionamento (%)", _resP);
     form->addRow("Punti quota (%)", _qP);
     qvb->addLayout(form);
