@@ -89,6 +89,11 @@ QString Csv::name() const {
     return info.baseName();
 }
 
+QString Csv::path() const {
+    QFileInfo info(_file);
+	return info.absoluteFilePath();
+}
+
 QString Csv::suffix() const {
     QFileInfo info(_file);
     return info.completeSuffix();

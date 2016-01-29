@@ -60,6 +60,9 @@ bool CVCsvInput::remove() {
 
 	Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 	q->remove(_table, QStringList(), QVariantList());
+
+	//cnn.remove_layer(_table.toStdString());
+
 	return false;
 }
 
@@ -85,8 +88,14 @@ bool CVCsvInput::persist() {
 		if (!ret) {
 			return false;
 		}
-
+		
 		Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
+
+		Util::Spatialite::Recordset set = q->select(QStringList() << "DATUM", QStringList() << "PROJECT", QStringList(), QVariantList());
+		QString srid = QString::number(set[0].toInt());
+
+		q->addGeometryColumn(_table, "POINT", srid);
+
 		cnn.begin_transaction();
 
 		while (!_csv->atEnd()) {
@@ -97,17 +106,18 @@ bool CVCsvInput::persist() {
 			QStringList out;
 			_csv->splitAndFormat(line, out);
 			
+			double xVal = out.at(x - 1).toDouble(), yVal = out.at(y - 1).toDouble(); 
 			bool ret = q->insert(
 				_table, 
-				QStringList() << "X" << "Y" << "Z" << "NAME",
-				QStringList() << "?1" << "?2" << "?3" << "?4",
-				QVariantList() << out.at(x - 1).toDouble() << out.at(y - 1).toDouble() << out.at(z - 1).toDouble() << (name != 0 ? out.at(name - 1) : "")
+				QStringList() << "X" << "Y" << "Z" << "NAME" << "GEOM",
+				QStringList() << "?1" << "?2" << "?3" << "?4" << QString("ST_GeomFromText('POINT(%1 %2)', %3)").arg(out.at(x - 1), out.at(y - 1), srid), 
+				QVariantList() << xVal << yVal << out.at(z - 1).toDouble() << (name != 0 ? out.at(name - 1) : "")
 			);
 		}
 
 		cnn.commit_transaction();
 
-		log(_csv->name(), "");
+		log(_csv->path(), "");
 		return true;
 	} else {
 		return load();

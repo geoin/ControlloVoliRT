@@ -43,6 +43,8 @@ protected:
 			for (int i = 0; i < data.size(); ++i) {
 				_labels.at(i)->setText(data.at(i));
 			}
+
+			info();
 		}
 	}
 

@@ -243,13 +243,11 @@ namespace SQL {
 		}
 	}
 
-	void Query::addGeometryColumn(const QString& table) {
-		Util::Spatialite::Recordset set = select(QStringList() << "DATUM", QStringList() << "PROJECT", QStringList(), QVariantList());
+	void Query::addGeometryColumn(const QString& table, const QString& type /*POINT*/, const QString& srid) {
 
-		QString sql1("SELECT AddGeometryColumn('%1', 'geom', %2, 'POINT','XY')");
+		QString sql1("SELECT AddGeometryColumn('%1', 'geom', %2, '%3','XY')");
 
-		QString srid = QString::number(set[0].toInt());
-		_connection.execute_immediate(sql1.arg(table, srid).toStdString());
+		_connection.execute_immediate(sql1.arg(table, srid, type).toStdString());
 	}
 
 	Query::Ptr QueryBuilder::build(CV::Util::Spatialite::Connection& cnn) {

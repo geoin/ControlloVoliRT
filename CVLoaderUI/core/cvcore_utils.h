@@ -135,6 +135,7 @@ public:
     void close();
 
     QDir dir() const;
+    QString path() const;
     QString name() const;
     QString suffix() const;
     QString ext() const;
