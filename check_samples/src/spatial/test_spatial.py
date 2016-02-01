@@ -7,6 +7,7 @@ import random
 
 testPath = "../../test/data"
 
+
 def handleFeature(i, feat):
     print i, feat.GetGeometryRef()
     return i
@@ -14,31 +15,41 @@ def handleFeature(i, feat):
 
 class TestShape(TestCase):
     def test_New(self):
-        layer = shp.Shape.New("../../test/data", "sampleLayer", ogr.wkbPolygon)
+        shp.Delete("../../test/data", "sampleLayer.shp")
+        layer = shp.NewWithEPSG("../../test/data", "sampleLayer", ogr.wkbPolygon, 4326)
         self.assertIsNotNone(layer, "")
         self.assertEqual(layer.name, "sampleLayer")
 
-        layer.addFeature(ogr.Geometry(type=ogr.wkbPolygon))
-        layer.addFeature(ogr.Geometry(type=ogr.wkbPolygon))
-        layer.addFeature(ogr.Geometry(type=ogr.wkbPolygon))
+        layer.NewFeatureFromGeom(ogr.Geometry(type=ogr.wkbPolygon))
+        layer.NewFeatureFromGeom(ogr.Geometry(type=ogr.wkbPolygon))
+        layer.NewFeatureFromGeom(ogr.Geometry(type=ogr.wkbPolygon))
 
         indexes = []
-        layer.EachFeature(lambda i, feat : indexes.append(handleFeature(i, feat)))
+        layer.EachFeature(lambda i, feat: indexes.append(handleFeature(i, feat)))
         print indexes
 
     def test_Open(self):
-        layer = shp.Shape.Open("../../test/data", "sampleLayer")
+        layer = shp.New("../../test/data", "sampleLayer", ogr.wkbPolygon, 4326)
         self.assertIsNotNone(layer, "")
         self.assertEqual(layer.name, "sampleLayer")
 
-        layer.addFeature(ogr.Geometry(type=ogr.wkbPolygon))
-        layer.addFeature(ogr.Geometry(type=ogr.wkbPolygon))
-        layer.addFeature(ogr.Geometry(type=ogr.wkbPolygon))
+        layer.NewFeatureFromGeom(ogr.Geometry(type=ogr.wkbPolygon))
+        layer.NewFeatureFromGeom(ogr.Geometry(type=ogr.wkbPolygon))
+        layer.NewFeatureFromGeom(ogr.Geometry(type=ogr.wkbPolygon))
 
         indexes = []
-        layer.EachFeature(lambda i, feat : indexes.append(handleFeature(i, feat)))
+        layer.EachFeature(lambda i, feat: indexes.append(handleFeature(i, feat)))
         print indexes
 
+    def test_Clone(self):
+        layer = shp.Open("../../test/data", "zona2castpescaia")
+        other = layer.Clone("../../test/data", "clonedLayer")
+        layer.EachFeature(lambda i, feat: other.AddFeature(feat))
+
+
+    def test_Union(self):
+        layer = shp.Open("../../test/data", "zona2castpescaia")
+        print layer.Area()
 
 
 if __name__ == '__main__':
