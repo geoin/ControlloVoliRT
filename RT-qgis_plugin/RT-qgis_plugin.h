@@ -68,6 +68,8 @@ private slots:
     void ver_lidar();
     void ver_raw_lidar();
     void ver_prod_lidar();
+
+    void exportData();
 };
 
 class dbox: public QDialog {
@@ -79,16 +81,20 @@ public:
 protected slots:
     void _report(bool);
     void _exec(bool);
-    void _chiudi(int);
     void _terminated(int, QProcess::ExitStatus);
     void _terminated1(int, QProcess::ExitStatus);
     void _received();
     void _esci(bool);
     bool _dirlist(bool);
+
+    virtual void _chiudi(int);
+
 protected:
     void _esegui(const QString& exe, const QStringList& args);
-    void _init(QVBoxLayout* qvb, bool is_report = true);
+    virtual void _init(QVBoxLayout* qvb, bool is_report = true);
+    virtual void _init(QVBoxLayout* qvb, QString file, QString last, bool is_report = true);
     void _add_layers_to_legend(void);
+
     QString get_last_prj(void);
     QString _plugin_dir;
     QString _set_dir;
@@ -186,6 +192,22 @@ private:
     QSpinBox* _classP, *_classF;
     QSpinBox* _resP, *_resF;
     QSpinBox* _qP;
+};
+
+
+class Export : public dbox {
+    Q_OBJECT
+public:
+    Export(QgisInterface* mi);
+
+    void _init(QVBoxLayout* qvb, QString file, QString last, bool is_report = true);
+    virtual void _chiudi(int);
+
+public slots:
+    void findConf(bool);
+
+private:
+    QLineEdit* _conf;
 };
 
 #endif
