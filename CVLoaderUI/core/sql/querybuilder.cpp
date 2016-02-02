@@ -101,7 +101,6 @@ namespace SQL {
 		return true;
 	}
 
-	
 	//TODO: too basic
 	CV::Util::Spatialite::Recordset Query::select(
 		const QStringList& what, 
@@ -242,6 +241,13 @@ namespace SQL {
 			default:
 				break;
 		}
+	}
+
+	void Query::addGeometryColumn(const QString& table, const QString& type /*POINT*/, const QString& srid) {
+
+		QString sql1("SELECT AddGeometryColumn('%1', 'geom', %2, '%3','XY')");
+
+		_connection.execute_immediate(sql1.arg(table, srid, type).toStdString());
 	}
 
 	Query::Ptr QueryBuilder::build(CV::Util::Spatialite::Connection& cnn) {

@@ -19,6 +19,7 @@ protected:
 private:
     void handleHelp(const std::string& name, const std::string& value);
     void handlePrjDir(const std::string& name, const std::string & value);
+	void handleDensity(const std::string&, const std::string& value);
 
     bool _helpRequested;
 

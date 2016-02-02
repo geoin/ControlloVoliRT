@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QDateTime>
+#include <QLayout>
 
 #include "core/cvjournal.h"
 #include "core/cvcore_utils.h"
@@ -31,7 +32,7 @@ public:
 	inline QString title() const { return _title->text(); }
 	
 	inline void info() { 
-		Core::CVJournalEntry::Entry e = Core::CVJournal::last(controller()->controlType(), controller()->type());
+		Core::CVJournalEntry::Entry e = Core::CVJournal::last(/*controller()->controlType(), */controller()->type());
 		if (e != NULL) {
 			_path->setText("Ultimo inserimento: " + e->uri);
 			_date->setText("In data: " + e->date.toString());
@@ -41,10 +42,22 @@ public:
 		}
 	}
 
+	inline void info(Core::CVControl::Type c, Core::CVObject::Type o) { 
+		Core::CVJournalEntry::Entry e = Core::CVJournal::last(c, o);
+		if (e != NULL) {
+			_path->setText("Ultimo inserimento: " + e->uri);
+			_date->setText("In data: " + e->date.toString());
+		} else {
+			_path->setText("");
+			_date->setText("");
+		}
+	}
+
+
 	inline void description(const QString& descr) { _descr->setText(descr); }
 	inline QString description() const { return _descr->text(); }
 
-	inline void body(QLayout* l) { _body->setLayout(l); }
+	inline void body(QLayout* l) { _body->setLayout(l); l->setAlignment(Qt::AlignTop); }
 	inline QWidget* body() { return _body; }
 	inline QMenu* detailMenu() const { return _menu; }
 

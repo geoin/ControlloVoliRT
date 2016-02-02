@@ -170,7 +170,7 @@ void CVMissionObject::init() {
 		dev->type(CVObject::SENSOR);
 	}
 	dev->isPlanning(false);
-	dev->uri(uri());
+	//dev->uri(uri());
 	dev->mission(id());
 	insert(dev);
 

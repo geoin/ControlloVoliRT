@@ -251,7 +251,7 @@ bool photo_exec::_uncovered(OGRGeomPtr& vs)
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'" << get_typestring(vs) << "'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
@@ -372,7 +372,7 @@ void photo_exec::_assi_from_vdp(std::map<std::string, VDP>& vdps)
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'LINESTRING'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
@@ -460,6 +460,8 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 {
 	std::string table = std::string(ASSETTI);
 
+	int factor = AttitudeAngleUnit(cnn) == 0 ? 180 : 200;
+
 	std::stringstream sql;
 	sql << "SELECT * from " << table;
 	Statement stm(cnn);
@@ -469,7 +471,7 @@ bool photo_exec::_read_vdp(std::map<std::string, VDP>& vdps)
 		std::string strip = rs["STRIP"];
 		Camera cam;
 		VDP vdp(cam, rs["ID"]);
-		vdp.Init(DPOINT(rs["PX"], rs["PY"], rs["PZ"]), (double) rs["OMEGA"], (double) rs["PHI"], (double) rs["KAPPA"]);
+		vdp.Init(DPOINT(rs["PX"], rs["PY"], rs["PZ"]), (double) rs["OMEGA"], (double) rs["PHI"], (double) rs["KAPPA"], factor);
 		vdps[vdp.nome] = vdp;
 		rs.next();
 	}
@@ -656,7 +658,7 @@ void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn) << "," <<
 		"'POINT'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
@@ -714,7 +716,7 @@ void photo_exec::_process_photos()
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn) << "," <<
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
@@ -828,7 +830,7 @@ void photo_exec::_process_models()
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
@@ -945,7 +947,7 @@ void photo_exec::_process_strips()
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'MULTIPOLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());
@@ -1081,7 +1083,7 @@ void photo_exec::_process_block()
 	std::stringstream sqlb;
 	sqlb << "SELECT AddGeometryColumn('" << tableb << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
         "'" << get_typestring(blk) << "'," <<
         "'XY')";
     cnn.execute_immediate(sqlb.str());

@@ -43,6 +43,53 @@ void check_lidar_final::defineOptions(OptionSet& options) {
             .repeatable(false)
             .argument("value")
             .callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handlePrjDir)));
+
+	
+    options.addOption(
+        Option("tile", "t", "Percentuale punti tile grezze")
+            .required(true)
+            .repeatable(false)
+            .argument("value")
+			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleTilesPointsPerc)));
+
+	
+    options.addOption(
+        Option("cf", "cf", "Percentuale file classificazione")
+            .required(true)
+            .repeatable(false)
+            .argument("value")
+			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleClassFilesPerc)));
+
+	
+    options.addOption(
+        Option("cp", "cp", "Percentuale punti classificazione")
+            .required(true)
+            .repeatable(false)
+            .argument("value")
+			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleClassPointsPerc)));
+
+	 options.addOption(
+        Option("rf", "rf", "Percentuale file ricampionamento")
+            .required(true)
+            .repeatable(false)
+            .argument("value")
+			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleResampleFilesPerc)));
+
+	
+    options.addOption(
+        Option("rp", "rp", "Percentuale punti ricampionamento")
+            .required(true)
+            .repeatable(false)
+            .argument("value")
+			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleResamplePointsPerc)));
+
+	
+    options.addOption(
+        Option("quota", "q", "Percentuale punti quota")
+            .required(true)
+            .repeatable(false)
+            .argument("value")
+			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleTilesPointsPerc)));
 }
 
 void check_lidar_final::handleHelp(const std::string& name, const std::string& value) {

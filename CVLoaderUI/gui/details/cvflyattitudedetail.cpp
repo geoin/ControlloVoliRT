@@ -121,6 +121,8 @@ void CVFlyAttitudeDetail::importAll(QStringList& uri) {
 			_table->setItem(i, j, itm);
 		}
 	}
+
+	info();
 }
 
 void CVFlyAttitudeDetail::onItemInserted(int el) {

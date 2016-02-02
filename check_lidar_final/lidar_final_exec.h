@@ -36,6 +36,13 @@ public:
 
     void set_proj_dir(const std::string&);
 
+	void setTilesPointsPerc(int p) { _tilePP = p; }
+	void setClassFilesPerc(int p) { _classFP = p; }
+	void setClassPointsPerc(int p) { _classPP = p; }
+	void setResampleFilesPerc(int p) { _resFP = p; }
+	void setResamplePointsPerc(int p) { _resPP = p; }
+	void setQuotaPointsPerc(int p) { _qPP = p; }
+
 	static void Error(const std::string& operation, const std::exception& e); 
 	static void Error(const std::string& operation); 
 	static void GetStats(const std::vector<double>& diff, Stats&);
@@ -49,7 +56,7 @@ private:
 	std::string _getRawFolder(const std::string& table, unsigned int& step);
 	void _getStrips(std::vector<CV::Lidar::Strip::Ptr>&);
 
-	size_t _getSamplesCount(size_t min, size_t max, size_t size);
+	size_t _getSamplesCount(size_t min, size_t max, size_t size, double perc = 0.1);
 	void _checkBlock();
 	void _checkEquality();
 	void _checkRawRandom();
@@ -93,6 +100,8 @@ private:
 	void _reportResamples();
 	void _reportQuota();
 	void _reportEllipsoidic();
+
+	int _tilePP, _classFP, _classPP, _resFP, _resPP, _qPP;
 };
 
 #endif

@@ -49,6 +49,8 @@ protected:
 				_shape->show();
 			}
 			_shape->loadFromSpatialite(layer()->table());
+
+			CVBaseDetail::info();
 		}
 	}
 

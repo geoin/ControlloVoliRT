@@ -49,19 +49,22 @@
 #include <QSettings>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QFormLayout>
 
-#define RT_PLUGIN_VERSION "1.3.8"
+#define RT_PLUGIN_VERSION "1.4.0a"
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
 
 #define PARAM_PREFIX(d) QString("/") + QString(d) + QString("=")
+#define PARAM_PREFIX_L(d) QString("/") + QString(d) + QString("=")
 #define FLAG_PREFIX(d) QString("/") + QString(d)
 
 #else
 #define QGISEXTERN extern "C"
 
 #define PARAM_PREFIX(d) QString("-") + QString(d)
+#define PARAM_PREFIX_L(d) QString("--") + QString(d) + QString("=")
 #define FLAG_PREFIX(d) QString("-") + QString(d)
 
 #endif
@@ -613,16 +616,29 @@ Check_lidar_raw::Check_lidar_raw(QgisInterface* mi): dbox(mi)
     _check_name = "check_lidar_raw";
 
     // prepare the parameters
-    _args << QString(PARAM_PREFIX("d")); // project dir
+    _args << PARAM_PREFIX("d"); // project dir
+    _args << PARAM_PREFIX("i") + "10"; // project dir
 
-    QString name = _check_name;// + ".exe";
+    QString name = _check_name;
 
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
+    _den = new QSpinBox(this);
+    _den->setValue(10);
+    connect(_den, SIGNAL(valueChanged(int)), this, SLOT(denValueChanged(int)));
+
+    QFormLayout* form = new QFormLayout;
+    form->addRow("Punti intersezione (%)", _den);
+    qvb->addLayout(form);
+
     _init(qvb);
+}
+
+void Check_lidar_raw::denValueChanged(int i) {
+    _args[1] = PARAM_PREFIX("i") + QString::number(i);
 }
 
 Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
@@ -631,7 +647,13 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
     _check_name = "check_lidar_final";
 
     // prepare the parameters
-    _args << QString(PARAM_PREFIX("d")); // project dir
+    _args << PARAM_PREFIX_L("dir"); // project dir
+    _args << PARAM_PREFIX_L("tile") + "10";
+    _args << PARAM_PREFIX_L("cf") + "10";
+    _args << PARAM_PREFIX_L("cp") + "10";
+    _args << PARAM_PREFIX_L("rf") + "10";
+    _args << PARAM_PREFIX_L("rp") + "10";
+    _args << PARAM_PREFIX_L("quota") + "10";
 
     QString name = _check_name;// + ".exe";
 
@@ -640,8 +662,50 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
+    _tileP = new QSpinBox(this);
+    _tileP->setValue(10);
+    connect(_tileP, SIGNAL(valueChanged(int)), this, SLOT(tileValueChanged(int)));
+
+    _classF = new QSpinBox(this);
+    _classF->setValue(10);
+    connect(_classF, SIGNAL(valueChanged(int)), this, SLOT(classFValueChanged(int)));
+
+    _classP = new QSpinBox(this);
+    _classP->setValue(10);
+    connect(_classP, SIGNAL(valueChanged(int)), this, SLOT(classPValueChanged(int)));
+
+    _resF = new QSpinBox(this);
+    _resF->setValue(10);
+    connect(_resF, SIGNAL(valueChanged(int)), this, SLOT(resFValueChanged(int)));
+
+    _resP = new QSpinBox(this);
+    _resP->setValue(10);
+    connect(_resP, SIGNAL(valueChanged(int)), this, SLOT(resPValueChanged(int)));
+
+    _qP = new QSpinBox(this);
+    _qP->setValue(10);
+    connect(_qP, SIGNAL(valueChanged(int)), this, SLOT(quotaValueChanged(int)));
+
+    QFormLayout* form = new QFormLayout;
+    form->addRow("Punti tile grezze (%)", _tileP);
+    form->addRow("File classificazione (%)", _classF);
+    form->addRow("Punti classificazione (%)", _classP);
+    form->addRow("File ricampionamento (%)", _resF);
+    form->addRow("Punti ricampionamento (%)", _resP);
+    form->addRow("Punti quota (%)", _qP);
+    qvb->addLayout(form);
+
     _init(qvb);
 }
+
+
+void Check_lidar_final::tileValueChanged(int i) { _args[1] = PARAM_PREFIX_L("tile") + QString::number(i); }
+void Check_lidar_final::classFValueChanged(int i) { _args[2] = PARAM_PREFIX_L("cf") + QString::number(i); }
+void Check_lidar_final::classPValueChanged(int i) { _args[3] = PARAM_PREFIX_L("cp") + QString::number(i); }
+void Check_lidar_final::resFValueChanged(int i) { _args[4] = PARAM_PREFIX_L("rf") + QString::number(i); }
+void Check_lidar_final::resPValueChanged(int i) { _args[5] = PARAM_PREFIX_L("rp") + QString::number(i); }
+void Check_lidar_final::quotaValueChanged(int i) { _args[6] = PARAM_PREFIX_L("quota") + QString::number(i); }
+
 
 /*******************************************/
 QString icon_path; //("C:/Google Drive/Regione Toscana Tools/icons");

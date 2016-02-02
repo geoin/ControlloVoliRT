@@ -64,6 +64,8 @@ public:
 	bool insert(const QString& tab, const QStringList& fields, const QStringList& values, const QVariantList& binds);
 	CV::Util::Spatialite::Recordset select(const QStringList& what, const QStringList& from, const QStringList& where, const QVariantList& binds, const QStringList& order = QStringList(), int = 0);
 	
+	void addGeometryColumn(const QString& table, const QString& type, const QString& srid);
+
 	void bindValue(const int& index, const QVariant& val);
 
 	QStringList columns(const QString& table);

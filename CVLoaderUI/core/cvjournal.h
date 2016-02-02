@@ -29,6 +29,7 @@ public:
 	static void add(CVJournalEntry::Entry);
 	static CVJournalEntry::EntryList lastN(const QStringList& filters, const QVariantList& binds, int num = 1);
 	static CVJournalEntry::Entry last(CVControl::Type t, CVObject::Type o);
+	static CVJournalEntry::Entry last(CVObject::Type o);
 };
 
 } // namespace Core

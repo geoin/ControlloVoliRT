@@ -34,6 +34,7 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QVector>
+#include <QSpinBox>
 
 class QAction;
 class QgsGeometry;
@@ -102,21 +103,24 @@ protected:
     QVector<QString> _layers;
     QgisInterface* _mi;
 };
+
 /**************************************/
 class Check_gps: public dbox {
     Q_OBJECT
 public:
     Check_gps(QgisInterface* mi);
 protected slots:
-    void _optype(int index)    ;
+    void _optype(int index);
 private:
 };
+
 class Check_photo: public dbox {
     Q_OBJECT
 public:
     Check_photo(QgisInterface* mi, int type);
 private:
 };
+
 class Check_ta: public dbox {
     Q_OBJECT
 public:
@@ -134,6 +138,7 @@ private:
     QLineEdit* _f3;
     QString _file1, _file2, _obs_file;
 };
+
 class Check_ortho: public dbox {
     Q_OBJECT
 public:
@@ -143,6 +148,7 @@ protected slots:
 private:
      QLineEdit* _idir;
 };
+
 class Check_lidar: public dbox {
     Q_OBJECT
 public:
@@ -154,14 +160,32 @@ class Check_lidar_raw: public dbox {
     Q_OBJECT
 public:
     Check_lidar_raw(QgisInterface* mi);
+
+public slots:
+    void denValueChanged(int i);
+
 private:
+    QSpinBox* _den;
 };
 
 class Check_lidar_final: public dbox {
     Q_OBJECT
 public:
     Check_lidar_final(QgisInterface* mi);
+
+public slots:
+    void tileValueChanged(int i);
+    void classPValueChanged(int i);
+    void classFValueChanged(int i);
+    void resPValueChanged(int i);
+    void resFValueChanged(int i);
+    void quotaValueChanged(int i);
+
 private:
+    QSpinBox* _tileP;
+    QSpinBox* _classP, *_classF;
+    QSpinBox* _resP, *_resF;
+    QSpinBox* _qP;
 };
 
 #endif

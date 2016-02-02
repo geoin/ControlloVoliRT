@@ -11,14 +11,24 @@
 using namespace CV::GUI;
 
 void ShapeViewer::loadFromShp(const QString& path) {
+	QString out;
+	{
+		QTemporaryFile script;
+		script.open();
+		out = script.fileName();
+	}
+	bool ok = QFile::copy(":/scripts/convert.py", out);
+
 	CVScopedCursor cur;
 
 	QTemporaryFile output;
 	output.open();
 
 	QStringList args;
-	args << "convert.py" << path + ".shp" << output.fileName();
+	args << out << path + ".shp" << output.fileName();
 	QProcess::execute("python", args);
+	QFile::remove(out);
+	QFile::remove(output.fileName() + ".aux.xml");
 
 	QImage im(output.fileName(), "BMP");
 	_item->setPixmap(QPixmap::fromImage(im));
@@ -29,14 +39,24 @@ void ShapeViewer::loadFromShp(const QString& path) {
 }
 
 void ShapeViewer::loadFromSpatialite(const QString& layer) {
+	QString out;
+	{
+		QTemporaryFile script;
+		script.open();
+		out = script.fileName();
+	}
+	bool ok = QFile::copy(":/scripts/convert.py", out);
+
 	CVScopedCursor cur;
 
 	QTemporaryFile output;
 	output.open();
 
 	QStringList args;
-	args << "convert.py" << Core::SQL::Database::path() << output.fileName() << layer;
+	args << out << Core::SQL::Database::path() << output.fileName() << layer;
 	QProcess::execute("python", args);
+	QFile::remove(out);
+	QFile::remove(output.fileName() + ".aux.xml");
 
 	QImage im(output.fileName(), "BMP");
 	_item->setPixmap(QPixmap::fromImage(im));

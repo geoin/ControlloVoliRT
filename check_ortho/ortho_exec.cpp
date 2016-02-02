@@ -245,7 +245,7 @@ bool ortho_exec::_process_borders()
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());	
@@ -337,7 +337,7 @@ bool ortho_exec::_process_imgs()
 	std::stringstream sql1;
 	sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
 		"'geom'," <<
-		SRID << "," <<
+		SRID(cnn)<< "," <<
 		"'POLYGON'," <<
 		"'XY')";
 	cnn.execute_immediate(sql1.str());	
