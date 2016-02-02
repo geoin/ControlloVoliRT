@@ -4,8 +4,8 @@ import ConfigParser, glob, os
 class Data:
     def __init__(self, path):
         config = ConfigParser.ConfigParser()
-        #remove lowercase convrtion
-        #config.optionxform = str
+        # remove lowercase convrtion
+        # config.optionxform = str
         config.read(path)
         self.input = config.get("DATA", "IN")
         self.output = config.get("DATA", "OUT")
@@ -20,6 +20,9 @@ class Data:
     def Shapes(self):
         """map of dir and filename"""
         files = glob.glob(os.path.join(self.input, "*.shp"))
+        if self.zone in files:
+            files.remove(self.zone)
+
         data = [os.path.split(f) for f in files]
         return map(lambda x: (x[0], os.path.splitext(os.path.basename(x[1]))[0]), data)
 
