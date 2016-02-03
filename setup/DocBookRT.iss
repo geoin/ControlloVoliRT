@@ -10,7 +10,7 @@
 ; cartella da cui prelevare i files
 #define MySourceDir "C:\DocBookRT" 
 ; cartella in cui registare il file per il setup
-#define MyBaseDir "D:\projects\RT\ControlloVoliRT"
+#define MyBaseDir "C:\ControlloVoliRT"
 ; cartella di default in cui installare i dati
 #define MyOutDir "C:\DocBookRT"
 
@@ -88,6 +88,7 @@ var
   proc_xls: string;
   proc_fop: string;
   tmp: string;
+  prgData: string;
   lines : TArrayOfString;
 begin
   filename := ExpandConstant('{app}\pdf_convert.bat');
@@ -95,10 +96,14 @@ begin
   proc_xls := ExpandConstant('{app}\lib\xsltproc');
   proc_fop := ExpandConstant('{app}\fop-1.0\fop');
   tmp := ExpandConstant('{app}\tmp.fo');
-  SetArrayLength(lines, 2);
- // lines[0] := 'cd %1';
-  lines[0] := proc_xls + ' ' + xls + ' %1.xml > ' + tmp;
-  lines[1] := proc_fop + ' ' + tmp + ' %1.pdf';
+  prgData := GetEnv('ProgramData');
+  SetArrayLength(lines, 5);
+  lines[0] := '@echo off';
+  lines[1] := 'set path=' +  prgData +'\Oracle\Java\javapath;%PATH%;';
+  lines[2] := '@echo on';
+
+  lines[3] := proc_xls + ' ' + xls + ' %1.xml > ' + tmp;
+  lines[4] := proc_fop + ' ' + tmp + ' %1.pdf';
   SaveStringsToFile(filename,lines,false);
   exit;
 end;
