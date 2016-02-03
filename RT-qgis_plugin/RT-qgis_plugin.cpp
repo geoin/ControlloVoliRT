@@ -90,12 +90,14 @@ QString dbox::get_last_prj() {
 }
 
 void dbox::_init(QVBoxLayout* qv, bool is_report) {
-    QString last_prj = get_last_prj();
+    _init(qv, "Cartella progetto:", get_last_prj(), is_report);
+}
 
+void dbox::_init(QVBoxLayout* qv, QString file, QString last_prj, bool is_report) {
     QVBoxLayout* qvb = new QVBoxLayout;
 
     // sezione iniziale comune a tutti
-    QLabel* l1 = new QLabel("Cartella progetto:");
+    QLabel* l1 = new QLabel(file);
     _prj = new QLineEdit;
     _prj->setText(last_prj);
     QPushButton* b1 = new QPushButton("...");
@@ -139,17 +141,17 @@ void dbox::_init(QVBoxLayout* qv, bool is_report) {
     connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
     connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
 
- #ifdef WIN32
-       _executable += ".exe";
- #endif
-    QFileInfo qf(_executable);
-    if ( !qf.exists() ) {
-        // if executable does not exists disable the excute button
-        _out->append(_executable + " non trovato");
-        bok->setEnabled(false);
-    }
+#ifdef WIN32
+      _executable += ".exe";
+#endif
+   QFileInfo qf(_executable);
+   if ( !qf.exists() ) {
+       // if executable does not exists disable the excute button
+       _out->append(_executable + " non trovato");
+       bok->setEnabled(false);
+   }
 
-    _args[0] = QString(PARAM_PREFIX("d")) + _prj->text();
+   _args[0] = QString(PARAM_PREFIX("d")) + _prj->text();
 }
 
 bool dbox::_dirlist(bool) {
@@ -253,7 +255,7 @@ void dbox::_report(bool b)
     QString exe = "cmd.exe";
     QString launcher = "pdf_convert.bat";
     args << FLAG_PREFIX("c");
-	dir.cdUp();
+    dir.cdUp();
     QFileInfo qf(dir, launcher);
 #else
     QString exe = "python";
@@ -266,6 +268,7 @@ void dbox::_report(bool b)
 
     _esegui(exe, args);
 }
+
 void dbox::_exec(bool b)
 {
     _qp.disconnect( SIGNAL(finished(int, QProcess::ExitStatus)), this );
@@ -308,6 +311,7 @@ void dbox::_esegui(const QString& exec, const QStringList& args)
 
     _qp.kill();
 }
+
 /***************************************************/
 Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 {
@@ -334,6 +338,7 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 }
 
 /*******************************************/
+
 Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 {
     setWindowTitle("Controllo dati gps");
@@ -361,6 +366,79 @@ Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 
     _init(qvb, false);
 }
+
+
+/***************************************************/
+
+Export::Export(QgisInterface* mi) : dbox(mi) {
+    setWindowTitle("Export");
+
+    _executable = "python";
+     QFileInfo qf(_plugin_dir,  "sampler.pyz");
+     _args << qf.absoluteFilePath();
+
+    QVBoxLayout* box = new QVBoxLayout;
+    _init(box, "Seleziona file di configurazione:", "", false);
+}
+
+void Export::_chiudi(int) {
+    deleteLater();
+}
+
+void Export::findConf(bool) {
+    QString ini = QFileDialog::getOpenFileName(this, "File di configurazione", "", "*.ini");
+    if (ini.isEmpty()) {
+        return;
+    }
+    _conf->setText(ini);
+}
+
+void Export::_init(QVBoxLayout* qv, QString file, QString last, bool) {
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    // sezione iniziale comune a tutti
+    QLabel* l1 = new QLabel(file);
+    _conf = new QLineEdit;
+    _conf->setText(last);
+    QPushButton* b1 = new QPushButton("...");
+    b1->setFixedWidth(20);
+    connect(b1, SIGNAL(clicked(bool)), this, SLOT(findConf(bool)));
+    QHBoxLayout* hl1 = new QHBoxLayout;
+    hl1->addWidget(l1);
+    hl1->addWidget(_conf);
+    hl1->addWidget(b1);
+    qvb->addLayout(hl1);
+
+    // parte specifica del comando
+    qvb->addLayout(qv);
+
+    // parte finale comune a tutti
+    _out = new QTextEdit(this);
+    _out->setMinimumHeight(200);
+    _out->setMinimumWidth(400);
+    qvb->addWidget(_out);
+
+    QHBoxLayout* hl2 = new QHBoxLayout;
+
+    QPushButton* bok = new QPushButton("Esegui");
+    connect(bok, SIGNAL(clicked(bool)), this, SLOT(_exec(bool)));
+    hl2->addWidget(bok);
+
+    QPushButton* bcanc = new QPushButton("Esci");
+    connect(bcanc, SIGNAL(clicked(bool)), this, SLOT(_esci(bool)));
+    hl2->addWidget(bcanc);
+
+    qvb->addLayout(hl2);
+    setLayout(qvb);
+
+    connect(this, SIGNAL(finished(int)), this, SLOT(_chiudi(int)));
+    connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
+    connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
+
+}
+
+/***************************************************/
+
 void Check_gps::_optype(int index)
 {
     switch ( index ) {
@@ -781,6 +859,13 @@ void QgsRTtoolsPlugin::initGui()
     mAction[++k] = qmb->addAction(QIcon(icon), "Verifica elaborati LIDAR");
     connect(mAction[k], SIGNAL(activated()), this, SLOT(ver_prod_lidar()));
     qtb->addAction(mAction[k]);
+
+    qtb->addSeparator();
+
+    icon = icon_path + "/export.png";
+    mAction[++k] = qmb->addAction(QIcon(icon), "Export");
+    connect(mAction[k], SIGNAL(activated()), this, SLOT(exportData()));
+    qtb->addAction(mAction[k]);
 }
 void QgsRTtoolsPlugin::unload()
 {
@@ -849,6 +934,11 @@ void QgsRTtoolsPlugin::ver_prod_lidar()
     db->open();
 }
 
+void QgsRTtoolsPlugin::exportData() {
+    Export* control = new Export(mIface);
+    control->open();
+}
+
 /*********************** INTERFACCIA PIANA ********************/
 QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
 {
@@ -861,7 +951,7 @@ QGISEXTERN QString icon()
 
 
     QString icon = icon_path + "/Regione.png";
-    return icon.toStdString().c_str(); 
+    return icon.toStdString().c_str();
 }
 QGISEXTERN QString name()
 {
