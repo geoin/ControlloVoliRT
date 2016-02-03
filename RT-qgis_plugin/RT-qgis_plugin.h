@@ -202,6 +202,7 @@ public slots:
 
 private:
     QString _outFolder;
+    QString _zone;
 
     QLineEdit* _epsg;
     QLineEdit* _conf;

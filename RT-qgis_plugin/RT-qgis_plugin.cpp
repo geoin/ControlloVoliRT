@@ -845,10 +845,23 @@ ExportLauncher::ExportLauncher(QgisInterface* mi) : _mi(mi) {
 
     connect(&_proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(ended(int, QProcess::ExitStatus)));
     connect(&_proc, SIGNAL(readyReadStandardOutput()), this, SLOT(received()));
+
+    _waiter.setWindowTitle("GEOIN PLUGIN");
+    _waiter.setText("tool running");
+    _waiter.setWindowModality(Qt::ApplicationModal);
+    _waiter.addButton("Interrompi", QMessageBox::AcceptRole);
+    _waiter.show();
 }
 
 void ExportLauncher::ended(int, QProcess::ExitStatus) {
+    _waiter.done(0);
+
     QDir dir(_outFolder);
+
+
+    QFileInfo file(_zone);
+    _mi->addVectorLayer(file.absoluteFilePath(), file.baseName(), "ogr");
+
     if (dir.exists()) {
         dir.setNameFilters(QStringList() << "*.shp");
         dir.setFilter(QDir::Files);
@@ -888,6 +901,7 @@ void ExportLauncher::run() {
 
     QSettings conf(_conf->text(), QSettings::IniFormat);
     _outFolder = conf.value("DATA/OUT").toString();
+    _zone = conf.value("DATA/ZONE").toString();
 
     QDir dir(_outFolder);
     if (dir.exists()) {
