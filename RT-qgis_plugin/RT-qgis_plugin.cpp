@@ -51,7 +51,8 @@
 #include <QUrl>
 #include <QFormLayout>
 
-#define RT_PLUGIN_VERSION "1.4.0a"
+#define RT_PLUGIN_VERSION "1.4.0"
+#define RT_PLUGIN_DATE "03/02/2016"
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )
@@ -83,21 +84,19 @@ dbox::dbox(QgisInterface* mi): _mi(mi) {
 }
 
 QString dbox::get_last_prj() {
-    QFileInfo qfs(_set_dir, "rt_tools.cfg");
-    QSettings qs(qfs.filePath(), QSettings::IniFormat);
-    QString last_prj = qs.value("PROJ_DIR", "").toString();
+    //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
+    QString last_prj = qs.value("RT/CV/PROJ_DIR", "").toString();
     return last_prj;
 }
 
 void dbox::_init(QVBoxLayout* qv, bool is_report) {
-    _init(qv, "Cartella progetto:", get_last_prj(), is_report);
-}
+    QString last_prj = get_last_prj();
 
-void dbox::_init(QVBoxLayout* qv, QString file, QString last_prj, bool is_report) {
     QVBoxLayout* qvb = new QVBoxLayout;
 
     // sezione iniziale comune a tutti
-    QLabel* l1 = new QLabel(file);
+    QLabel* l1 = new QLabel("Cartella progetto:");
     _prj = new QLineEdit;
     _prj->setText(last_prj);
     QPushButton* b1 = new QPushButton("...");
@@ -141,17 +140,17 @@ void dbox::_init(QVBoxLayout* qv, QString file, QString last_prj, bool is_report
     connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
     connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
 
-#ifdef WIN32
-      _executable += ".exe";
-#endif
-   QFileInfo qf(_executable);
-   if ( !qf.exists() ) {
-       // if executable does not exists disable the excute button
-       _out->append(_executable + " non trovato");
-       bok->setEnabled(false);
-   }
+ #ifdef WIN32
+       _executable += ".exe";
+ #endif
+    QFileInfo qf(_executable);
+    if ( !qf.exists() ) {
+        // if executable does not exists disable the excute button
+        _out->append(_executable + " non trovato");
+        bok->setEnabled(false);
+    }
 
-   _args[0] = QString(PARAM_PREFIX("d")) + _prj->text();
+    _args[0] = QString(PARAM_PREFIX("d")) + _prj->text();
 }
 
 bool dbox::_dirlist(bool) {
@@ -169,9 +168,9 @@ bool dbox::_dirlist(bool) {
 void dbox::_chiudi(int result) {
     QString last_prj = _prj->text();
     if ( !last_prj.isEmpty() ) {
-        QFileInfo qfs(_set_dir, "rt_tools.cfg");
-        QSettings qs(qfs.filePath(), QSettings::IniFormat);
-        qs.setValue("PROJ_DIR", last_prj) ;
+        //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+        QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
+        qs.setValue("RT/CVPROJ_DIR", last_prj) ;
     }
     deleteLater();
 }
@@ -255,7 +254,7 @@ void dbox::_report(bool b)
     QString exe = "cmd.exe";
     QString launcher = "pdf_convert.bat";
     args << FLAG_PREFIX("c");
-    dir.cdUp();
+	dir.cdUp();
     QFileInfo qf(dir, launcher);
 #else
     QString exe = "python";
@@ -268,7 +267,6 @@ void dbox::_report(bool b)
 
     _esegui(exe, args);
 }
-
 void dbox::_exec(bool b)
 {
     _qp.disconnect( SIGNAL(finished(int, QProcess::ExitStatus)), this );
@@ -311,7 +309,6 @@ void dbox::_esegui(const QString& exec, const QStringList& args)
 
     _qp.kill();
 }
-
 /***************************************************/
 Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 {
@@ -338,7 +335,6 @@ Check_photo::Check_photo(QgisInterface* mi, int type): dbox(mi)
 }
 
 /*******************************************/
-
 Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 {
     setWindowTitle("Controllo dati gps");
@@ -366,79 +362,6 @@ Check_gps::Check_gps(QgisInterface* mi): dbox(mi)
 
     _init(qvb, false);
 }
-
-
-/***************************************************/
-
-Export::Export(QgisInterface* mi) : dbox(mi) {
-    setWindowTitle("Export");
-
-    _executable = "python";
-     QFileInfo qf(_plugin_dir,  "sampler.pyz");
-     _args << qf.absoluteFilePath();
-
-    QVBoxLayout* box = new QVBoxLayout;
-    _init(box, "Seleziona file di configurazione:", "", false);
-}
-
-void Export::_chiudi(int) {
-    deleteLater();
-}
-
-void Export::findConf(bool) {
-    QString ini = QFileDialog::getOpenFileName(this, "File di configurazione", "", "*.ini");
-    if (ini.isEmpty()) {
-        return;
-    }
-    _conf->setText(ini);
-}
-
-void Export::_init(QVBoxLayout* qv, QString file, QString last, bool) {
-    QVBoxLayout* qvb = new QVBoxLayout;
-
-    // sezione iniziale comune a tutti
-    QLabel* l1 = new QLabel(file);
-    _conf = new QLineEdit;
-    _conf->setText(last);
-    QPushButton* b1 = new QPushButton("...");
-    b1->setFixedWidth(20);
-    connect(b1, SIGNAL(clicked(bool)), this, SLOT(findConf(bool)));
-    QHBoxLayout* hl1 = new QHBoxLayout;
-    hl1->addWidget(l1);
-    hl1->addWidget(_conf);
-    hl1->addWidget(b1);
-    qvb->addLayout(hl1);
-
-    // parte specifica del comando
-    qvb->addLayout(qv);
-
-    // parte finale comune a tutti
-    _out = new QTextEdit(this);
-    _out->setMinimumHeight(200);
-    _out->setMinimumWidth(400);
-    qvb->addWidget(_out);
-
-    QHBoxLayout* hl2 = new QHBoxLayout;
-
-    QPushButton* bok = new QPushButton("Esegui");
-    connect(bok, SIGNAL(clicked(bool)), this, SLOT(_exec(bool)));
-    hl2->addWidget(bok);
-
-    QPushButton* bcanc = new QPushButton("Esci");
-    connect(bcanc, SIGNAL(clicked(bool)), this, SLOT(_esci(bool)));
-    hl2->addWidget(bcanc);
-
-    qvb->addLayout(hl2);
-    setLayout(qvb);
-
-    connect(this, SIGNAL(finished(int)), this, SLOT(_chiudi(int)));
-    connect(&_qp, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(_terminated(int, QProcess::ExitStatus)));
-    connect(&_qp, SIGNAL(readyReadStandardOutput()), this, SLOT(_received()));
-
-}
-
-/***************************************************/
-
 void Check_gps::_optype(int index)
 {
     switch ( index ) {
@@ -864,9 +787,10 @@ void QgsRTtoolsPlugin::initGui()
 
     icon = icon_path + "/export.png";
     mAction[++k] = qmb->addAction(QIcon(icon), "Export");
-    connect(mAction[k], SIGNAL(activated()), this, SLOT(exportData()));
+    connect(mAction[k], SIGNAL(activated()), this, SLOT(sampler()));
     qtb->addAction(mAction[k]);
 }
+
 void QgsRTtoolsPlugin::unload()
 {
     for (int i = 0; i < mAction.size(); i++)
@@ -875,6 +799,127 @@ void QgsRTtoolsPlugin::unload()
     qmb->deleteLater();
 
 }
+
+ExportLauncher::ExportLauncher(QgisInterface* mi) : _mi(mi) {
+    QVBoxLayout* qvb = new QVBoxLayout;
+
+    QLabel* l1 = new QLabel("File di condigurazione:", this);
+    _conf = new QLineEdit(this);
+    _conf->setText(QSettings().value("RT/CV/EXP_CONF").toString());
+    QPushButton* b1 = new QPushButton("...", this);
+    b1->setFixedWidth(20);
+    connect(b1, SIGNAL(clicked()), this, SLOT(findConf()));
+    QHBoxLayout* hl1 = new QHBoxLayout;
+    hl1->addWidget(l1);
+    hl1->addWidget(_conf);
+    hl1->addWidget(b1);
+    qvb->addLayout(hl1);
+
+    hl1 = new QHBoxLayout;
+    _epsg = new QLineEdit(this);
+    _epsg->setValidator(new QIntValidator);
+    hl1->addWidget(new QLabel("EPSG in ingresso (opzionale):", this));
+    hl1->addWidget(_epsg);
+    qvb->addLayout(hl1);
+
+    // parte finale comune a tutti
+    _out = new QTextEdit(this);
+    _out->setMinimumHeight(200);
+    _out->setMinimumWidth(400);
+    _out->setReadOnly(true);
+    qvb->addWidget(_out);
+
+    QHBoxLayout* hl2 = new QHBoxLayout;
+
+    QPushButton* bok = new QPushButton("Esegui", this);
+    connect(bok, SIGNAL(clicked()), this, SLOT(run()));
+    hl2->addWidget(bok);
+
+    QPushButton* bcanc = new QPushButton("Esci", this);
+    connect(bcanc, SIGNAL(clicked(bool)), this, SLOT(deleteLater()));
+    hl2->addWidget(bcanc);
+
+    qvb->addLayout(hl2);
+    setLayout(qvb);
+
+
+    connect(&_proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(ended(int, QProcess::ExitStatus)));
+    connect(&_proc, SIGNAL(readyReadStandardOutput()), this, SLOT(received()));
+}
+
+void ExportLauncher::ended(int, QProcess::ExitStatus) {
+    QDir dir(_outFolder);
+    if (dir.exists()) {
+        dir.setNameFilters(QStringList() << "*.shp");
+        dir.setFilter(QDir::Files);
+        foreach(QString dirFile, dir.entryList()){
+            //QgsVectorLayer layer(dir.absoluteFilePath(dirFile));
+            //layer.geometryType() == QGis::Polygon || QGis::Line;
+
+            QFileInfo file(dirFile);
+            _mi->addVectorLayer(dir.absoluteFilePath(dirFile), file.baseName(), "ogr");
+        }
+    }
+
+    QMessageBox::information(0, tr("GEOIN PLUGIN"), tr("tool terminated "), QMessageBox::Ok);
+
+}
+
+void ExportLauncher::received() {
+    QByteArray qba = _proc.readLine();
+    while (qba.isEmpty() == false) {
+        QString qs(qba);
+        _out->append(qs);
+
+        qba = _proc.readLine();
+    }
+}
+
+void ExportLauncher::findConf() {
+    QString str = QFileDialog::getOpenFileName(NULL, "File di configurazione", QSettings().value("RT/CV/EXP_CONF").toString(), "*.ini");
+    if (!str.isEmpty()) {
+        _conf->setText(str);
+        QSettings().setValue("RT/CV/EXP_CONF", str);
+    }
+}
+
+void ExportLauncher::run() {
+    _out->clear();
+
+    QSettings conf(_conf->text(), QSettings::IniFormat);
+    _outFolder = conf.value("DATA/OUT").toString();
+
+    QDir dir(_outFolder);
+    if (dir.exists()) {
+        dir.setNameFilters(QStringList() << "*.*");
+        dir.setFilter(QDir::Files);
+        foreach(QString dirFile, dir.entryList()){
+            if (!dir.remove(dirFile)) {
+                QMessageBox::warning(0, tr("GEOIN PLUGIN"), tr("Impossibile rimuovere i file nella cartella di output"), QMessageBox::Ok);
+                return;
+            }
+        }
+    }
+
+    QByteArray p = qgetenv( "CV_QGIS_PREFIX_PATH" );
+    QString app = QDir::cleanPath(QString(p.data()) + QDir::separator() + "plugins/sampler.pyz");
+    QStringList args = QStringList() << app << _conf->text();
+
+    int epsg = _epsg->text().toInt();
+    if (epsg) {
+        args << QString::number(epsg);
+    } else {
+        args << QString::number(3044);
+    }
+
+    _proc.start("python", args);
+
+    _out->append(args.join(" ") + "\n");
+    _out->append("Versione: " + QString(RT_PLUGIN_VERSION) + " - " + QString(RT_PLUGIN_DATE) + "\n");
+
+    _out->append("Cartella di output: " + _outFolder + "\n");
+}
+
 /*********************** SLOTS attivazione comandi ************/
 void QgsRTtoolsPlugin::set_prj()
 {
@@ -933,11 +978,14 @@ void QgsRTtoolsPlugin::ver_prod_lidar()
     Check_lidar_final* db = new Check_lidar_final(mIface);
     db->open();
 }
-
-void QgsRTtoolsPlugin::exportData() {
-    Export* control = new Export(mIface);
-    control->open();
+void QgsRTtoolsPlugin::sampler()
+{
+    ExportLauncher* l = new ExportLauncher(mIface);
+    l->open();
 }
+
+
+
 
 /*********************** INTERFACCIA PIANA ********************/
 QGISEXTERN QgisPlugin* classFactory(QgisInterface* iface)
@@ -951,7 +999,7 @@ QGISEXTERN QString icon()
 
 
     QString icon = icon_path + "/Regione.png";
-    return icon.toStdString().c_str();
+    return icon.toStdString().c_str(); 
 }
 QGISEXTERN QString name()
 {

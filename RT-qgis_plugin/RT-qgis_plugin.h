@@ -68,8 +68,7 @@ private slots:
     void ver_lidar();
     void ver_raw_lidar();
     void ver_prod_lidar();
-
-    void exportData();
+    void sampler();
 };
 
 class dbox: public QDialog {
@@ -81,20 +80,16 @@ public:
 protected slots:
     void _report(bool);
     void _exec(bool);
+    void _chiudi(int);
     void _terminated(int, QProcess::ExitStatus);
     void _terminated1(int, QProcess::ExitStatus);
     void _received();
     void _esci(bool);
     bool _dirlist(bool);
-
-    virtual void _chiudi(int);
-
 protected:
     void _esegui(const QString& exe, const QStringList& args);
-    virtual void _init(QVBoxLayout* qvb, bool is_report = true);
-    virtual void _init(QVBoxLayout* qvb, QString file, QString last, bool is_report = true);
+    void _init(QVBoxLayout* qvb, bool is_report = true);
     void _add_layers_to_legend(void);
-
     QString get_last_prj(void);
     QString _plugin_dir;
     QString _set_dir;
@@ -194,20 +189,28 @@ private:
     QSpinBox* _qP;
 };
 
-
-class Export : public dbox {
+class ExportLauncher : public QDialog {
     Q_OBJECT
 public:
-    Export(QgisInterface* mi);
-
-    void _init(QVBoxLayout* qvb, QString file, QString last, bool is_report = true);
-    virtual void _chiudi(int);
+    ExportLauncher(QgisInterface* mi);
 
 public slots:
-    void findConf(bool);
+    void run();
+    void findConf();
+    void ended(int, QProcess::ExitStatus);
+    void received();
 
 private:
+    QString _outFolder;
+
+    QLineEdit* _epsg;
     QLineEdit* _conf;
+    QProcess _proc;
+    QgisInterface* _mi;
+
+    QTextEdit* _out;
+
+    QMessageBox _waiter;
 };
 
 #endif

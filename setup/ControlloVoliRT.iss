@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Controllo Voli RT"
-#define MyAppVersion "1.4.0a"
+#define MyAppVersion "1.4.0"
 #define MyAppPublisher "Geoin S.R.L."
 #define MyAppURL "http://www.geoin.it"
 #define MyAppExeName "ControlloVoliRT"
@@ -72,7 +72,8 @@ Source: "{#MyBinDir}\check_ta.exe"; DestDir: "{app}/plugins"; Flags: ignoreversi
 Source: "{#MyBinDir}\check_ortho.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion         
 Source: "{#MyBinDir}\check_lidar.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion         
 Source: "{#MyBinDir}\check_lidar_raw.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion       
-Source: "{#MyBinDir}\check_lidar_final.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion
+Source: "{#MyBinDir}\check_lidar_final.exe"; DestDir: "{app}/plugins"; Flags: ignoreversion 
+Source: "{#MyBinDir}\sampler.pyz"; DestDir: "{app}/plugins"; Flags: ignoreversion
 Source: "{#MyIconDir}\gps.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\lidar.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\Ortho.png"; DestDir: "{app}/icons"; Flags: ignoreversion
@@ -81,9 +82,11 @@ Source: "{#MyIconDir}\Regione.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\volo.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\voloL.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyIconDir}\voloP.png"; DestDir: "{app}/icons"; Flags: ignoreversion
-Source: "{#MyIconDir}\voloPL.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\voloPL.png"; DestDir: "{app}/icons"; Flags: ignoreversion    
 Source: "{#MyIconDir}\tria.png"; DestDir: "{app}/icons"; Flags: ignoreversion
-Source: "{#MyIconDir}\projects.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\projects.png"; DestDir: "{app}/icons"; Flags: ignoreversion      
+Source: "{#MyIconDir}\export.png"; DestDir: "{app}/icons"; Flags: ignoreversion
+Source: "{#MyIconDir}\import.png"; DestDir: "{app}/icons"; Flags: ignoreversion
 Source: "{#MyBaseDir}\setup\DocBookRT_setup.exe"; DestDir: "{tmp}"; Flags: ignoreversion
 Source: "{#vcfiles}\msvcp100.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 64bit
 Source: "{#vcfiles}\msvcr100.dll";  DestDir: "{sys}"; Flags: restartreplace uninsneveruninstall 64bit

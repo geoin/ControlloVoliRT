@@ -73,10 +73,16 @@ class Shape:
         self.type = self.layer.GetLayerDefn().GetGeomType()
         self.srs = self.layer.GetSpatialRef()
 
-    def Clone(self, path, name):
+    def Clone(self, path, name, epsg=None):
         """clone the input shapefile structure and return it"""
         Delete(path, name)
-        out = New(path, name, self.type, self.srs)
+
+        srs = self.srs
+        if srs == None and epsg != None:
+            srs = osr.SpatialReference()
+            srs.ImportFromEPSG(epsg)
+
+        out = New(path, name, self.type, srs)
         feature = self.layer.GetFeature(0)
         [out.layer.CreateField(feature.GetFieldDefnRef(i)) for i in range(feature.GetFieldCount())]
         return out

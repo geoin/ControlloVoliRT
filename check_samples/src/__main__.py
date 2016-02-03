@@ -8,12 +8,17 @@ import config
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])))
 root = os.getcwd()
 
+
 def main(args):
     if len(args) < 2:
         print "Nessuna configurazione trovata. [python", args[0], "path/conf.ini]"
         return -1
 
     conf = config.Data(args[1])
+
+    epsg = None
+    if len(args) >= 3:
+        epsg = int(args[2])
 
     zone = shp.Open(*conf.Zone())
     if zone == None:
@@ -52,7 +57,7 @@ def main(args):
 
             if not data: continue
 
-            cloned = layer.Clone(conf.output, filename)
+            cloned = layer.Clone(conf.output, filename, epsg)
             featList = out[name]
             featLen = len(featList)
             if featLen == 0:
@@ -69,10 +74,11 @@ def main(args):
                 total = len(l)
                 sample = [l[i] for i in sorted(random.sample(xrange(total), min(total, count)))]
                 [cloned.AddFeature(layer.Feature(i)) for i in sample]
+
+            print "Layer:"+os.path.join(conf.output, filename)
         finally:
             if layer != None:
                 layer.Release()
-                print "LAYER:"+os.path.join(conf.output, filename)
             if cloned != None: cloned.Release()
 
     return 0
