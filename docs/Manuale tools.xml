@@ -8,14 +8,12 @@
     <author>
       <firstname>Geoin SRL</firstname>
 
-      <surname/>
-
       <affiliation>
         <orgname/>
       </affiliation>
     </author>
 
-    <pubdate>02-2014</pubdate>
+    <pubdate>01-2015</pubdate>
   </bookinfo>
 
   <chapter>
@@ -35,7 +33,7 @@
       questi vengono elaborati e confrontati con i valori di riferimento per
       produrre il report finale.</para>
 
-      <para>Per rendere più agevole l'immissione dei dati ogni attività viene
+      <para>Per rendere più agevole l'immissione dei dati, ogni attività viene
       configurata in un progetto; ogni modulo ha il compito di verificare una
       fase ben precisa dell'iter produttivo, un'opportuna interfaccia a
       finestre permette di inserire i dati e di verificare in ogni istante lo
@@ -53,9 +51,9 @@
           verificare che la pianificazione proposta permetta di realizzare
           quanto richiesto; in particolare si verifica che tutta l'area
           oggetto del rilievo risulti acquisita mediante modelli
-          stereoscopici, aventi il ricoprimento, longitudinale e trasversale,
-          richiesto, che il GSD (impronta del pixel al suolo) abbia i valori
-          richiesti, che le strisciate non siano troppo lunghe</para>
+          stereoscopici, aventi il ricoprimento, longitudinale e trasversale
+          richiesto, che il GSD (impronta del pixel al suolo) abbia il valore
+          richiesto, che le strisciate non siano troppo lunghe.</para>
         </listitem>
 
         <listitem>
@@ -72,8 +70,8 @@
           <para>Verifica del volo. Si verifica che durante gli intervalli di
           acquisizione delle strisciate il gps abbia fornito valori coretti
           privi di lacune. Inoltre si verifica il GSD, la sovrapposizione tra
-          fotogrammi, tra strisciate, l'altezza del sole sull'orizzonte e
-          l'assetto dei fotogrammi.</para>
+          fotogrammi, tra strisciate, l'altezza del sole sull'orizzonte e gli
+          angoli di assetto dei fotogrammi.</para>
         </listitem>
 
         <listitem>
@@ -95,7 +93,7 @@
           prodotte a seguito di una ripresa aero fotogrammetrica si verifica
           che siano state realizzate tutte le tavole possibili e che queste
           abbiano sfruttato l'intero materiale fotografico disponibile. Si
-          verifica inoltre la correttezza del GSD, della geo referenziazione e
+          verifica inoltre la rispondenza del GSD, della geo referenziazione e
           l'attribuzione del nome alle tavole.</para>
         </listitem>
       </orderedlist>
@@ -104,7 +102,7 @@
     <section>
       <title>Il rilievo Lidar</title>
 
-      <para>Viene suddiviso in 5 fasi</para>
+      <para>Viene suddiviso in 5 fasi:</para>
 
       <orderedlist>
         <listitem>
@@ -118,24 +116,31 @@
         <listitem>
           <para>Controllo del gps ha lo scopo di accertare che durante le
           missioni di rilievo il gps abbia funzionato correttamente e che
-          quindi la geo referenziazione della nuvola sia corretta.</para>
+          quindi la geo referenziazione della nuvola possa essere calcolata
+          correttamente.</para>
         </listitem>
 
         <listitem>
           <para>Controllo del rilievo effettuato. Ha lo scopo di verificare
-          che le aree richieste siano state acquisite con la dovuta
-          densità</para>
+          che le aree richieste siano state acquisite integralmente e che la
+          densità sia conforme con quanto richiesto.</para>
         </listitem>
 
         <listitem>
-          <para>Controllo dei dati grezzi lidar;</para>
+          <para>Controllo dei dati grezzi lidar; ha lo scopo di verificare che
+          i dati acquisiti soddisfino i requisiti di accuratezza e
+          ripetibilità.</para>
         </listitem>
 
         <listitem>
           <para>Controllo degli elaborati prodotti. Ha lo scopo di verificare
           che i prodotti derivati ( modelli di superficie e del terreno) siano
-          stati prodotti concordemente con i corrispondenti dati grezzi e che
-          il taglio la nomenclatura e la consistenza sia completa</para>
+          stati prodotti concordemente con i corrispondenti dati grezzi. Viene
+          verificata la rispondenza tra strisciate e mattonelle grezze, la
+          classificazione, classificazione dei punti ( ground ed overground),
+          la conversione delle quote da ellissoidiche ad ortometriche, il
+          ricampionamento per produrre i file grid e che il taglio la
+          nomenclatura e la consistenza sia completa</para>
         </listitem>
       </orderedlist>
     </section>
@@ -179,37 +184,71 @@
     inserire e aggiornare i file di input necessari agli strumenti di
     verifica.</para>
 
+    <para><mediaobject>
+        <imageobject>
+          <imagedata fileref="loader.PNG"/>
+        </imageobject>
+      </mediaobject></para>
+
     <para>Tramite il menù applicativo e la barra degli strumenti è possibile
-    creare o caricare un progetto. La voce "Nuovo" presenta una finestra di
-    dialogo per la creazione di un progetto; deve essere inserito il nome, la
-    tipologia (fotogrammetria o lidar), la scala di riferimento per i
-    controlli e la cartella radice. Opzionale l'inserimento di una nota
-    relativa al progetto. La voce "Apri" richiede la selezione della cartella
-    root contenente un progetto creato precedentemente e presente nel
-    filesystem.</para>
+    creare o caricare un progetto esistente per integrarlo o
+    modificarlo.</para>
+
+    <para>Per creare un nuovo progetto selezionare la voce "Nuovo" presenta
+    una finestra di dialogo.</para>
+
+    <para><mediaobject>
+        <imageobject>
+          <imagedata fileref="new.PNG"/>
+        </imageobject>
+      </mediaobject></para>
+
+    <para>Nome indica il nome assegnato al progetto.</para>
+
+    <para>Cartella indica la cartella radice sotto cui verrà creato il
+    progetto (ad esempio se si indica Siena nella cartella Voli, verrà creata
+    la cartella Siena sotto la cartella voli in cui verranno inseriti tutti i
+    dati afferenti a quel progetto)</para>
+
+    <para>Configurazione è Il nome del file di configurazione (in formato xml)
+    che verrà copiato nella cartella del progetto; questo file contiene per
+    ogni controllo i valori di riferimento</para>
+
+    <para>La tipologia (fotogrammetria o lidar)</para>
+
+    <para>la scala di riferimento (solo nel caso di fotogrammetia).</para>
+
+    <para>Opzionale l'inserimento di una nota relativa al progetto.</para>
+
+    <para>La voce "Apri" richiede la selezione della cartella contenente un
+    progetto creato precedentemente e presente nel filesystem.</para>
 
     <para>Al momento della conferma, l'applicativo presenta l'albero di
     navigazione del progetto.</para>
 
     <mediaobject>
       <imageobject>
-        <imagedata fileref="Cattura.PNG"/>
+        <imagedata fileref="fotogrammetria.PNG"/>
+      </imageobject>
+    </mediaobject>
+
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="lidar.PNG"/>
       </imageobject>
     </mediaobject>
 
     <para>Tramite l'albero di navigazione è possibile visualizzare il
-    dettaglio relativo al progetto stesso o a ciascun controllo. Selezionando
-    un nodo nell'albero viene visualizzata la scheda di dettaglio
-    corrispondente nel corpo principale dell'applicazione, dove è possibile
-    visualizzare ed inserire i dati in ingresso.</para>
+    dettaglio relativo al progetto stesso e a ciascun controllo. Selezionando
+    un nodo nell'albero viene mostrata (sulla destra) la scheda di dettaglio
+    corrispondente, dove vengono inseriti i dati e dove vengono e visualizzati
+    i dati inseriti precedentemente.</para>
 
-    <para>Le informazioni generali del progetto vengono visualizzate nel
-    pannello centrale al momento del caricamento. La descrizione comprende il
-    nome, il tipo, la data di creazione e quella dell'ultima modifica. Le
-    informazioni sulla scala attiva e le note possono essere editate
+    <para>Selezionando il nodo del progetto, nel pannello sulla destra
+    compaiono le informazioni generali del progetto. La descrizione comprende
+    il nome, il tipo, la data di creazione e quella dell'ultima modifica. Le
+    informazioni sulla scala attiva e le note che possono essere editate
     selezionando l'apposito pulsante.</para>
-
-    <para/>
 
     <mediaobject>
       <imageobject>
@@ -220,13 +259,13 @@
     <para>L'espansione dell'albero di progetto permette di visualizzare la
     lista dei controlli che richiedono dati in ingresso. Il pannello di
     dettaglio corrispondente a ciascun controllo è composto in generale da una
-    scheda per ogni file di input; le tab, posizionate sul lato destro del
-    pannello, permettono la navigazione tra le varie schede, anche durante il
-    drag di un file.</para>
+    scheda per ogni tipologia di dato di input; le tab, posizionate sul lato
+    destro del pannello, permettono la navigazione tra le varie schede, anche
+    durante il drag di un file.</para>
 
     <mediaobject>
       <imageobject>
-        <imagedata contentwidth="511" fileref="dettaglio.PNG"/>
+        <imagedata fileref="dettaglio.PNG"/>
       </imageobject>
     </mediaobject>
 
@@ -234,8 +273,8 @@
 
     <itemizedlist>
       <listitem>
-        <para>un'intestazione contente il menù di dettaglio, seguito dal
-        nome;</para>
+        <para>un'intestazione contente il menù di dettaglio ( tendina) seguito
+        dal nome;</para>
       </listitem>
 
       <listitem>
@@ -262,17 +301,12 @@
     menù. La metodologia di inserimento dei dati resta la stessa degli altri
     controlli.</para>
 
-    <mediaobject>
-      <imageobject>
-        <imagedata fileref="missioni.PNG"/>
-      </imageobject>
-    </mediaobject>
-
     <para>Gli oggetti gestiti sono divisi per controllo.</para>
 
     <itemizedlist>
       <listitem>
-        <para>Progetto di volo, dettaglio composto da:</para>
+        <para>Progetto di volo per rilievo fotogrammetrico, dettaglio composto
+        da:</para>
 
         <itemizedlist>
           <listitem>
@@ -288,14 +322,14 @@
           </listitem>
 
           <listitem>
-            <para>dem.</para>
+            <para>modello numerico del terreno delle aree da rilevare.</para>
           </listitem>
         </itemizedlist>
       </listitem>
 
       <listitem>
-        <para>Dati Gps, comprende un numero variabile di missioni, ciascuna
-        con:</para>
+        <para>Dati Gps ( comune a controllo fotogrammetrico e Lidar),
+        comprende un numero variabile di missioni, ciascuna con:</para>
 
         <itemizedlist>
           <listitem>
@@ -313,7 +347,7 @@
       </listitem>
 
       <listitem>
-        <para>Volo effettuato, composto da:</para>
+        <para>Volo effettuato per rilievo fotogrammetrico, composto da:</para>
 
         <itemizedlist>
           <listitem>
@@ -343,14 +377,147 @@
           </listitem>
         </itemizedlist>
       </listitem>
+
+      <listitem>
+        <para>Progetto di volo per rilievo Lidar</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Dati del sensore che verrà utilizzato</para>
+          </listitem>
+
+          <listitem>
+            <para>assi di volo</para>
+          </listitem>
+
+          <listitem>
+            <para>aree da rilevare</para>
+          </listitem>
+
+          <listitem>
+            <para>modello numerico del terreno delle aree da rilevare</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>Volo effettuato per rilievo Lidar</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>aree da rilevare</para>
+          </listitem>
+
+          <listitem>
+            <para>modello numerico del terreno delle aree da rilevare</para>
+          </listitem>
+
+          <listitem>
+            <para>cartella contenenete i file (in formato LAS) delle
+            strisciate acquisite</para>
+          </listitem>
+
+          <listitem>
+            <para>nuvola di punti dell'area di test (formato LAS)</para>
+          </listitem>
+
+          <listitem>
+            <para>Punti di controllo (è un file ascii che contiene le
+            coordinate dei punti notevoli presenti nell'area di test)</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>Controllo dei dati grezzi</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>punti di controllo (è un file asci di punti notevoli
+            rilevati a cura del collaudatore che verranno confrontati con i
+            dati grezzi acquisiti).</para>
+          </listitem>
+
+          <listitem>
+            <para>cartella contenenete i file (in formato LAS) delle
+            strisciate acquisite</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>Controllo degli elaborati finali</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>Dati finali richiede che vengano inseriti i nomi delle
+            cartelle dove sono contenuti i file degli elaborati; in
+            particolare</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>Cartella delle tile grezze (formato LAS)</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella delle tile ground con quota ellissoidica</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella delle tile ground con quota ortometrica</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella delle tile overground con quota
+                ellissoidica</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella delle tile overground con quota
+                ortometrica</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella dei file grid del modello di superficie (MDS)
+                con quota ortometrica</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella dei file grid del modello del terreno (MDT) con
+                quota ortometrica</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella dei file del modello di intensità (formato
+                tiff)</para>
+              </listitem>
+
+              <listitem>
+                <para>Cartella dei grigliati IGMI ( formati gr o gk)</para>
+              </listitem>
+
+              <listitem>
+                <para>valore della estensione delle tile </para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>aree da cartografare</para>
+          </listitem>
+
+          <listitem>
+            <para>cartella contenenete i file (in formato LAS) delle
+            strisciate acquisite</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
     </itemizedlist>
 
-    <para/>
-
-    <para>Le aree da cartografare e il dem possono essere inseriti sia nel
-    contesto del progetto di volo che del volo effettivo; la modifica nella
-    relativa scheda di ciascun controllo sarà riportata correttamente in tutte
-    le schede di dettaglio collegate alla stessa informazione.</para>
+    <para>Alcuni dati sono utilizzati da più controlli (ad esempio le aree da
+    cartografare, il modello numerico), in questi casi il dato impostato per
+    un controllo risulta impostato anche per tutti gli altri che lo
+    condividono.</para>
 
     <para>Ogni oggetto necessita di diversi tipi di dati in ingresso.</para>
 
@@ -429,6 +596,40 @@
         poligonale. Non avendo un formato standardizzato, non viene
         visualizzata nessuna informazione aggiuntiva.</para>
       </listitem>
+
+      <listitem>
+        <para>File del sensore lidar<programlisting>&lt;SENSOR&gt;
+  &lt;FOV&gt;0.0&lt;/FOV&gt;
+  &lt;FREQ&gt;0.0&lt;/FREQ&gt;
+  &lt;SCAN_RATE&gt;0.0&lt;/SCAN_RATE&gt;
+  &lt;IFOV&gt;0.0&lt;/IFOV&gt;
+&lt;/SENSOR&gt;</programlisting><parameter>dove FOV è l'angolo di scansione
+        del sensore, FREQ è la frequenza degli impulsi del laser, SCAN_RATE è
+        la frequenza di oscillazione dello specchio ed IFOV è l'apertura del
+        fascio laser. </parameter></para>
+      </listitem>
+
+      <listitem>
+        <para>Dati grezzi lidar (strisciate o tile) prende in ingresso file in
+        formato las</para>
+      </listitem>
+
+      <listitem>
+        <para>modelli ground overground prende in ingresso dei file ascii i
+        cui primi tre campi devono essere le coordinate X, Y, Z ( Est, Nord,
+        Quota)</para>
+      </listitem>
+
+      <listitem>
+        <para>File dei punti di controllo prende in ingresso dei file ascii,
+        il significato dei campi viene impostato tramite una maschera che
+        permettere di selezionare il campo di ciascuna coordinata e quello del
+        nome del punto</para>
+      </listitem>
+
+      <listitem>
+        <para>File MDS - MDT sono file in formato ESRI(c) ASCII GRID.</para>
+      </listitem>
     </orderedlist>
   </chapter>
 
@@ -437,12 +638,9 @@
 
     <para>Tutti i controlli producono un report in cui alcuni valori misurati
     vengono confrontati con dei valori di riferimento. Questi valori sono
-    memorizzati in un file xml il cui nome fisso è <emphasis
-    role="bold">Regione_Toscana_RefVal.xml</emphasis> che deve trovarsi nella
-    cartella padre rispetto a quella del progetto. Ad esempio se operiamo sul
-    progetto Firenze che si trova nella cartella (c:\lavori ovvero
-    /user/regione/lavori) il file andrà caricato nella cartella c:/lavori
-    ovvero /user/regione/lavori.</para>
+    memorizzati in un file xml che viene richiesto in fase di creazione del
+    progetto e che viene copiato nella cartella del progetto col nome fisso è
+    <emphasis role="bold">RefVal.xml</emphasis> .</para>
 
     <para>Il file si compone di due sezioni una relativa alla parte
     fotogrammetrica ed una relativa alla parte Lidar. Essendo i due controlli
@@ -459,106 +657,106 @@
 
     <para>&lt;Regione_Toscana&gt;</para>
 
-    <para> &lt;Fotogrammetria&gt;</para>
+    <para>&lt;Fotogrammetria&gt;</para>
 
-    <para> &lt;RefScale_2000&gt;</para>
+    <para>&lt;RefScale_2000&gt;</para>
 
-    <para> &lt;GSD descr="Dimensione del pixel al suolo"
-    unimis="m"&gt;0.15&lt;/GSD&gt; </para>
+    <para>&lt;GSD descr="Dimensione del pixel al suolo"
+    unimis="m"&gt;0.15&lt;/GSD&gt;</para>
 
-    <para> &lt;MAX_GSD descr="max scarto dal valore di riferimento"
+    <para>&lt;MAX_GSD descr="max scarto dal valore di riferimento"
     unimis="perc"&gt;10&lt;/MAX_GSD&gt;</para>
 
-    <para> &lt;TP_PP descr ="Toll. plan. punti di passaggio"
+    <para>&lt;TP_PP descr ="Toll. plan. punti di passaggio"
     unimis="m"&gt;0.2&lt;/TP_PP&gt;</para>
 
-    <para> &lt;TA_TP descr="Toll. alt. punti di passaggio"
+    <para>&lt;TA_TP descr="Toll. alt. punti di passaggio"
     unimis="m"&gt;0.3&lt;/TA_TP&gt;</para>
 
-    <para> &lt;T_CP descr="Toll. dei centri di presa"
+    <para>&lt;T_CP descr="Toll. dei centri di presa"
     unimis="m"&gt;0.3&lt;/T_CP&gt;</para>
 
-    <para> &lt;T_PR descr="Toll. angoli di pitch e roll"
+    <para>&lt;T_PR descr="Toll. angoli di pitch e roll"
     unimis="mdeg"&gt;6.0&lt;/T_PR&gt;</para>
 
-    <para> &lt;T_H descr="Toll. angolo di heading"
+    <para>&lt;T_H descr="Toll. angolo di heading"
     unimis="mdeg"&gt;8.0&lt;/T_H&gt;</para>
 
-    <para> &lt;TP_PA descr="Toll. plan. punti di appoggio"
+    <para>&lt;TP_PA descr="Toll. plan. punti di appoggio"
     unimis="m"&gt;0.2&lt;/TP_PA&gt;</para>
 
-    <para> &lt;TA_PA descr="Toll. alt. punti di appoggio"
+    <para>&lt;TA_PA descr="Toll. alt. punti di appoggio"
     unimis="m"&gt;0.25&lt;/TA_PA&gt;</para>
 
-    <para> &lt;TP_PC descr="Toll plan. punti di controllo"
+    <para>&lt;TP_PC descr="Toll plan. punti di controllo"
     unimis="m"&gt;0.4&lt;/TP_PC&gt;</para>
 
-    <para> &lt;TA_PC descr="Toll alt. punti di controllo"
+    <para>&lt;TA_PC descr="Toll alt. punti di controllo"
     unimis="m"&gt;0.5&lt;/TA_PC&gt;</para>
 
-    <para> &lt;DTM_ST descr="paso griglia"
+    <para>&lt;DTM_ST descr="paso griglia"
     unimis="m"&gt;5&lt;/DTM_ST&gt;</para>
 
-    <para> &lt;DTM_TP descr="accuratezza plan."
+    <para>&lt;DTM_TP descr="accuratezza plan."
     unimis="m"&gt;0.3&lt;/DTM_TP&gt;</para>
 
-    <para> &lt;DTM_TA descr="accuratezza altimetrica campo aperto"
+    <para>&lt;DTM_TA descr="accuratezza altimetrica campo aperto"
     unimis="m"&gt;0.3&lt;/DTM_TA&gt;</para>
 
-    <para> &lt;DTM_BRK descr="dislivello per il quale sono richieste break
+    <para>&lt;DTM_BRK descr="dislivello per il quale sono richieste break
     lines" unimis="m"&gt;0.6&lt;/DTM_BRK&gt;</para>
 
-    <para> &lt;O_PIX descr="Dimensine del pixel sul terreno"
+    <para>&lt;O_PIX descr="Dimensine del pixel sul terreno"
     unimis="m"&gt;0.2&lt;/O_PIX&gt;</para>
 
-    <para> &lt;O_TPS descr="accuratezza plan. punti al asuolo"
+    <para>&lt;O_TPS descr="accuratezza plan. punti al asuolo"
     unimis="m"&gt;0.4&lt;/O_TPS&gt;</para>
 
-    <para> &lt;O_TPA descr="accuratezza plan. oggetti sopraelelati"
+    <para>&lt;O_TPA descr="accuratezza plan. oggetti sopraelelati"
     unimis="m"&gt;1.2&lt;/O_TPA&gt;</para>
 
-    <para> &lt;MODEL_OVERLAP descr="ricoprimento longitudinale foto"
+    <para>&lt;MODEL_OVERLAP descr="ricoprimento longitudinale foto"
     unimis="perc"&gt;60&lt;/MODEL_OVERLAP&gt;</para>
 
-    <para> &lt;MODEL_OVERLAP_RANGE descr="range di variabilità"
+    <para>&lt;MODEL_OVERLAP_RANGE descr="range di variabilità"
     unimis="perc"&gt;10&lt;/MODEL_OVERLAP_RANGE&gt;</para>
 
-    <para> &lt;MODEL_OVERLAP_T descr="minimo ricoprimento trasversale foto"
+    <para>&lt;MODEL_OVERLAP_T descr="minimo ricoprimento trasversale foto"
     unimis="perc"&gt;90&lt;/MODEL_OVERLAP_T&gt;</para>
 
-    <para> &lt;STRIP_OVERLAP descr="ricoprimento tra strip. adiacenti"
+    <para>&lt;STRIP_OVERLAP descr="ricoprimento tra strip. adiacenti"
     unimis="perc"&gt;20&lt;/STRIP_OVERLAP&gt;</para>
 
-    <para> &lt;STRIP_OVERLAP_RANGE descr="range di variabilità"
+    <para>&lt;STRIP_OVERLAP_RANGE descr="range di variabilità"
     unimis="perc"&gt;10&lt;/STRIP_OVERLAP_RANGE&gt;</para>
 
-    <para> &lt;MAX_STRIP_LENGTH descr="massima lunghezza strip"
+    <para>&lt;MAX_STRIP_LENGTH descr="massima lunghezza strip"
     unimis="km"&gt;15&lt;/MAX_STRIP_LENGTH&gt;</para>
 
-    <para> &lt;MAX_PDOP descr="massimo PDOP"
+    <para>&lt;MAX_PDOP descr="massimo PDOP"
     unimis="num"&gt;5&lt;/MAX_PDOP&gt;</para>
 
-    <para> &lt;MIN_SAT descr="Minimo numero di satelliti"
+    <para>&lt;MIN_SAT descr="Minimo numero di satelliti"
     unimis="num"&gt;5&lt;/MIN_SAT&gt;</para>
 
-    <para> &lt;MAX_DIST descr="massima distanza basi"
+    <para>&lt;MAX_DIST descr="massima distanza basi"
     unimis="km"&gt;50&lt;/MAX_DIST&gt;</para>
 
-    <para> &lt;MIN_SAT_ANG descr="minimo angolo elevazione satelliti"
+    <para>&lt;MIN_SAT_ANG descr="minimo angolo elevazione satelliti"
     unimis="num"&gt;15&lt;/MIN_SAT_ANG&gt;</para>
 
-    <para> &lt;NBASI descr="minimo numero di basi da usare"
+    <para>&lt;NBASI descr="minimo numero di basi da usare"
     unimis="num"&gt;2&lt;/NBASI&gt;</para>
 
-    <para> &lt;MAX_ANG descr="max. valore per gli angoli di pitch e roll"
+    <para>&lt;MAX_ANG descr="max. valore per gli angoli di pitch e roll"
     unimis="deg"&gt;5&lt;/MAX_ANG&gt;</para>
 
-    <para> &lt;MAX_HEADING_DIFF descr="max. diff. angolo heading tra
-    fotogrammi adiacenti" unimis="deg"&gt;5&lt;/MAX_HEADING_DIFF&gt;
-    &lt;MIN_ANG_SOL descr="min. angolo sole sull'orizzonte"
+    <para>&lt;MAX_HEADING_DIFF descr="max. diff. angolo heading tra fotogrammi
+    adiacenti" unimis="deg"&gt;5&lt;/MAX_HEADING_DIFF&gt; &lt;MIN_ANG_SOL
+    descr="min. angolo sole sull'orizzonte"
     unimis="deg"&gt;30&lt;/MIN_ANG_SOL&gt;</para>
 
-    <para> &lt;/RefScale_2000&gt;</para>
+    <para>&lt;/RefScale_2000&gt;</para>
 
     <para>Per facilitare la compilazione del file per ogni grandezza viene
     indicato che cosa rappresenta (attributo descrizione) e l'unità di misura
@@ -828,8 +1026,8 @@
   <chapter>
     <title>Il controllo della triangolazione aerea</title>
 
-    <para>Questo controllo richiede solo che la cartella del progetto, gli
-    altri dati vengono acquisiti come parametri e sono</para>
+    <para>Questo controllo richiede solo che venga indicata la cartella del
+    progetto, gli altri dati vengono acquisiti come parametri e sono</para>
 
     <itemizedlist>
       <listitem>
@@ -916,7 +1114,11 @@
   </chapter>
 
   <chapter>
-    <title>Il controllo delle orto immagini</title>
+    <title>E' necessario che sia stato eseguito preventivamente il controllo
+    del volo Il controllo delle orto immagini</title>
+
+    <para>E' necessario che sia stato preventivamente esguito il controllo del
+    volo fotogrammetrico da cui vengono derivate le orto immagini.</para>
 
     <para>Richiede che siano stati caricati nel progetto:</para>
 
@@ -957,5 +1159,397 @@
         materiale del volo di riferimento</para>
       </listitem>
     </itemizedlist>
+  </chapter>
+
+  <chapter>
+    <title>Il file di riferimento per ripresa Lidar</title>
+
+    <para>Nel caso di ripresa Lidar il file XML con i valori di riferimento fa
+    riferimento ai seguenti campi:</para>
+
+    <para>&lt;Lidar&gt;</para>
+
+    <para>&lt;MAX_PDOP descr="massimo PDOP"
+    unimis="num"&gt;3&lt;/MAX_PDOP&gt;</para>
+
+    <para>&lt;MIN_SAT descr="Minimo numero di satelliti"
+    unimis="num"&gt;5&lt;/MIN_SAT&gt;</para>
+
+    <para>&lt;MAX_DIST descr="massima distanza basi"
+    unimis="km"&gt;30&lt;/MAX_DIST&gt;</para>
+
+    <para>&lt;MIN_SAT_ANG descr="minimo angolo elevazione satelliti"
+    unimis="num"&gt;15&lt;/MIN_SAT_ANG&gt;</para>
+
+    <para>&lt;NBASI descr="minimo numero di basi da usare"
+    unimis="num"&gt;3&lt;/NBASI&gt;</para>
+
+    <para>&lt;LID_RAD_F descr="raggio dell'impronta al suolo del fascio laser"
+    unimis="m"&gt;0&lt;/LID_RAD_F&gt;</para>
+
+    <para>&lt;STRIP_OVERLAP descr="ricoprimento tra strip. adiacenti"
+    unimis="perc"&gt;40&lt;/STRIP_OVERLAP&gt;</para>
+
+    <para>&lt;STRIP_OVERLAP_RANGE descr="range di variabilità"
+    unimis="perc"&gt;10&lt;/STRIP_OVERLAP_RANGE&gt;</para>
+
+    <para>&lt;MAX_STRIP_LENGTH descr="massima lunghezza strip"
+    unimis="km"&gt;15&lt;/MAX_STRIP_LENGTH&gt;</para>
+
+    <para>&lt;PT_DENSITY descr="desnsità deipunti al suolo"
+    unimis="pt/mq"&gt;0&lt;/PT_DENSITY&gt;</para>
+
+    <para>&lt;LID_TOL_P descr="tolleranza dei punti di controllo planimetrici"
+    unimis="m"&gt;0&lt;/LID_TOL_P&gt;</para>
+
+    <para>&lt;LID_TOL_A descr="tolleranza dei punti di controllo altimetrici"
+    unimis="m"&gt;0&lt;/LID_TOL_A&gt;</para>
+
+    <para>&lt;LID_TOL_Z descr="tolleranza differenza di quota tra punti comuni
+    a due strisciate" unimis="m"&gt;0&lt;/LID_TOL_Z&gt; &lt;/Lidar&gt;h</para>
+  </chapter>
+
+  <chapter>
+    <title>La descrizione del sensore</title>
+
+    <para>E' l'analogo alla descrizione della fotocamera nel caso di ripresa
+    fotogrammetrica. Le informazioni possono essere rilette da un file XML
+    precedentemenet descritto.</para>
+
+    <para>In alterna i dati possono venire inseriti a mano attivando
+    l'apposita maschera :</para>
+
+    <para><mediaobject>
+        <imageobject>
+          <imagedata fileref="sensore_lidar.png"/>
+        </imageobject>
+      </mediaobject>L'angolo di scansione è l'angolo completo di cui viene
+    fatto oscillare il fascio laser</para>
+
+    <para>La frequenza di campionamento è la frequenza con cui il laser emette
+    gli impulsi</para>
+
+    <para>La divergenza del fascio è l'angolo al vertice del cono del raggio
+    laser.</para>
+
+    <para>La frequenza di scansione è relativa al tempo che il dispositivo di
+    oscillazione impiega a per compiere una oscillazione completa (ritornare
+    nella posizione di partenza)</para>
+
+    <para>La velocità dell'aereo non è un parametro del sensore ma è usata per
+    valutare la densità dei punti acquisibili.</para>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo del progetto di volo per ripresa Lidar</title>
+
+    <para>Richiede che siano stati caricati nel progetto i sueguenti
+    dati</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Descrizione del sensore</para>
+      </listitem>
+
+      <listitem>
+        <para>File degli assi di volo (analogo a quello della
+        fotogrammetria)</para>
+      </listitem>
+
+      <listitem>
+        <para>Aree da rilevare (analogo a quello usato per
+        fotogrammetria)</para>
+      </listitem>
+
+      <listitem>
+        <para>Dem in formato asc della porzione di territorio da
+        rilevare</para>
+      </listitem>
+    </itemizedlist>
+
+    <para><mediaobject>
+        <imageobject>
+          <imagedata fileref="assivololidar.png"/>
+        </imageobject>
+      </mediaobject>Il file degli assi di volo deve essere in formato shape ed
+    il suo contenuto informativo deve prevedere almeno due campi uno per il
+    nome dell'asse (A_VOL_CS) ed uno per la quota di volo in metri (A_VOL_QT).
+    Se il file fornito non contiene dei campi con questi nomi, viene richiesto
+    di indicare a quali campi, fra quelli presenti associare le informazioni
+    richieste. La finestra mostra come effettuare l'associazione.</para>
+
+    <para>Sulla base dei parametri del sensore, degli assi di volo progettati
+    e del modello numerico del terreno vengono ricostruite le strisciate delle
+    aree rilevate.</para>
+
+    <para>Vengono eseguiti i seguenti controlli</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Che tutte le aree da rilevare siano ricoprete da
+        strisciate</para>
+      </listitem>
+
+      <listitem>
+        <para>Che tutte le strisciate siano più corte del valore di
+        riferimento</para>
+      </listitem>
+
+      <listitem>
+        <para>Che la densità acquisibile (valutata sulla base del valore della
+        velocità di crociera del velivolo) sia non inferiore al valore
+        richiesto</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo del volo per ripresa Lidar</title>
+
+    <para>Richiede che sia stato eseguito precedentemente il controllo dei
+    dati GPS.</para>
+
+    <para>Richiede i seguenti dati:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Aree da rilevare</para>
+      </listitem>
+
+      <listitem>
+        <para>Modello numerico di elevazione della zona</para>
+      </listitem>
+
+      <listitem>
+        <para>Nome della cartella contenente i file in formato LAS delle
+        strisciate acquisite</para>
+      </listitem>
+
+      <listitem>
+        <para>Nome del file della nuvola di test (formato las)</para>
+      </listitem>
+
+      <listitem>
+        <para>Nome del file ascii con le coordinate dei punti noti</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Vengono eseguiti i seguenti controlli</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Che durante l'acquisizione delle strisciate i dati del GPS
+        abbiano le caratteristiche richieste ( massimo PDOP, minimo numero di
+        satelliti, minimo numero di stazioni entro la distanza prevista,
+        assenza di gap)</para>
+      </listitem>
+
+      <listitem>
+        <para>Che gli scarti delle quote sui punti noti dell'area di test
+        siano entro la tolleranza. Viene costruito un TIN (Triangulate
+        irregular Network) dalla nuvola dell'area di test, in corrispondenza
+        dei punti noti viene misurata la quota del TIN e confrontata con
+        quella del punto.</para>
+      </listitem>
+
+      <listitem>
+        <para>Che le strisciate ricoprano integralmente le aree da
+        rilevare</para>
+      </listitem>
+
+      <listitem>
+        <para>Che il ricoprimento tra strisciate sia entro quanto
+        imposto</para>
+      </listitem>
+
+      <listitem>
+        <para>Che la lunghezza delle strisciate sia inferiore al valore di
+        riferimento</para>
+      </listitem>
+
+      <listitem>
+        <para>Che la densità dei punti (calcolata come rapporto tra numero di
+        primi echi ed area della strisciata) corrisponda a quanto
+        offerto</para>
+      </listitem>
+    </itemizedlist>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo dei dati Grezzi</title>
+
+    <para>Richiede i seguenti dati</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Cartella con i dati delle strisciate in formato LAS</para>
+      </listitem>
+
+      <listitem>
+        <para>File dei punti di controllo (rilevati a cura del
+        collaudatore)</para>
+      </listitem>
+    </itemizedlist>
+
+    <para><mediaobject>
+        <imageobject>
+          <imagedata contentwidth="511" fileref="puntiControllo.png"/>
+        </imageobject>
+      </mediaobject>Ia finestra precedente permette di selezionare in quali
+    colonne compaiono i campi necessari che sono quelli delle coordinate e
+    quello del nome attribuito al punto</para>
+
+    <para>I controlli prendono in esame le quote presenti nei file delle
+    strisciate grezze. Da ciascuna di queste viene ricavato un TIN. </para>
+
+    <para>Vengono eseguiti i seguenti controlli.</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Che la quota dei punti noti, confrontata con la stessa ricavata
+        dal TIN delle strisciate in cui ricadono sia entro la
+        tolleranza</para>
+      </listitem>
+
+      <listitem>
+        <para>Che su un insieme di punti a comune tra due o più strisciate le
+        differenze di quota siano entro la soglia stabilita.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Per quest'ultimo controllo vengono presi in esame il 10% circa dei
+    punti a comune tra coppie di strisciate considerando solo gli echi
+    singoli.</para>
+  </chapter>
+
+  <chapter>
+    <title>Il controllo degli elaborati finali</title>
+
+    <para>Richiede i seguenti dati</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Cartella delle tile grezze (formato LAS)</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella delle tile ground con quota ellissoidica</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella delle tile ground con quota ortometrica</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella delle tile overground con quota ellissoidica</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella delle tile overground con quota ortometrica</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella dei file grid del modello di superficie (MDS) con quota
+        ortometrica</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella dei file grid del modello del terreno (MDT) con quota
+        ortometrica</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella dei file del modello di intensità (formato tiff)</para>
+      </listitem>
+
+      <listitem>
+        <para>Cartella dei grigliati IGMI ( formati gr o gk)</para>
+      </listitem>
+
+      <listitem>
+        <para>valore della estensione delle tile</para>
+      </listitem>
+
+      <listitem>
+        <para>aree da cartografare</para>
+      </listitem>
+
+      <listitem>
+        <para>cartella contenenete i file (in formato LAS) delle strisciate
+        acquisite</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Dai file delle tile grezze, sulla base del nome e della dimensione
+    di ciscuna tile, viene ricavato un quadro d'unione. Si assume che gli
+    ultimi 8 caratteri del nome dei file contenga le coordinte del vertice in
+    basso a sinistra 4 per la Est e 4 per la Nord; ad esempio 32_60004860.las
+    è relativo alla coordinate UTM Est = 600,000 Nord = 4,860,000.</para>
+
+    <para>Dalla la grossa quantità dei dati i controlli prendono in esame solo
+    una percentuale di tutti i dati</para>
+
+    <para>Vengono eseguiti i seguenti controlli:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Che le tile grezze ricoprano tutte le aree da
+        cartografare</para>
+      </listitem>
+
+      <listitem>
+        <para>Che in corrispondenza ad ogni tile grezza esista il
+        corrispondente file in ciascuna delle altre categori (verifica della
+        completezza dellafornitura)</para>
+      </listitem>
+
+      <listitem>
+        <para>Che presi a campione dei punti dalle tile grezze questi abbiano
+        un corrispondente nei file delle strisciate</para>
+      </listitem>
+
+      <listitem>
+        <para>Che presi a campione alcuni punti dalle tile ground con quota
+        ellissoidica si ritrovi la stessa coordinata nella corrispondente tile
+        grezza e che il punto sia un ultimo o singolo echo</para>
+      </listitem>
+
+      <listitem>
+        <para>Che presi a campione alcuni punti dalle tile overground con
+        quota ellissoidica si ritrovi la stessa coordinata nella
+        corrispondente tile grezza e che il punto sia un primo o singolo
+        echo</para>
+      </listitem>
+
+      <listitem>
+        <para>Che presi a campione alcuni punti dalle tile ground con quota
+        ellissoidica e trasformata la quota mediante i grigliati IGMI si
+        ottenga la stessa quota presente nel corrispondente file
+        ortometrico</para>
+      </listitem>
+
+      <listitem>
+        <para>Che presi a campione alcuni punti dalle tile overgroundground
+        con quota ellissoidica e trasformata la quota mediante i grigliati
+        IGMI si ottenga la stessa quota presente nel corrispondente file
+        ortometrico</para>
+      </listitem>
+
+      <listitem>
+        <para>Che in corrspondenza ad alcuni punti presi a campione dai file
+        grid MDT si ritrovi la stessa quota mediante interpolazione del TIN
+        della corrispondente tile ground</para>
+      </listitem>
+
+      <listitem>
+        <para>Che in corrspondenza ad alcuni punti presi a campione dai file
+        grid MDS si ritrovi la stessa quota mediante interpolazione del TIN
+        della corrispondente tile overground</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Per quanto riguarda i campioni presi in esame per ogni controlllo si
+    considerano il 20% dei file (0 tutte se sono in numero inferiore a 10) e
+    da questi vengono considerati il 10% dei punti.</para>
   </chapter>
 </book>
