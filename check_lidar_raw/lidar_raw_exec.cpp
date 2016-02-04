@@ -156,6 +156,8 @@ bool lidar_raw_exec::_initControlPoints() {
 			set.next();
 		}
 
+		std::cout << "Layer:RAW_CONTROL_POINTS" << std::endl;
+
 		//_controlInfoList.resize(_controlVal.size());
 
 		return true;

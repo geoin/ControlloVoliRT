@@ -961,6 +961,8 @@ bool lidar_exec::_check_sample_cloud() {
 }
 
 CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {
+	std::cout << "Layer:CONTROL_POINTS" << std::endl;
+
 	CV::Util::Spatialite::Statement stm(cnn);
 
     std::stringstream query;
