@@ -211,7 +211,7 @@ private:
 
     QTextEdit* _out;
 
-    QMessageBox _waiter;
+    QSharedPointer<QMessageBox> _waiter;
 };
 
 #endif

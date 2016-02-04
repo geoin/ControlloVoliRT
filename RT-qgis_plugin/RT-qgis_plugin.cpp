@@ -86,7 +86,7 @@ dbox::dbox(QgisInterface* mi): _mi(mi) {
 QString dbox::get_last_prj() {
     //QFileInfo qfs(_set_dir, "rt_tools.cfg");
     QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
-    QString last_prj = qs.value("RT/CV/PROJ_DIR", "").toString();
+    QString last_prj = qs.value("RTPLUGIN/CV/PROJ_DIR", "").toString();
     return last_prj;
 }
 
@@ -170,7 +170,7 @@ void dbox::_chiudi(int result) {
     if ( !last_prj.isEmpty() ) {
         //QFileInfo qfs(_set_dir, "rt_tools.cfg");
         QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
-        qs.setValue("RT/CVPROJ_DIR", last_prj) ;
+        qs.setValue("RTPLUGIN/CV/PROJ_DIR", last_prj) ;
     }
     deleteLater();
 }
@@ -418,15 +418,15 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
     QFileInfo qf(_plugin_dir, name);
     _executable = qf.filePath();
 
-    QFileInfo qfs(_set_dir, "rt_tools.cfg");
-    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+    //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
 
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
     QLabel* l1 = new QLabel("File di riferimento:");
     _f1 = new QLineEdit;
-    QString q1 = qs.value("TA_REF", "").toString();
+    QString q1 = qs.value("RTPLUGIN/CV/TA_REF", "").toString();
     _f1->setText(q1);
     if ( !q1.isEmpty() )
          _args[1] = QString(PARAM_PREFIX("r")) + q1;
@@ -442,7 +442,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l2 = new QLabel("File da confrontare:");
     _f2 = new QLineEdit;
-    QString q2 = qs.value("TA_CFG", "").toString();
+    QString q2 = qs.value("RTPLUGIN/CV/TA_CFG", "").toString();
     _f2->setText(q2);
     if ( !q2.isEmpty() )
         _args[2] = QString(PARAM_PREFIX("c")) + q2;
@@ -458,7 +458,7 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
     QLabel* l3 = new QLabel("File Osservazioni:");
     _f3 = new QLineEdit;
-    QString q3 = qs.value("TA_OBS", "").toString();
+    QString q3 = qs.value("RTPLUGIN/CV/TA_OBS", "").toString();
     _f3->setText(q3);
     if ( !q3.isEmpty() )
         _args[3] = QString(PARAM_PREFIX("o")) + q3;
@@ -478,8 +478,8 @@ Check_ta::Check_ta(QgisInterface* mi): dbox(mi)
 
 bool Check_ta::_dirlist1(bool)
 {
-    QFileInfo qfs(_set_dir, "rt_tools.cfg");
-    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+    //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
 
     QFileDialog qf;
     QString fileName = _f1->text();
@@ -490,14 +490,14 @@ bool Check_ta::_dirlist1(bool)
     if ( !fileName.isEmpty() ) {
         _f1->setText(fileName);
         _args[1] = QString(PARAM_PREFIX("r")) + fileName;
-        qs.setValue("TA_REF", fileName) ;
+        qs.setValue("RTPLUGIN/CV/TA_REF", fileName) ;
     }
     return true;
 }
 bool Check_ta::_dirlist2(bool)
 {
-    QFileInfo qfs(_set_dir, "rt_tools.cfg");
-    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+    //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
 
     QFileDialog qf;
     QString fileName = _f2->text();
@@ -508,14 +508,14 @@ bool Check_ta::_dirlist2(bool)
     if ( !fileName.isEmpty() ) {
         _f2->setText(fileName);
         _args[2] = QString(PARAM_PREFIX("c")) + fileName;
-        qs.setValue("TA_CFG", fileName) ;
+        qs.setValue("RTPLUGIN/CV/TA_CFG", fileName) ;
     }
     return true;
 }
 bool Check_ta::_dirlist3(bool)
 {
-    QFileInfo qfs(_set_dir, "rt_tools.cfg");
-    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+    //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
 
     QFileDialog qf;
     QString fileName = _f3->text();
@@ -526,7 +526,7 @@ bool Check_ta::_dirlist3(bool)
     if ( !fileName.isEmpty() ) {
         _f3->setText(fileName);
         _args[3] = QString(PARAM_PREFIX("o")) + fileName;
-        qs.setValue("TA_OBS", fileName) ;
+        qs.setValue("RTPLUGIN/CV/TA_OBS", fileName) ;
     }
     return true;
 }
@@ -545,13 +545,13 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 
     QVBoxLayout* qvb = new QVBoxLayout;
 
-    QFileInfo qfs(_set_dir, "rt_tools.cfg");
-    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+    //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
 
     // cartella delle immagini
     QLabel* l1 = new QLabel("Cartella Ortho immagini:");
     _idir = new QLineEdit;
-    QString q1 = qs.value("ORTHO_IDIR", "").toString();
+    QString q1 = qs.value("RTPLUGIN/CV/ORTHO_IDIR", "").toString();
     _idir->setText(q1);
     if ( !q1.isEmpty() )
          _args[1] = QString(PARAM_PREFIX("i")) + q1;
@@ -569,8 +569,8 @@ Check_ortho::Check_ortho(QgisInterface* mi): dbox(mi)
 }
 bool Check_ortho::_img_dir(bool)
 {
-    QFileInfo qfs(_set_dir, "rt_tools.cfg");
-    QSettings qs(qfs.filePath(), QSettings::IniFormat);
+    //QFileInfo qfs(_set_dir, "rt_tools.cfg");
+    QSettings qs;//(qfs.filePath(), QSettings::IniFormat);
 
     QFileDialog qf;
     QString dirName = _idir->text();
@@ -581,7 +581,7 @@ bool Check_ortho::_img_dir(bool)
     if ( !dirName.isEmpty() ) {
         _idir->setText(dirName);
         _args[1] = QString(PARAM_PREFIX("i")) + dirName;
-        qs.setValue("ORTHO_IDIR", dirName) ;
+        qs.setValue("RTPLUGIN/CV/ORTHO_IDIR", dirName) ;
     }
     return true;
 }
@@ -805,7 +805,7 @@ ExportLauncher::ExportLauncher(QgisInterface* mi) : _mi(mi) {
 
     QLabel* l1 = new QLabel("File di condigurazione:", this);
     _conf = new QLineEdit(this);
-    _conf->setText(QSettings().value("RT/CV/EXP_CONF").toString());
+    _conf->setText(QSettings().value("RTPLUGIN/CV/EXP_CONF").toString());
     QPushButton* b1 = new QPushButton("...", this);
     b1->setFixedWidth(20);
     connect(b1, SIGNAL(clicked()), this, SLOT(findConf()));
@@ -845,16 +845,10 @@ ExportLauncher::ExportLauncher(QgisInterface* mi) : _mi(mi) {
 
     connect(&_proc, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(ended(int, QProcess::ExitStatus)));
     connect(&_proc, SIGNAL(readyReadStandardOutput()), this, SLOT(received()));
-
-    _waiter.setWindowTitle("GEOIN PLUGIN");
-    _waiter.setText("tool running");
-    _waiter.setWindowModality(Qt::ApplicationModal);
-    _waiter.addButton("Interrompi", QMessageBox::AcceptRole);
-    _waiter.show();
 }
 
 void ExportLauncher::ended(int, QProcess::ExitStatus) {
-    _waiter.done(0);
+    _waiter.clear();
 
     QDir dir(_outFolder);
 
@@ -889,10 +883,10 @@ void ExportLauncher::received() {
 }
 
 void ExportLauncher::findConf() {
-    QString str = QFileDialog::getOpenFileName(NULL, "File di configurazione", QSettings().value("RT/CV/EXP_CONF").toString(), "*.ini");
+    QString str = QFileDialog::getOpenFileName(NULL, "File di configurazione", QSettings().value("RTPLUGIN/CV/EXP_CONF").toString(), "*.ini");
     if (!str.isEmpty()) {
         _conf->setText(str);
-        QSettings().setValue("RT/CV/EXP_CONF", str);
+        QSettings().setValue("RTPLUGIN/CV/EXP_CONF", str);
     }
 }
 
@@ -932,6 +926,16 @@ void ExportLauncher::run() {
     _out->append("Versione: " + QString(RT_PLUGIN_VERSION) + " - " + QString(RT_PLUGIN_DATE) + "\n");
 
     _out->append("Cartella di output: " + _outFolder + "\n");
+
+
+    _waiter = QSharedPointer<QMessageBox>(new QMessageBox);
+    _waiter->setWindowTitle("GEOIN PLUGIN");
+    _waiter->setText("running");
+    _waiter->setWindowModality(Qt::ApplicationModal);
+    _waiter->addButton("Interrompi", QMessageBox::RejectRole);
+    _waiter->show();
+
+    connect(_waiter.data(), SIGNAL(rejected()), &_proc, SLOT(kill()));
 }
 
 /*********************** SLOTS attivazione comandi ************/
