@@ -10,7 +10,7 @@
 ; cartella da cui prelevare i files
 #define MySourceDir "C:\DocBookRT" 
 ; cartella in cui registare il file per il setup
-#define MyBaseDir "C:\ControlloVoliRT"
+#define MyBaseDir "D:\projects\RT\ControlloVoliRT"
 ; cartella di default in cui installare i dati
 #define MyOutDir "C:\DocBookRT"
 
