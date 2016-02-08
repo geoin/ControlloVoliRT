@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "DocBook RT"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.4.0"
 #define MyAppPublisher "Geoin S.R.L."
 #define MyAppURL "http://www.geoin.it"
 #define MyAppExeName "DocBookRT"
