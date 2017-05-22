@@ -39,10 +39,14 @@ public:
 	unsigned int open(const std::string& nome);
 	bool get_next_point(DPOINT& p);
 	int get_echo(void) const { return _echo; }
+	int get_angle( void ) const { return _angle; }
 	void get_min(double& _xmin, double& _ymin, double& _zmin) const;
 	void get_max(double& _xmax, double& _ymax, double& _zmax) const;
+    bool isvalid() const { return _isvalid; }
 private:
 	int _echo;
+	int _angle;
+    mutable bool _isvalid;
 	LASreader* _lasreader;
 };
 
@@ -235,6 +239,7 @@ public:
 	virtual std::string Error_string(void) const { return _err_mes; }
 	//virtual void SetEps(double eps) {}
 	virtual void SetEcho(int echo) {}
+	virtual void SetAngle( int angle ) {}
 	virtual void SetMask(const File_Mask& fm) {}
 
 	double z_noVal(void) const { return _z_noVal; }
@@ -340,6 +345,9 @@ public:
 	void SetEcho(int echo) {
 		_lidar_echo = echo;
 	}
+	void SetAngle( int angle ) {
+		_lidar_angle = angle;
+	}
 	void SetMask(const File_Mask& fma) {
 		fm = fma;
 	}
@@ -353,6 +361,7 @@ public:
 	}
 private:
     int _lidar_echo;
+	int _lidar_angle;
     double _eps;
 	File_Mask fm;
     DSM* _dsm;

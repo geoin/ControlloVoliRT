@@ -12,21 +12,31 @@ TARGET = CVloader
 TEMPLATE = app
 
 CV_INCL = ../include
-CV_TOOLS_INCL = ../../ControlloVoliRT_Tools/include
+CV_TOOLS_INCL = $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 OUT_DIR = $$_PRO_FILE_PWD_/../bin
+
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZip.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZipd.lib
 
 DEFINES += NOMINMAX
 
 INCLUDEPATH += $${CV_INCL}
 
 win32 {
-    INCLUDEPATH += $$_PRO_FILE_PWD_/$${CV_TOOLS_INCL}
+    INCLUDEPATH += $${CV_TOOLS_INCL}
     LIBS += -L$$_PRO_FILE_PWD_"/../lib" -L$$_PRO_FILE_PWD_"/../../ControlloVoliRT_Tools/lib"
+    LIBS += -LD:/OSGeo4W64/lib
     CONFIG(debug, debug|release) {
-         LIBS += -lCVUtild -lPocoZipd -lspatialite -lPocoFoundationd -lsqlite3_i
+         LIBS += -lCVUtild -lPocoZip64d -lspatialite_i -lPocoFoundation64d -lsqlite3_i
          TARGET = $$join(TARGET,,,d)
     } else {
-         LIBS += -lCVUtil -lPocoZip -lspatialite -lPocoFoundation -lsqlite3_i
+         LIBS += -lCVUtil -lPocoZip64 -lspatialite_i -lPocoFoundation64 -lsqlite3_i
     }
 }
 
@@ -47,6 +57,7 @@ SOURCES += main.cpp \
     gui/status/cvnodeinfo.cpp \
     gui/helper/cvdetailsfactory.cpp \
     gui/cvprojectoverviewdetail.cpp \
+    gui/cvshapeviewer.cpp \
     gui/cvstatusbar.cpp \
     gui/details/plandetail.cpp \
     gui/details/missionlistdetails.cpp \
@@ -110,6 +121,7 @@ HEADERS  += \
     gui/helper/cvdetailsfactory.h \
     gui/cvprojectoverviewdetail.h \
     gui/cvstatusbar.h \
+    gui/cvshapeviewer.h \
     gui/details/plandetail.h \
     gui/details/missionlistdetails.h \
     gui/details/cvcameradetail.h \

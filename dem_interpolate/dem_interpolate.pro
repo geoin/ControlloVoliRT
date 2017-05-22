@@ -8,8 +8,12 @@ QT       -= core gui qt
 TARGET = dem_interpolate
 TEMPLATE = lib
 
+QMAKE_CFLAGS+= /ZI
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+
 win32 {
-        LIBS += -L"../../ControlloVoliRT_Tools/lib"
+        LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
         DEFINES += DLL_EXPORTS
 }
 unix{
@@ -21,17 +25,17 @@ macx {
 }
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoZipd -llaslib
+        LIBS += -lPocoFoundation64d -llaslibd
         TARGET = $$join(TARGET,,,d)
 }
 else {
-    LIBS += -lPocoFoundation -lPocoZip -llaslib
+    LIBS += -lPocoFoundation64 -llaslib
 }
 
 
-INCLUDEPATH += ../../ControlloVoliRT_Tools/include \
-    ../include/dem_interpolate\
-    ../include
+INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include \
+    $$_PRO_FILE_PWD_/../include/dem_interpolate\
+    $$_PRO_FILE_PWD_/../include
 
 DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS NOMINMAX
 
@@ -39,12 +43,12 @@ SOURCES += \
     geom.cpp \
     grid.cpp \
     triangle.c \
-    ../common/parser.cpp
+    $$_PRO_FILE_PWD_/../common/parser.cpp
 
 HEADERS +=\
-    ../include/dem_interpolate/pslg.h \
-    ../include/dem_interpolate/dsm.h \
-    ../include/dem_interpolate/geom.h \
+    $$_PRO_FILE_PWD_/../include/dem_interpolate/pslg.h \
+    $$_PRO_FILE_PWD_/../include/dem_interpolate/dsm.h \
+    $$_PRO_FILE_PWD_/../include/dem_interpolate/geom.h \
     triangle.h
 
 
@@ -54,4 +58,4 @@ HEADERS +=\
 #incl.files = ../dem_interpolate/geom.h ../dem_interpolate/dsm.h
 #INSTALLS += incl
 
-DESTDIR = ../lib
+DESTDIR = $$_PRO_FILE_PWD_/../bin

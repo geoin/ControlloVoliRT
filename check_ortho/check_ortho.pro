@@ -8,16 +8,20 @@ QT       -= core gui
 CONFIG += console
 TARGET = check_ortho
 
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
+
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib" -L"C:/OSGeo4W/lib/"
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include ../../ControlloVoliRT_Tools/include/tifflib
+        LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib" -L"C:/OSGeo4W/lib/"
+        INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include/tifflib
         CONFIG(debug, debug|release) {
-                LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite4 -lCVutild -lgdald_i -llibtiff_i
+                LIBS += -lPocoFoundation64d -lPocoUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite_i -lCVutild -lgdald_i -llibtiff_i
                 TARGET = $$join(TARGET,,,d)
         }
         else {
-                LIBS += -lPocoFoundation -lPocoUtil -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite4 -lCVutil -lgdal_i -llibtiff_i
+                LIBS += -lPocoFoundation64 -lPocoUtil -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite4 -lCVutil -lgdal_i -llibtiff_i
         }
 }
 
@@ -41,12 +45,12 @@ SOURCES += \
     check_ortho.cpp \
     tiff_util.cpp \
     ortho_exec.cpp \
-    ../common/parser.cpp \
-    ../common/geo_util.cpp \
-    ../common/doc_book_util.cpp
+    $$_PRO_FILE_PWD_/../common/parser.cpp \
+    $$_PRO_FILE_PWD_/../common/geo_util.cpp \
+    $$_PRO_FILE_PWD_/../common/doc_book_util.cpp
 
 HEADERS +=\
     check_ortho.h \
     tiff_util.h
 
-DESTDIR = ../bin
+DESTDIR = $$_PRO_FILE_PWD_/../../bin

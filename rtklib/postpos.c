@@ -59,7 +59,7 @@ static FILE *fp_rtcm=NULL;      /* rtcm data file pointer */
 static rtcm_t rtcm;             /* rtcm data structure */
 
 // Callback definition
-int (*showmsg)(char *format,...);
+int (*showmsg)(const char *format,...);
 void (*settspan)(gtime_t ts, gtime_t te);
 int (*settime)(gtime_t time);
 void (*resettime)(char* mes) = NULL;
@@ -70,7 +70,7 @@ TOOLS_EXPORTS void Set_myCoordPlot(void (*mcp)(double* rec, const char* date))
 {
     myCoordPlot = mcp;
 }
-TOOLS_EXPORTS void Set_showmsg(int (*smsg)(char *format,...))
+TOOLS_EXPORTS void Set_showmsg(int (*smsg)(const char *format,...))
 {
     showmsg = smsg;
 }

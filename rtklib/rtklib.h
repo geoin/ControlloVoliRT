@@ -1433,7 +1433,7 @@ extern void (*setread)(double ps);
 extern void (*myCoordPlot)(double* rec, const char* date);
 
 TOOLS_EXPORTS void Set_myCoordPlot(void (*myCoordPlot)(double* rec, const char* date));
-TOOLS_EXPORTS void Set_showmsg(int (*smsg)(char *format,...));
+TOOLS_EXPORTS void Set_showmsg(int (*smsg)(const char *format,...));
 TOOLS_EXPORTS void Set_settspan(void (*settspan)(gtime_t ts, gtime_t te));
 TOOLS_EXPORTS void Set_settime(int (*settime)(gtime_t time));
 TOOLS_EXPORTS void Set_resettime(void (*resettime)(char* mes));

@@ -2,6 +2,7 @@
 #define CV_CLOUD_SAMPLE_DETAIL_H
 
 #include "core/categories/cvfileinput.h"
+#include "core/categories/cvfolderinput.h"
 
 #include "cvbasedetail.h"
 
@@ -27,7 +28,8 @@ public:
 	virtual void searchFile();
 	virtual void importAll(QStringList&);
 	
-	inline Core::CVFileInput* input() const { return static_cast<Core::CVFileInput*>(controller()); }
+    //inline Core::CVFileInput* input() const { return static_cast<Core::CVFileInput*>(controller()); }
+    inline Core::CVFolderInput* folder() const { return static_cast<Core::CVFolderInput*>(controller()); }
 
 protected:
     virtual void dragEnterEvent(QDragEnterEvent*);

@@ -9,15 +9,19 @@ QT       -= core gui
 TARGET = check_ta
 #TEMPLATE = app
 
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
+
 win32 {
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
-    LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
 
     CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundationd -lPocoUtild -lCVUtild -lphoto_utild -lsqlite3_i -lspatialite4 -lgdald_i
+            LIBS += -lPocoFoundation64d -lPocoUtil64d lPocoXML64d -lCVUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite_i -lgdal_i
             TARGET = $$join(TARGET,,,d)
     } else {
-            LIBS += -lPocoFoundation -lPocoUtil -lCVUtil -lphoto_utild -lspatialite4 -lsqlite3_i -lgdal_i
+            LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lCVUtil -lphoto_util -lspatialite_i -lsqlite3_i -lgdal_i -ldem_interpolate
     }
 }
 
@@ -38,11 +42,11 @@ DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 SOURCES += \
     check_ta.cpp \
     ta_exec.cpp \
-    ../common/geo_util.cpp \
-    ../common/doc_book_util.cpp
+    $$_PRO_FILE_PWD_/../common/geo_util.cpp \
+    $$_PRO_FILE_PWD_/../common/doc_book_util.cpp
 
 
 HEADERS +=\
     check_ta.h
 
-DESTDIR = ../bin
+DESTDIR = $$_PRO_FILE_PWD_/../bin

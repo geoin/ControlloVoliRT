@@ -34,6 +34,6 @@ CONFIG(debug, debug|release) {
 
 DESTDIR = $$_PRO_FILE_PWD_/../lib
 
-incl.path = ../include/photo_util
-incl.files = ../photo_util/sun.h ../photo_util/vdp.h
+incl.path = $$_PRO_FILE_PWD_/../include/photo_util
+incl.files = $$_PRO_FILE_PWD_/../photo_util/sun.h $$_PRO_FILE_PWD_/../photo_util/vdp.h
 INSTALLS += incl

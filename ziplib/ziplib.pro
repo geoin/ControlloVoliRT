@@ -3,14 +3,20 @@
 # Project created by QtCreator 2013-10-10T17:26:24
 #
 #-------------------------------------------------
-CONFIG += sharedlib
+CONFIG += dll
 QT       -= core gui
-
 TARGET = ziplib
 TEMPLATE = lib
 
+QMAKE_CFLAGS+= /ZI
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZip.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZipd.lib
+
 win32 {
-        LIBS += -L"C:/ControlloVoliRT_Tools/lib"
+        LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
+        DEFINES += DLL_EXPORTS
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib"
@@ -18,16 +24,16 @@ macx {
 
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoZipd
+        LIBS += -lPocoFoundation64d -lPocoZip64d
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoFoundation -lPocoZip
+        LIBS += -lPocoFoundation64 -lPocoZip64
 }
 
 
-INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
-
+INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
+#CFLAG
 
 DEFINES +=ZIPLIB_LIBRARY
 
@@ -45,8 +51,8 @@ HEADERS +=\
     tailor.h \
     ziplib.h
 
-DESTDIR = ../lib
+DESTDIR = $$_PRO_FILE_PWD_/../lib
 
-incl.path = ../include/ziplib
-incl.files = ../ziplib/ziplib.h
+incl.path = $$_PRO_FILE_PWD_/../include/ziplib
+incl.files = $$_PRO_FILE_PWD_/../ziplib/ziplib.h
 INSTALLS += incl

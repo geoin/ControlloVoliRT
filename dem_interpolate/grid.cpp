@@ -19,7 +19,7 @@
 #include "laslib/lasreader.hpp"
 
 #ifdef WIN32 //TODO (TEMP): needs to update win version
-#define LAS_NUMBER_OF_RETURNS number_of_returns
+#define LAS_NUMBER_OF_RETURNS number_of_returns_of_given_pulse
 #else
 #define LAS_NUMBER_OF_RETURNS number_of_returns_of_given_pulse
 #endif
@@ -44,7 +44,12 @@ unsigned int MyLas::open(const std::string& nome)
 }
 bool MyLas::get_next_point(DPOINT& p)
 {
+    _isvalid = true;
 	if ( _lasreader->read_point() ) {
+        if( _lasreader->point.number_of_returns_of_given_pulse <= 0 ) {
+            _isvalid = false;
+            return true;
+        }
 		p.x = _lasreader->get_x();
 		p.y = _lasreader->get_y();
 		p.z = _lasreader->get_z();
@@ -58,6 +63,8 @@ bool MyLas::get_next_point(DPOINT& p)
 		if (_lasreader->point.LAS_NUMBER_OF_RETURNS == 1) {
 			_echo |= single_pulse;
 		}
+		_angle = int( _lasreader->point.scan_angle_rank );
+
 		return true;
 	}
 	return false;
@@ -589,6 +596,8 @@ bool DSM_Factory::Open(const std::string nome, bool verbose, bool tria)
 		_dsm = new PSLG;
 		_dsm->SetEcho(_lidar_echo);
 		_dsm->SetMask(fm);
+        _dsm->SetAngle( _lidar_angle / 2 );
+        //std::cout << "!!!!! Reading with angle of: " << _lidar_angle / 2 << std::endl;
 
 		return _dsm->Open(nome, verbose, tria);
 	}

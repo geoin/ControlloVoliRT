@@ -179,11 +179,17 @@ CVControl* CVProjectManager::_fly(CVProject* proj, bool b) {
 		folder->table("RAW_STRIP_DATA");
 		ctrl->insert(folder);
 
-		CVFileInput* file = new CVCloudSampleInput(ctrl);
-		file->type(CVObject::TEST_CLOUD);
-		file->uri(proj->path); 
-		file->control(plan_t);
-		ctrl->insert(file, false);
+		CVFolderInput* folder1 = new CVFolderInput( ctrl );
+		folder1->controlType( fly_t );
+		folder1->type( CVObject::TEST_CLOUD );
+		folder1->table( "CLOUD_SAMPLE" );
+		ctrl->insert( folder1 );
+
+		//CVFileInput* file = new CVCloudSampleInput(ctrl);
+		//file->type(CVObject::TEST_CLOUD);
+		//file->uri(proj->path); 
+		//file->control(plan_t);
+		//ctrl->insert(file, false);
 
 		CVCsvInput* controlPoint = new CVCsvInput(proj);
 		controlPoint->setTable("CONTROL_POINTS");

@@ -285,7 +285,7 @@ void gps_exec::_createGPSMissionsTables() {
 }
 
 bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vector<std::string>& vs_base) {
-	std::cout << "Layer:" << BASI << std::endl;
+    //std::cout << "Layer:" << BASI << std::endl;
 
 	/*std::stringstream sql;
 	sql << "CREATE TABLE " << BASI << 
@@ -302,7 +302,8 @@ bool gps_exec::_record_base_file(const std::vector<DPOINT>& basi, const std::vec
 	cnn.execute_immediate(sql1.str());*/
 	
 	std::stringstream sql2;
-	sql2 << "INSERT INTO " << BASI << " (id, nome, geom) \
+    // Insert or ignore into
+    sql2 << "INSERT OR IGNORE INTO " << BASI << " (id, nome, geom) \
 		VALUES (?1, ?2, ST_GeomFromWKB(:geom, " << SRIDGEO << ") )";
 	
 	CV::Util::Spatialite::Statement stm(cnn);
@@ -409,7 +410,7 @@ bool gps_exec::_single_track(const std::string& mission, std::vector< Poco::Shar
 	// create a layer for the basis
 	_record_base_file(basi, _vs_base);
 
-	std::cout << "Layer:" << GPS << std::endl;
+    //std::cout << "Layer:" << GPS << std::endl;
 
 	// create the GPS table
 	/*std::stringstream sql;
@@ -617,6 +618,8 @@ bool gps_exec::_create_gps_track()
             _mission_process(ms.toString());
         }
 	}
+    std::cout << "Layer:" << BASI << std::endl;
+    std::cout << "Layer:" << GPS << std::endl;
 	return true;
 }
 bool gps_exec::_mission_process(const std::string& folder)

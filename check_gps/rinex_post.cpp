@@ -40,7 +40,7 @@ vGPS* pr;
 extern "C" {
 
 // show message in message area ---------------------------------------------
-int fshowmsg(char *format, ...)
+int fshowmsg(const char *format, ...)
 {
 	return 0;
 	va_list arg;

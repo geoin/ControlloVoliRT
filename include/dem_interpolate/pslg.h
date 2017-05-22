@@ -258,6 +258,9 @@ public:
 		if ( _echo == 3 )
 			_echo = 4; // per gli echi intermedi
 	}
+	void SetAngle( int angle ) {
+		_angle = angle;
+	}
 	void SetMask(const File_Mask& fm) {
 		_fm = fm;
 	}
@@ -662,27 +665,46 @@ public:
 		if ( !InitNode(Org_Nod) )
 			return false;
 
+        std::cout << "Las " << nome << " " << Org_Nod << " punti" << std::endl;
+
 		//bool ret = true;
 		Org_Nod = 0;
 
-		ml.get_min(_xmin, _ymin, _zmin);
-		ml.get_max(_xmax, _ymax, _zmax);
-		_set_off_scale();
+//		ml.get_min(_xmin, _ymin, _zmin);
+//		ml.get_max(_xmax, _ymax, _zmax);
+//		_set_off_scale();
+
+        _xmin = _ymin = _zmin = INF;
+        _xmax = _ymax = _zmax = -INF;
 
 		DPOINT pt;
 
-		while ( ml.get_next_point(pt) ) {
+        while ( ml.get_next_point(pt) ) {
+            if ( !ml.isvalid() )
+                continue;
 			if ( _echo != 0 && !( _echo & ml.get_echo()) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 				continue;
+			if ( _angle != 0 ) {
+				int angle = ml.get_angle();
+				if( angle < -_angle || angle > _angle )
+					continue;
+			}
 
 			node[Org_Nod].x = pt.x;
 			node[Org_Nod].y = pt.y;
 			node[Org_Nod].z = pt.z;
+            Org_Nod++;
+
+            setMin(pt.x, pt.y, pt.z);
+            setMax(pt.x, pt.y, pt.z);
 
 			_ie.add(pt.x, pt.y);
 
-			_normalize(Org_Nod++);
+            //_normalize(Org_Nod++);
 		}
+        _set_off_scale();
+        for (unsigned int i = 0; i < Org_Nod; i++)
+            _normalize(i);
 
 		_ie.compute();
 
@@ -1102,6 +1124,7 @@ private:
 	mutable RETTA	_rt[3];
 	double	_trEps;
 	int		_echo;
+	int		_angle;
 	File_Mask _fm;
 	long	_nSize;
 	bool	_open;

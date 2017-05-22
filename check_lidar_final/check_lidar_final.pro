@@ -3,16 +3,20 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
+
 win32 {
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
-    LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
-    INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
     CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundationd -lPocoUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite4 -lCVutild -lgdald_i -llibtiff_i
+        LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite_i -lCVutild -lgdal_i -llibtiff_i -lproj_i
         TARGET = $$join(TARGET,,,d)
     }
     else {
-         LIBS += -lPocoFoundation -lPocoUtil -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite4 -lCVutil -lgdal_i -llibtiff_i
+         LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite_i -lCVutil -lgdal_i -llibtiff_i -lproj_i
     }
 }
 
@@ -33,13 +37,14 @@ DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 SOURCES += \
     check_lidar_final.cpp \
     lidar_final_exec.cpp \
-    ../common/doc_book_util.cpp \
-    ../common/geo_util.cpp \
-    ../common/lidar.cpp
+    $$_PRO_FILE_PWD_/../common/doc_book_util.cpp \
+    $$_PRO_FILE_PWD_/../common/geo_util.cpp \
+    $$_PRO_FILE_PWD_/../common/sampler.cpp \
+    $$_PRO_FILE_PWD_/../common/lidar.cpp
 
 HEADERS += \
     check_lidar_final.h \
     lidar_final_exec.h \
-    ../include/cv/lidar.h
+    $$_PRO_FILE_PWD_/../include/cv/lidar.h
 
-DESTDIR = ../bin
+DESTDIR = $$_PRO_FILE_PWD_/../bin

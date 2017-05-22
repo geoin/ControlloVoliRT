@@ -148,19 +148,28 @@ double Axis::averageSpeed() const {
 	return speed_MS;
 }
 
-bool Axis::fromCloud(const std::string& las) {
+bool Axis::fromCloud(const std::string& las, double ang) {
+    // ang angolo su cui filtrare la strip
     DSM_Factory f;
+    f.SetAngle(ang);
 	if (!f.Open(las, false, false)) {
 		return false;
 	}
+    _npoints = f.GetDsm()->Npt();
+    //std::cout << "Punti filtrati: " << _npoints << std::endl;
+    //std::cout << "min max: " << f.GetDsm()->Xmin() << " " <<  f.GetDsm()->Ymin() << " " << f.GetDsm()->Xmax() << " " <<  f.GetDsm()->Ymax() << std::endl;
 
+    // first e last sono gli estremi dell'asse maggiore
 	f.GetDsm()->getMajorAxis(_first, _last);
+    _bb.resize(4);
+    f.GetDsm()->getBB(_bb[0], _bb[1], _bb[2], _bb[3]);
 
 	_geom = OGRGeometryFactory::createGeometry(wkbLineString);
 	
 	OGRGeometry* og = _geom;
 	reinterpret_cast<OGRLineString*>(og)->addPoint(_first.x, _first.y);
 	reinterpret_cast<OGRLineString*>(og)->addPoint(_last.x, _last.y);
+    //std::cout << "!!!estremi asse : "<< _first.x << " " <<  _first.y << " " << _last.x << " " <<  _last.y << std::endl;
 	
 	_line = toLineString();
 	
@@ -255,4 +264,19 @@ double Strip::computeDensity(DSM* dsm) {
 
 	_density = count / area;
 	return _density;
+}
+
+double Strip::computeDensity(long count) {
+    double area = toPolygon()->get_Area();
+    if (area == 0.0) {
+        throw std::runtime_error("Empty strip area");
+    }
+
+    if (count == 0) {
+        throw std::runtime_error("Empty cloud");
+    }
+
+    _density = count / area;
+       std::cout << "Area " << area << " Punti " << count << " Density " << _density << std::endl;
+    return _density;
 }

@@ -54,7 +54,7 @@ extern "C" {
 
 TOOLS_EXPORTS void ReleaseStruct(struct triangulateio *);
 TOOLS_EXPORTS int InitStruct(struct triangulateio * sto, int npt, int natt, int nseg);
-TOOLS_EXPORTS int Triangulate(char * triswitches, struct triangulateio *in, struct triangulateio *out,
+TOOLS_EXPORTS int Triangulate(const char * triswitches, struct triangulateio *in, struct triangulateio *out,
 										void (*fLprintf)(char*), char* fTrErrMes);
 TOOLS_EXPORTS int Voronoi(char * triswitches, struct triangulateio *in, struct triangulateio *out,
 										struct triangulateio *vor, void (*fLprintf)(char*), char* fTrErrMes);

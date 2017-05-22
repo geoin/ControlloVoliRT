@@ -1,8 +1,8 @@
 #ifndef CV_VERSION_H
 #define CV_VERSION_H
 
-#define CHECK_VERSION "1.4.0"
-#define CHECK_DATE "03/02/2016"
+#define CHECK_VERSION "1.5.0"
+#define CHECK_DATE "18/05/2017"
 
 #include <iostream> 
 #include <sstream>

@@ -95,7 +95,11 @@ bool lidar_exec::run()
 
 		_read_ref_val();
 
+		// quota volo dagli assi
 		_findReferenceColumns();
+
+        // TEST
+//        _check_sample_cloud_folder();
 
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 		
@@ -132,7 +136,7 @@ bool lidar_exec::run()
 		
 		if ( _type == FLY_TYPE ) {
 			std::cout << "Verifica punti di controllo su area di test" << std::endl;
-			_check_sample_cloud();
+            _check_sample_cloud_folder();
 		}
 
 		// se volo lidar confronta gli assi progettati con quelli effettivi
@@ -291,29 +295,65 @@ void lidar_exec::_buildAxis() {
 		Poco::Path p(f.path());
 
 		if (f.isDirectory()) {
+            // solo se ci fossero sotto cartelle
 			_traverseFolder(p, stm);
-			continue;
-		}
+        } else
+          _addstrip(p, stm);
 		
-		if (Poco::toLower(p.getExtension()) == "las") {
-			std::cout << " * Analisi strisciata " << p.getBaseName() << std::endl;
+//		if (Poco::toLower(p.getExtension()) == "las") {
+//			std::cout << "Strisciata " << p.getBaseName() << std::endl;
 
-			Lidar::Axis::Ptr axis(new Lidar::Axis);
-			axis->stripName(p.getBaseName());
+//			Lidar::Axis::Ptr axis(new Lidar::Axis);
+//			axis->stripName(p.getBaseName());
 
-			bool ret = axis->fromCloud(p.toString());
-			if (ret) {
-				stm[1] = axis->stripName();
+//            bool ret = axis->fromCloud(p.toString(), LID_ANG_SCAN);
+//			if (ret) {
+//                std::cout << "inserisce " << axis->stripName() << std::endl;
+//				stm[1] = axis->stripName();
 
-				OGRGeomPtr buf = axis->geom();
-				stm[2].fromBlob(buf);
+//				OGRGeomPtr buf = axis->geom();
+//				stm[2].fromBlob(buf);
 
-				stm.execute();
-				stm.reset();
-			}
-		}
+//				stm.execute();
+//				stm.reset();
+//			}
+//		}
 	}
 	cnn.commit_transaction();
+}
+void lidar_exec::_addstrip(const Poco::Path& p, Statement& stm)
+{
+    if (Poco::toLower(p.getExtension()) == "las") {
+        std::cout << "Strisciata " << p.getBaseName() << std::endl;
+
+        Lidar::Axis::Ptr axis(new Lidar::Axis);
+        axis->stripName(p.getBaseName());
+
+        bool ret = axis->fromCloud(p.toString(), LID_ANG_SCAN);
+        if (ret) {
+            FootPrint ft;
+            ft.name = axis->stripName();
+            ft.BB = axis->BB();
+            ft.Npoints = axis->npoints();
+            strpFt[ft.name] = ft;
+            const std::vector<DPOINT>& bb = ft.BB;
+            std::cout << "Bounding box\n";
+            std::cout <<  bb[0].x << " " << bb[0].y << "," << std::endl;
+            std::cout <<  bb[1].x << " " << bb[1].y << "," << std::endl;
+            std::cout <<  bb[2].x << " " << bb[2].y << "," << std::endl;
+            std::cout <<  bb[3].x << " " << bb[3].y << std::endl;
+
+            std::cout << "Punti filtrati: " << ft.Npoints << std::endl;
+
+            stm[1] = axis->stripName();
+
+            OGRGeomPtr buf = axis->geom();
+            stm[2].fromBlob(buf);
+
+            stm.execute();
+            stm.reset();
+        }
+    }
 }
 
 void lidar_exec::_traverseFolder(const Poco::Path& fold, Statement& stm) {
@@ -325,24 +365,32 @@ void lidar_exec::_traverseFolder(const Poco::Path& fold, Statement& stm) {
 	for (; it != end; it++) {
 		Poco::File& f = *it;
 		Poco::Path p(f.path());
+
+        _addstrip(p, stm);
 		
-		if (Poco::toLower(p.getExtension()) == "las") {
-			std::cout << " * Analisi strisciata " << p.getBaseName() << std::endl;
+//		if (Poco::toLower(p.getExtension()) == "las") {
+//			std::cout << " * Analisi strisciata " << p.getBaseName() << std::endl;
 
-			Lidar::Axis::Ptr axis(new Lidar::Axis);
-			axis->stripName(p.getBaseName());
+//			Lidar::Axis::Ptr axis(new Lidar::Axis);
+//			axis->stripName(p.getBaseName());
 
-			bool ret = axis->fromCloud(p.toString());
-			if (ret) {
-				stm[1] = axis->stripName();
+//            bool ret = axis->fromCloud(p.toString(), LID_ANG_SCAN);
+//			if (ret) {
+//                const std::vector<DPOINT>& bb = axis->BB();
+//                std::cout << "   b1 " << bb[0].x << " " << bb[0].y << std::endl;
+//                std::cout << "   b2 " << bb[1].x << " " << bb[1].y << std::endl;
+//                std::cout << "   b3 " << bb[2].x << " " << bb[2].y << std::endl;
+//                std::cout << "   b4 " << bb[3].x << " " << bb[3].y << std::endl;
 
-				OGRGeomPtr buf = axis->geom();
-				stm[2].fromBlob(buf);
+//				stm[1] = axis->stripName();
 
-				stm.execute();
-				stm.reset();
-			}
-		}
+//				OGRGeomPtr buf = axis->geom();
+//				stm[2].fromBlob(buf);
+
+//				stm.execute();
+//				stm.reset();
+//			}
+//		}
 	}
 }
 
@@ -813,6 +861,7 @@ bool lidar_exec::_read_ref_val()
 		LID_TOL_A = pConf->getDouble(get_key("LID_TOL_A"));
 		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
 		LID_ANG_SCAN =  pConf->getDouble(get_key("LID_ANG_SCAN"));
+        std::cout << "!!! ang_scan " << LID_ANG_SCAN << std::endl;
 		//_T_CP = pConf->getDouble(get_key("T_CP"));
 
 		MAX_PDOP = pConf->getInt(get_key("MAX_PDOP"));
@@ -927,9 +976,38 @@ bool lidar_exec::_read_lidar_from_mission() {
 	return true;
 }
 
-bool lidar_exec::_check_sample_cloud() {
+bool lidar_exec::_check_sample_cloud_folder() {
+    CV::Util::Spatialite::Statement stm(cnn);
+
+    std::stringstream query;
+    query << "select FOLDER from CLOUD_SAMPLE";
+    stm.prepare(query.str());
+    CV::Util::Spatialite::Recordset set = stm.recordset();
+    if (set.eof()) {
+        return false;
+    }
+
+    std::string samplePath = set[0].toString();
+    std::cout << "FOLDER  " << samplePath << std::endl;
+
+    Poco::File lasClouds(samplePath);
+    std::vector<Poco::File> files;
+    lasClouds.list(files);
+    std::cout << "size " << files.size() << std::endl;
+
+    std::vector<Poco::File>::iterator it = files.begin(), end = files.end();
+
+    for (; it != end; it++) {
+        Poco::File& f = *it;
+        Poco::Path p(f.path());
+        _check_sample_cloud(p.toString());
+    }
+}
+
+bool lidar_exec::_check_sample_cloud(const std::string &cloudname) {
 	bool ret = false;
-	if (!_read_cloud()) {
+    std::cout << "Processing " << cloudname << std::endl;
+    if (!_read_cloud(cloudname)) {
 		return ret;
 	}
 
@@ -945,8 +1023,11 @@ bool lidar_exec::_check_sample_cloud() {
 			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(x, y, z));
 			point->name(set["NAME"].toString());
 
-			point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT
-			_controlVal.push_back(point);
+            Lidar::ControlPoint::Status csp = point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT
+            if ( csp == Lidar::ControlPoint::VALID ) {
+                std::cout << "Z dif " << point->zDiff() << std::endl;
+                _controlVal.push_back(point);
+            }
 
 			set.next();
 		}
@@ -973,20 +1054,22 @@ CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {
 	return set;
 }
 
-bool lidar_exec::_read_cloud() {
-	CV::Util::Spatialite::Statement stm(cnn);
+bool lidar_exec::_read_cloud(const std::string& samplePath) {
+//	CV::Util::Spatialite::Statement stm(cnn);
 
-    std::stringstream query;
-    query << "select URI from CLOUD_SAMPLE";
-    stm.prepare(query.str());
-    CV::Util::Spatialite::Recordset set = stm.recordset();
-    if (set.eof()) {
-        return false;
-    }
-	std::string samplePath = Path(_proj_dir, set[0].toString()).toString();
+//    std::stringstream query;
+//    query << "select FOLDER from CLOUD_SAMPLE";
+//    stm.prepare(query.str());
+//    CV::Util::Spatialite::Recordset set = stm.recordset();
+//    if (set.eof()) {
+//        return false;
+//    }
+//	std::string samplePath = Path(_proj_dir, set[0].toString()).toString();
+//    std::cout << "TEST  " << samplePath << std::endl;
 
 	_sampleCloudFactory.assign(new DSM_Factory);
 	_sampleCloudFactory->SetEcho(MyLas::last_pulse);
+    _sampleCloudFactory->SetAngle(LID_ANG_SCAN);
 	if (!_sampleCloudFactory->Open(samplePath, false)) {
 		return false;
 	}
@@ -1006,6 +1089,7 @@ bool lidar_exec::_read_dem() {
     _dem_name = Path(_proj_dir, set[0].toString()).toString();
 
 	_df = new DSM_Factory;
+    _df->SetAngle( LID_ANG_SCAN );
 	if ( !_df->Open(_dem_name, false) )
 		return false;
 	return true;
@@ -1043,6 +1127,7 @@ void lidar_exec::_process_strips()
 	_createStripTable();
     std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 
+    std::cout << "populating table " << table << std::endl;
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_DENSITY, Z_STRIP_LENGTH, geom) \
 		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
@@ -1084,8 +1169,10 @@ void lidar_exec::_process_strips()
 		axis->stripName(strip);
 		axis->missionName(mission);
 		axis->id(rs[0].toInt());
+        std::cout << "STRIP: " << strip << " MISSION " << mission << std::endl;
 
 		if (!axis->isValid()) { 
+            std::cout << "Asse di volo non valido\n";
 			throw std::runtime_error("Asse di volo non valido");
 		}
 		
@@ -1095,6 +1182,7 @@ void lidar_exec::_process_strips()
 			lidar = _lidarsList[mission];
 			
 			if (lidar.isNull()) {
+                std::cout << "Valori lidar non validi\n";
 				throw std::runtime_error("Valori lidar non validi");
 			} 
 
@@ -1102,24 +1190,42 @@ void lidar_exec::_process_strips()
 			OGRGeometry* g = gp_;
 			OGRLinearRing* gp = reinterpret_cast<OGRLinearRing*>(g);
 			gp->setCoordinateDimension(2);
-			
-			DPOINT p1, p2, p3, p4;
-			
-            std::string path = _findLasByName(strip);
-			DSM_Factory fact;
-			fact.Open(path, false, false);
-			DSM* dsm = fact.GetDsm();
-			dsm->getBB(p1, p2, p3, p4);
 
-			gp->addPoint(p1.x, p1.y);
-			gp->addPoint(p2.x, p2.y);
-			gp->addPoint(p3.x, p3.y);
-			gp->addPoint(p4.x, p4.y);
+            std::map<std::string, FootPrint>::iterator st = strpFt.find(strip);
+            if ( st == strpFt.end() )
+                throw std::runtime_error("Strip data not found");
+			
+//			DPOINT p1, p2, p3, p4;
+			
+//            std::string path = _findLasByName(strip);
+//			DSM_Factory fact;
+//            fact.SetAngle(LID_ANG_SCAN);
+//			fact.Open(path, false, false);
+//			DSM* dsm = fact.GetDsm();
+//            std::cout << "!!! proc strip punti letti " << dsm->Npt() << " da " << path << std::endl;
+//			dsm->getBB(p1, p2, p3, p4);
+
+//            std::cout << "   v1 " << p1.x << " " << p1.y << std::endl;
+//            std::cout << "   v2 " << p2.x << " " << p2.y << std::endl;
+//            std::cout << "   v3 " << p3.x << " " << p3.y << std::endl;
+//            std::cout << "   v4 " << p4.x << " " << p4.y << std::endl;
+
+//			gp->addPoint(p1.x, p1.y);
+//			gp->addPoint(p2.x, p2.y);
+//			gp->addPoint(p3.x, p3.y);
+//			gp->addPoint(p4.x, p4.y);
+            FootPrint& ft = st->second;
+
+            gp->addPoint(ft.BB[0].x, ft.BB[0].y);
+            gp->addPoint(ft.BB[1].x, ft.BB[1].y);
+            gp->addPoint(ft.BB[2].x, ft.BB[2].y);
+            gp->addPoint(ft.BB[3].x, ft.BB[3].y);
 			
 			gp->closeRings();
 			stripPtr->fromLineRing(axis, gp);
-			stripPtr->computeDensity(dsm);
-			fact.Close();
+
+            stripPtr->computeDensity(ft.Npoints);
+            //fact.Close();
 
 		} else {
 			lidar = _lidar; 
@@ -1153,6 +1259,7 @@ void lidar_exec::_process_strips()
 		stm.reset();
 		rs.next();
 	}
+    std::cout << " fine strip \n";
 	cnn.commit_transaction();
 }
 
@@ -1490,20 +1597,36 @@ void lidar_exec::_get_overlaps(const std::map<std::string, Lidar::Strip::Ptr>& r
 		for (; it != end; it++) {
 			const Lidar::Strip::Ptr source = (*it).second;
 			std::map<std::string, Lidar::Strip::Ptr>::const_iterator next = it;
+
+            int rmax = -100;
+            std::string rname;
 			for (next++; next != end; next++) {
 				const Lidar::Strip::Ptr target = (*next).second;
 				if (source->isParallel(target) && source->intersect(target)) {
 					int dt = source->intersectionPercentage(target);
-					if (dt) {
-						stm[1] = ++k;
-						stm[2] = source->name();
-						stm[3] = target->name();
-						stm[4] = dt;
-						stm.execute();
-						stm.reset();
-					}
+                    if ( dt > rmax) {
+                        rmax = dt;
+                        rname = target->name();
+                    }
+//					if (dt) {
+//						stm[1] = ++k;
+//						stm[2] = source->name();
+//						stm[3] = target->name();
+//						stm[4] = dt;
+//						stm.execute();
+//						stm.reset();
+//					}
 				}
 			}
+            if (rmax < 0 ) {
+                stm[1] = ++k;
+                stm[2] = source->name();
+                stm[3] = rname;
+                stm[4] = rmax;
+                stm.execute();
+                stm.reset();
+            }
+
 		}
 	} catch (const std::exception& ex) {
 		cnn.rollback_transaction();

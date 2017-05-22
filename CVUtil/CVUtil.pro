@@ -10,10 +10,10 @@ TARGET = CVUtil
 TEMPLATE = lib
 CONFIG += staticlib
 
-INCLUDEPATH += ../include
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 
 win32 {
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include
+        INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 }
 macx {
         INCLUDEPATH += ../../SwTools/include
@@ -32,11 +32,11 @@ HEADERS += \
     cvspatialite.h \
     ogrgeomptr.h
 
-DESTDIR = ../lib
+DESTDIR = $$_PRO_FILE_PWD_/../lib
 
-incl.path = ../include/CVUtil
-incl.files += ../CVUtil/cvspatialite.h
-incl.files += ../CVUtil/ogrgeomptr.h
+incl.path = $$_PRO_FILE_PWD_/../include/CVUtil
+incl.files += $$_PRO_FILE_PWD/_../CVUtil/cvspatialite.h
+incl.files += $$_PRO_FILE_PWD_/../CVUtil/ogrgeomptr.h
 INSTALLS += incl
 
 LIBS += -lPocoFoundation -lspatialite -lsqlite3

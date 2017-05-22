@@ -6,7 +6,7 @@
 using namespace CV::Util::Geometry;
 using namespace CV::Util::Spatialite;
 
-char* get_typestring(const OGRGeomPtr geom) 
+char const * get_typestring(const OGRGeomPtr geom)
 {
 	OGRwkbGeometryType ty = geom->getGeometryType();
 	switch ( ty ) {

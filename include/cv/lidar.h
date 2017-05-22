@@ -83,6 +83,8 @@ public:
 
 	const DPOINT& first() const { return _first; }
 	const DPOINT& last() const { return _last; }
+    const std::vector<DPOINT>& BB() const  { return _bb; }
+    long npoints() const {return _npoints;}
 
 	inline OGRLineString* toLineString() {
 		OGRGeometry* og = _geom;
@@ -115,11 +117,13 @@ public:
 
 	double averageSpeed() const;
 
-	bool fromCloud(const std::string& las); 
+    bool fromCloud(const std::string& las, double angle = 0.);
 
 private:
 	DPOINT _first;
 	DPOINT _last;
+    std::vector<DPOINT> _bb;
+    long _npoints;
 	
 	double _qt;
 	unsigned int _id;
@@ -201,7 +205,8 @@ public:
 	bool hasAxis() const { return !_axis.isNull(); }
 
 	double computeDensity(Sensor::Ptr, DSM* dsm);
-	double computeDensity(DSM* dsm);
+    double computeDensity(DSM* dsm);
+    double computeDensity(long np);
 	double density() const { return _density; }
 	void density(double d) { _density = d; }
 

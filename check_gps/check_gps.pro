@@ -3,22 +3,28 @@
 # Project created by QtCreator 2013-10-10T17:26:24
 #
 #-------------------------------------------------
-CONFIG -= qt
+TEMPLATE = app
 CONFIG += console
-QT       -= core gui
-TARGET = check_gps
-#TEMPLATE = app
+CONFIG -= app_bundle
+CONFIG -= qt
+
+#QT       -= core gui
+#TARGET = check_gps
+
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
 
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"../../ControlloVoliRT_Tools/lib" -L"../lib"
+        LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
 
         CONFIG(debug, debug|release) {
-                LIBS += -lPocoUtild -lPocoZipd -lphoto_utild -lZipLibd -lrtklibd -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
+                LIBS += -lPocoFoundation64d -lPocoUtil64d lPocoXML64d -lPocoZip64d -lphoto_utild -lZipLibd -lrtklibd -lspatialite4 -lsqlite3_i -lCVUtild -lgdald_i
                 TARGET = $$join(TARGET,,,d)
         }
         else {
-                LIBS += -lPocoUtil -lPocoZip -lrtklib -lphoto_util -lziplib -lspatialite4 -lsqlite3_i -lCVUtil -lgdal_i
+                LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lZipLib -lphoto_util -lrtklib -lspatialite_i -lsqlite3_i -lCVUtil -lgdal_i -lproj_i -lgeos_c
         }
 }
 
@@ -33,7 +39,7 @@ unix: {
     }
 }
 
-INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include ../include
 
 
 DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
@@ -47,4 +53,4 @@ HEADERS +=\
     check_gps.h \
     gps.h
 
-DESTDIR = ../bin
+DESTDIR = $$_PRO_FILE_PWD_/../bin

@@ -12,15 +12,8 @@ namespace GUI {
 class ShapeViewer : public QGraphicsView {
 	Q_OBJECT
 public: 
-	ShapeViewer(QWidget* p) : QGraphicsView(p) , _scene(new QGraphicsScene(this)), _item(new QGraphicsPixmapItem) {
-		 setAcceptDrops(false);
-
-		_scene->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
-		_scene->addItem(_item);
-
-		setScene(_scene);
-		setDragMode(ScrollHandDrag);
-	}
+        ShapeViewer(QWidget* p);
+signals:
 
 public slots:
 	void loadFromShp(const QString& path);

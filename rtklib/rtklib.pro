@@ -9,7 +9,8 @@ QT       -= core gui
 TARGET = rtklib
 TEMPLATE = lib
 
-win32:LIBS += -L"C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Lib" -lWs2_32 -lwinmm
+#win32:LIBS += -L"C:/Program Files (x86)/Microsoft SDKs/Windows/v7.0A/Lib" -lWs2_32 -lwinmm
+win32:LIBS += -lWs2_32 -lwinmm
 
 CONFIG(debug, debug|release) {
         TARGET = $$join(TARGET,,,d)
@@ -18,7 +19,7 @@ CONFIG(debug, debug|release) {
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
         QMAKE_CFLAGS -= -Zc:wchar_t-
-        INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+        INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
 }
 macx {
         INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
@@ -65,8 +66,8 @@ SOURCES += \
 HEADERS +=\
     rtklib.h
 
-DESTDIR = ../lib
+DESTDIR = $$_PRO_FILE_PWD_/../lib
 
-incl.path = ../include/rtklib
-incl.files = ../rtklib/rtklib.h
+incl.path = $$_PRO_FILE_PWD_/../include/rtklib
+incl.files = $$_PRO_FILE_PWD_/../rtklib/rtklib.h
 INSTALLS += incl

@@ -493,6 +493,7 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 		std::string path = _fileFromCorner(folder, "xyzic", corner);
 		DSM_Factory f;
 		f.SetEcho(MyLas::single_pulse);
+        //f.SetAngle(LID_ANG_SCAN / 2.);
 
 		File_Mask mask(5, 1, 2, 3, 1, 1);
 		f.SetMask(mask);

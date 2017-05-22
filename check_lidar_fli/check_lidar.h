@@ -55,6 +55,12 @@ struct AxisVertex {
 	AxisVertex() : dist(0.0f) {}
 };
 
+class FootPrint {
+public:
+    std::string name;
+    std::vector<DPOINT> BB;
+    long Npoints;
+};
 
 class lidar_exec {
 public:
@@ -75,6 +81,7 @@ private:
 	void _buildAxis();
 	void _process_strips();
 	void _traverseFolder(const Poco::Path&, CV::Util::Spatialite::Statement&);
+    void _addstrip(const Poco::Path& p, CV::Util::Spatialite::Statement& stm);
 	void _createStripTable(); 
 
 	void _process_block();
@@ -93,8 +100,9 @@ private:
 	bool _read_dem(void);
 
 	CV::Util::Spatialite::Recordset _read_control_points();
-	bool _check_sample_cloud();
-	bool _read_cloud();
+    bool _check_sample_cloud(const std::string& cloudname);
+    bool _check_sample_cloud_folder();
+    bool _read_cloud(const std::string &samplePath);
 
 	std::string _get_strip(const std::string& nome);
 	bool _check_differences(void);
@@ -150,6 +158,8 @@ private:
 	std::string _quotaCol, _stripNameCol;
 
 	std::string _cloudsFolder;
+
+    std::map<std::string, FootPrint> strpFt;
 };
 
 class check_lidar: public Poco::Util::Application {
