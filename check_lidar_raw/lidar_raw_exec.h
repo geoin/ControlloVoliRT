@@ -10,7 +10,7 @@
 
 class lidar_raw_exec {
 public:
-	lidar_raw_exec() : LID_TOL_Z(0.0), LID_TOL_A(0.0),  INTERSECTION_DENSITY(5.0/100.0) {}
+    lidar_raw_exec() : LID_TOL_Z(0.0), LID_TOL_A(0.0),  INTERSECTION_DENSITY(5.0/100.0), LID_ANG_SCAN(0) {}
 
     void set_proj_dir(const std::string&);
 	void setIntersectionDensity(int perc) { INTERSECTION_DENSITY = perc/100.0f; }
@@ -36,6 +36,8 @@ private:
 	void _traverseFolder(const Poco::Path& fPath);
 	bool _initControlPoints();
 	bool _initStripsLayer();
+    std::string _get_overlapped_cloud(const std::string& cloud);
+    CV::Lidar::CloudStrip::Ptr _get_strip_by_name(const std::string& cloud);
 
 	bool _checkDensity();
 	bool _checkIntersection();
@@ -69,6 +71,7 @@ private:
 
 	double LID_TOL_Z, LID_TOL_A;
 	double INTERSECTION_DENSITY;
+    double LID_ANG_SCAN;
 };
 
 #endif

@@ -702,17 +702,18 @@ public:
 
             //_normalize(Org_Nod++);
 		}
+        if ( Org_Nod == 0 )
+            return false;
+        node.resize(Org_Nod);
+        _npt = Org_Nod;
+        _open = true;
+
+        std::cout << " !!! Read " << Org_Nod << " punti\n";
         _set_off_scale();
         for (unsigned int i = 0; i < Org_Nod; i++)
             _normalize(i);
 
 		_ie.compute();
-
-		if ( Org_Nod == 0 )
-			return false;
-		node.resize(Org_Nod);
-		_npt = Org_Nod;
-		_open = true;
 
 		if (!tria) {
 			return true;
@@ -722,6 +723,7 @@ public:
 		if (!retval) {
 			Release();
 		}
+        std::cout << " TRIANGULATE " << _ntriangle << std::endl;
 		return retval;
 	}
 

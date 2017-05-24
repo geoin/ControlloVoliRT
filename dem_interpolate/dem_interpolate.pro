@@ -42,7 +42,7 @@ DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS NOMINMAX
 SOURCES += \
     geom.cpp \
     grid.cpp \
-    triangle.c \
+    triangle.cpp \
     $$_PRO_FILE_PWD_/../common/parser.cpp
 
 HEADERS +=\

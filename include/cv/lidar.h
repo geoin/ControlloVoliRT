@@ -15,6 +15,8 @@
 #include "gps.h"
 
 #include <limits>
+#include <iostream>
+
 
 #define CV_DISABLE_COPY(T)  \
 	T (const T&);			\
@@ -282,6 +284,9 @@ public:
 	void name(const std::string& n) { _name = n; }
 	const std::string& name() const { return _name; }
 
+    void cloud(const std::string& n) { _cloud = n; }
+    const std::string& cloud() const { return _cloud; }
+
     Status zDiffFrom(DSM* dsm);
 	double zDiff() const { 
 		if (_status == UNKNOWN) { throw std::runtime_error("Uninitialized control point"); }
@@ -299,6 +304,7 @@ public:
 private:
 	DPOINT _geom;
 	std::string _name;
+    std::string _cloud;
 	double _quota;
 
 	double _diff;
@@ -311,17 +317,18 @@ public:
 	typedef Poco::SharedPtr<DSM_Factory> DSMPtr;
 
 	CloudStrip(Strip::Ptr p) : _factory(NULL), _strip(p), _density(0.0) {
-		init();
+        init(0.);
 	}
 
 	~CloudStrip() { 
 		release();
 	}
 
-	void init() {
+    void init(double ang) {
 		if (!_factory.get()) {
 			_factory.assign(new DSM_Factory);
-			_factory->SetEcho(MyLas::first_pulse);
+            _factory->SetEcho(MyLas::single_pulse);
+            _factory->SetAngle(ang);
 		}
 	}
 
@@ -361,12 +368,14 @@ private:
 
 class DSMHandler {
 public:
-	DSMHandler(CloudStrip::Ptr strip, bool tria = true) {
+    DSMHandler(CloudStrip::Ptr strip, double ang, bool tria = true) {
 		_strip = strip;
 
-		strip->init();
+        strip->init(ang);
+        std::cout << "...opening " << std::endl;
 		_dsm = strip->open(tria);
 		_d = _dsm->GetDsm();
+        std::cout << "...read " << _d->Npt() << std::endl;
 	}
 
 	~DSMHandler() { 

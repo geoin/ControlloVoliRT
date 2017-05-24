@@ -39,6 +39,7 @@
 #include "common/util.h"
 
 #include <iostream>
+#include <iomanip>
 
 #include "cv_version.h"
 #include <cmath>
@@ -639,8 +640,19 @@ void lidar_exec::_control_points_report() {
     tab->add_item("title")->append("Punti di controllo");
 
     Poco::XML::AttributesImpl attr;
-    attr.addAttribute("", "", "cols", "", "2");
+    attr.addAttribute("", "", "cols", "", "3");
     tab = tab->add_item("tgroup", attr);
+
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "300*");
+    tab->add_item("colspec", attr);
+     attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "500*");
+    tab->add_item("colspec", attr);
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "200*");
+    tab->add_item("colspec", attr);
+
 
     Doc_Item thead = tab->add_item("thead");
     Doc_Item row = thead->add_item("row");
@@ -648,6 +660,7 @@ void lidar_exec::_control_points_report() {
     attr.clear();
     attr.addAttribute("", "", "align", "", "center");
     row->add_item("entry", attr)->append("Punto di controllo");
+    row->add_item("entry", attr)->append("Nuvola");
     row->add_item("entry", attr)->append("Z diff");
     Doc_Item tbody = tab->add_item("tbody");
 
@@ -662,9 +675,11 @@ void lidar_exec::_control_points_report() {
 	for (; it != end; it++) {
 		CV::Lidar::ControlPoint::Ptr point = *it;
 		const std::string& name = point->name();
+        const std::string& cloud = point->cloud();
 
 		row = tbody->add_item("row");
         row->add_item("entry", attr)->append(name);
+        row->add_item("entry", attr)->append(cloud);
 		
 		if (point->isValid()) {
 			double diff = point->zDiff();
@@ -1000,8 +1015,11 @@ bool lidar_exec::_check_sample_cloud_folder() {
     for (; it != end; it++) {
         Poco::File& f = *it;
         Poco::Path p(f.path());
-        _check_sample_cloud(p.toString());
+
+        if (Poco::toLower(p.getExtension()) == "las" )
+            _check_sample_cloud(p.toString());
     }
+    std::cout << "Layer:CONTROL_POINTS" << std::endl;
 }
 
 bool lidar_exec::_check_sample_cloud(const std::string &cloudname) {
@@ -1010,6 +1028,7 @@ bool lidar_exec::_check_sample_cloud(const std::string &cloudname) {
     if (!_read_cloud(cloudname)) {
 		return ret;
 	}
+    Poco::Path pth(cloudname);
 
 	try {
 		DSM* dsm = _sampleCloudFactory->GetDsm();
@@ -1021,11 +1040,14 @@ bool lidar_exec::_check_sample_cloud(const std::string &cloudname) {
 			double z = set["Z"].toDouble();
 
 			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(x, y, z));
-			point->name(set["NAME"].toString());
+            point->name(set["NAME"].toString());
+            point->cloud(pth.getBaseName());
 
             Lidar::ControlPoint::Status csp = point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT
             if ( csp == Lidar::ControlPoint::VALID ) {
-                std::cout << "Z dif " << point->zDiff() << std::endl;
+                std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 ) <<
+                             point->name() << " " << point->point().x <<  " " <<
+                             point->point().y << " " << point->zDiff() << std::endl;
                 _controlVal.push_back(point);
             }
 
@@ -1042,7 +1064,7 @@ bool lidar_exec::_check_sample_cloud(const std::string &cloudname) {
 }
 
 CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {
-	std::cout << "Layer:CONTROL_POINTS" << std::endl;
+//	std::cout << "Layer:CONTROL_POINTS" << std::endl;
 
 	CV::Util::Spatialite::Statement stm(cnn);
 
@@ -1618,7 +1640,7 @@ void lidar_exec::_get_overlaps(const std::map<std::string, Lidar::Strip::Ptr>& r
 //					}
 				}
 			}
-            if (rmax < 0 ) {
+            if (rmax > 0 ) {
                 stm[1] = ++k;
                 stm[2] = source->name();
                 stm[3] = rname;

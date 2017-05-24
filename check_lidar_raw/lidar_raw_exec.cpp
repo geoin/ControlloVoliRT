@@ -52,6 +52,7 @@ bool lidar_raw_exec::readReference() {
 		pConf = new XMLConfiguration(ref_file.toString());
 		LID_TOL_Z = pConf->getDouble(get_key("LID_TOL_Z"));
 		LID_TOL_A = pConf->getDouble(get_key("LID_TOL_A"));
+        LID_ANG_SCAN = pConf->getDouble(get_key("LID_ANG_SCAN"));
 		return true;
 	} catch (const std::exception& e) {
 		Error("Reading reference values..", e);
@@ -276,22 +277,61 @@ bool lidar_raw_exec::_checkDensity() {
 	return ret;
 }
 
+std::string lidar_raw_exec::_get_overlapped_cloud(const std::string& cloud) {
+    Poco::Path pth(cloud);
+    std::string base = pth.getBaseName();
+    std::cout << "base " << base << std::endl;
+
+    CV::Util::Spatialite::Statement stm(cnn);
+
+    std::stringstream query;
+    query << "SELECT Z_STRIP2 FROM Z_STR_OVLV WHERE Z_STRIP1='" << base <<"'";
+    stm.prepare(query.str());
+
+    CV::Util::Spatialite::Recordset set = stm.recordset();
+
+    std::string ovl_strip;
+    if (!set.eof()) {
+        ovl_strip = set["Z_STRIP2"];
+    }
+    std::cout << "ovl " << ovl_strip << std::endl;
+    return ovl_strip;
+}
+
+Lidar::CloudStrip::Ptr lidar_raw_exec::_get_strip_by_name(const std::string& cloud) {
+    std::vector<Lidar::CloudStrip::Ptr>::iterator it = _strips.begin();
+    std::vector<Lidar::CloudStrip::Ptr>::iterator end = _strips.end();
+
+    Lidar::CloudStrip::Ptr strp = nullptr;
+    for (; it != end && strp.get() == nullptr; it++) {
+        Lidar::CloudStrip::Ptr tmp = *it;
+        if ( tmp->name() == cloud )
+            strp = *it;
+    }
+    return strp;
+}
+
 bool lidar_raw_exec::_checkIntersection() {
 	std::vector<Lidar::CloudStrip::Ptr>::iterator it = _strips.begin();
 	std::vector<Lidar::CloudStrip::Ptr>::iterator end = _strips.end();
 	
 	for (; it != end; it++) {
 		Lidar::CloudStrip::Ptr cloud = *it;
-		
-		std::cout << " * Analisi nuvola " << cloud->name() << std::endl;
+        std::cout << " * Analisi nuvola " << cloud->name() << std::endl;
 
-		Lidar::DSMHandler srcDsm(cloud);
+        std::string ovl = _get_overlapped_cloud(cloud->name());
+        if ( ovl.empty() )
+            continue;
+		
+        Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN);
 		_checkControlPoints(cloud->name(), srcDsm);
 
 		Lidar::Strip::Ptr source = cloud->strip();
-		std::vector<Lidar::CloudStrip::Ptr>::const_iterator next = it;
-		for (next++; next != end; next++) {
-			Lidar::CloudStrip::Ptr cloudTarget = *next;
+//		std::vector<Lidar::CloudStrip::Ptr>::const_iterator next = it;
+//		for (next++; next != end; next++) {
+            Lidar::CloudStrip::Ptr cloudTarget = _get_strip_by_name(ovl); //*next;
+            if ( cloudTarget.get() == nullptr )
+                continue;
 			Lidar::Strip::Ptr target = cloudTarget->strip();
 			if (source->isParallel(target) && source->intersect(target)) {
 				Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
@@ -331,13 +371,17 @@ bool lidar_raw_exec::_checkIntersection() {
 						}
 					}
 				}
+                std::cout << "Nuvola 1 " << cloud->name() << " Nuvola 2 " << cloudTarget->name() << std::endl;
+                std::cout << "  Analisi di "  << intersectionGrid.size() << " punti\n";
 
 				std::vector<double> zSrc; 
 				_getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
+                std::cout << "ZSRC " << zSrc.size() << std::endl;
 				
 				std::vector<double> zTrg; 
-				Lidar::DSMHandler targetDsm(cloudTarget);
-				_getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
+                Lidar::DSMHandler targetDsm(cloudTarget, LID_ANG_SCAN);
+                _getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
+                std::cout << "zTrg " << zTrg.size() << std::endl;
 				targetDsm.release();
 
 				std::vector<double> diff; 
@@ -352,6 +396,7 @@ bool lidar_raw_exec::_checkIntersection() {
 						}
 					}
 				}
+                std::cout << "diff: " <<diff.size() << std::endl;
 
 				intersectionGrid = std::vector<DPOINT>();
 				zSrc = std::vector<double>(); 
@@ -364,8 +409,8 @@ bool lidar_raw_exec::_checkIntersection() {
 					_statList.insert(std::pair<std::string, Stats>(source->name(), s));
 				}
 			}
-		}
-		srcDsm.release();
+        //}
+        srcDsm.release();
 	}
 	return true;
 }
@@ -424,7 +469,7 @@ bool lidar_raw_exec::report() {
 
 		std::string title ="Collaudo dati grezzi";
 
-		Poco::Path doc_file(_proj_dir, "*");
+        Poco::Path doc_file(_proj_dir, "*");
 		doc_file.setFileName("check_lidar_raw.xml");
 
 		init_document(_dbook, doc_file.toString(), title, _note);
@@ -514,6 +559,19 @@ void lidar_raw_exec::_strip_overlaps_report() {
     Poco::XML::AttributesImpl attr;
     attr.addAttribute("", "", "cols", "", "4");
     tab = tab->add_item("tgroup", attr);
+
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "300*");
+    tab->add_item("colspec", attr);
+     attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "300*");
+    tab->add_item("colspec", attr);
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "150*");
+    tab->add_item("colspec", attr);
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "250*");
+    tab->add_item("colspec", attr);
 
     Doc_Item thead = tab->add_item("thead");
     Doc_Item row = thead->add_item("row");
