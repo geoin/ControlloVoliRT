@@ -13,6 +13,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <iostream>
 
 #include "geom.h"
 #include "exports.h"
@@ -347,6 +348,7 @@ public:
 	}
 	void SetAngle( int angle ) {
 		_lidar_angle = angle;
+        //std::cout << "FAC " << _lidar_angle << std::endl;
 	}
 	void SetMask(const File_Mask& fma) {
 		fm = fma;

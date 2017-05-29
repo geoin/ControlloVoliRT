@@ -600,7 +600,7 @@ bool DSM_Factory::Open(const std::string nome, bool verbose, bool tria)
 		_dsm->SetEcho(_lidar_echo);
 		_dsm->SetMask(fm);
         _dsm->SetAngle( _lidar_angle / 2 );
-        //std::cout << "!!!!! Reading with angle of: " << _lidar_angle / 2 << std::endl;
+        std::cout << "!!!!! Reading with angle of: " << _lidar_angle / 2 << " Echo " << _lidar_echo << std::endl;
 
 		return _dsm->Open(nome, verbose, tria);
 	}

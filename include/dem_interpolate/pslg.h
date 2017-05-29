@@ -670,10 +670,6 @@ public:
 		//bool ret = true;
 		Org_Nod = 0;
 
-//		ml.get_min(_xmin, _ymin, _zmin);
-//		ml.get_max(_xmax, _ymax, _zmax);
-//		_set_off_scale();
-
         _xmin = _ymin = _zmin = INF;
         _xmax = _ymax = _zmax = -INF;
 
@@ -682,7 +678,7 @@ public:
         while ( ml.get_next_point(pt) ) {
             if ( !ml.isvalid() )
                 continue;
-			if ( _echo != 0 && !( _echo & ml.get_echo()) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
+            if ( _echo != 0 && ! ( (_echo & ml.get_echo()) != _echo ) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 				continue;
 			if ( _angle != 0 ) {
 				int angle = ml.get_angle();
@@ -699,8 +695,6 @@ public:
             setMax(pt.x, pt.y, pt.z);
 
 			_ie.add(pt.x, pt.y);
-
-            //_normalize(Org_Nod++);
 		}
         if ( Org_Nod == 0 )
             return false;
@@ -708,7 +702,7 @@ public:
         _npt = Org_Nod;
         _open = true;
 
-        std::cout << " !!! Read " << Org_Nod << " punti\n";
+        std::cout << " !!! Read " << Org_Nod << " punti con angolo: " << _angle << std::endl;
         _set_off_scale();
         for (unsigned int i = 0; i < Org_Nod; i++)
             _normalize(i);
@@ -723,7 +717,7 @@ public:
 		if (!retval) {
 			Release();
 		}
-        std::cout << " TRIANGULATE " << _ntriangle << std::endl;
+        //std::cout << " TRIANGULATE " << _ntriangle << std::endl;
 		return retval;
 	}
 

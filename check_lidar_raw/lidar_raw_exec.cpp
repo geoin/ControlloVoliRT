@@ -1,4 +1,5 @@
 #include "lidar_raw_exec.h"
+#include "common/statistics.h"
 
 #include "Poco/File.h"
 #include "Poco/Util/XMLConfiguration.h"
@@ -8,6 +9,7 @@
 #include <numeric>
 #include <math.h>
 #include <cmath>
+#include <iomanip>
 
 #define GEO_DB_NAME "geo.sqlite"
 
@@ -144,6 +146,8 @@ bool lidar_raw_exec::_initControlPoints() {
 		if (set.eof()) {
 			throw std::runtime_error("No data in RAW_CONTROL_POINTS");
 		}
+
+        std::cout << " Reading points\n";
 		
 		while (!set.eof()) {
 			double x = set["X"].toDouble();
@@ -152,6 +156,11 @@ bool lidar_raw_exec::_initControlPoints() {
 
 			Lidar::ControlPoint::Ptr point(new Lidar::ControlPoint(x, y, z));
 			point->name(set["NAME"].toString());
+
+//            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 ) <<
+//                         point->name() << " cloud: " << point->cloud() << " coord: " <<
+//                         point->point().x << " " << point->point().y << " Quota: " << point->quota() << std::endl;
+
 			_controlVal.push_back(point);
 
 			set.next();
@@ -323,7 +332,9 @@ bool lidar_raw_exec::_checkIntersection() {
         if ( ovl.empty() )
             continue;
 		
-        Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN);
+         //std::cout << "ANGLE " << LID_ANG_SCAN << std::endl;
+         Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN);
+
 		_checkControlPoints(cloud->name(), srcDsm);
 
 		Lidar::Strip::Ptr source = cloud->strip();
@@ -420,12 +431,14 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
 	if (pair != _controlInfoList.end()) {
 		return;
 	}
+    std::cout << "Control point " << _controlVal.size() << std::endl;
 
 	_controlInfoList.insert(std::pair< std::string, std::vector<double> > (strip, std::vector<double>()));
 	pair = _controlInfoList.find(strip);
 
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
+    long count = 0;
 	for (; it != end; it++) {
 		CV::Lidar::ControlPoint::Ptr cp = *it;
 
@@ -434,9 +447,15 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
 		if (z == Z_NOVAL || z == Z_OUT) {
 			pair->second.push_back(z);
 		} else {
-			pair->second.push_back(cp->quota() - z);
+            double dz = cp->quota() - z;
+            pair->second.push_back(dz);
+            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 ) <<
+                         cp->name() << " cloud: " << strip << " diff: " << dz << std::endl;
+            count++;
 		}
 	}
+    if (!count )
+        std::cout << "No control points in strip\n";
 }
 
 void lidar_raw_exec::_getIntersectionDiff(CV::Lidar::DSMHandler& dsm, std::vector<DPOINT>& intersectionGrid, std::vector<double>& diff) {
@@ -581,7 +600,7 @@ void lidar_raw_exec::_strip_overlaps_report() {
     row->add_item("entry", attr)->append("Strisciata 1");
     row->add_item("entry", attr)->append("Strisciata 2");
     row->add_item("entry", attr)->append("Media");
-    row->add_item("entry", attr)->append("Deviazione standard");
+    row->add_item("entry", attr)->append("Dev. standard");
     Doc_Item tbody = tab->add_item("tbody");
 
 	
@@ -621,6 +640,8 @@ void lidar_raw_exec::_control_points_report() {
 
 	std::vector<int> missed;
 
+    statistics sts(1);
+
 	for (int i = 0; i < _controlVal.size(); i++) {
 		CV::Lidar::ControlPoint::Ptr point = _controlVal.at(i);
 		const std::string& name = point->name();
@@ -638,6 +659,9 @@ void lidar_raw_exec::_control_points_report() {
 		for (; it != end; it++) {
 			std::string strip = it->first;
 			double diff = it->second.at(i);
+            std::vector<double> vdif;
+            vdif.push_back(diff);
+            sts.add_point(vdif);
 
 			if (diff != Z_OUT && diff != Z_NOVAL) {
 				if (!hasHeader) {
