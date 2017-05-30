@@ -255,8 +255,8 @@ public:
 	}
 	void SetEcho(int echo) {
 		_echo = echo;
-		if ( _echo == 3 )
-			_echo = 4; // per gli echi intermedi
+//		if ( _echo == 3 )
+//			_echo = 4; // per gli echi intermedi
 	}
 	void SetAngle( int angle ) {
 		_angle = angle;
@@ -678,7 +678,7 @@ public:
         while ( ml.get_next_point(pt) ) {
             if ( !ml.isvalid() )
                 continue;
-            if ( _echo != 0 && ! ( (_echo & ml.get_echo()) != _echo ) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
+            if ( _echo != 0 && ( (_echo & ml.get_echo()) != _echo ) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 				continue;
 			if ( _angle != 0 ) {
 				int angle = ml.get_angle();
@@ -702,7 +702,7 @@ public:
         _npt = Org_Nod;
         _open = true;
 
-        std::cout << " !!! Read " << Org_Nod << " punti con angolo: " << _angle << std::endl;
+        std::cout << " !!! Read " << Org_Nod << " punti con angolo: " << _angle << " echo " << _echo << std::endl;
         _set_off_scale();
         for (unsigned int i = 0; i < Org_Nod; i++)
             _normalize(i);

@@ -4,6 +4,7 @@
 #include "Poco/File.h"
 #include "Poco/Util/XMLConfiguration.h"
 #include "Poco/AutoPtr.h"
+#include "Poco/LocalDateTime.h"
 
 #include <sstream>
 #include <numeric>
@@ -61,48 +62,6 @@ bool lidar_raw_exec::readReference() {
 		return false;
 	}
 }
-/*
-bool lidar_raw_exec::_initBlocks() {
-	CV::Util::Spatialite::Statement stm(cnn);
-
-	std::stringstream query;
-	query << "select AsBinary(GEOM) FROM BLOCKV";
-	stm.prepare(query.str());
-	CV::Util::Spatialite::Recordset set = stm.recordset();
-	if (set.eof()) {
-		ERROR("Blocco non presente");
-		return false;
-	}
-	
-	Blob b = set[0].toBlob();
-	CV::Util::Geometry::OGRGeomPtr geom = b;
-	_block.assign(new CV::Lidar::Block(geom));
-	
-	std::vector<CV::Util::Geometry::OGRGeomPtr> parts;
-	_block->split(parts);
-
-	std::vector<CV::Util::Geometry::OGRGeomPtr>::iterator it = parts.begin();
-	std::vector<CV::Util::Geometry::OGRGeomPtr>::iterator end = parts.end();
-	
-	for (; it != end; it++) {
-		OGREnvelope env;
-		(*it)->getEnvelope(&env);
-
-		OGRLinearRing* ls = static_cast<OGRLinearRing*>(OGRGeometryFactory::createGeometry(wkbLinearRing));
-		ls->addPoint(env.MinX, env.MinY);
-		ls->addPoint(env.MaxX, env.MinY);
-		ls->addPoint(env.MaxX, env.MaxY);
-		ls->addPoint(env.MinX, env.MaxY);
-		ls->closeRings();
-
-		OGRPolygon* pol = static_cast<OGRPolygon*>(OGRGeometryFactory::createGeometry(wkbPolygon));
-		CV::Util::Geometry::OGRGeomPtr polPtr(pol);
-
-		pol->addRingDirectly(ls);
-	}
-
-	return true;
-}*/
 
 bool lidar_raw_exec::init() {
     std::string str;
@@ -124,7 +83,13 @@ bool lidar_raw_exec::init() {
 
 bool lidar_raw_exec::run() {
 	try {
-		_checkIntersection();
+        Poco::LocalDateTime dt;
+        std::cout << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
+
+        _checkIntersection();
+
+        Poco::LocalDateTime dte;
+        std::cout << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute();
 			
 		return true;
 	} catch (const std::exception& e) {
@@ -324,7 +289,11 @@ bool lidar_raw_exec::_checkIntersection() {
 	std::vector<Lidar::CloudStrip::Ptr>::iterator it = _strips.begin();
 	std::vector<Lidar::CloudStrip::Ptr>::iterator end = _strips.end();
 	
+    int ccc = 0;
 	for (; it != end; it++) {
+        ++ccc;
+        if ( ccc > 2)
+            break;
 		Lidar::CloudStrip::Ptr cloud = *it;
         std::cout << " * Analisi nuvola " << cloud->name() << std::endl;
 
@@ -338,89 +307,87 @@ bool lidar_raw_exec::_checkIntersection() {
 		_checkControlPoints(cloud->name(), srcDsm);
 
 		Lidar::Strip::Ptr source = cloud->strip();
-//		std::vector<Lidar::CloudStrip::Ptr>::const_iterator next = it;
-//		for (next++; next != end; next++) {
-            Lidar::CloudStrip::Ptr cloudTarget = _get_strip_by_name(ovl); //*next;
-            if ( cloudTarget.get() == nullptr )
-                continue;
-			Lidar::Strip::Ptr target = cloudTarget->strip();
-			if (source->isParallel(target) && source->intersect(target)) {
-				Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
-				double a = 0.0, b = 0.0, theta = 0.0;
-				intersection->getAxisFromGeom(a, b, theta);
-				intersection->toBuffer(-b/4.0);
 
-				double v[2] = { std::cos(theta), std::sin(theta) };
-				double vn[2] = { -std::sin(theta), std::cos(theta) };
+        Lidar::CloudStrip::Ptr cloudTarget = _get_strip_by_name(ovl);
+        if ( cloudTarget.get() == nullptr )
+            continue;
+        Lidar::Strip::Ptr target = cloudTarget->strip();
+        if (source->isParallel(target) && source->intersect(target)) {
+            Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
+            double a = 0.0, b = 0.0, theta = 0.0;
+            intersection->getAxisFromGeom(a, b, theta);
+            intersection->toBuffer(-b/4.0);
 
-				double densityS = source->density(), densityT = target->density();
-				OGRPolygon* intersectionPol = intersection->toPolygon();
+            double v[2] = { std::cos(theta), std::sin(theta) };
+            double vn[2] = { -std::sin(theta), std::cos(theta) };
 
-				CV::Util::Geometry::OGRGeomPtr ptr = OGRGeometryFactory::createGeometry(wkbPoint);
-				OGRGeometry* cen_ = ptr;
-				OGRPoint* center = reinterpret_cast<OGRPoint*>(cen_);
-				intersectionPol->Centroid(center);
-				
-				double area = intersectionPol->get_Area();
-				double np = area * std::max(densityS, densityT) * INTERSECTION_DENSITY;
+            double densityS = source->density(), densityT = target->density();
+            OGRPolygon* intersectionPol = intersection->toPolygon();
 
-				double ny = std::sqrt((b/a) * np);
-				double nx = (a/b) * ny;
+            CV::Util::Geometry::OGRGeomPtr ptr = OGRGeometryFactory::createGeometry(wkbPoint);
+            OGRGeometry* cen_ = ptr;
+            OGRPoint* center = reinterpret_cast<OGRPoint*>(cen_);
+            intersectionPol->Centroid(center);
 
-				double stepX = a/nx, stepY = b/ny;
+            double area = intersectionPol->get_Area();
+            double np = area * std::max(densityS, densityT) * INTERSECTION_DENSITY;
 
-				std::vector<DPOINT> intersectionGrid; 
-				intersectionGrid.reserve(np);
+            double ny = std::sqrt((b/a) * np);
+            double nx = (a/b) * ny;
 
-				for (double i = -nx/2; i <= nx/2; i++) {
-					for (double j = -ny/2; j <= (ny/2); j++) {
-						double xi = center->getX() + j*stepY*vn[0] + i*stepX*v[0];
-						double yi = center->getY() + j*stepY*vn[1] + i*stepX*v[1];
+            double stepX = a/nx, stepY = b/ny;
 
-						if (intersection->contains(xi, yi)) {
-							intersectionGrid.push_back(DPOINT(xi, yi));
-						}
-					}
-				}
-                std::cout << "Nuvola 1 " << cloud->name() << " Nuvola 2 " << cloudTarget->name() << std::endl;
-                std::cout << "  Analisi di "  << intersectionGrid.size() << " punti\n";
+            std::vector<DPOINT> intersectionGrid;
+            intersectionGrid.reserve(np);
 
-				std::vector<double> zSrc; 
-				_getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
-                std::cout << "ZSRC " << zSrc.size() << std::endl;
-				
-				std::vector<double> zTrg; 
-                Lidar::DSMHandler targetDsm(cloudTarget, LID_ANG_SCAN);
-                _getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
-                std::cout << "zTrg " << zTrg.size() << std::endl;
-				targetDsm.release();
+            for (double i = -nx/2; i <= nx/2; i++) {
+                for (double j = -ny/2; j <= (ny/2); j++) {
+                    double xi = center->getX() + j*stepY*vn[0] + i*stepX*v[0];
+                    double yi = center->getY() + j*stepY*vn[1] + i*stepX*v[1];
 
-				std::vector<double> diff; 
+                    if (intersection->contains(xi, yi)) {
+                        intersectionGrid.push_back(DPOINT(xi, yi));
+                    }
+                }
+            }
+            std::cout << "Nuvola 1 " << cloud->name() << " Nuvola 2 " << cloudTarget->name() << std::endl;
+            std::cout << "  Analisi di "  << intersectionGrid.size() << " punti\n";
 
-				for (size_t i = 0; i < intersectionGrid.size(); i++) {
-					double sVal = zSrc.at(i);
-					double tVal = zTrg.at(i);
-					if (sVal != Z_NOVAL && sVal != Z_OUT && tVal != Z_NOVAL && tVal != Z_OUT) {
-						double d = sVal - tVal;
-						if (std::abs(d) < 20) {
-							diff.push_back(d);
-						}
-					}
-				}
-                std::cout << "diff: " <<diff.size() << std::endl;
+            std::vector<double> zSrc;
+            _getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
+            std::cout << "ZSRC " << zSrc.size() << std::endl;
 
-				intersectionGrid = std::vector<DPOINT>();
-				zSrc = std::vector<double>(); 
-				zTrg = std::vector<double>();
-				
-				if (diff.size()) {		
-					Stats s = { target->name(), 0.0, 0.0 };
-					_getStats(diff, s);
+            std::vector<double> zTrg;
+            Lidar::DSMHandler targetDsm(cloudTarget, LID_ANG_SCAN);
+            _getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
+            std::cout << "zTrg " << zTrg.size() << std::endl;
+            targetDsm.release();
 
-					_statList.insert(std::pair<std::string, Stats>(source->name(), s));
-				}
-			}
-        //}
+            std::vector<double> diff;
+
+            for (size_t i = 0; i < intersectionGrid.size(); i++) {
+                double sVal = zSrc.at(i);
+                double tVal = zTrg.at(i);
+                if (sVal != Z_NOVAL && sVal != Z_OUT && tVal != Z_NOVAL && tVal != Z_OUT) {
+                    double d = sVal - tVal;
+                    if (std::abs(d) < 20) {
+                        diff.push_back(d);
+                    }
+                }
+            }
+            std::cout << "diff: " <<diff.size() << std::endl;
+
+            intersectionGrid = std::vector<DPOINT>();
+            zSrc = std::vector<double>();
+            zTrg = std::vector<double>();
+
+            if (diff.size()) {
+                Stats s = { target->name(), 0.0, 0.0 };
+                _getStats(diff, s);
+
+                _statList.insert(std::pair<std::string, Stats>(source->name(), s));
+            }
+        }
         srcDsm.release();
 	}
 	return true;
@@ -516,45 +483,6 @@ bool lidar_raw_exec::report() {
 		return false;
 	}
 }
-/*
-void lidar_raw_exec::_density_report() {
-	Doc_Item sec = _article->add_item("section");
-    sec->add_item("title")->append("Striciate");
-
-	
-    sec->add_item("para")->append("Densita' strisciate");
-
-	Doc_Item tab = sec->add_item("table");
-    tab->add_item("title")->append("Calcolo densita' strisciate");
-
-    Poco::XML::AttributesImpl attr;
-    attr.addAttribute("", "", "cols", "", "2");
-    tab = tab->add_item("tgroup", attr);
-
-    Doc_Item thead = tab->add_item("thead");
-    Doc_Item row = thead->add_item("row");
-
-    attr.clear();
-    attr.addAttribute("", "", "align", "", "center");
-    row->add_item("entry", attr)->append("Strisciata");
-    row->add_item("entry", attr)->append("Densita'");
-    Doc_Item tbody = tab->add_item("tbody");
-
-    Poco::XML::AttributesImpl attrr;
-    attrr.addAttribute("", "", "align", "", "right");
-
-	std::vector<CV::Lidar::CloudStrip::Ptr>::iterator it = _strips.begin();
-	std::vector<CV::Lidar::CloudStrip::Ptr>::iterator end = _strips.end();
-
-	for (; it != end; it++) {
-		const std::string& name = (*it)->name();
-		const double density = (*it)->density();
-
-		row = tbody->add_item("row");
-        row->add_item("entry", attr)->append(name);
-		print_item(row, attrr, density, abs_less_ty, PT_DENSITY);
-	}
-}*/
 
 void lidar_raw_exec::_strip_overlaps_report() {
 	if (_statList.size() == 0) {
@@ -642,6 +570,8 @@ void lidar_raw_exec::_control_points_report() {
 
     statistics sts(1);
 
+    std::cout << " Tot punti " << _controlVal.size() << std::endl;
+
 	for (int i = 0; i < _controlVal.size(); i++) {
 		CV::Lidar::ControlPoint::Ptr point = _controlVal.at(i);
 		const std::string& name = point->name();
@@ -656,12 +586,11 @@ void lidar_raw_exec::_control_points_report() {
 		std::map< std::string, std::vector<double> >::iterator it = _controlInfoList.begin();
 		std::map< std::string, std::vector<double> >::iterator end = _controlInfoList.end();
 
+        //std::cout << "Punto " << name << " motl " << _controlInfoList.size();
+
 		for (; it != end; it++) {
 			std::string strip = it->first;
 			double diff = it->second.at(i);
-            std::vector<double> vdif;
-            vdif.push_back(diff);
-            sts.add_point(vdif);
 
 			if (diff != Z_OUT && diff != Z_NOVAL) {
 				if (!hasHeader) {
@@ -688,12 +617,22 @@ void lidar_raw_exec::_control_points_report() {
 				Doc_Item row = tbody->add_item("row");
 				row->add_item("entry", attr)->append(strip);
 				print_item(row, attrr, diff, abs_less_ty, LID_TOL_A);
+                std::vector<double> vdif;
+                vdif.push_back(diff);
+                sts.add_point(vdif);
 			}
 		}
 		if (!hasHeader) {
 			missed.push_back(i);
 		}
     }
+    std::cout << "sts size " << sts.count() << std::endl;
+    double stdev = sts.st_devS();
+    double vmax = sts.aMaxS();
+    std::stringstream ssd;
+    ssd << std::fixed;
+    ssd << "Deviazione standard " << stdev << " Valore massimo " << vmax;
+    sec->add_item("para")->append(ssd.str());
 
 	if (missed.size()) {
 		sec->add_item("para")->append("Punti di controllo fuori dal blocco");

@@ -55,17 +55,12 @@ bool MyLas::get_next_point(DPOINT& p)
 		p.z = _lasreader->get_z();
 		_echo = 0;
 		if ( _lasreader->point.return_number == 1 )
-			_echo |= 1; // first echo
+            _echo |= first_pulse; // first echo
         if ( _lasreader->point.return_number ==  _lasreader->point.LAS_NUMBER_OF_RETURNS )
-			_echo |= 2; // last echo
+            _echo |= last_pulse; // last echo
         if ( _lasreader->point.return_number > 1 && _lasreader->point.return_number < _lasreader->point.LAS_NUMBER_OF_RETURNS )
             _echo = intermediate_pulse;
 
-//        if ( _echo == 0 )
-//			_echo = 4; // intermediate echo
-//		if (_lasreader->point.LAS_NUMBER_OF_RETURNS == 1) {
-//			_echo |= single_pulse;
-//		}
 		_angle = int( _lasreader->point.scan_angle_rank );
 
 		return true;

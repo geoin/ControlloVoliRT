@@ -148,10 +148,11 @@ double Axis::averageSpeed() const {
 	return speed_MS;
 }
 
-bool Axis::fromCloud(const std::string& las, double ang) {
+bool Axis::fromCloud(const std::string& las, double ang, int echo) {
     // ang angolo su cui filtrare la strip
     DSM_Factory f;
     f.SetAngle(ang);
+    f.SetEcho(echo);
 	if (!f.Open(las, false, false)) {
 		return false;
 	}

@@ -119,7 +119,7 @@ public:
 
 	double averageSpeed() const;
 
-    bool fromCloud(const std::string& las, double angle = 0.);
+    bool fromCloud(const std::string& las, double angle = 0., int echo = 0);
 
 private:
 	DPOINT _first;

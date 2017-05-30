@@ -32,6 +32,7 @@
 #include "Poco/File.h"
 #include "Poco/String.h"
 #include "Poco/SharedPtr.h"
+#include "Poco/LocalDateTime.h"
 #include <fstream>
 #include <sstream>
 #include "gdal/ogr_geometry.h"
@@ -78,7 +79,10 @@ lidar_exec::~lidar_exec()
 
 bool lidar_exec::run()
 {
-	try {
+    Poco::LocalDateTime dt;
+    std::cout << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
+
+    try {
 		CV::Version::print();
 
 		if ( _proj_dir.empty() ) {
@@ -100,7 +104,7 @@ bool lidar_exec::run()
 		_findReferenceColumns();
 
         // TEST
-//        _check_sample_cloud_folder();
+        //_check_sample_cloud_folder();
 
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 		
@@ -168,7 +172,12 @@ bool lidar_exec::run()
 
 		// write the result on the docbook report
 		_dbook.write();
-		std::cout << "Procedura terminata" << std::endl;
+
+
+        Poco::LocalDateTime dte;
+        std::cout << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute();
+
+        std::cout << "Procedura terminata" << std::endl;
 
 		return true;
 
@@ -301,24 +310,6 @@ void lidar_exec::_buildAxis() {
         } else
           _addstrip(p, stm);
 		
-//		if (Poco::toLower(p.getExtension()) == "las") {
-//			std::cout << "Strisciata " << p.getBaseName() << std::endl;
-
-//			Lidar::Axis::Ptr axis(new Lidar::Axis);
-//			axis->stripName(p.getBaseName());
-
-//            bool ret = axis->fromCloud(p.toString(), LID_ANG_SCAN);
-//			if (ret) {
-//                std::cout << "inserisce " << axis->stripName() << std::endl;
-//				stm[1] = axis->stripName();
-
-//				OGRGeomPtr buf = axis->geom();
-//				stm[2].fromBlob(buf);
-
-//				stm.execute();
-//				stm.reset();
-//			}
-//		}
 	}
 	cnn.commit_transaction();
 }
@@ -330,7 +321,7 @@ void lidar_exec::_addstrip(const Poco::Path& p, Statement& stm)
         Lidar::Axis::Ptr axis(new Lidar::Axis);
         axis->stripName(p.getBaseName());
 
-        bool ret = axis->fromCloud(p.toString(), LID_ANG_SCAN);
+        bool ret = axis->fromCloud(p.toString(), LID_ANG_SCAN, MyLas::last_pulse);
         if (ret) {
             FootPrint ft;
             ft.name = axis->stripName();
@@ -339,10 +330,10 @@ void lidar_exec::_addstrip(const Poco::Path& p, Statement& stm)
             strpFt[ft.name] = ft;
             const std::vector<DPOINT>& bb = ft.BB;
             std::cout << "Bounding box\n";
-            std::cout <<  bb[0].x << " " << bb[0].y << "," << std::endl;
-            std::cout <<  bb[1].x << " " << bb[1].y << "," << std::endl;
-            std::cout <<  bb[2].x << " " << bb[2].y << "," << std::endl;
-            std::cout <<  bb[3].x << " " << bb[3].y << std::endl;
+            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 ) << bb[0].x << " " << bb[0].y << "," << std::endl;
+            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 )<<  bb[1].x << " " << bb[1].y << "," << std::endl;
+            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 )<<  bb[2].x << " " << bb[2].y << "," << std::endl;
+            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 )<<  bb[3].x << " " << bb[3].y << std::endl;
 
             std::cout << "Punti filtrati: " << ft.Npoints << std::endl;
 
@@ -369,29 +360,6 @@ void lidar_exec::_traverseFolder(const Poco::Path& fold, Statement& stm) {
 
         _addstrip(p, stm);
 		
-//		if (Poco::toLower(p.getExtension()) == "las") {
-//			std::cout << " * Analisi strisciata " << p.getBaseName() << std::endl;
-
-//			Lidar::Axis::Ptr axis(new Lidar::Axis);
-//			axis->stripName(p.getBaseName());
-
-//            bool ret = axis->fromCloud(p.toString(), LID_ANG_SCAN);
-//			if (ret) {
-//                const std::vector<DPOINT>& bb = axis->BB();
-//                std::cout << "   b1 " << bb[0].x << " " << bb[0].y << std::endl;
-//                std::cout << "   b2 " << bb[1].x << " " << bb[1].y << std::endl;
-//                std::cout << "   b3 " << bb[2].x << " " << bb[2].y << std::endl;
-//                std::cout << "   b4 " << bb[3].x << " " << bb[3].y << std::endl;
-
-//				stm[1] = axis->stripName();
-
-//				OGRGeomPtr buf = axis->geom();
-//				stm[2].fromBlob(buf);
-
-//				stm.execute();
-//				stm.reset();
-//			}
-//		}
 	}
 }
 
@@ -593,6 +561,19 @@ void lidar_exec::_gps_report() {
 	attr.addAttribute("", "", "cols", "", "4");
 	tab = tab->add_item("tgroup", attr);
 
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "400*");
+    tab->add_item("colspec", attr);
+     attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "200*");
+    tab->add_item("colspec", attr);
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "200*");
+    tab->add_item("colspec", attr);
+    attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "200*");
+    tab->add_item("colspec", attr);
+
 	Doc_Item thead = tab->add_item("thead");
 	Doc_Item row = thead->add_item("row");
 
@@ -727,14 +708,16 @@ void lidar_exec::_strips_comp_report() {
     sec->add_item("para")->append("Valori di riferimento:");
     Doc_Item itl = sec->add_item("itemizedlist");
     std::stringstream ss;
-    ss << "Ricoprimento Trasversale compreso tra " << minVal << "% e " << maxVal << "%";
+    //ss << "Ricoprimento Trasversale compreso tra " << minVal << "% e " << maxVal << "%";
+    ss << "Ricoprimento Trasversale superiore a " << minVal << "%";
     itl->add_item("listitem")->add_item("para")->append(ss.str());
 
     std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
     std::string table2 = std::string(Z_STR_OVL) + (_type == PRJ_TYPE ? "P" : "V");
     std::stringstream sql;
     sql << "SELECT Z_STRIP_CS, Z_STRIP_LENGTH, Z_STRIP_T_OVERLAP, Z_STRIP2 FROM " << table << " a inner JOIN " <<
-        table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << minVal << " OR Z_STRIP_T_OVERLAP>" << maxVal;
+        table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_T_OVERLAP<" << minVal;// << " OR Z_STRIP_T_OVERLAP>" << maxVal;
+        //table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << minVal;// << " OR Z_STRIP_T_OVERLAP>" << maxVal;
 
     Statement stm(cnn);
     stm.prepare(sql.str());
@@ -772,7 +755,8 @@ void lidar_exec::_strips_comp_report() {
         row->add_item("entry", attr)->append(rs[0].toString());
 
         //print_item(row, attrr, rs[1], less_ty, MAX_STRIP_LENGTH);
-        print_item(row, attrr, rs[2], between_ty, minVal, maxVal);
+         print_item(row, attrr, rs[2], great_ty, minVal);
+        //print_item(row, attrr, rs[2], between_ty, minVal, maxVal);
 
         row->add_item("entry", attr)->append(rs[3].toString());
         rs.next();
@@ -823,6 +807,16 @@ void lidar_exec::_strip_report() {
 				attr.addAttribute("", "", "cols", "", "3");
 				tab = tab->add_item("tgroup", attr);
 
+                attr.clear();
+                attr.addAttribute("", "", "colwidth", "", "500*");
+                tab->add_item("colspec", attr);
+                 attr.clear();
+                attr.addAttribute("", "", "colwidth", "", "200*");
+                tab->add_item("colspec", attr);
+                attr.clear();
+                attr.addAttribute("", "", "colwidth", "", "300*");
+                tab->add_item("colspec", attr);
+
 				Doc_Item thead = tab->add_item("thead");
 				Doc_Item row = thead->add_item("row");
 
@@ -844,7 +838,7 @@ void lidar_exec::_strip_report() {
 			attr = Poco::XML::AttributesImpl();
 			attr.addAttribute("", "", "align", "", "right");
 			print_item(row, attr, len, less_ty, MAX_STRIP_LENGTH);
-			print_item(row, attr, d, great_ty, d);
+            print_item(row, attr, d, great_ty, PT_DENSITY);
 		}
 	}
 
@@ -1077,18 +1071,6 @@ CV::Util::Spatialite::Recordset lidar_exec::_read_control_points() {
 }
 
 bool lidar_exec::_read_cloud(const std::string& samplePath) {
-//	CV::Util::Spatialite::Statement stm(cnn);
-
-//    std::stringstream query;
-//    query << "select FOLDER from CLOUD_SAMPLE";
-//    stm.prepare(query.str());
-//    CV::Util::Spatialite::Recordset set = stm.recordset();
-//    if (set.eof()) {
-//        return false;
-//    }
-//	std::string samplePath = Path(_proj_dir, set[0].toString()).toString();
-//    std::cout << "TEST  " << samplePath << std::endl;
-
 	_sampleCloudFactory.assign(new DSM_Factory);
 	_sampleCloudFactory->SetEcho(MyLas::last_pulse);
     _sampleCloudFactory->SetAngle(LID_ANG_SCAN);
