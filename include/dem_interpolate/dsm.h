@@ -106,7 +106,8 @@ public:
 		DSM_GRID = 0,
 		DSM_TIN = 1
 	};
-	_DSM(void): _xmin(0.), _ymin(0.), _zmin(0.), _xmax(0.), _ymax(0.), _zmax(0.), _z_noVal(Z_NOVAL) {}
+    _DSM(void): _xmin(0.), _ymin(0.), _zmin(0.), _xmax(0.), _ymax(0.), _zmax(0.), _z_noVal(Z_NOVAL),
+                _count_first(0), _count_last(0), _count_single(0), _count_inter(0) {}
 	virtual ~_DSM() {}
 
 	virtual double GetQuota(double x, double y, double z = Z_NOVAL, double zo = Z_OUT) const = 0;
@@ -118,6 +119,18 @@ public:
 	virtual double GetX(int i) const  = 0;
 	virtual double GetY(int i) const = 0;
 	virtual double GetZ(int i) const = 0;
+    virtual long PointCount(int type) {
+        if ( type == MyLas::first_pulse )
+            return _count_first;
+        if ( type == MyLas::last_pulse )
+            return _count_last;
+        if ( type == MyLas::single_pulse )
+            return _count_single;
+        if ( type == MyLas::intermediate_pulse )
+            return _count_inter;
+        return _count_first + _count_last + _count_inter - 2 * _count_single;
+    }
+
 	virtual const ND Node(unsigned int i) const = 0;
 	virtual void Node(const DPOINT& p, unsigned int i) = 0;
 	virtual const TRIANGLE& Triangle(unsigned int i) const = 0;
@@ -262,10 +275,12 @@ public:
 
 	virtual void getBB(DPOINT&, DPOINT&, DPOINT&, DPOINT&) {}
 	virtual void getMajorAxis(DPOINT&, DPOINT&) {}
+    virtual void calculateStrip(std::vector<DPOINT>&, DPOINT&, DPOINT&) {}
 protected:
 	std::string	_err_mes;
 	double	_xmin, _ymin, _zmin;
 	double	_xmax, _ymax, _zmax;
+    long    _count_first, _count_last, _count_single, _count_inter;
 	double _z_noVal;
 };
 

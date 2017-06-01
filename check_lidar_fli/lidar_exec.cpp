@@ -38,6 +38,7 @@
 #include "gdal/ogr_geometry.h"
 #include "dem_interpolate/dsm.h"
 #include "common/util.h"
+#include "common/logger.h"
 
 #include <iostream>
 #include <iomanip>
@@ -66,6 +67,8 @@ using namespace CV::Util::Geometry;
 /**************************************************************************/
 typedef std::vector<unsigned char> Blob;
 
+Logger Check_log;
+
 
 std::string get_key(const std::string& val)
 {
@@ -79,8 +82,12 @@ lidar_exec::~lidar_exec()
 
 bool lidar_exec::run()
 {
+    _skip_areatest = true;
+    Poco::Path lp(_proj_dir, "Lidar_flight.log");
+    Check_log.Init(lp.toString());
+
     Poco::LocalDateTime dt;
-    std::cout << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
+    Check_log << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute() << std::endl;
 
     try {
 		CV::Version::print();
@@ -115,10 +122,10 @@ bool lidar_exec::run()
 				throw std::runtime_error("Invalid strip folder");
 			}
 			
-			std::cout << "Creazione assi di volo.." << std::endl;
+            Check_log << "Creazione assi di volo.." << std::endl;
 			_createAvolov();
 			_buildAxis();
-			std::cout << std::endl;
+            Check_log << std::endl;
 
 			_update_assi_volo();
 		} else {
@@ -128,19 +135,19 @@ bool lidar_exec::run()
 		// read digital terrain model
 		//_dem_name = Path(_proj_dir, DEM).toString();
 
-		std::cout << "Lettura dem" << std::endl;
+        Check_log << "Lettura dem" << std::endl;
 		if (!_read_dem()) {
 			throw std::runtime_error("Modello numerico non trovato");
 		}
 		
-		std::cout << "Elaborazione strisciate" << std::endl;
+        Check_log << "Elaborazione strisciate" << std::endl;
 		_process_strips();
 
-		std::cout << "Elaborazione blocchi" << std::endl;
+        Check_log << "Elaborazione blocchi" << std::endl;
 		_process_block();
 		
-		if ( _type == FLY_TYPE ) {
-			std::cout << "Verifica punti di controllo su area di test" << std::endl;
+        if ( _type == FLY_TYPE && !_skip_areatest ) {
+            Check_log << "Verifica punti di controllo su area di test" << std::endl;
             _check_sample_cloud_folder();
 		}
 
@@ -167,7 +174,7 @@ bool lidar_exec::run()
 		_dbook.set_dtd(dtd);
 		_article = _dbook.get_item("article");
 
-		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+        Check_log << "Produzione del report finale: " << _dbook.name() << std::endl;
 		_final_report();
 
 		// write the result on the docbook report
@@ -175,9 +182,10 @@ bool lidar_exec::run()
 
 
         Poco::LocalDateTime dte;
-        std::cout << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute();
+        Check_log << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute() << std::endl;
 
-        std::cout << "Procedura terminata" << std::endl;
+        Check_log << "Procedura terminata" << std::endl;
+        Check_log.Close();
 
 		return true;
 
@@ -316,7 +324,7 @@ void lidar_exec::_buildAxis() {
 void lidar_exec::_addstrip(const Poco::Path& p, Statement& stm)
 {
     if (Poco::toLower(p.getExtension()) == "las") {
-        std::cout << "Strisciata " << p.getBaseName() << std::endl;
+        Check_log << "Strisciata " << p.getBaseName() << std::endl;
 
         Lidar::Axis::Ptr axis(new Lidar::Axis);
         axis->stripName(p.getBaseName());
@@ -327,15 +335,25 @@ void lidar_exec::_addstrip(const Poco::Path& p, Statement& stm)
             ft.name = axis->stripName();
             ft.BB = axis->BB();
             ft.Npoints = axis->npoints();
+
+            ft.First_points = axis->firstPoints();
+            ft.Last_points = axis->lastPoints();
+            ft.Single_points = axis->singlePoints();
+            ft.Inter_points = axis->interPoints();
+
             strpFt[ft.name] = ft;
             const std::vector<DPOINT>& bb = ft.BB;
-            std::cout << "Bounding box\n";
-            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 ) << bb[0].x << " " << bb[0].y << "," << std::endl;
-            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 )<<  bb[1].x << " " << bb[1].y << "," << std::endl;
-            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 )<<  bb[2].x << " " << bb[2].y << "," << std::endl;
-            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 )<<  bb[3].x << " " << bb[3].y << std::endl;
+            Check_log << "Bounding box\n";
+            Check_log <<  bb[0].x << " " << bb[0].y << "," << std::endl;
+            Check_log <<  bb[1].x << " " << bb[1].y << "," << std::endl;
+            Check_log <<  bb[2].x << " " << bb[2].y << "," << std::endl;
+            Check_log <<  bb[3].x << " " << bb[3].y << std::endl;
 
-            std::cout << "Punti filtrati: " << ft.Npoints << std::endl;
+            Check_log << "Conteggio punti:\n";
+            Check_log << "  primi:     " << ft.First_points << std::endl;
+            Check_log << "  ultimi:    " << ft.Last_points << std::endl;
+            Check_log << "  singoli:   " << ft.Single_points << std::endl;
+            Check_log << "  intermedi: " << ft.Inter_points << std::endl;
 
             stm[1] = axis->stripName();
 
@@ -391,7 +409,7 @@ void lidar_exec::_compare_axis() {
 	_get_planned_axis(_projectAxis);
 
 	if (_projectAxis.size() != _strips.size()) {
-		std::cout << "Different axis number" << std::endl;
+        Check_log << "Different axis number" << std::endl;
 	}
 
 	//<real axis, proj axis>
@@ -870,7 +888,7 @@ bool lidar_exec::_read_ref_val()
 		LID_TOL_A = pConf->getDouble(get_key("LID_TOL_A"));
 		PT_DENSITY = pConf->getDouble(get_key("PT_DENSITY"));
 		LID_ANG_SCAN =  pConf->getDouble(get_key("LID_ANG_SCAN"));
-        std::cout << "!!! ang_scan " << LID_ANG_SCAN << std::endl;
+        Check_log << "!!! ang_scan " << LID_ANG_SCAN << std::endl;
 		//_T_CP = pConf->getDouble(get_key("T_CP"));
 
 		MAX_PDOP = pConf->getInt(get_key("MAX_PDOP"));
@@ -997,12 +1015,12 @@ bool lidar_exec::_check_sample_cloud_folder() {
     }
 
     std::string samplePath = set[0].toString();
-    std::cout << "FOLDER  " << samplePath << std::endl;
+    Check_log << "FOLDER  " << samplePath << std::endl;
 
     Poco::File lasClouds(samplePath);
     std::vector<Poco::File> files;
     lasClouds.list(files);
-    std::cout << "size " << files.size() << std::endl;
+    Check_log << "size " << files.size() << std::endl;
 
     std::vector<Poco::File>::iterator it = files.begin(), end = files.end();
 
@@ -1018,7 +1036,7 @@ bool lidar_exec::_check_sample_cloud_folder() {
 
 bool lidar_exec::_check_sample_cloud(const std::string &cloudname) {
 	bool ret = false;
-    std::cout << "Processing " << cloudname << std::endl;
+    Check_log << "Processing " << cloudname << std::endl;
     if (!_read_cloud(cloudname)) {
 		return ret;
 	}
@@ -1039,7 +1057,7 @@ bool lidar_exec::_check_sample_cloud(const std::string &cloudname) {
 
             Lidar::ControlPoint::Status csp = point->zDiffFrom(dsm); //can be Z_NOVAL Z_OUT
             if ( csp == Lidar::ControlPoint::VALID ) {
-                std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 ) <<
+                Check_log << /*std::fixed << std::setw( 11 ) << std::setprecision( 3 ) <<*/
                              point->name() << " " << point->point().x <<  " " <<
                              point->point().y << " " << point->zDiff() << std::endl;
                 _controlVal.push_back(point);
@@ -1228,7 +1246,8 @@ void lidar_exec::_process_strips()
 			gp->closeRings();
 			stripPtr->fromLineRing(axis, gp);
 
-            stripPtr->computeDensity(ft.Npoints);
+            // la densità viene conteggiata con gli ultimi
+            stripPtr->computeDensity(ft.Last_points);
             //fact.Close();
 
 		} else {
@@ -1263,7 +1282,7 @@ void lidar_exec::_process_strips()
 		stm.reset();
 		rs.next();
 	}
-    std::cout << " fine strip \n";
+    Check_log << " fine strip \n";
 	cnn.commit_transaction();
 }
 
@@ -1373,7 +1392,7 @@ bool lidar_exec::select_mission(std::map<std::string, AxisVertex>& ep1, std::map
 
 void lidar_exec::_update_assi_volo()
 {
-	std::cout << "Associazione della traccia GPS con gli assi di volo" << std::endl;
+    Check_log << "Associazione della traccia GPS con gli assi di volo" << std::endl;
 
 	std::stringstream sqla;
 	sqla << "SELECT CreateSpatialIndex('" << GPS_TABLE_NAME << "', 'geom')";
@@ -1575,7 +1594,7 @@ void lidar_exec::_get_overlaps(const std::map<std::string, Lidar::Strip::Ptr>& r
 	std::string table = std::string(Z_STR_OVL) + (_type == PRJ_TYPE ? "P" : "V");
 	cnn.remove_layer(table);
 
-	std::cout << "Calcolo sovrapposizione tra strisciate" << std::endl;
+    Check_log << "Calcolo sovrapposizione tra strisciate" << std::endl;
 
 	// create the strip overlap table
 	std::stringstream sql;

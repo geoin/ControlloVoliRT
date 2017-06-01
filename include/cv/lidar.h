@@ -87,6 +87,10 @@ public:
 	const DPOINT& last() const { return _last; }
     const std::vector<DPOINT>& BB() const  { return _bb; }
     long npoints() const {return _npoints;}
+    long firstPoints() const {return _first_points;}
+    long lastPoints() const {return _last_points;}
+    long singlePoints() const {return _single_points;}
+    long interPoints() const {return _inter_points;}
 
 	inline OGRLineString* toLineString() {
 		OGRGeometry* og = _geom;
@@ -126,6 +130,8 @@ private:
 	DPOINT _last;
     std::vector<DPOINT> _bb;
     long _npoints;
+    long _first_points, _last_points, _single_points, _inter_points;
+
 	
 	double _qt;
 	unsigned int _id;
@@ -376,10 +382,10 @@ public:
 		_strip = strip;
 
         strip->init(ang);
-        std::cout << "...opening " << std::endl;
+//        std::cout << "...opening " << std::endl;
 		_dsm = strip->open(tria);
 		_d = _dsm->GetDsm();
-        std::cout << "...read " << _d->Npt() << std::endl;
+//        std::cout << "...read " << _d->Npt() << std::endl;
 	}
 
 	~DSMHandler() { 

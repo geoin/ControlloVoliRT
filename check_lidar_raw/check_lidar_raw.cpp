@@ -82,32 +82,35 @@ int check_lidar_raw::main(const std::vector<std::string>& args) {
 	}
 	
 	CV::Version::print();
-    
-	try {
-
-		bool ret = true;
-		ret = _check.openDBConnection() && _check.readReference();
-        if (ret) {	
-
-			std::cout << "Inizializzazione in corso.." << std::endl;
-			if (!_check.init()) {
-				throw std::runtime_error("Error while initializing check");
-			}
-			
-			std::cout << "Esecuzione controllo.." << std::endl;
-			if (!_check.run()) {
-				throw std::runtime_error("Error while running check");
-			}
-			
-			_check.report();
-        }
-		
-		return ret ? Application::EXIT_OK : Application::EXIT_SOFTWARE;
-
-    } catch (const std::exception& ex) {
-		lidar_raw_exec::Error("Main", ex);
-        return Application::EXIT_SOFTWARE;
+    if (!_check.run()) {
+        std::cout << "Error while running check" << std::endl;
     }
+    
+//	try {
+
+//		bool ret = true;
+//		ret = _check.openDBConnection() && _check.readReference();
+//        if (ret) {
+
+//			std::cout << "Inizializzazione in corso.." << std::endl;
+//			if (!_check.init()) {
+//				throw std::runtime_error("Error while initializing check");
+//			}
+			
+//			std::cout << "Esecuzione controllo.." << std::endl;
+//			if (!_check.run()) {
+//				throw std::runtime_error("Error while running check");
+//			}
+			
+//			_check.report();
+//        }
+		
+//		return ret ? Application::EXIT_OK : Application::EXIT_SOFTWARE;
+
+//    } catch (const std::exception& ex) {
+//		lidar_raw_exec::Error("Main", ex);
+//        return Application::EXIT_SOFTWARE;
+//    }
 }
 
 POCO_APP_MAIN(check_lidar_raw)

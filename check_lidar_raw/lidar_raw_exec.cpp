@@ -1,5 +1,6 @@
 #include "lidar_raw_exec.h"
 #include "common/statistics.h"
+#include "common/logger.h"
 
 #include "Poco/File.h"
 #include "Poco/Util/XMLConfiguration.h"
@@ -19,6 +20,8 @@ using namespace Poco;
 using namespace Poco::Util;
 
 #define LIDAR "Lidar"
+
+Logger Check_log;
 
 std::string get_key(const std::string& val) {
 	return std::string(LIDAR) + "." + val;
@@ -83,17 +86,40 @@ bool lidar_raw_exec::init() {
 
 bool lidar_raw_exec::run() {
 	try {
-        Poco::LocalDateTime dt;
-        std::cout << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute();
+        Poco::Path lp(_proj_dir, "Lidar_raw.log");
+        Check_log.Init(lp.toString());
 
+        Poco::LocalDateTime dt;
+        Check_log << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute() << std::endl;
+
+        bool ret = true;
+        ret = openDBConnection() && readReference();
+        if ( !ret )
+            return false;
+
+        Check_log << "Inizializzazione in corso.." << std::endl;
+        if ( !init() ) {
+            Check_log << "Error while initializing check" << std::endl;
+//				throw std::runtime_error("Error while initializing check");
+        }
+
+        Check_log << "Esecuzione controllo.." << std::endl;
         _checkIntersection();
+//			if ( !run() ) {
+//				Check_log  << "Error while running check" << std::endl;
+//			}
+
+        report();
+
+//        _checkIntersection();
 
         Poco::LocalDateTime dte;
-        std::cout << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute();
+        Check_log << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute() << std::endl;
 			
 		return true;
 	} catch (const std::exception& e) {
-		Error("Running..", e);
+        Check_log << "Exception " << e.what() << std::endl;
+        //Error("Running..", e);
 		return false;
 	}
 }
@@ -254,7 +280,7 @@ bool lidar_raw_exec::_checkDensity() {
 std::string lidar_raw_exec::_get_overlapped_cloud(const std::string& cloud) {
     Poco::Path pth(cloud);
     std::string base = pth.getBaseName();
-    std::cout << "base " << base << std::endl;
+    //std::cout << "base " << base << std::endl;
 
     CV::Util::Spatialite::Statement stm(cnn);
 
@@ -268,7 +294,7 @@ std::string lidar_raw_exec::_get_overlapped_cloud(const std::string& cloud) {
     if (!set.eof()) {
         ovl_strip = set["Z_STRIP2"];
     }
-    std::cout << "ovl " << ovl_strip << std::endl;
+    //std::cout << "ovl " << ovl_strip << std::endl;
     return ovl_strip;
 }
 
@@ -289,19 +315,22 @@ bool lidar_raw_exec::_checkIntersection() {
 	std::vector<Lidar::CloudStrip::Ptr>::iterator it = _strips.begin();
 	std::vector<Lidar::CloudStrip::Ptr>::iterator end = _strips.end();
 	
-    int ccc = 0;
+    Check_log << "Strips da analizzare "<< _strips.size() << std::endl;
+    long strip_count = 0;
 	for (; it != end; it++) {
-        ++ccc;
-        if ( ccc > 2)
-            break;
 		Lidar::CloudStrip::Ptr cloud = *it;
-        std::cout << " * Analisi nuvola " << cloud->name() << std::endl;
+        Check_log << "Analisi nuvola " << cloud->name() << std::endl;
+        ++strip_count;
+        if ( strip_count < 28)
+            continue;
 
         std::string ovl = _get_overlapped_cloud(cloud->name());
-        if ( ovl.empty() )
+        if ( ovl.empty() ) {
+            Check_log << " No Overlap" << std::endl;
             continue;
+        }
 		
-         //std::cout << "ANGLE " << LID_ANG_SCAN << std::endl;
+         //Check_log << "ANGLE " << LID_ANG_SCAN << std::endl;
          Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN);
 
 		_checkControlPoints(cloud->name(), srcDsm);
@@ -309,8 +338,10 @@ bool lidar_raw_exec::_checkIntersection() {
 		Lidar::Strip::Ptr source = cloud->strip();
 
         Lidar::CloudStrip::Ptr cloudTarget = _get_strip_by_name(ovl);
-        if ( cloudTarget.get() == nullptr )
+        if ( cloudTarget.get() == nullptr ) {
+            Check_log << "Error reading from " << ovl << std::endl;
             continue;
+        }
         Lidar::Strip::Ptr target = cloudTarget->strip();
         if (source->isParallel(target) && source->intersect(target)) {
             Lidar::Strip::Intersection::Ptr intersection = source->intersection(target);
@@ -350,20 +381,22 @@ bool lidar_raw_exec::_checkIntersection() {
                     }
                 }
             }
-            std::cout << "Nuvola 1 " << cloud->name() << " Nuvola 2 " << cloudTarget->name() << std::endl;
-            std::cout << "  Analisi di "  << intersectionGrid.size() << " punti\n";
+            Check_log << " Intersezione con " << cloudTarget->name() << std::endl;
+            Check_log << "  Analisi di "  << intersectionGrid.size() << " punti\n";
 
             std::vector<double> zSrc;
             _getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
-            std::cout << "ZSRC " << zSrc.size() << std::endl;
+            //Check_log << "ZSRC " << zSrc.size() << std::endl;
 
             std::vector<double> zTrg;
             Lidar::DSMHandler targetDsm(cloudTarget, LID_ANG_SCAN);
             _getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
-            std::cout << "zTrg " << zTrg.size() << std::endl;
+            //Check_log << "ZTRG " << zTrg.size() << std::endl;
             targetDsm.release();
 
             std::vector<double> diff;
+
+            long discarted = 0;
 
             for (size_t i = 0; i < intersectionGrid.size(); i++) {
                 double sVal = zSrc.at(i);
@@ -372,21 +405,26 @@ bool lidar_raw_exec::_checkIntersection() {
                     double d = sVal - tVal;
                     if (std::abs(d) < 20) {
                         diff.push_back(d);
-                    }
+                    } else
+                        ++discarted;
                 }
             }
-            std::cout << "diff: " <<diff.size() << std::endl;
+            Check_log << "Scartati: " << discarted << std::endl;
 
             intersectionGrid = std::vector<DPOINT>();
             zSrc = std::vector<double>();
             zTrg = std::vector<double>();
 
-            if (diff.size()) {
+            if ( diff.size() ) {
                 Stats s = { target->name(), 0.0, 0.0 };
                 _getStats(diff, s);
-
+                Check_log << "Mean " << s.mean << std::endl;
                 _statList.insert(std::pair<std::string, Stats>(source->name(), s));
+            } else {
+                Check_log << "Nessun punto  " << std::endl;
             }
+        } else {
+            Check_log << "No intersection" << std::endl;
         }
         srcDsm.release();
 	}
@@ -398,7 +436,7 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
 	if (pair != _controlInfoList.end()) {
 		return;
 	}
-    std::cout << "Control point " << _controlVal.size() << std::endl;
+    Check_log << "Control point " << _controlVal.size() << std::endl;
 
 	_controlInfoList.insert(std::pair< std::string, std::vector<double> > (strip, std::vector<double>()));
 	pair = _controlInfoList.find(strip);
@@ -416,13 +454,13 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
 		} else {
             double dz = cp->quota() - z;
             pair->second.push_back(dz);
-            std::cout << std::fixed << std::setw( 11 ) << std::setprecision( 3 ) <<
+            Check_log /*<< std::fixed << std::setw( 11 ) << std::setprecision( 3 )*/ <<
                          cp->name() << " cloud: " << strip << " diff: " << dz << std::endl;
             count++;
 		}
 	}
     if (!count )
-        std::cout << "No control points in strip\n";
+        Check_log << "No control points in strip\n";
 }
 
 void lidar_raw_exec::_getIntersectionDiff(CV::Lidar::DSMHandler& dsm, std::vector<DPOINT>& intersectionGrid, std::vector<double>& diff) {
@@ -468,7 +506,7 @@ bool lidar_raw_exec::report() {
 		_dbook.set_dtd(dtd);
 		_article = _dbook.get_item("article");
 
-		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+        Check_log << "Produzione del report finale: " << _dbook.name() << std::endl;
 
 		//_density_report();
 		_strip_overlaps_report();
@@ -570,7 +608,7 @@ void lidar_raw_exec::_control_points_report() {
 
     statistics sts(1);
 
-    std::cout << " Tot punti " << _controlVal.size() << std::endl;
+    Check_log << " Tot punti " << _controlVal.size() << std::endl;
 
 	for (int i = 0; i < _controlVal.size(); i++) {
 		CV::Lidar::ControlPoint::Ptr point = _controlVal.at(i);
@@ -586,7 +624,7 @@ void lidar_raw_exec::_control_points_report() {
 		std::map< std::string, std::vector<double> >::iterator it = _controlInfoList.begin();
 		std::map< std::string, std::vector<double> >::iterator end = _controlInfoList.end();
 
-        //std::cout << "Punto " << name << " motl " << _controlInfoList.size();
+        //Check_log << "Punto " << name << " motl " << _controlInfoList.size();
 
 		for (; it != end; it++) {
 			std::string strip = it->first;
@@ -626,7 +664,7 @@ void lidar_raw_exec::_control_points_report() {
 			missed.push_back(i);
 		}
     }
-    std::cout << "sts size " << sts.count() << std::endl;
+    Check_log << "sts size " << sts.count() << std::endl;
     double stdev = sts.st_devS();
     double vmax = sts.aMaxS();
     std::stringstream ssd;

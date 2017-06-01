@@ -56,9 +56,9 @@ bool MyLas::get_next_point(DPOINT& p)
 		_echo = 0;
 		if ( _lasreader->point.return_number == 1 )
             _echo |= first_pulse; // first echo
-        if ( _lasreader->point.return_number ==  _lasreader->point.LAS_NUMBER_OF_RETURNS )
+        if ( _lasreader->point.return_number == _lasreader->point.number_of_returns_of_given_pulse )
             _echo |= last_pulse; // last echo
-        if ( _lasreader->point.return_number > 1 && _lasreader->point.return_number < _lasreader->point.LAS_NUMBER_OF_RETURNS )
+        if ( _lasreader->point.return_number > 1 && _lasreader->point.return_number < _lasreader->point.number_of_returns_of_given_pulse )
             _echo = intermediate_pulse;
 
 		_angle = int( _lasreader->point.scan_angle_rank );

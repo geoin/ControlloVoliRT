@@ -157,13 +157,19 @@ bool Axis::fromCloud(const std::string& las, double ang, int echo) {
 		return false;
 	}
     _npoints = f.GetDsm()->Npt();
+    _first_points = f.GetDsm()->PointCount(MyLas::first_pulse);
+    _last_points = f.GetDsm()->PointCount(MyLas::last_pulse);
+    _single_points = f.GetDsm()->PointCount(MyLas::single_pulse);
+    _inter_points = f.GetDsm()->PointCount(MyLas::intermediate_pulse);
+
     //std::cout << "Punti filtrati: " << _npoints << std::endl;
     //std::cout << "min max: " << f.GetDsm()->Xmin() << " " <<  f.GetDsm()->Ymin() << " " << f.GetDsm()->Xmax() << " " <<  f.GetDsm()->Ymax() << std::endl;
 
     // first e last sono gli estremi dell'asse maggiore
-	f.GetDsm()->getMajorAxis(_first, _last);
-    _bb.resize(4);
-    f.GetDsm()->getBB(_bb[0], _bb[1], _bb[2], _bb[3]);
+//	f.GetDsm()->getMajorAxis(_first, _last);
+//    _bb.resize(4);
+    f.GetDsm()->calculateStrip(_bb, _first, _last);
+//    f.GetDsm()->getBB(_bb[0], _bb[1], _bb[2], _bb[3]);
 
 	_geom = OGRGeometryFactory::createGeometry(wkbLineString);
 	

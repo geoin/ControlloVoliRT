@@ -61,6 +61,7 @@ public:
 		Iyy = M2y - My * My;
 		//Ixy = Mxy - Mx * My;
 		Ixy = (double(_n) / double(_n - 1)) * (Mxy - Mx * My);
+        Theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
 	}
 
 	inline void getAxisLen(double& l1, double& l2, double& theta) {
@@ -96,32 +97,32 @@ public:
 		getAxisLen(l1, l2, t_);
 	}
 
-	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) {
-		double tmin = 1e30;
-		double tmax = -1e30;
+//	inline void getMajorAxis(DPOINT& p1, DPOINT& p2) {
+//		double tmin = 1e30;
+//		double tmax = -1e30;
 
-		double tminB = 1e30;
-		double tmaxB = -1e30;
+//		double tminB = 1e30;
+//		double tmaxB = -1e30;
 		
-		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
-		double vi = cos(theta);
-		double vj = sin(theta);
+//		double theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+//		double vi = cos(theta);
+//		double vj = sin(theta);
 
-		double n = _points.size(); 
-		for (int i = 0; i < n; i++) {
-			DPOINT p = _points.at(i);
-			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
-			tmin = std::min(tmin, ti);
-			tmax = std::max(tmax, ti);
+//		double n = _points.size();
+//		for (int i = 0; i < n; i++) {
+//			DPOINT p = _points.at(i);
+//			double ti = (p.x - Mx) * vi + (p.y - My) * vj;
+//			tmin = std::min(tmin, ti);
+//			tmax = std::max(tmax, ti);
 			
-			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
-			tminB = std::min(tminB, ti);
-			tmaxB = std::max(tmaxB, ti);
-		}
+//			ti = -(p.x - Mx) * vj + (p.y - My) * vi;
+//			tminB = std::min(tminB, ti);
+//			tmaxB = std::max(tmaxB, ti);
+//		}
 		
-		p1.set(Mx + tmin * vi, My + tmin * vj);
-		p2.set(Mx + tmax * vi, My + tmax * vj);
-	} 
+//		p1.set(Mx + tmin * vi, My + tmin * vj);
+//		p2.set(Mx + tmax * vi, My + tmax * vj);
+//	}
 
 	inline void getMajorAxis(DSM* dsm) {
 		double tmin = 1e30;
@@ -146,23 +147,94 @@ public:
 			tmaxB = std::max(tmaxB, ti);
 		}
 		
-		P1.set(Mx + tmin * vi, My + tmin * vj);
-		P2.set(Mx + tmax * vi, My + tmax * vj);
+        FirstPt.set(Mx + tmin * vi, My + tmin * vj);
+        LastPt.set(Mx + tmax * vi, My + tmax * vj);
 
     // vertici strip
-		V1 = DPOINT(P1.x - tminB * vj, + P1.y + tminB * vi);
-		V2 = DPOINT(P1.x - tmaxB * vj, + P1.y + tmaxB * vi);
-		V3 = DPOINT(P2.x - tmaxB * vj, + P2.y + tmaxB * vi);
-		V4 = DPOINT(P2.x - tminB * vj, + P2.y + tminB * vi);
-	} 
+        A = DPOINT(FirstPt.x - tminB * vj, + FirstPt.y + tminB * vi);
+        B = DPOINT(FirstPt.x - tmaxB * vj, + FirstPt.y + tmaxB * vi);
+        C = DPOINT(LastPt.x - tmaxB * vj, + LastPt.y + tmaxB * vi);
+        D = DPOINT(LastPt.x - tminB * vj, + LastPt.y + tminB * vi);
+    }
+    inline void calculateStrip(DSM* dsm) {
+        double minX = INF, minY = INF;
+        double maxX = -INF, maxY = -INF;
+        MatOri mr( 0, 0, Theta );
+        DPOINT tr( Mx, My );
+        DPOINT ti;
+        for( UINT i = 0; i < dsm->Npt(); i++ ) {
+            const DPOINT& pt = dsm->Node( i );
+            ti = mr * (pt - tr);
+            minX = std::min( minX, ti.x );
+            maxX = std::max( maxX, ti.x );
+
+            minY = std::min( minY, ti.y );
+            maxY = std::max( maxY, ti.y );
+        }
+
+        double thr( 0.75 );
+
+        double tminX = minX * thr;
+        double tmaxX = maxX * thr;
+        double tminY = minY * thr;
+        double tmaxY = maxY * thr;
+
+        A = DPOINT( INF, -INF );
+        B = DPOINT( -INF, -INF );
+        C = DPOINT( -INF, INF );
+        D = DPOINT( INF, INF );
+
+        for( UINT i = 0; i < dsm->Npt(); i++ ) {
+            const DPOINT& pt = dsm->Node( i );
+            ti = mr * (pt - tr);
+
+            if ( ti.y > tmaxY ) {
+                if (  ti.x < tminX ) {
+                    A.x = std::min( A.x, ti.x );
+                    A.y = std::max( A.y, ti.y );
+                }
+                if( ti.x > tmaxX ) {
+                    B.x = std::max( B.x, ti.x );
+                    B.y = std::max( B.y, ti.y );
+                }
+            } else if ( ti.y < tminY ) {
+                if( ti.x < tminX ) {
+                    D.x = std::min( D.x, ti.x );
+                    D.y = std::min( D.y, ti.y );
+                }
+                if( ti.x > tmaxX ) {
+                    C.x = std::max( C.x, ti.x );
+                    C.y = std::min( C.y, ti.y );
+                }
+            }
+        }
+        if ( A.x == INF) A.x = minX;
+        if ( A.y == -INF ) A.y = maxY;
+        if ( B.x == -INF ) B.x = maxX;
+        if ( B.y == -INF ) B.y = maxY;
+        if( C.x == -INF ) C.x = maxX;
+        if ( C.y == INF ) C.y = minY;
+        if ( D.x == INF ) D.x = minX;
+        if ( D.y == INF ) D.y = minY;
+
+        MatOri mr1 = mr.Invert();
+        A = mr1 * A + tr;
+        B = mr1 * B + tr;
+        C = mr1 * C + tr;
+        D = mr1 * D + tr;
+
+        FirstPt = DPOINT( (A.x + D.x) / 2, (A.y + D.y) / 2 );
+        LastPt = DPOINT( (B.x + C.x) / 2, (B.y + C.y) / 2 );
+    }
 
 	double Mx, My;
 
 	double Ixx, Iyy, Ixy; // momenti d'inerzia	
 	double M2x, M2y, Mxy;
+    double Theta;
 
-	DPOINT V1, V2, V3, V4;
-	DPOINT P1, P2;
+    DPOINT A, B, C, D;      // corners of strip footprint
+    DPOINT FirstPt, LastPt; // ending point of axes
 
 private:
 	size_t _n; // numero punti processati
@@ -678,13 +750,33 @@ public:
         while ( ml.get_next_point(pt) ) {
             if ( !ml.isvalid() )
                 continue;
-            if ( _echo != 0 && ( (_echo & ml.get_echo()) != _echo ) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
+
+            if ( _angle != 0 ) {
+                int angle = ml.get_angle();
+                if( angle < -_angle || angle > _angle )
+                    continue;
+            }
+
+            int act_echo = ml.get_echo();
+            if ( act_echo == 0 )
+                std::cout << "PUNTO ANOMALO\n";
+
+            if ( act_echo & MyLas::first_pulse )
+                _count_first++;
+            if ( act_echo & MyLas::last_pulse )
+                _count_last++;
+            if ( act_echo == MyLas::single_pulse )
+                _count_single++;
+            if ( act_echo == MyLas::intermediate_pulse )
+                _count_inter++;
+
+            if ( _count_single > _count_first ) {
+                std::cout << "!!! " << act_echo << " fi " << _count_first << " si " <<_count_single << std::endl;
+            }
+
+            if ( _echo != 0 && ( (_echo & act_echo) != _echo ) ) // 1 primo impulso 2 ultimo 3 intermedio 0 tutti
 				continue;
-			if ( _angle != 0 ) {
-				int angle = ml.get_angle();
-				if( angle < -_angle || angle > _angle )
-					continue;
-			}
+
 
 			node[Org_Nod].x = pt.x;
 			node[Org_Nod].y = pt.y;
@@ -717,28 +809,40 @@ public:
 		if (!retval) {
 			Release();
 		}
-        //std::cout << " TRIANGULATE " << _ntriangle << std::endl;
+
+        std::cout << " TRIANGULATE " << _ntriangle << std::endl;
 		return retval;
 	}
 
+    virtual void calculateStrip(std::vector<DPOINT>& bb, DPOINT& firstPt, DPOINT& lastPt) {
+        _ie.calculateStrip(this);
+        bb.clear();
+        bb.push_back(_ie.A);
+        bb.push_back(_ie.B);
+        bb.push_back(_ie.C);
+        bb.push_back(_ie.D);
+        firstPt = _ie.FirstPt;
+        lastPt = _ie.LastPt;
+    }
+
 	virtual void getMajorAxis(DPOINT& p1, DPOINT& p2) {
-		if (_ie.P1 == DPOINT() && _ie.P2 == DPOINT()) {
+        if (_ie.FirstPt == DPOINT() && _ie.LastPt == DPOINT()) {
 			_ie.getMajorAxis(this);
 		}
 
-		p1 = _ie.P1;
-		p2 = _ie.P2;
+        p1 = _ie.FirstPt;
+        p2 = _ie.LastPt;
 	} 
 
 	virtual void getBB(DPOINT& p1, DPOINT& p2, DPOINT& p3, DPOINT& p4) {
-		if (_ie.P1 == DPOINT() && _ie.P2 == DPOINT()) {
+        if (_ie.FirstPt == DPOINT() && _ie.LastPt == DPOINT()) {
 			_ie.getMajorAxis(this); 
 		}
 
-		p1 = _ie.V1;
-		p2 = _ie.V2;
-		p3 = _ie.V3;
-		p4 = _ie.V4;
+        p1 = _ie.A;
+        p2 = _ie.B;
+        p3 = _ie.C;
+        p4 = _ie.D;
 	} 
 
 	bool GetDemFromNod(const std::string& path, bool verbose, bool tria) {
@@ -991,8 +1095,9 @@ private:
 		
 		bool ret = false;
 		//_hl_ = GetParent(_cnl.GetListHandle().GetHwnd());
+        std::cout << "call triangulate" << std::endl;
 		char mes[256];
-		if ( Triangulate("Vpczn", &inData, &outData, fn_lst, mes) ) {
+        if ( Triangulate(&inData, &outData, mes) ) {
 
 			// add the new nodes
 			if ( _npt != (unsigned int) outData.numberofpoints ) {

@@ -213,25 +213,26 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <iostream>
 
 void (*fGNprintf)(char*);
 static bool tri_verbose = true;
 
 int GNprintf(char* fmt, ...)
 {
-	if ( !tri_verbose )
-		return 0;
-	char	string[256];
-	short	retval;
-	char format[256];
+    if ( !tri_verbose )
+        return 0;
+    char	string[256];
+    short	retval;
+    char format[256];
 
-	va_list	arglist;
-	va_start(arglist, fmt);
+    va_list	arglist;
+    va_start(arglist, fmt);
 
-	strcpy(format, fmt);
-	if ( (retval = vsprintf(string, (char*) format, arglist)) > 0 )
-		(*fGNprintf)(string);
-	return 0;
+    strcpy(format, fmt);
+    if ( (retval = vsprintf(string, (char*) format, arglist)) > 0 )
+        std::cout << string << std::endl;
+    return 0;
 }
 
 #define TEPS 1.e-10 
@@ -383,7 +384,7 @@ int GNprintf(char* fmt, ...)
 #include <fpu_control.h>
 #endif /* LINUX */
 #ifdef TRILIBRARY
-#include "GNtriangle.h"
+#include "triangle.h"
 #endif /* TRILIBRARY */
 
 /* A few forward declarations.                                               */
@@ -16106,7 +16107,7 @@ void ResetStruct(struct triangulateio *st)
 !@	rilascia le strutture usate dalla triangolazione
 !
 !----------------------------------------------------------------------------*/
-_declspec (dllexport) void ReleaseStruct(struct triangulateio *st)
+void ReleaseStruct(struct triangulateio *st)
 {
 	if (st->pointlist != (TREAL *) NULL)
 		free(st->pointlist);
@@ -16151,7 +16152,7 @@ _declspec (dllexport) void ReleaseStruct(struct triangulateio *st)
 !@	Prepara le strutture per il modulo di triangolazione
 !
 !----------------------------------------------------------------------------*/
-_declspec (dllexport) int InitStruct(struct triangulateio *st, unsigned int npt, int natt, unsigned int nseg)
+int InitStruct(struct triangulateio *st, unsigned int npt, int natt, unsigned int nseg)
 {
 	ResetStruct(st);
 
@@ -16204,15 +16205,14 @@ void Terminate(short k)
   //   produce an edge list (e), a Voronoi diagram (v), and a triangle
   //   neighbor list (n).
 
-_declspec (dllexport) int Triangulate(struct triangulateio *in,
-    struct triangulateio *out, void (*fLprintf)(char*),
-    char* fTrErrMes)
+int Triangulate(struct triangulateio *in, struct triangulateio *out, char* fTrErrMes)
 {
         int Verbose = 0;
-	fGNprintf = fLprintf;
-	tri_verbose = Verbose == 0 ? false : true;
+        fGNprintf = nullptr;//fLprintf;
+        tri_verbose = Verbose == 0 ? false : true;
+        std::cout << "Triangulate" << std::endl;
 
-	char* triswitches = "pcznj"; //"Vpcznj";
+        char* triswitches = "Vpcznj"; //"Vpcznj";
 	if ( !setjmp(env) ) {
 		triangulate(triswitches, in, out, NULL);
 		return 1;

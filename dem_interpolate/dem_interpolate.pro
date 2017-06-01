@@ -49,7 +49,7 @@ HEADERS +=\
     $$_PRO_FILE_PWD_/../include/dem_interpolate/pslg.h \
     $$_PRO_FILE_PWD_/../include/dem_interpolate/dsm.h \
     $$_PRO_FILE_PWD_/../include/dem_interpolate/geom.h \
-    triangle.h
+    $$_PRO_FILE_PWD_/../include/dem_interpolate/triangle.h
 
 
 #DESTDIR = ../lib

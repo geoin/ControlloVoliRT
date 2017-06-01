@@ -60,6 +60,7 @@ public:
     std::string name;
     std::vector<DPOINT> BB;
     long Npoints;
+    long First_points, Last_points, Single_points, Inter_points;
 };
 
 class lidar_exec {
@@ -69,12 +70,20 @@ public:
 		FLY_TYPE = 1
 	};
 
-	lidar_exec() : STRIP_OVERLAP(0), STRIP_OVERLAP_RANGE(0), MAX_STRIP_LENGTH(0), PT_DENSITY(0), LID_ANG_SCAN(0) { }
+    lidar_exec() : STRIP_OVERLAP(0), STRIP_OVERLAP_RANGE(0), MAX_STRIP_LENGTH(0), PT_DENSITY(0), LID_ANG_SCAN(0),
+                count_first(0), count_last(0), count_single(0), count_inter(0), _skip_areatest(false) { }
 	~lidar_exec();
 
 	bool run(void);
 	void set_proj_dir(const std::string& nome);
 	void set_checkType(Check_Type t);
+    long count_first, count_last, count_single, count_inter;
+    void set_count(DSM* dsm) {
+        count_first = dsm->PointCount(MyLas::first_pulse);
+        count_last = dsm->PointCount(MyLas::last_pulse);
+        count_single = dsm->PointCount(MyLas::single_pulse);
+        count_inter = dsm->PointCount(MyLas::intermediate_pulse);
+    }
 
 private:
 	void _createAvolov();
@@ -136,6 +145,7 @@ private:
 	CV::Util::Spatialite::Connection cnn;
 
 	Check_Type _type;
+    bool _skip_areatest;
 	
 	DSM_Factory* _df;
 

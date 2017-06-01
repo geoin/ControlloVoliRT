@@ -10,7 +10,7 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#define REAL double
+#define TREAL double
 
 #ifdef TRILIBRARY
 #define HGLOBAL int
@@ -18,15 +18,15 @@
 #include "exports.h"
 
 struct triangulateio {
-	REAL *pointlist;
-	REAL *pointattributelist;
+    TREAL *pointlist;
+    TREAL *pointattributelist;
 	int *pointmarkerlist;
 	int numberofpoints;
 	int numberofpointattributes;
 
 	int *trianglelist;
-	REAL *triangleattributelist;
-	REAL *trianglearealist;
+    TREAL *triangleattributelist;
+    TREAL *trianglearealist;
 	int *neighborlist;
 	int numberoftriangles;
 	int numberofcorners;
@@ -36,31 +36,30 @@ struct triangulateio {
 	int *segmentmarkerlist;
 	int numberofsegments;
 
-	REAL *holelist;
+    TREAL *holelist;
 	int numberofholes;
 
-	REAL *regionlist;
+    TREAL *regionlist;
 	int numberofregions;
 
 	int *edgelist;
 	int *edgemarkerlist;
-	REAL *normlist;
+    TREAL *normlist;
 	int numberofedges;
 };
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
+//#if defined(__cplusplus)
+//extern "C" {
+//#endif
 
-TOOLS_EXPORTS void ReleaseStruct(struct triangulateio *);
-TOOLS_EXPORTS int InitStruct(struct triangulateio * sto, int npt, int natt, int nseg);
-TOOLS_EXPORTS int Triangulate(const char * triswitches, struct triangulateio *in, struct triangulateio *out,
-										void (*fLprintf)(char*), char* fTrErrMes);
-TOOLS_EXPORTS int Voronoi(char * triswitches, struct triangulateio *in, struct triangulateio *out,
-										struct triangulateio *vor, void (*fLprintf)(char*), char* fTrErrMes);
-#if defined(__cplusplus)
-}
-#endif
+void ReleaseStruct(struct triangulateio *);
+int InitStruct(struct triangulateio * sto, unsigned int npt, int natt, unsigned int nseg);
+int Triangulate(struct triangulateio *in, struct triangulateio *out,char* fTrErrMes);
+//int Voronoi(char * triswitches, struct triangulateio *in, struct triangulateio *out,
+//										struct triangulateio *vor, void (*fLprintf)(char*), char* fTrErrMes);
+//#if defined(__cplusplus)
+//}
+//#endif
 
 
 #endif
