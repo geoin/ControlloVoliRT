@@ -27,6 +27,7 @@ public:
 
 	struct Stats {
 		std::string target;
+        long count;
 		double mean;
 		double stdDev;
 	};

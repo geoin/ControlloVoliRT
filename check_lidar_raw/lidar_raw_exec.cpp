@@ -321,8 +321,8 @@ bool lidar_raw_exec::_checkIntersection() {
 		Lidar::CloudStrip::Ptr cloud = *it;
         Check_log << "Analisi nuvola " << cloud->name() << std::endl;
         ++strip_count;
-        if ( strip_count < 28)
-            continue;
+//        if ( strip_count < 28)
+//            continue;
 
         std::string ovl = _get_overlapped_cloud(cloud->name());
         if ( ovl.empty() ) {
@@ -330,10 +330,10 @@ bool lidar_raw_exec::_checkIntersection() {
             continue;
         }
 		
-         //Check_log << "ANGLE " << LID_ANG_SCAN << std::endl;
          Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN);
 
 		_checkControlPoints(cloud->name(), srcDsm);
+        continue;
 
 		Lidar::Strip::Ptr source = cloud->strip();
 
@@ -403,7 +403,7 @@ bool lidar_raw_exec::_checkIntersection() {
                 double tVal = zTrg.at(i);
                 if (sVal != Z_NOVAL && sVal != Z_OUT && tVal != Z_NOVAL && tVal != Z_OUT) {
                     double d = sVal - tVal;
-                    if (std::abs(d) < 20) {
+                    if (std::abs(d) < 10 * LID_TOL_Z) {
                         diff.push_back(d);
                     } else
                         ++discarted;
@@ -418,7 +418,8 @@ bool lidar_raw_exec::_checkIntersection() {
             if ( diff.size() ) {
                 Stats s = { target->name(), 0.0, 0.0 };
                 _getStats(diff, s);
-                Check_log << "Mean " << s.mean << std::endl;
+                s.count = diff.size();
+                Check_log << "N.punti " << s.count << " Mean " << s.mean << std::endl;
                 _statList.insert(std::pair<std::string, Stats>(source->name(), s));
             } else {
                 Check_log << "Nessun punto  " << std::endl;
@@ -542,7 +543,7 @@ void lidar_raw_exec::_strip_overlaps_report() {
     tab->add_item("title")->append("Statistiche sovrapposizione nuvole");
 
     Poco::XML::AttributesImpl attr;
-    attr.addAttribute("", "", "cols", "", "4");
+    attr.addAttribute("", "", "cols", "", "5");
     tab = tab->add_item("tgroup", attr);
 
     attr.clear();
@@ -552,10 +553,12 @@ void lidar_raw_exec::_strip_overlaps_report() {
     attr.addAttribute("", "", "colwidth", "", "300*");
     tab->add_item("colspec", attr);
     attr.clear();
+    attr.addAttribute("", "", "colwidth", "", "100*");
+    tab->add_item("colspec", attr);
     attr.addAttribute("", "", "colwidth", "", "150*");
     tab->add_item("colspec", attr);
     attr.clear();
-    attr.addAttribute("", "", "colwidth", "", "250*");
+    attr.addAttribute("", "", "colwidth", "", "150*");
     tab->add_item("colspec", attr);
 
     Doc_Item thead = tab->add_item("thead");
@@ -565,6 +568,7 @@ void lidar_raw_exec::_strip_overlaps_report() {
     attr.addAttribute("", "", "align", "", "center");
     row->add_item("entry", attr)->append("Strisciata 1");
     row->add_item("entry", attr)->append("Strisciata 2");
+    row->add_item("entry", attr)->append("N. punti");
     row->add_item("entry", attr)->append("Media");
     row->add_item("entry", attr)->append("Dev. standard");
     Doc_Item tbody = tab->add_item("tbody");
@@ -583,7 +587,10 @@ void lidar_raw_exec::_strip_overlaps_report() {
 		row = tbody->add_item("row");
         row->add_item("entry", attr)->append(source);
 		row->add_item("entry", attr)->append(stat.target);
-		row->add_item("entry", attr)->append(stat.mean);
+        row->add_item("entry", attr)->append(stat.count);
+
+        print_item(row, attr, stat.mean, abs_less_ty, LID_TOL_Z);
+        //row->add_item("entry", attr)->append(stat.mean);
 		row->add_item("entry", attr)->append(stat.stdDev);
 	}
 }

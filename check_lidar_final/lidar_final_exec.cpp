@@ -9,6 +9,7 @@
 
 #include "proj_api.h"
 #include "PJ_igmi.h"
+#include "common/logger.h"
 
 #include "CVUtil/ogrgeomptr.h"
 
@@ -28,6 +29,7 @@
 using namespace CV;
 using namespace CV::Util::Geometry;
 
+Logger Check_log;
 
 lidar_final_exec::lidar_final_exec() {
 	srand(time(NULL));
@@ -42,34 +44,43 @@ void lidar_final_exec::set_proj_dir(const std::string& proj) {
 }
 
 bool lidar_final_exec::run() {
+    Poco::Path lp(_proj_dir, "Lidar_final.log");
+    Check_log.Init(lp.toString());
+
+    if (!openDBConnection()) {
+        return false;
+    }
     std::string str;
     if (!GetProjData(cnn, _note, str)) {
 		return false;
 	}
+    readFolders();
 
-	std::cout << "Analisi copertura aree da rilevare.." << std::endl;
+    Check_log << "Analisi copertura aree da rilevare.." << std::endl;
     _checkBlock();
 	
-	std::cout << "Analisi completezza dati.." << std::endl;
+    Check_log << "Analisi completezza dati.." << std::endl;
     _checkEquality();
 	
-	std::cout << "Analisi tile grezze.." << std::endl;
+    Check_log << "Analisi tile grezze.." << std::endl;
     _checkRawRandom();
 	
-	std::cout << "Analisi classificazione.." << std::endl;
+    Check_log << "Analisi classificazione.." << std::endl;
     _checkEllipsoidicData();
 	
-	std::cout << "Analisi conversione quote ground.." << std::endl;
+    Check_log << "Analisi conversione quote ground.." << std::endl;
 	_checkQuota(_groundEll, _groundOrto, statsGround);
 	
-	std::cout << "Analisi conversione quote overground.." << std::endl;
+    Check_log << "Analisi conversione quote overground.." << std::endl;
 	_checkQuota(_overgroundEll, _overgroundOrto, statsOverGround);
 	
-	std::cout << "Analisi ricampionamento ground ortometrico.." << std::endl;
+    Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
 	_checkResamples(_groundOrto, _groundOrtoList, _mdt, _mdtList, diffMdt);
 
-	std::cout << "Analisi ricampionamento overground ortometrico.." << std::endl;
+    Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
 	_checkResamples(_overgroundOrto, _overgroundOrtoList, _mds, _mdsList, diffMds);
+
+    createReport();
 
 	return true;
 }
@@ -90,7 +101,7 @@ void lidar_final_exec::createReport() {
 	_dbook.set_dtd(dtd);
 	_article = _dbook.get_item("article");
 
-	std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+    Check_log << "Produzione del report finale: " << _dbook.name() << std::endl;
 	
 	_reportBlock();
 	_reportEquality();
@@ -110,19 +121,19 @@ void lidar_final_exec::readFolders() {
 		_raw = _getRawFolder("FINAL_RAW_STRIP_DATA", _step);
 		_getCoordNameList(_raw, "las", _rawList);
 	} catch (const std::exception& ex) { 
-		std::cout << "Dati grezzi non inseriti" << std::endl;
+        Check_log << "Dati grezzi non inseriti" << std::endl;
 	}
 	_groundEll = _getFolder("FINAL_GROUND_ELL");
-	_getCoordNameList(_groundEll, "xyzic", _groundEllList);
+	_getCoordNameList(_groundEll, "xyzi", _groundEllList);
 
 	_overgroundEll = _getFolder("FINAL_OVERGROUND_ELL");
-	_getCoordNameList(_overgroundEll, "xyzic", _overgroundEllList);
+	_getCoordNameList(_overgroundEll, "xyzi", _overgroundEllList);
 
-	_groundOrto = _getFolder("FINAL_GROUND_ORTO");
-	_getCoordNameList(_groundOrto, "xyzic", _groundOrtoList);
+	//_groundOrto = _getFolder("FINAL_GROUND_ORTO");
+	//_getCoordNameList(_groundOrto, "xyzic", _groundOrtoList);
 
-	_overgroundOrto = _getFolder("FINAL_OVERGROUND_ORTO");
-	_getCoordNameList(_overgroundOrto, "xyzic", _overgroundOrtoList);
+	//_overgroundOrto = _getFolder("FINAL_OVERGROUND_ORTO");
+	//_getCoordNameList(_overgroundOrto, "xyzic", _overgroundOrtoList);
 	
 	_mds = _getFolder("FINAL_MDS");
 	_getCoordNameList(_mds, "asc", _mdsList, true);
@@ -226,14 +237,14 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 		stm.prepare("select FOLDER FROM RAW_STRIP_DATA");
 		CV::Util::Spatialite::Recordset set = stm.recordset();
 		if (set.eof()) {
-			std::cout << "Nessun dato in RAW_STRIP_DATA" << std::endl;
+            Check_log << "Nessun dato in RAW_STRIP_DATA" << std::endl;
 			return;
 		}
 		if (!set.eof()) {
 			_stripFolder = set["FOLDER"].toString();
 		}
 	} catch (const std::exception&) {
-		std::cout << "Errore durante il reperimento delle strisciate, cartella non inserita" << std::endl;
+        Check_log << "Errore durante il reperimento delle strisciate, cartella non inserita" << std::endl;
 	}
 
 	try {
@@ -241,7 +252,7 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 		stm.prepare("select Z_STRIP_CS, AsBinary(GEOM) as GEOM FROM Z_STRIPV");
 		CV::Util::Spatialite::Recordset set = stm.recordset();
 		if (set.eof()) {
-			std::cout << "Nessun dato in Z_STRIPV" << std::endl;
+            Check_log << "Nessun dato in Z_STRIPV" << std::endl;
 			return;
 		}
 	
@@ -256,7 +267,7 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 			set.next();
 		}
 	} catch (const std::exception& ex) {
-		std::cout << "Errore durante il reperimento delle strisciate, dati non inseriti" << std::endl;
+        Check_log << "Errore durante il reperimento delle strisciate, dati non inseriti" << std::endl;
 	}
 }
 
@@ -266,8 +277,8 @@ void lidar_final_exec::_checkBlock() {
 	cnn.remove_layer(table);
 	cnn.remove_layer(rawGrid);
 
-	std::vector<std::string>::iterator it = _rawList.begin();
-	std::vector<std::string>::iterator end = _rawList.end();
+    std::vector<std::string>::iterator it = _groundEllList.begin(); // _rawList.begin();
+    std::vector<std::string>::iterator end = _groundEllList.end(); //_rawList.end();
 
 	OGRGeomPtr rg_ = OGRGeometryFactory::createGeometry(wkbPolygon);
 	OGRGeometry* pol = rg_;
@@ -290,16 +301,26 @@ void lidar_final_exec::_checkBlock() {
 
 	for (; it != end; it++) {
 		std::string name = *it;
-		int x = Poco::NumberParser::parse(name.substr(0, 4)) * 100;
-		int y = Poco::NumberParser::parse(name.substr(4, 4)) * 1000;
+        Poco::Path pth(_groundEll, name);
+        pth.setExtension("xyzi");
+		DSM_Factory fac;
+        File_Mask mask( 4, 1, 2, 3, -1, -1 );
+        fac.SetMask( mask );
+        if( !fac.Open( pth.toString(), false, false ) )
+			continue;
+		DSM* dsm = fac.GetDsm();
+        Check_log << "Letti " << dsm->Npt() << " punti da " << name << std::endl;
+
+		//int x = Poco::NumberParser::parse(name.substr(0, 4)) * 100;
+		//int y = Poco::NumberParser::parse(name.substr(4, 4)) * 1000;
 
 		OGRGeometry* g = OGRGeometryFactory::createGeometry(wkbLinearRing);
 		OGRLinearRing* gp = reinterpret_cast<OGRLinearRing*>(g);
 		gp->setCoordinateDimension(2);
-		gp->addPoint(x, y);
-		gp->addPoint(x + _step, y);
-		gp->addPoint(x + _step, y + _step);
-		gp->addPoint(x, y + _step);
+		gp->addPoint(dsm->Xmin(), dsm->Ymin());
+		gp->addPoint( dsm->Xmax(), dsm->Ymin() );
+		gp->addPoint( dsm->Xmax(), dsm->Ymax() );
+		gp->addPoint( dsm->Xmin(), dsm->Ymax() );
 		gp->closeRings();
 
 		OGRGeomPtr rg_tmp = OGRGeometryFactory::createGeometry(wkbPolygon);
@@ -359,7 +380,7 @@ void lidar_final_exec::_checkBlock() {
 			}
 		}
 	} catch (const std::exception& e) {
-		std::cout << "Errore durante il reperimento del blocco" << e.what() << std::endl;
+        Check_log << "Errore durante il reperimento del blocco" << e.what() << std::endl;
 	}
 	
 	std::cout << "Layer:" << table << std::endl;
@@ -367,31 +388,31 @@ void lidar_final_exec::_checkBlock() {
 
 void lidar_final_exec::_checkEquality() {
 	if (!_sortAndCompare(_rawList, _mdtList, mdtDiff)) {
-		std::cout << "Dati grezzi ed mdt non compatibili" << std::endl;
+        Check_log << "Dati grezzi ed mdt non compatibili" << std::endl;
 	}
 	
 	if (!_sortAndCompare(_rawList, _mdsList, mdsDiff)) {
-		std::cout << "Dati grezzi ed mds non compatibili" << std::endl;
+        Check_log << "Dati grezzi ed mds non compatibili" << std::endl;
 	} 
 	
 	if (!_sortAndCompare(_rawList, _intensityList, intensityDiff)) {
-		std::cout << "Dati grezzi ed intensity non compatibili" << std::endl;
+        Check_log << "Dati grezzi ed intensity non compatibili" << std::endl;
 	}
 	
 	if (!_sortAndCompare(_rawList, _groundEllList, groundEllDiff)) {
-		std::cout << "Dati grezzi e dati ground ellisoidici non compatibili" << std::endl;
+        Check_log << "Dati grezzi e dati ground ellisoidici non compatibili" << std::endl;
 	}
 	
 	if (!_sortAndCompare(_rawList, _groundOrtoList, groundOrtoDiff)) {
-		std::cout << "Dati grezzi e dati ground ortometrici non compatibili" << std::endl;
+        Check_log << "Dati grezzi e dati ground ortometrici non compatibili" << std::endl;
 	}
 	
 	if (!_sortAndCompare(_rawList, _overgroundEllList, overGroundEllDiff)) {
-		std::cout << "Dati grezzi e dati overground ellisoidici non compatibili" << std::endl;
+        Check_log << "Dati grezzi e dati overground ellisoidici non compatibili" << std::endl;
 	}
 	
 	if (!_sortAndCompare(_rawList, _overgroundOrtoList, overGroundOrtoDiff)) {
-		std::cout << "Dati grezzi e dati overground ortometrici non compatibili" << std::endl;
+        Check_log << "Dati grezzi e dati overground ortometrici non compatibili" << std::endl;
 	}
 }
 
@@ -444,7 +465,7 @@ void lidar_final_exec::_checkRawRandom() {
 		std::string actual = (*sit)->name() + ".las";
 		path.append(actual);
 
-		std::cout << " * " << actual << std::endl;
+        Check_log << " * " << actual << std::endl;
 		
 		DSM_Factory f;
 		f.Open(path.toString());
@@ -519,7 +540,7 @@ void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std:
 		DSM_Factory s;
 		std::string path = _fileFromCorner(_raw, "las", gIt->first);
 		if (!s.Open(path)) {
-			std::cout << "Impossibile aprire " << path << std::endl;
+            Check_log << "Impossibile aprire " << path << std::endl;
 			continue;
 		}
 		
@@ -579,14 +600,14 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 		File_Mask mask(5, 1, 2, 3, 1, 1);
 		gr.SetMask(mask);
 		if (!gr.Open(groundPath, false, true)) {
-			std::cout << "Impossibile aprire " << groundPath << std::endl;
+            Check_log << "Impossibile aprire " << groundPath << std::endl;
 			continue;
 		}
 
 		std::string mdtPath = _fileFromCorner(folder2, "asc", corner);
 		DSM_Factory m;
 		if (!m.Open(mdtPath, false, false)) {
-			std::cout << "Impossibile aprire " << mdtPath << std::endl;
+            Check_log << "Impossibile aprire " << mdtPath << std::endl;
 			continue;
 		}
 		std::vector<double> diff;
@@ -703,7 +724,7 @@ void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string
 
 		size_t ortoNpt = ortoF.GetDsm()->Npt(), ellNpt = ellF.GetDsm()->Npt();
 		if (ortoNpt != ellNpt) {
-			std::cout << ell << " e " << orto << " differiscono per numero di punti" << std::endl; //REPORT
+            Check_log << ell << " e " << orto << " differiscono per numero di punti" << std::endl; //REPORT
 			continue;
 		}
 		std::vector<double> diffData;
@@ -770,11 +791,11 @@ size_t lidar_final_exec::_getSamplesCount(size_t minVal, size_t maxVal, size_t s
 }
 
 void lidar_final_exec::Error(const std::string& operation, const std::exception& e) {
-	std::cout << "Error [" << operation << "] : " << e.what() << std::endl;
+    Check_log << "Error [" << operation << "] : " << e.what() << std::endl;
 }
 
 void lidar_final_exec::Error(const std::string& operation) {
-	std::cout << "Error [" << operation << "]" << std::endl;
+    Check_log << "Error [" << operation << "]" << std::endl;
 }
 
 void lidar_final_exec::GetStats(const std::vector<double>& diff, Stats& s) {

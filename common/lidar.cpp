@@ -1,7 +1,10 @@
 #include "cv/lidar.h"
+#include "common/logger.h"
 
 #include <iostream>
 #include <sstream>
+
+extern Logger Check_log;
 
 using namespace CV::Lidar;
 using namespace CV::Util::Geometry;
@@ -284,6 +287,6 @@ double Strip::computeDensity(long count) {
     }
 
     _density = count / area;
-       std::cout << "Area " << area << " Punti " << count << " Density " << _density << std::endl;
+       Check_log << "Area " << area << " Punti " << count << " Density " << _density << std::endl;
     return _density;
 }

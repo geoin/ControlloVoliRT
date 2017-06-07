@@ -48,7 +48,7 @@ public:
 	static void GetStats(const std::vector<double>& diff, Stats&);
 
 private:
-	void _getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list, bool complete = false);
+	void _getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list, bool complete = true);
 	bool _sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2, std::vector<std::string>& diff);
 	
 	std::string _fileFromCorner(const std::string& folder, const std::string& ext, const std::string& corner);

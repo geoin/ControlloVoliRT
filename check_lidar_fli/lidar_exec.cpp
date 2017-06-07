@@ -1191,10 +1191,10 @@ void lidar_exec::_process_strips()
 		axis->stripName(strip);
 		axis->missionName(mission);
 		axis->id(rs[0].toInt());
-        std::cout << "STRIP: " << strip << " MISSION " << mission << std::endl;
+        Check_log << "STRIP: " << strip << " MISSION " << mission << std::endl;
 
 		if (!axis->isValid()) { 
-            std::cout << "Asse di volo non valido\n";
+            Check_log << "Asse di volo non valido\n";
 			throw std::runtime_error("Asse di volo non valido");
 		}
 		
@@ -1204,7 +1204,7 @@ void lidar_exec::_process_strips()
 			lidar = _lidarsList[mission];
 			
 			if (lidar.isNull()) {
-                std::cout << "Valori lidar non validi\n";
+                Check_log << "Valori lidar non validi\n";
 				throw std::runtime_error("Valori lidar non validi");
 			} 
 
@@ -1217,25 +1217,6 @@ void lidar_exec::_process_strips()
             if ( st == strpFt.end() )
                 throw std::runtime_error("Strip data not found");
 			
-//			DPOINT p1, p2, p3, p4;
-			
-//            std::string path = _findLasByName(strip);
-//			DSM_Factory fact;
-//            fact.SetAngle(LID_ANG_SCAN);
-//			fact.Open(path, false, false);
-//			DSM* dsm = fact.GetDsm();
-//            std::cout << "!!! proc strip punti letti " << dsm->Npt() << " da " << path << std::endl;
-//			dsm->getBB(p1, p2, p3, p4);
-
-//            std::cout << "   v1 " << p1.x << " " << p1.y << std::endl;
-//            std::cout << "   v2 " << p2.x << " " << p2.y << std::endl;
-//            std::cout << "   v3 " << p3.x << " " << p3.y << std::endl;
-//            std::cout << "   v4 " << p4.x << " " << p4.y << std::endl;
-
-//			gp->addPoint(p1.x, p1.y);
-//			gp->addPoint(p2.x, p2.y);
-//			gp->addPoint(p3.x, p3.y);
-//			gp->addPoint(p4.x, p4.y);
             FootPrint& ft = st->second;
 
             gp->addPoint(ft.BB[0].x, ft.BB[0].y);
