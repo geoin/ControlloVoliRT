@@ -1,10 +1,12 @@
 #include "lidar_final_exec.h"
+#include "common/statistics.h"
 
 #include "Poco/Path.h"
 #include "Poco/File.h"
 #include "Poco/String.h"
 #include "Poco/Util/XMLConfiguration.h"
 #include "Poco/AutoPtr.h"
+#include "Poco/LocalDateTime.h"
 #include "Poco/NumberParser.h"
 
 #include "proj_api.h"
@@ -25,13 +27,18 @@
 #include "sampler.h"
 
 #define GEO_DB_NAME "geo.sqlite"
+#define LIDAR "Lidar"
 
 using namespace CV;
 using namespace CV::Util::Geometry;
 
 Logger Check_log;
 
-lidar_final_exec::lidar_final_exec() {
+std::string get_key(const std::string& val) {
+    return std::string(LIDAR) + "." + val;
+}
+
+lidar_final_exec::lidar_final_exec(): LID_ANG_SCAN( 0 ), LID_TOL_A(0) {
 	srand(time(NULL));
 	_coversAll = false;
 
@@ -43,44 +50,77 @@ void lidar_final_exec::set_proj_dir(const std::string& proj) {
     _proj_dir = proj;
 }
 
+bool lidar_final_exec::readReference() {
+	try {
+		Poco::Path ref_file( _proj_dir, "*" );
+		ref_file.setFileName( "refval.xml" );
+		Poco::AutoPtr<Poco::Util::XMLConfiguration> pConf;
+		pConf = new Poco::Util::XMLConfiguration( ref_file.toString() );
+		//LID_TOL_Z = pConf->getDouble( get_key( "LID_TOL_Z" ) );
+		LID_TOL_A = pConf->getDouble( get_key( "LID_TOL_A" ) );
+		LID_ANG_SCAN = pConf->getDouble( get_key( "LID_ANG_SCAN" ) );
+		return true;
+	}
+	catch( const std::exception& e ) {
+		Error( "Reading reference values..", e );
+		return false;
+	}
+}
+
 bool lidar_final_exec::run() {
     Poco::Path lp(_proj_dir, "Lidar_final.log");
     Check_log.Init(lp.toString());
 
-    if (!openDBConnection()) {
+    Poco::LocalDateTime dt;
+    Check_log << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute() << std::endl;
+
+    if (!openDBConnection() ) {
         return false;
     }
+	if( !readReference() )
+		return false;
+
     std::string str;
     if (!GetProjData(cnn, _note, str)) {
 		return false;
 	}
+
     readFolders();
 
+    // usando i dati ground o overground determina l'ingombro dei fogli e lo sottrae da quello di carto
     Check_log << "Analisi copertura aree da rilevare.." << std::endl;
-    _checkBlock();
+    //_checkBlock();
 	
+    // confronta che il dato tile ground contenga gli stessi elementi degli altri oggetti
     Check_log << "Analisi completezza dati.." << std::endl;
     _checkEquality();
 	
-    Check_log << "Analisi tile grezze.." << std::endl;
-    _checkRawRandom();
+	// verifica che il dato groud abbia corrispondenti nelle strip
+    Check_log << "Analisi classificazione ground" << std::endl;
+    _checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
+
+    Check_log << "Analisi classificazione overground" << std::endl;
+    _checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
 	
-    Check_log << "Analisi classificazione.." << std::endl;
-    _checkEllipsoidicData();
+//    Check_log << "Analisi classificazione.." << std::endl;
+//    _checkEllipsoidicData();
 	
-    Check_log << "Analisi conversione quote ground.." << std::endl;
-	_checkQuota(_groundEll, _groundOrto, statsGround);
+    Check_log << "Analisi conversione ground grid" << std::endl;
+//	_checkQuota(_groundEll, _groundOrto, statsGround);
 	
-    Check_log << "Analisi conversione quote overground.." << std::endl;
-	_checkQuota(_overgroundEll, _overgroundOrto, statsOverGround);
+    Check_log << "Analisi conversione overgground grid" << std::endl;
+//	_checkQuota(_overgroundEll, _overgroundOrto, statsOverGround);
 	
     Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
-	_checkResamples(_groundOrto, _groundOrtoList, _mdt, _mdtList, diffMdt);
+    _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt);
 
-    Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
-	_checkResamples(_overgroundOrto, _overgroundOrtoList, _mds, _mdsList, diffMds);
+//    Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
+//	_checkResamples(_overgroundOrto, _overgroundOrtoList, _mds, _mdsList, diffMds);
 
     createReport();
+
+    Poco::LocalDateTime dte;
+    Check_log << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute() << std::endl;
 
 	return true;
 }
@@ -105,7 +145,10 @@ void lidar_final_exec::createReport() {
 	
 	_reportBlock();
 	_reportEquality();
-	_reportRawRandom();
+
+    _reportRawRandom(groundRandomDiffg);
+    _reportRawRandom(overRandomDiff);
+
 	_reportEllipsoidic();
 	
 	_reportQuota();
@@ -117,12 +160,14 @@ void lidar_final_exec::createReport() {
 void lidar_final_exec::readFolders() {
 	_step = 0;
 
-	try {
-		_raw = _getRawFolder("FINAL_RAW_STRIP_DATA", _step);
-		_getCoordNameList(_raw, "las", _rawList);
-	} catch (const std::exception& ex) { 
-        Check_log << "Dati grezzi non inseriti" << std::endl;
-	}
+//	try {
+        // tile raw non più in uso
+//		_raw = _getRawFolder("FINAL_RAW_STRIP_DATA", _step);
+//		_getCoordNameList(_raw, "las", _rawList);
+//	} catch (const std::exception& ex) {
+//        Check_log << "Dati grezzi non inseriti" << std::endl;
+//	}
+
 	_groundEll = _getFolder("FINAL_GROUND_ELL");
 	_getCoordNameList(_groundEll, "xyzi", _groundEllList);
 
@@ -209,26 +254,51 @@ void lidar_final_exec::_getCoordNameList(const std::string& fold, const std::str
 }
 
 bool lidar_final_exec::_sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2, std::vector<std::string>& diff) {
-	std::sort(list1.begin(), list1.end());
-	std::sort(list2.begin(), list2.end());
-	if (list1 != list2) {
-		std::vector<std::string>::const_iterator it = list1.begin();
-		std::vector<std::string>::const_iterator end = list1.end();
-
-		for (; it != end; it++) {
-			std::string val = *it;
-			if (std::find_if(list2.begin(), list2.end(), [&val] (std::string in) -> bool {
-				bool ret = in.find(val) != std::string::npos;
-				return ret;
-			}) == list2.end()) {
-				diff.push_back(val);
-			};
-		}	
-
-		return diff.size() == 0;
+    if ( list1.size() != list2.size() ) {
+        Check_log << "Different size" << std::endl;
+        return false;
+    }
+	for( size_t i = 0; i < list1.size(); i++ ) {
+		std::transform( list1[i].begin(), list1[i].end(), list1[i].begin(), ::toupper );
+		std::transform( list2[i].begin(), list2[i].end(), list2[i].begin(), ::toupper );
 	}
 
-	return true;
+	std::sort(list1.begin(), list1.end());
+	std::sort(list2.begin(), list2.end());
+
+    for ( size_t i = 0; i < list1.size(); i++) {
+        std::string val1 = list1[i];
+        size_t k1 = val1.find_last_of('_');
+        if ( k1 != std::string::npos )
+            val1 = val1.substr(k1);
+        std::string val2 = list2[i];
+        size_t k2 = val2.find_last_of('_');
+        if ( k2 != std::string::npos )
+            val2 = val2.substr(k2);
+        if ( val1 != val2)
+            diff.push_back(val1);
+    }
+    return diff.size() == 0;
+
+//	if (list1 != list2) {
+
+//		std::vector<std::string>::const_iterator it = list1.begin();
+//		std::vector<std::string>::const_iterator end = list1.end();
+
+//		for (; it != end; it++) {
+//			std::string val = *it;
+//			if (std::find_if(list2.begin(), list2.end(), [&val] (std::string in) -> bool {
+//				bool ret = in.find(val) != std::string::npos;
+//				return ret;
+//			}) == list2.end()) {
+//				diff.push_back(val);
+//			};
+//		}
+
+//		return diff.size() == 0;
+//	}
+
+//	return true;
 }
 
 void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
@@ -387,54 +457,102 @@ void lidar_final_exec::_checkBlock() {
 }
 
 void lidar_final_exec::_checkEquality() {
-	if (!_sortAndCompare(_rawList, _mdtList, mdtDiff)) {
-        Check_log << "Dati grezzi ed mdt non compatibili" << std::endl;
-	}
-	
-	if (!_sortAndCompare(_rawList, _mdsList, mdsDiff)) {
-        Check_log << "Dati grezzi ed mds non compatibili" << std::endl;
-	} 
-	
-	if (!_sortAndCompare(_rawList, _intensityList, intensityDiff)) {
-        Check_log << "Dati grezzi ed intensity non compatibili" << std::endl;
-	}
-	
-	if (!_sortAndCompare(_rawList, _groundEllList, groundEllDiff)) {
-        Check_log << "Dati grezzi e dati ground ellisoidici non compatibili" << std::endl;
-	}
-	
-	if (!_sortAndCompare(_rawList, _groundOrtoList, groundOrtoDiff)) {
-        Check_log << "Dati grezzi e dati ground ortometrici non compatibili" << std::endl;
-	}
-	
-	if (!_sortAndCompare(_rawList, _overgroundEllList, overGroundEllDiff)) {
+    if (!_sortAndCompare(_groundEllList, _overgroundEllList, overGroundEllDiff)) {
         Check_log << "Dati grezzi e dati overground ellisoidici non compatibili" << std::endl;
-	}
+    } else {
+        Check_log << "Dati grezzi e dati overground ellisoidici compatibili" << std::endl;
+    }
+
+    if (!_sortAndCompare(_groundEllList, _mdtList, mdtDiff)) {
+        Check_log << "Dati grezzi ed mdt non compatibili" << std::endl;
+    } else {
+        Check_log << "Dati grezzi e mdt compatibili" << std::endl;
+    }
 	
-	if (!_sortAndCompare(_rawList, _overgroundOrtoList, overGroundOrtoDiff)) {
-        Check_log << "Dati grezzi e dati overground ortometrici non compatibili" << std::endl;
-	}
+    if (!_sortAndCompare(_groundEllList, _mdsList, mdsDiff)) {
+        Check_log << "Dati grezzi ed mds non compatibili" << std::endl;
+    } else {
+        Check_log << "Dati grezzi e mds compatibili" << std::endl;
+    }
+	
+    if (!_sortAndCompare(_groundEllList, _intensityList, intensityDiff)) {
+        Check_log << "Dati grezzi ed intensity non compatibili" << std::endl;
+    } else {
+        Check_log << "Dati grezzi e intensity compatibili" << std::endl;
+    }
+	
+//	if (!_sortAndCompare(_groundEllList, _groundOrtoList, groundOrtoDiff)) {
+//        Check_log << "Dati grezzi e dati ground ortometrici non compatibili" << std::endl;
+//	}
+	
+
+	
+//	if (!_sortAndCompare(_rawList, _overgroundOrtoList, overGroundOrtoDiff)) {
+//        Check_log << "Dati grezzi e dati overground ortometrici non compatibili" << std::endl;
+//	}
 }
 
-void lidar_final_exec::_checkRawRandom() {
+// verifica se almeno un punto ricade nella strip
+bool lidar_final_exec::_isStripUsed( std::map< std::string, std::vector<NODE> >& points, Lidar::Strip::Ptr sit ) {
+	std::map< std::string, std::vector<NODE> >::iterator gIt = points.begin();
+	std::map< std::string, std::vector<NODE> >::iterator gEnd = points.end();
+	for( ; gIt != gEnd; gIt++ ) {
+		std::vector<NODE>::iterator pIt = gIt->second.begin();
+		std::vector<NODE>::iterator pEnd = gIt->second.end();
+		for( ; pIt != pEnd; pIt++ ) {
+			const NODE& n = *pIt;
+			OGRPoint pt( n.x, n.y );
+
+			bool contains = sit->geom()->Contains( &pt );
+			if( contains )
+				return true;
+		}
+	}
+	return false;
+}
+
+void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::map< std::string, std::vector<double> >& rawRandomDiff ) {
 
 	std::vector<Lidar::Strip::Ptr> strips;
 	_getStrips(strips);
 
-	Poco::Path fPath(_raw);
+	Poco::Path fPath(raw);
 	
 	std::vector<std::string> folderContent;
 	Poco::File(fPath).list(folderContent);
+
+    size_t sizef = folderContent.size();
+    Geoin::Util::Sampler samplerf(sizef);
+
+    int campione = 10; /*0.1 * sizef*/
+    samplerf.sample(campione, sizef);
+    Check_log << "Verifica di un campione di " << campione << " su " << sizef << std::endl;
 
 	std::vector<std::string>::iterator it = folderContent.begin();
 	std::vector<std::string>::iterator end = folderContent.end();
 
 	std::map< std::string, std::vector<NODE> > points;
 	
-	for (; it != end; it++) {
-		Poco::Path p = Poco::Path(fPath).append(*it);
+//	for (; it != end; it++) {
+
+    size_t cnt = 1500;  // punti da verificare per ogni tile
+
+    // seleziona alcune tile
+    for (auto it = samplerf.begin(); it != samplerf.end(); it++) {
+        auto index = *it;
+
+        Poco::Path p = Poco::Path(fPath).append(folderContent[index]);
+		File_Mask fm( 4, 1, 2, 3 );
 		DSM_Factory f;
-		if (Poco::toLower(p.getExtension()) != "las" || !f.Open(p.toString(), false, false)) {
+		f.SetMask( fm );
+        if( Poco::toLower( p.getExtension() ) != "las" && Poco::toLower( p.getExtension() ) != "xyzi" ) {
+            Check_log << "Estensione non supportata " << p.getExtension() << std::endl;
+			continue;
+        }
+
+        Check_log << "Apertura di " << p.getBaseName() << std::endl;
+		if ( !f.Open(p.toString(), false, false)) {
+            Check_log << "Errore nell'apertura di " << p.getBaseName() << std::endl;
 			continue;
 		}
 
@@ -443,10 +561,11 @@ void lidar_final_exec::_checkRawRandom() {
 
 		//size_t c = _getSamplesCount(1000, size/2, size);
 
-		size_t cnt = _tilePP/100.0f*size;
-		if (cnt == 0) {
-			cnt = 1;
-		}
+//		cnt = _tilePP/100.0f*size;
+//		if (cnt == 0) {
+//			cnt = 1;
+//		}
+//		cnt = 1500;
 
 		Geoin::Util::Sampler sampler(size);
 		sampler.sample(cnt, size);
@@ -457,10 +576,17 @@ void lidar_final_exec::_checkRawRandom() {
 		}
 	}
 
+    Check_log << " Verifica di " << cnt << " punti per tile" << std::endl;
+
 	std::vector<Lidar::Strip::Ptr>::const_iterator sit = strips.begin();
 	std::vector<Lidar::Strip::Ptr>::const_iterator send = strips.end();
 	bool con = false;
 	for (; sit != send; sit++) {
+        if ( !_isStripUsed( points, *sit) ) {
+            Check_log << "No points in " << (*sit)->name() << std::endl;
+            continue;
+        }
+
 		Poco::Path path(_stripFolder);
 		std::string actual = (*sit)->name() + ".las";
 		path.append(actual);
@@ -468,28 +594,69 @@ void lidar_final_exec::_checkRawRandom() {
         Check_log << " * " << actual << std::endl;
 		
 		DSM_Factory f;
-		f.Open(path.toString());
+        f.SetEcho(pulse);
+        f.SetAngle( LID_ANG_SCAN );
+        if ( !f.Open(path.toString(), false, false) ) {
+            Check_log << "Error opening " << (*sit)->name() << std::endl;
+            continue;
+        }
+		DSM* dsm = f.GetDsm();
+		dsm->CreateIndex();
+        Check_log << "Creato indice" << std::endl;
 
 		std::map< std::string, std::vector<NODE> >::iterator gIt = points.begin();
 		std::map< std::string, std::vector<NODE> >::iterator gEnd = points.end();
+
+        // iterazioni sui tutti i punti presi dalle tile
 		for (; gIt != gEnd; gIt++) {
-			std::vector<NODE>::iterator pIt = gIt->second.begin();
-			std::vector<NODE>::iterator pEnd = gIt->second.end();
-			for (; pIt != pEnd; pIt++) {
-				const NODE& n = *pIt;
+			//std::vector<NODE>::iterator pIt = gIt->second.begin();
+			//std::vector<NODE>::iterator pEnd = gIt->second.end();
+			std::vector<NODE>& vn = gIt->second;
+
+            std::set<size_t> ilist;
+            statistics st(1);
+            // iterazioni dei punti di una singola tile
+			for( size_t i = 0; i < vn.size(); i++) {
+				const NODE& n = vn[i]; // *pIt;
 				OGRPoint pt(n.x, n.y);
 
 				bool contains = (*sit)->geom()->Contains(&pt);
 				if (contains) {
-					double z = f.GetDsm()->GetQuota(n.x, n.y);	
-					double diff = n.z - z;
-					if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT && std::abs(diff) < 20.f) {
-						rawRandomDiff[gIt->first].push_back(diff);
-					}
+                    double diff = dsm->getPoint(n);
+                    if ( diff > 0 && diff < 10. * LID_TOL_A ) {
+                        rawRandomDiff[gIt->first].push_back(diff);
+                        std::vector<double> dd;
+                        dd.push_back(diff);
+                        st.add_point(dd);
+                        ilist.insert(i);
+                    }
 				}
 			}
+			std::vector<NODE> vn1;
+            for ( size_t i = 0; i < vn.size(); i++ ) {
+				if ( ilist.find(i) == ilist.end() )
+					vn1.push_back(vn[i]);
+            }
+			size_t sz = vn.size();
+			vn = vn1;
+
+            if ( st.count() ) {
+                Check_log << "Tile " << gIt->first << " trovati " << (long) st.count() << " punti su " << sz << std::endl;
+                Check_log << "  Stdev " << st.st_devS() << " mean " << st.meanS() << " max val " << st.aMaxS() << std::endl;
+                Check_log << "  Punti residui " << gIt->second.size() << std::endl;
+            }
+
 		}
 	}
+    std::map< std::string, std::vector<NODE> >::iterator gIt = points.begin();
+    std::map< std::string, std::vector<NODE> >::iterator gEnd = points.end();
+
+    // iterazioni sui tutti i punti presi dalle tile
+    long count = 0;
+    for (; gIt != gEnd; gIt++) {
+        count += gIt->second.size();
+    }
+    Check_log << "Punti non accoppiati " << count << std::endl;
 }
 
 void lidar_final_exec::_checkEllipsoidicData() {
@@ -595,9 +762,9 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 	for (auto it = sampler.begin(); it != sampler.end(); it++) {
 		std::string corner = list1.at(*it);
 
-		std::string groundPath = _fileFromCorner(folder1, "xyzic", corner);
+		std::string groundPath = _fileFromCorner(folder1, "xyzi", corner);
 		DSM_Factory gr;
-		File_Mask mask(5, 1, 2, 3, 1, 1);
+		File_Mask mask(4, 1, 2, 3);
 		gr.SetMask(mask);
 		if (!gr.Open(groundPath, false, true)) {
             Check_log << "Impossibile aprire " << groundPath << std::endl;
@@ -769,13 +936,15 @@ std::string lidar_final_exec::_fileFromCorner(const std::string& folder, const s
 	std::vector<std::string> folderContent;
 	Poco::File(folder).list(folderContent);
 
+	std::string& cnr = Poco::toLower( corner );
+
 	std::vector<std::string>::iterator it = folderContent.begin();
 	std::vector<std::string>::iterator end = folderContent.end();
 	
 	for (; it != end; it++) {
 		Poco::Path p = Poco::Path(folder).append(*it);	
-		std::string name = p.getBaseName();
-		if (Poco::toLower(p.getExtension()) == Poco::toLower(ext) && name.find(corner) != std::string::npos) {
+		std::string name = Poco::toLower( p.getBaseName());
+		if (Poco::toLower(p.getExtension()) == Poco::toLower(ext) && name.find(cnr) != std::string::npos) {
 			return p.toString();
 		}
 	}
@@ -906,7 +1075,7 @@ void lidar_final_exec::_reportEquality() {
 	}
 }
 	
-void lidar_final_exec::_reportRawRandom() {
+void lidar_final_exec::_reportRawRandom(std::map< std::string, std::vector<double> >& rawRandomDiff) {
 	if (!rawRandomDiff.size()) {
 		return;
 	}

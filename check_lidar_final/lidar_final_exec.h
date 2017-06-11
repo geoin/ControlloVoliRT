@@ -33,6 +33,7 @@ public:
 
 	bool openDBConnection();
 	void readFolders();
+	bool readReference();
 
     void set_proj_dir(const std::string&);
 
@@ -51,15 +52,16 @@ private:
 	void _getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list, bool complete = true);
 	bool _sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2, std::vector<std::string>& diff);
 	
-	std::string _fileFromCorner(const std::string& folder, const std::string& ext, const std::string& corner);
+    std::string _fileFromCorner(const std::string& folder, const std::string& ext, const std::string& corner);
 	std::string _getFolder(const std::string& table);
 	std::string _getRawFolder(const std::string& table, unsigned int& step);
 	void _getStrips(std::vector<CV::Lidar::Strip::Ptr>&);
+    bool _isStripUsed( std::map< std::string, std::vector<NODE> >& points,CV:: Lidar::Strip::Ptr sit );
 
 	size_t _getSamplesCount(size_t min, size_t max, size_t size, double perc = 0.1);
 	void _checkBlock();
 	void _checkEquality();
-	void _checkRawRandom();
+    void _checkRawRandom(const std::string& raw, int pulse, std::map< std::string, std::vector<double> >& rawRandomDiff );
 	void _checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& diff);
 	void _checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>&);
 
@@ -85,7 +87,7 @@ private:
 	std::vector<std::string> overGroundEllDiff;
 	std::vector<std::string> overGroundOrtoDiff;
 
-	std::map< std::string, std::vector<double> > rawRandomDiff;
+    std::map< std::string, std::vector<double> > groundRandomDiffg, overRandomDiff;
 
 	std::vector<PointCheck> _pc;
 	std::vector<Stats> diffMdt, diffMds, statsGround, statsOverGround;
@@ -96,12 +98,13 @@ private:
 
 	void _reportBlock();
 	void _reportEquality();
-	void _reportRawRandom();
+    void _reportRawRandom(std::map< std::string, std::vector<double> >& rawRandomDiff);
 	void _reportResamples();
 	void _reportQuota();
 	void _reportEllipsoidic();
 
 	int _tilePP, _classFP, _classPP, _resFP, _resPP, _qPP;
+	double LID_ANG_SCAN, LID_TOL_A;
 };
 
 #endif

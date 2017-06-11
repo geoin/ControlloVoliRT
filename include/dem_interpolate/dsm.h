@@ -76,6 +76,9 @@ public:
 	File_Mask(): nf(0), x(0), y(0), z(0), ne(0), ni(0){}
 	File_Mask(int nfield, int xi, int yi, int zi, int nec, int nim):
 		nf(nfield), x(xi), y(yi), z(zi), ne(nec), ni(nim) {}
+	File_Mask( int nfield, int xi, int yi, int zi ) :
+		nf( nfield ), x( xi ), y( yi ), z( zi ), ne( 0 ), ni( 0 ) {
+	}
 	File_Mask(const File_Mask& fm):
 		nf(fm.nf), x(fm.x), y(fm.y), z(fm.z), ne(fm.ne), ni(fm.ni) {}
 	void operator=(const File_Mask& fm) {
@@ -189,6 +192,8 @@ public:
 		}
 		return true;
 	}
+    virtual void CreateIndex() {}
+    virtual double getPoint(const ND& nd) { return -1;}
 	virtual size_t GetBorder(std::vector<DPOINT>& vec) {
 		vec.clear();
 		std::vector<SEGMENT> st;
