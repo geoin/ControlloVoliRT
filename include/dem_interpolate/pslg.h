@@ -562,9 +562,16 @@ public:
 		if ( !_open )
 			return z;
 		_lastTri = FindTriangle(x, y, _lastTri);
+        if ( _lastTri < 0)
+            return Z_OUT;
        if ( !isInnerTri(_lastTri) )
-           return z;
-		return ( _lastTri < 0 ) ? z : HeightInterpolation(_lastTri, x, y);
+           return Z_WEAK;
+       Triangolo t;
+       Get_triangle(t, _lastTri);
+       double ff = t.AspectRatio();
+       if ( ff < 0.3 )
+           return Z_WEAK;
+        return HeightInterpolation(_lastTri, x, y);
 	}
 	void _trIn(std::set<unsigned int>& tr, std::set<unsigned int>& nd, long k, const Bbox& b) const {
 		tr.insert(k);

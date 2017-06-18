@@ -384,7 +384,7 @@ bool DSM_Grid::GetProperties(const std::string& nome)
     char mes[256];
 	int count = 0;
     while ( txf.getline(mes, 255) ) {
-		Poco::StringTokenizer tok(mes, " \t", Poco::StringTokenizer::TOK_TRIM );
+		Poco::StringTokenizer tok(mes, " \t", Poco::StringTokenizer::TOK_TRIM | Poco::StringTokenizer::TOK_IGNORE_EMPTY );
 		if ( tok.count() != 2 )
 			break;
 		std::string keyword = Poco::toLower(tok[0]);

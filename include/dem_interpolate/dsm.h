@@ -20,6 +20,7 @@
 
 #define Z_NOVAL -9999.
 #define Z_OUT -8888.
+#define Z_WEAK -7777.
 #define DEM_EXT "nod"
 
 class LASreader;
@@ -254,6 +255,17 @@ public:
 		}
 		return vec.size();
 	}
+    virtual bool Get_triangle(Triangolo &t, int nTri) const {
+        if ( Triangle(nTri).p[0] < 0 || Triangle(nTri).p[1] < 0 || Triangle(nTri).p[2] < 0 )
+            return false;
+        DPOINT p0 = Node(Triangle(nTri).p[0]);
+        DPOINT p1 = Node(Triangle(nTri).p[1]);
+        DPOINT p2 = Node(Triangle(nTri).p[2]);
+        if ( p1.z == z_noVal() || p2.z == z_noVal() || p2.z == z_noVal() )
+            return false;
+        t = Triangolo(p0, p1, p2);
+        return true;
+    }
 
 	virtual std::string Error_string(void) const { return _err_mes; }
 	//virtual void SetEps(double eps) {}

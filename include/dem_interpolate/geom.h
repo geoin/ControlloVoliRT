@@ -12,6 +12,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef EPS_TH
+    #define	EPS_TH 1.e-4
+#endif
+
 #ifndef INF
 #define INF	1.e30
 #endif
@@ -50,7 +54,7 @@ public:
 	double OridistPt(const DPOINT& pt);
 	DPOINT DistOnRetta(const DPOINT& p0, double d);
 	double Slope(void);
-	//virtual bool Intersez(RETTA& rt, DPOINT *point);
+    virtual bool Intersez(RETTA& rt, DPOINT *point) const;
 	//bool CircleIntersez(double xc, double yc, double R, DPOINT* pt);
 	double val(const DPOINT& p);
 	double val(double x, double y) {
@@ -574,6 +578,233 @@ private:
 			for (int j = 0; j < 3; j++)
 				_mat[i][j] = m[i][j];
 	}
+};
+class TOOLS_EXPORTS SEGMENTO:public RETTA {
+public:
+    SEGMENTO() {}
+    SEGMENTO(const DPOINT& _p1, const DPOINT& _p2) {
+        X2Points(_p1, _p2);
+    }
+    SEGMENTO(const DPOINT* _p1, const DPOINT* _p2) {
+        X2Points(*_p1, *_p2);
+    }
+    DPOINT p1, p2;
+    void X2Points(const DPOINT& pt1, const DPOINT& pt2) {
+        p1 = pt1;
+        p2 = pt2;
+        RETTA::X2Points(p1, p2);
+    }
+    bool Intersez(RETTA& rt, DPOINT *point) const {
+        if ( !RETTA::Intersez(rt, point) )
+            return false;
+        return IsPtIn(point);
+    }
+    bool Intersez(SEGMENTO& sg, DPOINT *point) const {
+        if ( !RETTA::Intersez(sg, point) )
+            return false;
+        return IsPtIn(point)&& sg.IsPtIn(point);
+    }
+    bool IsPtIn(DPOINT* pt) const;
+    double PtDist(double xp, double yp, DPOINT& pt) const;
+    double Slope(void) const;
+};
+class TOOLS_EXPORTS Triangolo {
+public:
+    Triangolo() {}
+    Triangolo(const DPOINT& p0, const DPOINT& p1, const DPOINT& p2) {
+        _p[0] = p0;
+        _p[1] = p1;
+        _p[2] = p2;
+        _zminmax();
+    }
+    Triangolo(const Triangolo& t) {
+        _p[0] = t._p[0];
+        _p[1] = t._p[1];
+        _p[2] = t._p[2];
+        _zminmax();
+    }
+    void SetVertex(int i, const DPOINT& p) {
+        if ( i >= 0 && i < 3 )
+            _p[i] = p;
+    }
+    double zmin(void) const { return  _zmin; }
+    double zmax(void) const { return  _zmax; }
+    const DPOINT& Vert(int i ) const { return _p[i]; }
+    bool IsQuote(double ql) {
+        return ( ql < _zmin || ql > _zmax ) ? false : true;
+    }
+    double quote(const DPOINT& pt) {
+        DPOINT norm;
+        GetNormal(&norm);
+        double z = _p[0].z -( (pt.x - _p[0].x) * norm.x + (pt.y - _p[0].y) * norm.y ) / norm.z;
+        return z;
+    }
+    DPOINT InCenter(void) const {
+        // calcola l'incentro del triangolo
+        double l0 = _p[1].dist2D(_p[2]);
+        double l1 = _p[2].dist2D(_p[0]);
+        double l2 = _p[0].dist2D(_p[1]);
+        double p = l0 + l1 + l2;
+        DPOINT ic = _p[0] * (l0 / p) + _p[1] * (l1 / p)  + _p[2] * (l2 / p);
+        return ic;
+    }
+    DPOINT Simplesso(void) const {
+        // generico punto interno
+        double l0 = 0.3, l1 = 0.3, l2 = 0.4;
+        DPOINT ic = _p[0] * l0 + _p[1] * l1  + _p[2] * l2;
+        return ic;
+    }
+    bool IsPointInside(DPOINT pt) {
+        double d1 = _sign(pt, _p[0], _p[1]);
+        double d2 = _sign(pt, _p[1], _p[2]);
+        double d3 = _sign(pt, _p[2], _p[0]);
+        bool b1 = d1 < 0.;
+        bool b2 = d2 < 0.;
+        bool b3 = d3 < 0.;
+        return (b1 == b2) && (b2 == b3) || d1 == 0. || d2 == 0. || d3 == 0.;
+    }
+    int GetSide(double ql) {
+        if ( ql == _p[0].z && _p[0].z == _p[1].z && _p[1].z == _p[2].z  ) {
+            return -1; // triangolo piano a quota ql
+        }
+        if ( ql >= _p[0].z && ql <= _p[1].z && ql <= _p[2].z || ql <= _p[0].z && ql >= _p[1].z && ql >= _p[2].z )
+            return 0;
+        if ( ql >= _p[1].z && ql <= _p[2].z && ql <= _p[0].z || ql <= _p[1].z && ql >= _p[2].z && ql >= _p[0].z )
+            return 1;
+        if ( ql >= _p[2].z && ql <= _p[0].z && ql <= _p[1].z || ql <= _p[2].z && ql >= _p[0].z && ql >= _p[1].z )
+            return 2;
+        return -1;
+    }
+    bool LineIntersection(const DPOINT& p0, const DPOINT& p1, DPOINT& pt) {
+        DPOINT nt;
+        GetNormal(&nt);// normale al piano del triangolo
+
+        double s = nt.dot(_p[0] - p0) / (nt.dot(p1));
+        pt = p0 + (p1 * s);
+        if ( IsPointInside(pt) ) {
+            pt.z = quote(pt);
+            return true;
+        }
+        return false;
+    }
+    bool GetIntersection(double ql, SEGMENTO& seg) {
+        int side;
+        if ( (side = GetSide(ql)) < 0 )
+            return false;
+
+        int v1 = (side + 1) % 3;
+        double dq = _p[side].z - _p[v1].z;
+        double dx = _p[side].x - _p[v1].x;
+        double dy = _p[side].y - _p[v1].y;
+        double dist = _hypot(dx, dy);
+        double d1 = 0;
+        if ( dq != 0 )
+            d1 = dist * (ql - _p[v1].z) / dq;
+        DPOINT p1(_p[v1].x + d1 * dx / dist, _p[v1].y + d1 * dy / dist);
+
+
+        int v2 = (side + 2) % 3;
+        double dq2 = _p[side].z - _p[v2].z;
+        double dx2 = _p[side].x - _p[v2].x;
+        double dy2 = _p[side].y - _p[v2].y;
+        double dist2 = _hypot(dx, dy);
+        double d2 = 0;
+        if ( dq2 != 0 )
+            d2 = dist2 * (ql - _p[v2].z) / dq2;
+        DPOINT p2(_p[v2].x + d2 * dx2 / dist2, _p[v2].y + d2 * dy2 / dist2);
+        seg = SEGMENTO(p1, p2);
+        return true;
+    }
+    double Perimeter( int type = 0 ) const {
+        double perim = 0.;	// perimeter
+        for( int i = 0; i < 3; i++ ) {
+            int i1 = (i + 1) % 3;
+            perim += (type == 1) ? _p[i].dist3D( _p[i1] ) : _p[i].dist2D( _p[i1] );
+        }
+        return perim;
+    }
+    double Surface(int type = 0) const {
+        double	len[3];
+        double sperim = 0.;	// perimeter
+        for (int i = 0; i < 3; i++) {
+            int i1 = (i + 1) % 3;
+            len[i] = ( type == 1 ) ? _p[i].dist3D(_p[i1]) : _p[i].dist2D(_p[i1]);
+            sperim += len[i];
+        }
+        sperim /= 2.;
+
+        double surface = 1.;
+        for (int i = 0; i < 3; i++)
+            surface *= (sperim - len[i]);
+        surface = sqrt(sperim * surface);
+        return surface;
+    }
+    double AspectRatio() const {
+        return 2 * inradius() / circumradius();
+    }
+    double circumradius() const {
+        //double s = 0.5 * Perimeter();
+        double	len[3];
+        for( int i = 0; i < 3; i++ ) {
+            int i1 = (i + 1) % 3;
+            len[i] = _p[i].dist2D( _p[i1] );
+        }
+        double R = (len[0] * len[1] * len[2]) / (4 * Surface());
+        //double R = (len[0] * len[1] * len[2]) / 4 * sqrt( s * (len[0] + len[1] - s) * (len[0] + len[2] - s) * (len[1] + len[2] - s) );
+        return R;
+    }
+    double inradius() const {
+        double r = 2 * Surface() / Perimeter();
+        //double	len[3];
+        //for( int i = 0; i < 3; i++ ) {
+        //	int i1 = (i + 1) % 3;
+        //	len[i] = _p[i].dist2D( _p[i1] );
+        //}
+        //double r = 0.5 * sqrt( (len[1] + len[2] - len[0]) * (len[2] + len[0] - len[1]) * (len[0] + len[1] - len[2]) /  Perimeter());
+        return r;
+    }
+    double Volume(double qrif) const {
+        double Ab = Surface(0);
+        if ( Ab == 0. )
+            return 0.;
+        double z[3];
+        for (int i = 0; i < 3; i++) {
+            z[i] = _p[i].z - qrif;
+        }
+        return Ab * (z[0] + z[1] + z[2]) / 3.;
+    }
+    void GetNormal(DPOINT* norm) const {
+        DPOINT v1(_p[0] - _p[2]);
+        DPOINT v2(_p[1] - _p[2]);
+        *norm = v1.vec(v2);
+        norm->Normalize();
+    }
+    double GetSlope(void) const {
+        DPOINT norm;
+        GetNormal(&norm);
+        if ( norm.z == 0. )
+            return 3.14 / 2;
+        double ta = sqrt(1 - norm.z * norm.z) / norm.z;
+        return 100. * ta;
+    }
+private:
+    void _zminmax(void) {
+        _zmin = _p[0].z;
+        _zmin = std::min(_zmin, _p[1].z);
+        _zmin = std::min(_zmin, _p[2].z);
+        _zmax = _p[0].z;
+        _zmax = std::max(_zmax, _p[1].z);
+        _zmax = std::max(_zmax, _p[2].z);
+
+    }
+    double _sign(const DPOINT& p1, const DPOINT& p2, const DPOINT& p3) {
+        double d = (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+        if ( fabs(d) < 1.e-9 ) d = 0;
+        return d;
+    }
+
+    DPOINT _p[3];
+    double _zmin, _zmax;
 };
 class MBR {
 public:

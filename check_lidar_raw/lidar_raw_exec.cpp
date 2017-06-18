@@ -87,7 +87,7 @@ bool lidar_raw_exec::init() {
 bool lidar_raw_exec::run() {
 	try {
         Poco::Path lp(_proj_dir, "Lidar_raw.log");
-        Check_log.Init(lp.toString());
+        Check_log.Init(lp.toString(), true);
 
         Poco::LocalDateTime dt;
         Check_log << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute() << std::endl;
@@ -100,18 +100,13 @@ bool lidar_raw_exec::run() {
         Check_log << "Inizializzazione in corso.." << std::endl;
         if ( !init() ) {
             Check_log << "Error while initializing check" << std::endl;
-//				throw std::runtime_error("Error while initializing check");
+            return false;
         }
 
         Check_log << "Esecuzione controllo.." << std::endl;
         _checkIntersection();
-//			if ( !run() ) {
-//				Check_log  << "Error while running check" << std::endl;
-//			}
 
         report();
-
-//        _checkIntersection();
 
         Poco::LocalDateTime dte;
         Check_log << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute() << std::endl;
@@ -321,7 +316,7 @@ bool lidar_raw_exec::_checkIntersection() {
 		Lidar::CloudStrip::Ptr cloud = *it;
         Check_log << "Analisi nuvola " << cloud->name() << std::endl;
         ++strip_count;
-//        if ( strip_count < 28)
+//        if ( strip_count < 35)
 //            continue;
 
         std::string ovl = _get_overlapped_cloud(cloud->name());
@@ -450,7 +445,10 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
 
 		const DPOINT& p = cp->point();
 		double z = dsm->GetQuota(p.x, p.y);
-		if (z == Z_NOVAL || z == Z_OUT) {
+        if (z == Z_WEAK ) {
+            Check_log << cp->name() << " Scartato perché sul bordo" << std::endl;
+            pair->second.push_back(Z_OUT);
+        } else if (z == Z_NOVAL || z == Z_OUT) {
 			pair->second.push_back(z);
 		} else {
             double dz = cp->quota() - z;

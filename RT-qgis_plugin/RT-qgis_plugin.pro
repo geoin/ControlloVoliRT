@@ -7,8 +7,9 @@ QT += xml gui core
 #unix:LIBS += -L/$$QGIS_DIR/lib -lqgis_core -lqgis_gui
 
 win32 {
-    QGIS_DIR = "C:/OSGeo4W64/apps/qgis-rel-dev"
-    OSGEO4W_DIR = "C:/OSGeo4W64"
+    OSGEO4W_DIR = "D:/OSGeo4W64"
+    QGIS_DIR = $$OSGEO4W_DIR"/apps/qgis-rel-dev"
+
 
     LIBS += $$QGIS_DIR/lib/qgis_core.lib -L$$OSGEO4W_DIR/lib
     INCLUDEPATH += \
@@ -16,7 +17,7 @@ win32 {
     $$OSGEO4W_DIR/include
 
     DEFINES += WIN32
-    DESTDIR = ../bin64
+    DESTDIR = ../bin
 }
 
 unix {

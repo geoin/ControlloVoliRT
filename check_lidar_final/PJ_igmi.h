@@ -8,6 +8,8 @@
 !			09/09/2008	created
 !			17/06/2009	updated
 !----------------------------------------------------------------------------*/
+#ifndef PJ_IHMI_H
+#define PJ_IHMI_H
 /******************
 	File modificati per aggiungere l'opzione IGMGRID:
 	PJ_apply_gridshift.c : aggiunta le funzioni igmgridinit igmgriddealloc pj_apply_igmgridshift
@@ -33,10 +35,10 @@
 #define DEG_RAD(val) (M_PI / 180.) * (val)
 #define RAD_DEG(val) (180. / M_PI) * (val)
 
-#ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
-#endif
+//#ifndef max
+//#define max(a,b) (((a) > (b)) ? (a) : (b))
+//#define min(a,b) (((a) < (b)) ? (a) : (b))
+//#endif
 
 static int nearest(double val)
 {
@@ -234,13 +236,13 @@ bool hGrid::MergeGrid(const char* nome, DATUM_TYPE dt)
 	if ( plat != hg.plat || plon != hg.plon )
 		return false; // non si possono fondere grigliati con passi differenti
 
-    double minlat = min(lat0, hg.lat0);
-    double minlon = min(lon0, hg.lon0);
+    double minlat = std::min(lat0, hg.lat0);
+    double minlon = std::min(lon0, hg.lon0);
 	
 	double lat1 = lat0 + plat * (nlat - 1);
 	double lon1 = lon0 + plon * (nlon - 1);
-    double maxlat = max(lat1, (hg.lat0 + hg.plat * (hg.nlat - 1)));
-    double maxlon = max(lon1, (hg.lon0 + hg.plon * (hg.nlon - 1)));
+    double maxlat = std::max(lat1, (hg.lat0 + hg.plat * (hg.nlat - 1)));
+    double maxlon = std::max(lon1, (hg.lon0 + hg.plon * (hg.nlon - 1)));
 
 	int newlat = nearest((maxlat - minlat) / plat) + 1;
 	int newlon = nearest((maxlon - minlon) / plon) + 1;
@@ -436,13 +438,13 @@ bool vGrid::MergeGrid(const char* nome)
 	if ( plat != vg.plat || plon != vg.plon )
 		return false; // non si possono fondere grigliati con passi differenti
 
-    double minlat = min(lat0, vg.lat0);
-    double minlon = min(lon0, vg.lon0);
+    double minlat = std::min(lat0, vg.lat0);
+    double minlon = std::min(lon0, vg.lon0);
 	
 	double lat1 = lat0 + plat * (nlat - 1);
 	double lon1 = lon0 + plon * (nlon - 1);
-    double maxlat = max(lat1, vg.lat0 + vg.plat * (vg.nlat - 1));
-    double maxlon = max(lon1, vg.lon0 + vg.plon * (vg.nlon - 1));
+    double maxlat = std::max(lat1, vg.lat0 + vg.plat * (vg.nlat - 1));
+    double maxlon = std::max(lon1, vg.lon0 + vg.plon * (vg.nlon - 1));
 
 	int newlat = nearest((maxlat - minlat ) / plat) + 1;
 	int newlon = nearest((maxlon - minlon ) / plon) + 1;
@@ -841,3 +843,4 @@ void grApplyI(void*_ig_, double* x, double* y, double* z)
 	}
 }
 }
+#endif

@@ -6,6 +6,9 @@
 
 #include "cv/lidar.h"
 #include "proj_api.h"
+//#include "PJ_igmi.h"
+
+class vGrid;
 
 class lidar_final_exec {
 
@@ -51,6 +54,7 @@ public:
 private:
 	void _getCoordNameList(const std::string& fold, const std::string& ext, std::vector<std::string>& list, bool complete = true);
 	bool _sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2, std::vector<std::string>& diff);
+	std::string build_gridname( const std::vector<std::string>& list, const std::string& nome );
 	
     std::string _fileFromCorner(const std::string& folder, const std::string& ext, const std::string& corner);
 	std::string _getFolder(const std::string& table);
@@ -64,6 +68,7 @@ private:
     void _checkRawRandom(const std::string& raw, int pulse, std::map< std::string, std::vector<double> >& rawRandomDiff );
 	void _checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& diff);
 	void _checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>&);
+    bool InitIGMIgrid( vGrid& grid );
 
 	void _checkEllipsoidicData();
 	void _checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data, const std::string&);

@@ -26,6 +26,7 @@
 */
 
 #include "RT-qgis_plugin.h"
+#define _USE_MATH_DEFINES
 #include "qgisinterface.h"
 //#include "qgisiface.h"
 #include "qgsgeometry.h"
@@ -51,8 +52,8 @@
 #include <QUrl>
 #include <QFormLayout>
 
-#define RT_PLUGIN_VERSION "1.4.0"
-#define RT_PLUGIN_DATE "03/02/2016"
+#define RT_PLUGIN_VERSION "1.5.0"
+#define RT_PLUGIN_DATE "18/06/2017"
 
 #ifdef WIN32
 #define QGISEXTERN extern "C" __declspec( dllexport )

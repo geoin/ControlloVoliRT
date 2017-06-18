@@ -84,7 +84,7 @@ public:
 	{
 		double vret = _amax[0];
 		for (int i = 0; i < _size; i++)
-			vret = std::max( vret, _amax[i] );
+                        vret = (std::max)( vret, _amax[i] );
 		return vret;
 	}
 	std::vector<double> variance(void) const {

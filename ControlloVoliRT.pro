@@ -12,5 +12,6 @@ SUBDIRS +=			\
         CVLoaderUI              \
 	dem_interpolate		\
 	photo_util		\
+        RT-qgis_plugin          \
         rtklib                  \
         ziplib

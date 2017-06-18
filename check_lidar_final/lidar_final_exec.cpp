@@ -38,6 +38,106 @@ std::string get_key(const std::string& val) {
     return std::string(LIDAR) + "." + val;
 }
 
+std::istream& _Getline(std::istream& is, std::string& t) {
+    t.clear();
+
+    // The characters in the stream are read one-by-one using a std::streambuf.
+    // That is faster than reading them one-by-one using the std::istream.
+    // Code that uses streambuf this way must be guarded by a sentry object.
+    // The sentry object performs various tasks,
+    // such as thread synchronization and updating the stream state.
+
+    std::istream::sentry se(is, true);
+    std::streambuf* sb = is.rdbuf();
+
+    for(;;) {
+        int c = sb->sbumpc();
+        switch (c) {
+        case '\n':
+            return is;
+        case '\r':
+            if(sb->sgetc() == '\n')
+                sb->sbumpc();
+            return is;
+        case EOF:
+            // Also handle the case when the last line has no line ending
+            if(t.empty())
+                is.setstate(std::ios::eofbit);
+            return is;
+        default:
+            t += (char)c;
+        }
+    }
+}
+
+class ortometric {
+public:
+    ortometric(const std::string& gridFile): _gridFile(gridFile) {
+        utm = pj_init_plus("+proj=utm +ellps=WGS84 +zone=32 +datum=WGS84 +units=m +no_defs");
+        wgs84 = pj_init_plus("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
+        InitIGMIgrid();
+    }
+
+    bool InitIGMIgrid( ) {
+        std::vector<Poco::Path> files;
+
+        vGrid::HGRID_TYPE type;
+        Poco::Path g( _gridFile );
+        if( Poco::toLower( g.getExtension() ) == "gk1" || Poco::toLower( g.getExtension() ) == "gk2" ) {
+            type = vGrid::ty_GK;
+            files.push_back( g );
+        } else if( Poco::toLower( g.getExtension() ) == "gr1" || Poco::toLower( g.getExtension() ) == "gr2" ) {
+            type = vGrid::ty_GR;
+            files.push_back( g );
+        } else {
+            std::fstream in;
+            in.open( _gridFile, std::ios_base::in );
+
+            std::string line;
+            while( _Getline( in, line ) ) {
+                Poco::Path t( line );
+                if( Poco::toLower( t.getExtension() ) == "gk1" || Poco::toLower( t.getExtension() ) == "gk2" ) {
+                    type = vGrid::ty_GK;
+                    files.push_back( t );
+                } else if( Poco::toLower( t.getExtension() ) == "gr1" || Poco::toLower( t.getExtension() ) == "gr2" ) {
+                    type = vGrid::ty_GR;
+                    files.push_back( t );
+                }
+            }
+        }
+
+        bool ret = true;
+        for( std::vector<Poco::Path>::iterator it = files.begin(); it != files.end(); it++ ) {
+            if( it == files.begin() ) {
+                ret |= grid.Init( it->toString().c_str(), type );
+            } else {
+                ret |= grid.MergeGrid( it->toString().c_str() );
+            }
+        }
+        return true;
+    }
+
+    double ortoQ(double x, double y, double z )  {
+        double lat(y);
+        double lon(x);
+        double quote(z);
+        pj_transform(utm, wgs84, 1, 1, &lon, &lat, &quote);
+        double diff(0);
+        if (grid.GetCorrections(lat, lon, &diff)) {
+            quote -= diff;
+        } else
+         quote = Z_NOVAL;
+        return quote;
+    }
+
+private:
+    std::string _gridFile;
+    vGrid grid;
+    projPJ utm; // = pj_init_plus("+proj=utm +ellps=WGS84 +zone=32 +datum=WGS84 +units=m +no_defs");
+    projPJ wgs84; // = pj_init_plus("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
+
+};
+
 lidar_final_exec::lidar_final_exec(): LID_ANG_SCAN( 0 ), LID_TOL_A(0) {
 	srand(time(NULL));
 	_coversAll = false;
@@ -97,20 +197,22 @@ bool lidar_final_exec::run() {
 	
 	// verifica che il dato groud abbia corrispondenti nelle strip
     Check_log << "Analisi classificazione ground" << std::endl;
-    _checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
+    //_checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
 
+    // come sopra ma per il dato overground
     Check_log << "Analisi classificazione overground" << std::endl;
-    _checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
+    //_checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
 	
 //    Check_log << "Analisi classificazione.." << std::endl;
 //    _checkEllipsoidicData();
 	
-    Check_log << "Analisi conversione ground grid" << std::endl;
+//    Check_log << "Analisi conversione ground grid" << std::endl;
 //	_checkQuota(_groundEll, _groundOrto, statsGround);
 	
-    Check_log << "Analisi conversione overgground grid" << std::endl;
+//    Check_log << "Analisi conversione overgground grid" << std::endl;
 //	_checkQuota(_overgroundEll, _overgroundOrto, statsOverGround);
 	
+    // Verifica che ricampionamento e conversione quote produca risultati congrui
     Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
     _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt);
 
@@ -251,6 +353,24 @@ void lidar_final_exec::_getCoordNameList(const std::string& fold, const std::str
 			}
 		}
 	}
+}
+std::string lidar_final_exec::build_gridname( const std::vector<std::string>& list, const std::string& nome ) {
+	std::string Nome( nome );
+	std::transform( Nome.begin(), Nome.end(), Nome.begin(), ::toupper );
+	size_t k1 = Nome.find_last_of( '_' );
+	if( k1 != std::string::npos )
+		Nome = Nome.substr( k1 );
+
+	for( size_t i = 0; i < list.size(); i++ ) {
+		std::string val = list[i];
+		size_t k = val.find_last_of( '_' );
+		if( k != std::string::npos )
+			val= val.substr( k );
+
+		if( val == Nome )
+			return val;
+	}
+	return "";
 }
 
 bool lidar_final_exec::_sortAndCompare(std::vector<std::string>& list1, std::vector<std::string>& list2, std::vector<std::string>& diff) {
@@ -756,6 +876,8 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 		cnt = 1;
 	}
 
+    ortometric orto(_gridFile);
+
 	Geoin::Util::Sampler sampler(size);
 	sampler.sample(cnt, size);
 	
@@ -771,7 +893,13 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 			continue;
 		}
 
-		std::string mdtPath = _fileFromCorner(folder2, "asc", corner);
+		std::string mdtnome = build_gridname( list2, corner );
+		if( mdtnome.empty() ) {
+			Check_log << "Non è stato trovato l'MDT corrispondente a  " << corner << std::endl;
+			continue;
+		}
+		std::string mdtPath	= _fileFromCorner(folder2, "asc", mdtnome );
+
 		DSM_Factory m;
 		if (!m.Open(mdtPath, false, false)) {
             Check_log << "Impossibile aprire " << mdtPath << std::endl;
@@ -786,51 +914,32 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 		Geoin::Util::Sampler sampler(npt);
 		sampler.sample(cntp, npt);
 		
+//		vGrid grid;
+//        InitIGMIgrid( grid );
 		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
 			const NODE& n = m.GetDsm()->Node(*itp);
 			double z = gr.GetDsm()->GetQuota(n.x, n.y);
+
 			if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT) {
-				diff.push_back(z - n.z);
+                z = orto.ortoQ(n.x, n.y, z);
+                if (z != Z_NOVAL )
+//				double cr;
+//				if( grid.GetCorrections( n.y, n.x, &cr ) ) {
+//					z -= cr;
+//				}
+                    diff.push_back(z - n.z);
 			}
 		}
 
+        Check_log << corner << " analizzati " << diff.size() << " punti" << std::endl;
 		Stats s = { corner, 0, 0, diff.size()};
-		GetStats(diff, s);
+        GetStats(diff, s);
+        Check_log << "   media " << s.mean << " st dev " << s.stdDev << std::endl;
 		stats.push_back(s);
 	}
 }
 
-std::istream& _Getline(std::istream& is, std::string& t) {
-    t.clear();
 
-    // The characters in the stream are read one-by-one using a std::streambuf.
-    // That is faster than reading them one-by-one using the std::istream.
-    // Code that uses streambuf this way must be guarded by a sentry object.
-    // The sentry object performs various tasks,
-    // such as thread synchronization and updating the stream state.
-
-    std::istream::sentry se(is, true);
-    std::streambuf* sb = is.rdbuf();
-
-    for(;;) {
-        int c = sb->sbumpc();
-        switch (c) {
-        case '\n':
-            return is;
-        case '\r':
-            if(sb->sgetc() == '\n')
-                sb->sbumpc();
-            return is;
-        case EOF:
-            // Also handle the case when the last line has no line ending
-            if(t.empty())
-                is.setstate(std::ios::eofbit);
-            return is;
-        default:
-            t += (char)c;
-        }
-    }
-}
 
 void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>& stats) { 
 	std::vector<Poco::Path> files;
@@ -954,8 +1063,8 @@ std::string lidar_final_exec::_fileFromCorner(const std::string& folder, const s
 size_t lidar_final_exec::_getSamplesCount(size_t minVal, size_t maxVal, size_t size, double perc) {
 	size_t count = size * perc;
 
-	count = min(count, maxVal);
-	count = max(count, minVal);
+    count = std::min(count, maxVal);
+    count = std::max(count, minVal);
 	return count < size ? count : size - 1;
 }
 

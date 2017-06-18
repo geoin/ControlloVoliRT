@@ -38,9 +38,31 @@ void RETTA::X1PointNor(const DPOINT& p1, const RETTA& rtA)
 	b = -rtA.a;
     c = -a * p1.x - b * p1.y;
 }
+bool RETTA::Intersez(RETTA& rt, DPOINT *point) const
+{
+    double den = a * rt.b - rt.a * b;
+    if ( fabs(den ) < 1.e-4 )
+        return false;	// parallel
+
+    point->x = (-c * rt.b + rt.c * b) / den;
+    point->y = (-a * rt.c + rt.a * c) / den;
+    return true;
+}
 double RETTA::val(const DPOINT& p) 
 {
 	return a * p.x + b * p.y + c;
+}
+
+bool SEGMENTO::IsPtIn(DPOINT* pt) const
+{
+    double teta = p1.angdir(p2);
+    double dist = p1.dist2D(p2);
+    double yprj = (pt->x - p1.x) * sin(teta) + (pt->y - p1.y) * cos(teta);
+    if ( fabs(yprj) < EPS_TH ) yprj = 0.;
+    if ( fabs(yprj - dist ) < EPS_TH) yprj = dist;
+    if ( yprj < 0. || yprj > dist )
+        return false;
+    return true;
 }
 //RETTA RETTA::X1PointNor(const DPOINT& p1)
 //{

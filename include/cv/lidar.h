@@ -333,11 +333,9 @@ public:
     void init(double ang) {
 		if (!_factory.get()) {
 			_factory.assign(new DSM_Factory);
-//            _factory->SetEcho(MyLas::single_pulse);
-//            _factory->SetAngle(ang);
-//            std::cout << "STRIP INIT " << ang << " " <<
+
 		}
-        _factory->SetEcho(MyLas::single_pulse);
+        _factory->SetEcho(MyLas::last_pulse); //single_pulse);
         _factory->SetAngle(ang);
         //std::cout << "STRIP INIT " << ang << " " << std::endl;
 	}
