@@ -790,11 +790,11 @@ public:
 private:
     void _zminmax(void) {
         _zmin = _p[0].z;
-        _zmin = std::min(_zmin, _p[1].z);
-        _zmin = std::min(_zmin, _p[2].z);
+        _zmin = (std::min)(_zmin, _p[1].z);
+        _zmin = (std::min)(_zmin, _p[2].z);
         _zmax = _p[0].z;
-        _zmax = std::max(_zmax, _p[1].z);
-        _zmax = std::max(_zmax, _p[2].z);
+        _zmax = (std::max)(_zmax, _p[1].z);
+        _zmax = (std::max)(_zmax, _p[2].z);
 
     }
     double _sign(const DPOINT& p1, const DPOINT& p2, const DPOINT& p3) {
@@ -826,10 +826,10 @@ public:
 		Xs = -INF; Ys = -INF;
 	}
 	void Update(double x, double y) {
-		Xi = std::min(Xi, x);
-		Yi = std::min(Yi, y);
-		Xs = std::max(Xs, x);
-		Ys = std::max(Ys, y);
+		Xi = (std::min)(Xi, x);
+		Yi = (std::min)(Yi, y);
+		Xs = (std::max)(Xs, x);
+		Ys = (std::max)(Ys, y);
 	}
 	void Assign(double* xi0, double* yi0, double* xi1, double* yi1) {
 		*xi0 = Xi; *yi0 = Yi;
@@ -874,17 +874,17 @@ public:
 	bool Intersect(const MBR& mbr) {
 		if ( Disjoint(mbr) )
 			return false;
-		Xi = std::max(Xi, mbr.GetMinX());
-		Xs = std::min(Xs, mbr.GetMaxX());
-		Yi = std::max(Yi, mbr.GetMinY());
-		Ys = std::min(Ys, mbr.GetMaxY());
+		Xi = (std::max)(Xi, mbr.GetMinX());
+		Xs = (std::min)(Xs, mbr.GetMaxX());
+		Yi = (std::max)(Yi, mbr.GetMinY());
+		Ys = (std::min)(Ys, mbr.GetMaxY());
 		return true;
 	}
 	void Extend(MBR& mbr) {
-		Xi = std::min(Xi, mbr.GetMinX());
-		Yi = std::min(Yi, mbr.GetMinY());
-		Xs = std::max(Xs, mbr.GetMaxX());
-		Ys = std::max(Ys, mbr.GetMaxY());
+		Xi = (std::min)(Xi, mbr.GetMinX());
+		Yi = (std::min)(Yi, mbr.GetMinY());
+		Xs = (std::max)(Xs, mbr.GetMaxX());
+		Ys = (std::max)(Ys, mbr.GetMaxY());
 	}
 	void Inflate(double dx, double dy) {
 		Xi -= dx; Xs += dx;

@@ -1,3 +1,29 @@
+/*
+    File: lidar_final_exec.h
+    Author:  F.Flamigni
+    Date: 2017 June 19
+    Comment:
+
+    Disclaimer:
+        This file is part of RT_Controllo_Voli.
+
+        Tabula is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Lesser General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        Tabula is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+        Copyright (C) 2013 Geoin s.r.l.
+
+*/
 #ifndef LIDAR_FINAL_EXEC_H
 #define LIDAR_FINAL_EXEC_H
 

@@ -1,3 +1,29 @@
+/*
+    File: lidar_final_exec.cpp
+    Author:  F.Flamigni
+    Date: 2017 June 19
+    Comment:
+
+    Disclaimer:
+        This file is part of RT_Controllo_Voli.
+
+        Tabula is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Lesser General Public License as published by
+        the Free Software Foundation, either version 3 of the License, or
+        (at your option) any later version.
+
+        Tabula is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with Tabula.  If not, see <http://www.gnu.org/licenses/>.
+
+
+        Copyright (C) 2013 Geoin s.r.l.
+
+*/
 #include "lidar_final_exec.h"
 #include "common/statistics.h"
 
@@ -81,13 +107,13 @@ public:
     bool InitIGMIgrid( ) {
         std::vector<Poco::Path> files;
 
-        vGrid::HGRID_TYPE type;
+        iGrid::GRID_TYPE gridtype = iGrid::ty_UKN;
         Poco::Path g( _gridFile );
         if( Poco::toLower( g.getExtension() ) == "gk1" || Poco::toLower( g.getExtension() ) == "gk2" ) {
-            type = vGrid::ty_GK;
+            gridtype = iGrid::ty_GK;
             files.push_back( g );
         } else if( Poco::toLower( g.getExtension() ) == "gr1" || Poco::toLower( g.getExtension() ) == "gr2" ) {
-            type = vGrid::ty_GR;
+            gridtype = iGrid::ty_GR;
             files.push_back( g );
         } else {
             std::fstream in;
@@ -97,21 +123,34 @@ public:
             while( _Getline( in, line ) ) {
                 Poco::Path t( line );
                 if( Poco::toLower( t.getExtension() ) == "gk1" || Poco::toLower( t.getExtension() ) == "gk2" ) {
-                    type = vGrid::ty_GK;
+					if (gridtype == iGrid::ty_UKN )
+						gridtype = iGrid::ty_GK;
+					else {
+						if( gridtype != iGrid::ty_GK )
+							return false; // mixed grids
+					}
                     files.push_back( t );
                 } else if( Poco::toLower( t.getExtension() ) == "gr1" || Poco::toLower( t.getExtension() ) == "gr2" ) {
-                    type = vGrid::ty_GR;
+					if( gridtype == iGrid::ty_UKN )
+						gridtype = iGrid::ty_GR;
+					else {
+						if( gridtype != iGrid::ty_GR )
+							return false; // mixed grids
+					}
                     files.push_back( t );
                 }
             }
         }
+        iGrid::DATUM_TYPE datumtype = (gridtype == iGrid::ty_GK) ? iGrid::ty_ETRF2000 : iGrid::ty_ROMA40;
 
         bool ret = true;
         for( std::vector<Poco::Path>::iterator it = files.begin(); it != files.end(); it++ ) {
             if( it == files.begin() ) {
-                ret |= grid.Init( it->toString().c_str(), type );
+                ret |= _Vgrid.Init( it->toString().c_str(), gridtype );
+                ret |= _Hgrid.Init( it->toString().c_str(), gridtype, datumtype );
             } else {
-                ret |= grid.MergeGrid( it->toString().c_str() );
+                ret |= _Vgrid.MergeGrid( it->toString().c_str() );
+                ret |= _Hgrid.MergeGrid( it->toString().c_str() );
             }
         }
         return true;
@@ -121,20 +160,29 @@ public:
         double lat(y);
         double lon(x);
         double quote(z);
+
+        // da piane utm32 a geografiche (ETRF2000)
         pj_transform(utm, wgs84, 1, 1, &lon, &lat, &quote);
+
+        // da ETRF2000 a ETRF89
+        double la, lo, quo;
+        _Hgrid.GetCoordI( lat, lon, quote, &la, &lo, &quo);
+
+        // quota da ellissoidica a ortometrica
         double diff(0);
-        if (grid.GetCorrections(lat, lon, &diff)) {
-            quote -= diff;
+        if (_Vgrid.GetCorrections(la, lo, &diff)) {
+            quo -= diff;
         } else
-         quote = Z_NOVAL;
-        return quote;
+            quo = Z_NOVAL;
+        return quo;
     }
 
 private:
     std::string _gridFile;
-    vGrid grid;
-    projPJ utm; // = pj_init_plus("+proj=utm +ellps=WGS84 +zone=32 +datum=WGS84 +units=m +no_defs");
-    projPJ wgs84; // = pj_init_plus("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
+    vGrid _Vgrid;
+    hGrid _Hgrid;
+    projPJ utm;
+    projPJ wgs84;
 
 };
 
@@ -169,7 +217,7 @@ bool lidar_final_exec::readReference() {
 
 bool lidar_final_exec::run() {
     Poco::Path lp(_proj_dir, "Lidar_final.log");
-    Check_log.Init(lp.toString());
+    Check_log.Init(lp.toString(), true);
 
     Poco::LocalDateTime dt;
     Check_log << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute() << std::endl;
@@ -920,13 +968,10 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 			const NODE& n = m.GetDsm()->Node(*itp);
 			double z = gr.GetDsm()->GetQuota(n.x, n.y);
 
-			if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT) {
+			if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT && z != Z_WEAK && n.z != Z_WEAK ) {
                 z = orto.ortoQ(n.x, n.y, z);
                 if (z != Z_NOVAL )
-//				double cr;
-//				if( grid.GetCorrections( n.y, n.x, &cr ) ) {
-//					z -= cr;
-//				}
+
                     diff.push_back(z - n.z);
 			}
 		}
@@ -941,105 +986,105 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 
 
 
-void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>& stats) { 
-	std::vector<Poco::Path> files;
+//void lidar_final_exec::_checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>& stats) {
+//	std::vector<Poco::Path> files;
 
-	vGrid::HGRID_TYPE type;
-	Poco::Path g(_gridFile);
-	if (Poco::toLower(g.getExtension()) == "gk1" || Poco::toLower(g.getExtension()) == "gk2") {
-		type = vGrid::ty_GK;
-		files.push_back(g);
-	} else if (Poco::toLower(g.getExtension()) == "gr1" || Poco::toLower(g.getExtension()) == "gr2") {
-		type = vGrid::ty_GR;
-		files.push_back(g);
-	} else {
-		std::fstream in;
-        in.open(_gridFile, std::ios_base::in);
+//	vGrid::HGRID_TYPE type;
+//	Poco::Path g(_gridFile);
+//	if (Poco::toLower(g.getExtension()) == "gk1" || Poco::toLower(g.getExtension()) == "gk2") {
+//		type = vGrid::ty_GK;
+//		files.push_back(g);
+//	} else if (Poco::toLower(g.getExtension()) == "gr1" || Poco::toLower(g.getExtension()) == "gr2") {
+//		type = vGrid::ty_GR;
+//		files.push_back(g);
+//	} else {
+//		std::fstream in;
+//        in.open(_gridFile, std::ios_base::in);
 
-		std::string line;
-        while (_Getline(in, line)) {
-			Poco::Path t(line);
-            if (Poco::toLower(t.getExtension()) == "gk1" || Poco::toLower(t.getExtension()) == "gk2") {
-				type = vGrid::ty_GK;
-				files.push_back(t);
-            } else if (Poco::toLower(t.getExtension()) == "gr1" || Poco::toLower(t.getExtension()) == "gr2") {
-				type = vGrid::ty_GR;
-				files.push_back(t);
-			}
-		}
-	}
+//		std::string line;
+//        while (_Getline(in, line)) {
+//			Poco::Path t(line);
+//            if (Poco::toLower(t.getExtension()) == "gk1" || Poco::toLower(t.getExtension()) == "gk2") {
+//				type = vGrid::ty_GK;
+//				files.push_back(t);
+//            } else if (Poco::toLower(t.getExtension()) == "gr1" || Poco::toLower(t.getExtension()) == "gr2") {
+//				type = vGrid::ty_GR;
+//				files.push_back(t);
+//			}
+//		}
+//	}
 	
-	vGrid grid;
+//	vGrid grid;
 
-	bool ret = true;
-	for (std::vector<Poco::Path>::iterator it = files.begin(); it !=  files.end(); it++) {
-		if (it == files.begin()) {
-			ret |=  grid.Init(it->toString().c_str(), type);
-		} else {
-			ret |= grid.MergeGrid(it->toString().c_str());
-		}
-	}
+//	bool ret = true;
+//	for (std::vector<Poco::Path>::iterator it = files.begin(); it !=  files.end(); it++) {
+//		if (it == files.begin()) {
+//			ret |=  grid.Init(it->toString().c_str(), type);
+//		} else {
+//			ret |= grid.MergeGrid(it->toString().c_str());
+//		}
+//	}
 
-	projPJ utm = pj_init_plus("+proj=utm +ellps=WGS84 +zone=32 +datum=WGS84 +units=m +no_defs");
-	projPJ wgs84 = pj_init_plus("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
+//	projPJ utm = pj_init_plus("+proj=utm +ellps=WGS84 +zone=32 +datum=WGS84 +units=m +no_defs");
+//	projPJ wgs84 = pj_init_plus("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
 
-	std::vector<std::string>::iterator it = _rawList.begin();
-	std::vector<std::string>::iterator end = _rawList.end();
-	for (; it != end; it++) {
-		std::string ell = _fileFromCorner(folder1, "xyzic", *it);
-		DSM_Factory ellF; 
-		File_Mask mask(5, 1, 2, 3, 1, 1);
-		ellF.SetMask(mask);
-		bool ok = ellF.Open(ell, false, false);
+//	std::vector<std::string>::iterator it = _rawList.begin();
+//	std::vector<std::string>::iterator end = _rawList.end();
+//	for (; it != end; it++) {
+//		std::string ell = _fileFromCorner(folder1, "xyzic", *it);
+//		DSM_Factory ellF;
+//		File_Mask mask(5, 1, 2, 3, 1, 1);
+//		ellF.SetMask(mask);
+//		bool ok = ellF.Open(ell, false, false);
 
-		std::string orto = _fileFromCorner(folder2, "xyzic", *it);
-		DSM_Factory ortoF; 
-		File_Mask mask1(5, 1, 2, 3, 1, 1);
-		ortoF.SetMask(mask1);
-		ok = ortoF.Open(orto, false, false);
+//		std::string orto = _fileFromCorner(folder2, "xyzic", *it);
+//		DSM_Factory ortoF;
+//		File_Mask mask1(5, 1, 2, 3, 1, 1);
+//		ortoF.SetMask(mask1);
+//		ok = ortoF.Open(orto, false, false);
 
-		size_t ortoNpt = ortoF.GetDsm()->Npt(), ellNpt = ellF.GetDsm()->Npt();
-		if (ortoNpt != ellNpt) {
-            Check_log << ell << " e " << orto << " differiscono per numero di punti" << std::endl; //REPORT
-			continue;
-		}
-		std::vector<double> diffData;
+//		size_t ortoNpt = ortoF.GetDsm()->Npt(), ellNpt = ellF.GetDsm()->Npt();
+//		if (ortoNpt != ellNpt) {
+//            Check_log << ell << " e " << orto << " differiscono per numero di punti" << std::endl; //REPORT
+//			continue;
+//		}
+//		std::vector<double> diffData;
 
-		size_t npt = ortoF.GetDsm()->Npt(); 
-		size_t cntp = _qPP/100.0f * npt;
-		if (cntp == 0) {
-			cntp = 1;
-		}
+//		size_t npt = ortoF.GetDsm()->Npt();
+//		size_t cntp = _qPP/100.0f * npt;
+//		if (cntp == 0) {
+//			cntp = 1;
+//		}
 
-		Geoin::Util::Sampler sampler(npt);
-		sampler.sample(cntp, npt);
+//		Geoin::Util::Sampler sampler(npt);
+//		sampler.sample(cntp, npt);
 		
-		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
-			auto index = *itp;
-			const NODE& ellN = ellF.GetDsm()->Node(index);
-			const NODE& ortoN = ortoF.GetDsm()->Node(index);
+//		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
+//			auto index = *itp;
+//			const NODE& ellN = ellF.GetDsm()->Node(index);
+//			const NODE& ortoN = ortoF.GetDsm()->Node(index);
 
-			double x = ellN.x, y = ellN.y, z = ellN.z;
-			pj_transform(utm, wgs84, 1, 1, &x, &y, &z);
+//			double x = ellN.x, y = ellN.y, z = ellN.z;
+//			pj_transform(utm, wgs84, 1, 1, &x, &y, &z);
 	
-			double diff = 0;
-			if (grid.GetCorrections(y, x, &diff)) {
-				z -= diff;
-				if (z != Z_NOVAL && z != Z_OUT && ortoN.z != Z_NOVAL && ortoN.z != Z_OUT) {
-					diffData.push_back(ortoN.z - z); 
-				}
-			}
-		}
+//			double diff = 0;
+//			if (grid.GetCorrections(y, x, &diff)) {
+//				z -= diff;
+//				if (z != Z_NOVAL && z != Z_OUT && ortoN.z != Z_NOVAL && ortoN.z != Z_OUT) {
+//					diffData.push_back(ortoN.z - z);
+//				}
+//			}
+//		}
 
-		Stats st = { *it, 0, 0, diffData.size() };
-		GetStats(diffData, st);
+//		Stats st = { *it, 0, 0, diffData.size() };
+//		GetStats(diffData, st);
 
-		stats.push_back(st);
-	}
+//		stats.push_back(st);
+//	}
 
-	pj_free(utm);
-	pj_free(wgs84);
-}
+//	pj_free(utm);
+//	pj_free(wgs84);
+//}
 
 std::string lidar_final_exec::_fileFromCorner(const std::string& folder, const std::string& ext, const std::string& corner) {
 	std::vector<std::string> folderContent;
