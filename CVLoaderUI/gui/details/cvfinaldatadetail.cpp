@@ -31,62 +31,78 @@ CVFinalDataDetail::CVFinalDataDetail(QWidget* p, Core::CVObject* l) : CVBaseDeta
 	
     QFormLayout* form = new QFormLayout;
 
-	QWidget* w = _addFolderPicker("FINAL_RAW_STRIP_DATA");
-	form->addRow("Dati grezzi LAS", w);
-	_data["FINAL_RAW_STRIP_DATA"] = w;
+    QWidget* w = nullptr;
+//    w = _addFolderPicker("FINAL_RAW_STRIP_DATA");
+//    form->addRow("****Dati grezzi LAS", w);
+//    _data["FINAL_RAW_STRIP_DATA"] = w;
 	
 	w = _addFolderPicker("FINAL_GROUND_ELL");
-	form->addRow("Dati ground ellissoidici", w);
+    form->addRow("Tile GROUND", w);
 	_data["FINAL_GROUND_ELL"] = w;
 	
-	w = _addFolderPicker("FINAL_GROUND_ORTO");
-	form->addRow("Dati ground ortometrici", w);
-	_data["FINAL_GROUND_ORTO"] = w;
+//    w = _addFolderPicker("FINAL_GROUND_ORTO");
+//    form->addRow("****Dati ground ortometrici", w);
+//    _data["FINAL_GROUND_ORTO"] = w;
 	
 	w = _addFolderPicker("FINAL_OVERGROUND_ELL");
-	form->addRow("Dati overground ellissoidici", w);
+    form->addRow("Tile OVERGROUND", w);
 	_data["FINAL_OVERGROUND_ELL"] = w;
 	
-	w = _addFolderPicker("FINAL_OVERGROUND_ORTO");
-	form->addRow("Dati overground ortometrici", w);
-	_data["FINAL_OVERGROUND_ORTO"] = w;
+//    w = _addFolderPicker("FINAL_OVERGROUND_ORTO");
+//    form->addRow("***Dati overground ortometrici", w);
+//    _data["FINAL_OVERGROUND_ORTO"] = w;
 	
 	w = _addFolderPicker("FINAL_MDS");
-	form->addRow("Dati mds ortometrici", w);
+	form->addRow("Grid MDS ortometrico", w);
 	_data["FINAL_MDS"] = w;
 	
 	w = _addFolderPicker("FINAL_MDT");
-	form->addRow("Dati mdt ortometrici", w);
+	form->addRow("Grid MDT ortometrico", w);
 	_data["FINAL_MDT"] = w;
 	
 	w = _addFolderPicker("FINAL_INTENSITY");
-	form->addRow("Dati intensità", w);
+	form->addRow("Modello intensità", w);
 	_data["FINAL_INTENSITY"] = w;
 	
-	w = _addFilePicker("FINAL_IGM_GRID");
-	form->addRow("Grigliati IGMI", w);
-	_data["FINAL_IGM_GRID"] = w;
+    w = _addFilePicker("FINAL_IGM_GRID");
+    form->addRow("Grigliati IGMI", w);
+    _data["FINAL_IGM_GRID"] = w;
 
-	QSpinBox* box = new QSpinBox(this);
-	box->setRange(0, 10000);
-	box->setSingleStep(1000);
+//    QSpinBox* box = new QSpinBox(this);
+//    box->setRange(0, 10000);
+//    box->setSingleStep(1000);
 
-	form->addRow("Misura tile griglia (m)", box);
+//    form->addRow("Misura tile griglia (m)", box);
 
-	connect(box, SIGNAL(valueChanged(int)), this, SLOT(onTileSizeChanged(int)));
+//	connect(box, SIGNAL(valueChanged(int)), this, SLOT(onTileSizeChanged(int)));
 
 	body(form);
 
-	if (controller()->isValid()) {
-		QStringList& data = input()->data();
+    if (controller()->isValid()) {
+        QStringList& data = input()->data();
         QStringList tables = input()->tables();
-		assert(data.size() >= _editors.size());
-		for (int i = 0; i < _editors.size(); ++i) {
-			_editors[tables.at(i)]->setText(data.at(i));
-		}
+		//for( int i = 0; i < tables.size(); i++ ) {
+		//	std::string ss = tables.at( i ).toStdString();
+		//	int a = 1;
+		//}
+		//for( int i = 0; i < data.size(); i++ ) {
+		//	std::string ss = data.at( i ).toStdString();
+		//	int a = 1;
+		//}
+		int kk = _editors.size();
 
-		box->setValue(input()->tileSize());
-	}
+        assert(data.size() >= _editors.size());
+        //for (int i = 0; i < _editors.size(); ++i) {
+		for( int i = 0; i < data.size(); ++i ) {
+			std::string ss = data.at( i ).toStdString();
+			if( ss.empty() )
+				continue;
+			std::string ss1 = tables.at( i ).toStdString();
+            _editors[tables.at(i)]->setText(data.at(i));
+        }
+
+//		box->setValue(input()->tileSize());
+    }
 }
 
 CVFinalDataDetail::~CVFinalDataDetail() {

@@ -694,7 +694,7 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
     form->addRow("Punti classificazione (%)", _classP);
     form->addRow("File ricampionamento (%)", _resF);
     form->addRow("Punti ricampionamento (%)", _resP);
-    form->addRow("Punti quota (%)", _qP);
+    form->addRow("**Punti quota (%)", _qP);
     qvb->addLayout(form);
 
     _init(qvb);

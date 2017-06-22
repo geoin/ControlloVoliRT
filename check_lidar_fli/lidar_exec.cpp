@@ -82,9 +82,9 @@ lidar_exec::~lidar_exec()
 
 bool lidar_exec::run()
 {
-    _skip_areatest = true;
+    _skip_areatest = false;
     Poco::Path lp(_proj_dir, "Lidar_flight.log");
-    Check_log.Init(lp.toString());
+    Check_log.Init(lp.toString(), true);
 
     Poco::LocalDateTime dt;
     Check_log << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute() << std::endl;
@@ -109,9 +109,6 @@ bool lidar_exec::run()
 
 		// quota volo dagli assi
 		_findReferenceColumns();
-
-        // TEST
-        //_check_sample_cloud_folder();
 
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
 		

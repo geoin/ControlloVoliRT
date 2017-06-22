@@ -58,15 +58,15 @@ void check_lidar_final::defineOptions(OptionSet& options) {
             .required(true)
             .repeatable(false)
             .argument("value")
-			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleClassFilesPerc)));
+            .callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleTilesFilesPerc)));
 
 	
-    options.addOption(
-        Option("cp", "cp", "Percentuale punti classificazione")
-            .required(true)
-            .repeatable(false)
-            .argument("value")
-			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleClassPointsPerc)));
+//    options.addOption(
+//        Option("cp", "cp", "Percentuale punti classificazione")
+//            .required(true)
+//            .repeatable(false)
+//            .argument("value")
+//			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleClassPointsPerc)));
 
 	 options.addOption(
         Option("rf", "rf", "Percentuale file ricampionamento")
@@ -84,12 +84,12 @@ void check_lidar_final::defineOptions(OptionSet& options) {
 			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleResamplePointsPerc)));
 
 	
-    options.addOption(
-        Option("quota", "q", "Percentuale punti quota")
-            .required(true)
-            .repeatable(false)
-            .argument("value")
-			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleTilesPointsPerc)));
+//    options.addOption(
+//        Option("quota", "q", "Percentuale punti quota")
+//            .required(true)
+//            .repeatable(false)
+//            .argument("value")
+//			.callback(OptionCallback<check_lidar_final>(this, &check_lidar_final::handleTilesPointsPerc)));
 }
 
 void check_lidar_final::handleHelp(const std::string& name, const std::string& value) {

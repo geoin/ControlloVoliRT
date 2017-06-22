@@ -47,11 +47,11 @@ private:
     void handlePrjDir(const std::string& name, const std::string & value);
 
 	void handleTilesPointsPerc(const std::string& name, const std::string& p) { _check.setTilesPointsPerc(std::stoi(p)); }
-	void handleClassFilesPerc(const std::string& name, const std::string& p) { _check.setClassFilesPerc(std::stoi(p)); }
-	void handleClassPointsPerc(const std::string& name, const std::string& p) { _check.setClassPointsPerc(std::stoi(p)); }
+    void handleTilesFilesPerc(const std::string& name, const std::string& p) { _check.setTilesFilesPerc(std::stoi(p)); }
+//	void handleClassPointsPerc(const std::string& name, const std::string& p) { _check.setClassPointsPerc(std::stoi(p)); }
 	void handleResampleFilesPerc(const std::string& name, const std::string& p) { _check.setResampleFilesPerc(std::stoi(p)); }
 	void handleResamplePointsPerc(const std::string& name, const std::string& p) { _check.setResamplePointsPerc(std::stoi(p)); }
-	void handleQuotaPointsPerc(const std::string& name, const std::string& p) { _check.setQuotaPointsPerc(std::stoi(p)); }
+//	void handleQuotaPointsPerc(const std::string& name, const std::string& p) { _check.setQuotaPointsPerc(std::stoi(p)); }
 
     bool _helpRequested;
 

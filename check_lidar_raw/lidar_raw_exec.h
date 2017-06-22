@@ -68,6 +68,7 @@ private:
 
 	bool _checkDensity();
 	bool _checkIntersection();
+    bool _checkGCP();
 
 	void _getStats(const std::vector<double>& diff, Stats&);
 

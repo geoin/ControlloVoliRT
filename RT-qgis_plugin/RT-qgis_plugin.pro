@@ -8,7 +8,8 @@ QT += xml gui core
 
 win32 {
     OSGEO4W_DIR = "D:/OSGeo4W64"
-    QGIS_DIR = $$OSGEO4W_DIR"/apps/qgis-rel-dev"
+    QGIS_DIR = $$OSGEO4W_DIR"/apps/qgis-ltr-dev"
+    #QGIS_DIR = $$OSGEO4W_DIR"/apps/qgis-rel-dev"
 
 
     LIBS += $$QGIS_DIR/lib/qgis_core.lib -L$$OSGEO4W_DIR/lib
@@ -17,7 +18,7 @@ win32 {
     $$OSGEO4W_DIR/include
 
     DEFINES += WIN32
-    DESTDIR = ../bin
+    DESTDIR = $$_PRO_FILE_PWD_/../../bin
 }
 
 unix {

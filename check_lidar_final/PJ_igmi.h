@@ -270,13 +270,13 @@ bool hGrid::MergeGrid(const char* nome)
 	if ( plat != hg.plat || plon != hg.plon )
 		return false; // non si possono fondere grigliati con passi differenti
 
-    double minlat = std::min(lat0, hg.lat0);
-    double minlon = std::min(lon0, hg.lon0);
+    double minlat = (std::min)(lat0, hg.lat0);
+    double minlon = (std::min)(lon0, hg.lon0);
 	
 	double lat1 = lat0 + plat * (nlat - 1);
 	double lon1 = lon0 + plon * (nlon - 1);
-    double maxlat = std::max(lat1, (hg.lat0 + hg.plat * (hg.nlat - 1)));
-    double maxlon = std::max(lon1, (hg.lon0 + hg.plon * (hg.nlon - 1)));
+    double maxlat = (std::max)(lat1, (hg.lat0 + hg.plat * (hg.nlat - 1)));
+    double maxlon = (std::max)(lon1, (hg.lon0 + hg.plon * (hg.nlon - 1)));
 
 	int newlat = nearest((maxlat - minlat) / plat) + 1;
 	int newlon = nearest((maxlon - minlon) / plon) + 1;
@@ -513,13 +513,13 @@ bool vGrid::MergeGrid(const char* nome)
 	if ( plat != vg.plat || plon != vg.plon )
 		return false; // non si possono fondere grigliati con passi differenti
 
-    double minlat = std::min(lat0, vg.lat0);
-    double minlon = std::min(lon0, vg.lon0);
+    double minlat = (std::min)(lat0, vg.lat0);
+    double minlon = (std::min)(lon0, vg.lon0);
 	
 	double lat1 = lat0 + plat * (nlat - 1);
 	double lon1 = lon0 + plon * (nlon - 1);
-    double maxlat = std::max(lat1, vg.lat0 + vg.plat * (vg.nlat - 1));
-    double maxlon = std::max(lon1, vg.lon0 + vg.plon * (vg.nlon - 1));
+    double maxlat = (std::max)(lat1, vg.lat0 + vg.plat * (vg.nlat - 1));
+    double maxlon = (std::max)(lon1, vg.lon0 + vg.plon * (vg.nlon - 1));
 
 	int newlat = nearest((maxlat - minlat ) / plat) + 1;
 	int newlon = nearest((maxlon - minlon ) / plon) + 1;

@@ -190,8 +190,9 @@ lidar_final_exec::lidar_final_exec(): LID_ANG_SCAN( 0 ), LID_TOL_A(0) {
 	srand(time(NULL));
 	_coversAll = false;
 
+    _tilePP = 10, _tileFP = 10, _resFP = 10, _resPP = 10;
 	
-	_tilePP = 10, _classFP = 10, _classPP = 10, _resFP = 10, _resPP = 10, _qPP = 10;
+//	_tilePP = 10, _classFP = 10, _classPP = 10, _resFP = 10, _resPP = 10, _qPP = 10;
 }
 
 void lidar_final_exec::set_proj_dir(const std::string& proj) {
@@ -237,7 +238,7 @@ bool lidar_final_exec::run() {
 
     // usando i dati ground o overground determina l'ingombro dei fogli e lo sottrae da quello di carto
     Check_log << "Analisi copertura aree da rilevare.." << std::endl;
-    //_checkBlock();
+    _checkBlock();
 	
     // confronta che il dato tile ground contenga gli stessi elementi degli altri oggetti
     Check_log << "Analisi completezza dati.." << std::endl;
@@ -245,11 +246,11 @@ bool lidar_final_exec::run() {
 	
 	// verifica che il dato groud abbia corrispondenti nelle strip
     Check_log << "Analisi classificazione ground" << std::endl;
-    //_checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
+    _checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
 
     // come sopra ma per il dato overground
     Check_log << "Analisi classificazione overground" << std::endl;
-    //_checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
+    _checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
 	
 //    Check_log << "Analisi classificazione.." << std::endl;
 //    _checkEllipsoidicData();
@@ -264,8 +265,8 @@ bool lidar_final_exec::run() {
     Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
     _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt);
 
-//    Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
-//	_checkResamples(_overgroundOrto, _overgroundOrtoList, _mds, _mdsList, diffMds);
+    Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
+    _checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds);
 
     createReport();
 
@@ -296,12 +297,12 @@ void lidar_final_exec::createReport() {
 	_reportBlock();
 	_reportEquality();
 
-    _reportRawRandom(groundRandomDiffg);
-    _reportRawRandom(overRandomDiff);
+    _reportRawRandom(groundRandomDiffg, TILE_GROUND);
+    _reportRawRandom(overRandomDiff, TILE_OVERGROUND);
 
-	_reportEllipsoidic();
+//	_reportEllipsoidic();
 	
-	_reportQuota();
+//	_reportQuota();
 	_reportResamples();
 
 	_dbook.write();	
@@ -692,9 +693,12 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
     size_t sizef = folderContent.size();
     Geoin::Util::Sampler samplerf(sizef);
 
-    int campione = 10; /*0.1 * sizef*/
+    int campione = _tileFP / 100.f * sizef;
+    if (campione == 0) {
+        campione = 1;
+    }
     samplerf.sample(campione, sizef);
-    Check_log << "Verifica di un campione di " << campione << " su " << sizef << std::endl;
+    Check_log << "Verifica di un campione di " << campione << " su " << sizef << " files" << std::endl;
 
 	std::vector<std::string>::iterator it = folderContent.begin();
 	std::vector<std::string>::iterator end = folderContent.end();
@@ -729,11 +733,10 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 
 		//size_t c = _getSamplesCount(1000, size/2, size);
 
-//		cnt = _tilePP/100.0f*size;
-//		if (cnt == 0) {
-//			cnt = 1;
-//		}
-//		cnt = 1500;
+        cnt = _tilePP/100.0f*size;
+        if (cnt == 0) {
+            cnt = 1;
+        }
 
 		Geoin::Util::Sampler sampler(size);
 		sampler.sample(cnt, size);
@@ -791,7 +794,7 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 				bool contains = (*sit)->geom()->Contains(&pt);
 				if (contains) {
                     double diff = dsm->getPoint(n);
-                    if ( diff > 0 && diff < 10. * LID_TOL_A ) {
+                    if ( diff > 0 && diff < 4. * LID_TOL_A ) {
                         rawRandomDiff[gIt->first].push_back(diff);
                         std::vector<double> dd;
                         dd.push_back(diff);
@@ -827,95 +830,96 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
     Check_log << "Punti non accoppiati " << count << std::endl;
 }
 
-void lidar_final_exec::_checkEllipsoidicData() {
-	_checkFolderWithRaw(_groundEll, _groundEllList, "Ground");
-	_checkFolderWithRaw(_overgroundEll, _overgroundEllList, "Overground");
-}
+//void lidar_final_exec::_checkEllipsoidicData() {
+//	_checkFolderWithRaw(_groundEll, _groundEllList, "Ground");
+//	_checkFolderWithRaw(_overgroundEll, _overgroundEllList, "Overground");
+//}
 
-void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data, const std::string& group) {
-	std::map< std::string, std::vector<NODE> > points;
+//void lidar_final_exec::_checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data, const std::string& group) {
+//	std::map< std::string, std::vector<NODE> > points;
 
-	size_t size = data.size();
-	size_t cnt = _classFP/100.0f * size;
-	if (cnt == 0) {
-		cnt = 1;
-	}
-	Geoin::Util::Sampler sampler(size);
-	sampler.sample(cnt, size);
-	for (auto it = sampler.begin(); it != sampler.end(); it++) {
-		size_t index = *it;
-		std::string corner = data.at(index);
+//	size_t size = data.size();
+//	size_t cnt = _classFP/100.0f * size;
+//	if (cnt == 0) {
+//		cnt = 1;
+//	}
+//	Geoin::Util::Sampler sampler(size);
+//	sampler.sample(cnt, size);
+//	for (auto it = sampler.begin(); it != sampler.end(); it++) {
+//		size_t index = *it;
+//		std::string corner = data.at(index);
 
-		std::string path = _fileFromCorner(folder, "xyzic", corner);
-		DSM_Factory f;
-		f.SetEcho(MyLas::single_pulse);
-        //f.SetAngle(LID_ANG_SCAN / 2.);
+//		std::string path = _fileFromCorner(folder, "xyzic", corner);
+//		DSM_Factory f;
+//		f.SetEcho(MyLas::single_pulse);
+//        //f.SetAngle(LID_ANG_SCAN / 2.);
 
-		File_Mask mask(5, 1, 2, 3, 1, 1);
-		f.SetMask(mask);
-		bool ret = f.Open(path, false, false);
+//		File_Mask mask(5, 1, 2, 3, 1, 1);
+//		f.SetMask(mask);
+//		bool ret = f.Open(path, false, false);
 		
-		unsigned int npt = f.GetDsm()->Npt();
-		size_t cntp = _classPP/100.0f * npt;
-		if (cntp == 0) {
-			cntp = 1;
-		}
-		Geoin::Util::Sampler sampler(npt);
-		sampler.sample(cntp, npt);
+//		unsigned int npt = f.GetDsm()->Npt();
+//		size_t cntp = _classPP/100.0f * npt;
+//		if (cntp == 0) {
+//			cntp = 1;
+//		}
+//		Geoin::Util::Sampler sampler(npt);
+//		sampler.sample(cntp, npt);
 		
-		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
-			const NODE& n = f.GetDsm()->Node(*itp);
-			points[corner].push_back(n);
-		}
-	}
+//		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
+//			const NODE& n = f.GetDsm()->Node(*itp);
+//			points[corner].push_back(n);
+//		}
+//	}
 
-	std::map< std::string, std::vector<NODE> >::iterator gIt = points.begin();
-	std::map< std::string, std::vector<NODE> >::iterator gEnd = points.end();
-	for (; gIt != gEnd; gIt++) {		
-		DSM_Factory s;
-		std::string path = _fileFromCorner(_raw, "las", gIt->first);
-		if (!s.Open(path)) {
-            Check_log << "Impossibile aprire " << path << std::endl;
-			continue;
-		}
+//	std::map< std::string, std::vector<NODE> >::iterator gIt = points.begin();
+//	std::map< std::string, std::vector<NODE> >::iterator gEnd = points.end();
+//	for (; gIt != gEnd; gIt++) {
+//		DSM_Factory s;
+//		std::string path = _fileFromCorner(_raw, "las", gIt->first);
+//		if (!s.Open(path)) {
+//            Check_log << "Impossibile aprire " << path << std::endl;
+//			continue;
+//		}
 		
-		DSM* dsm = s.GetDsm();
+//		DSM* dsm = s.GetDsm();
 
-		std::vector<NODE>::iterator pIt = gIt->second.begin();
-		std::vector<NODE>::iterator pEnd = gIt->second.end();
+//		std::vector<NODE>::iterator pIt = gIt->second.begin();
+//		std::vector<NODE>::iterator pEnd = gIt->second.end();
 
-		PointCheck pc;
-		pc.target = gIt->first;
-		pc.group = group;
+//		PointCheck pc;
+//		pc.target = gIt->first;
+//		pc.group = group;
 		
-		unsigned int trIdx = -1;
-		unsigned long match = 0;
-		for (; pIt != pEnd; pIt++) {
-			const NODE& n = *pIt;
+//		unsigned int trIdx = -1;
+//		unsigned long match = 0;
+//		for (; pIt != pEnd; pIt++) {
+//			const NODE& n = *pIt;
 			
-			trIdx = dsm->FindTriangle(n.x, n.y, trIdx);
-			const TRIANGLE& tri = dsm->Triangle(trIdx);
+//			trIdx = dsm->FindTriangle(n.x, n.y, trIdx);
+//			const TRIANGLE& tri = dsm->Triangle(trIdx);
 
-			for (unsigned int idx = 0; idx < 3; idx++) {
-				const NODE& t = dsm->Node(tri.p[idx]);
-				if (t.z == Z_NOVAL || t.z == Z_OUT) {
-					continue;
-				}
-				if (abs(t.x - n.x) < 0.1 && abs(t.y - n.y) < 0.1) {
-					double z = s.GetDsm()->GetQuota(n.x, n.y);
-					if (z != Z_NOVAL && z != Z_OUT && abs(z - n.z) < 0.1) {
-						pc.ok++;
-					} else {
-						pc.ko++;
-					}
-					break;
-				}
-			}
-		}
-		_pc.push_back(pc);
-	}
-}
+//			for (unsigned int idx = 0; idx < 3; idx++) {
+//				const NODE& t = dsm->Node(tri.p[idx]);
+//				if (t.z == Z_NOVAL || t.z == Z_OUT) {
+//					continue;
+//				}
+//				if (abs(t.x - n.x) < 0.1 && abs(t.y - n.y) < 0.1) {
+//					double z = s.GetDsm()->GetQuota(n.x, n.y);
+//					if (z != Z_NOVAL && z != Z_OUT && abs(z - n.z) < 0.1) {
+//						pc.ok++;
+//					} else {
+//						pc.ko++;
+//					}
+//					break;
+//				}
+//			}
+//		}
+//		_pc.push_back(pc);
+//	}
+//}
 
+// verifica ricampionamento e conversione quote
 void lidar_final_exec::_checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& stats) { 
 
 	size_t size = list1.size();
@@ -928,6 +932,8 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 
 	Geoin::Util::Sampler sampler(size);
 	sampler.sample(cnt, size);
+
+    Check_log << "Verifica di un campione di " << cnt << " su " << size << " files" << std::endl;
 	
 	for (auto it = sampler.begin(); it != sampler.end(); it++) {
 		std::string corner = list1.at(*it);
@@ -961,6 +967,8 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 		}
 		Geoin::Util::Sampler sampler(npt);
 		sampler.sample(cntp, npt);
+
+        Check_log << " Verifica di " << cntp << " punti per tile" << std::endl;
 		
 //		vGrid grid;
 //        InitIGMIgrid( grid );
@@ -977,10 +985,12 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 		}
 
         Check_log << corner << " analizzati " << diff.size() << " punti" << std::endl;
-		Stats s = { corner, 0, 0, diff.size()};
-        GetStats(diff, s);
-        Check_log << "   media " << s.mean << " st dev " << s.stdDev << std::endl;
-		stats.push_back(s);
+        if (!diff.empty()) {
+            Stats s = { corner, 0, 0, diff.size()};
+            GetStats(diff, s);
+            Check_log << "   media " << s.mean << " st dev " << s.stdDev << std::endl;
+            stats.push_back(s);
+        }
 	}
 }
 
@@ -1193,15 +1203,15 @@ void lidar_final_exec::_reportEquality() {
 		missed |= true;
 	}
 
-	if (groundOrtoDiff.size()) {
-		sec->add_item("para")->append("Dati ground ortometrici non completi");
+//	if (groundOrtoDiff.size()) {
+//		sec->add_item("para")->append("Dati ground ortometrici non completi");
 
-		Doc_Item itl = sec->add_item("itemizedlist");
-		for (int i = 0; i < groundEllDiff.size(); i++) {
-			itl->add_item("listitem")->add_item("para")->append(groundOrtoDiff.at(i));
-		}
-		missed |= true;
-	}
+//		Doc_Item itl = sec->add_item("itemizedlist");
+//		for (int i = 0; i < groundEllDiff.size(); i++) {
+//			itl->add_item("listitem")->add_item("para")->append(groundOrtoDiff.at(i));
+//		}
+//		missed |= true;
+//	}
 
 	if (overGroundEllDiff.size()) {
 		sec->add_item("para")->append("Dati overground ellissoidici non completi");
@@ -1214,33 +1224,44 @@ void lidar_final_exec::_reportEquality() {
 	}
 
 
-	if (overGroundOrtoDiff.size()) {
-		sec->add_item("para")->append("Dati overground ortometrici non completi");
+//	if (overGroundOrtoDiff.size()) {
+//		sec->add_item("para")->append("Dati overground ortometrici non completi");
 
-		Doc_Item itl = sec->add_item("itemizedlist");
-		for (int i = 0; i < overGroundEllDiff.size(); i++) {
-			itl->add_item("listitem")->add_item("para")->append(overGroundOrtoDiff.at(i));
-		}
-		missed |= true;
-	}
+//		Doc_Item itl = sec->add_item("itemizedlist");
+//		for (int i = 0; i < overGroundEllDiff.size(); i++) {
+//			itl->add_item("listitem")->add_item("para")->append(overGroundOrtoDiff.at(i));
+//		}
+//		missed |= true;
+//	}
 
 	if (!missed) {
 		sec->add_item("para")->append("I dati consegnati risultano completi");
 	}
 }
 	
-void lidar_final_exec::_reportRawRandom(std::map< std::string, std::vector<double> >& rawRandomDiff) {
+void lidar_final_exec::_reportRawRandom(std::map< std::string, std::vector<double> >& rawRandomDiff, DATA_TYPE tiletype) {
 	if (!rawRandomDiff.size()) {
 		return;
 	}
 
 	Doc_Item sec = _article->add_item("section");
-    sec->add_item("title")->append("Verifica tile grezze");
-    sec->add_item("para")->append("Si confrontano punti presi a campione dalle tile grezze con le strisciate acquisite.");
+    if ( tiletype == TILE_GROUND) {
+        sec->add_item("title")->append("Verifica tile GROUND grezze");
+        sec->add_item("para")->append("Si confrontano punti presi a campione dalle tile GROUND grezze con le strisciate acquisite.");
+    } else {
+        sec->add_item("title")->append("Verifica tile OVERGROUND grezze");
+        sec->add_item("para")->append("Si confrontano punti presi a campione dalle tile OVERGROUND grezze con le strisciate acquisite.");
+
+    }
     sec->add_item("para")->append("Sono riportate la media degli scarti in z e la loro standard deviation.");
 
 	Doc_Item tab = sec->add_item("table");
-    tab->add_item("title")->append("Statistiche tile");
+    if ( tiletype == TILE_GROUND) {
+        tab->add_item("title")->append("Statistiche tile GROUND");
+    } else {
+        tab->add_item("title")->append("Statistiche tile OVERGROUND");
+
+    }
 
     Poco::XML::AttributesImpl attr;
     attr.addAttribute("", "", "cols", "", "4");
@@ -1274,7 +1295,7 @@ void lidar_final_exec::_reportRawRandom(std::map< std::string, std::vector<doubl
 	
 void lidar_final_exec::_reportResamples() {
 	Doc_Item sec = _article->add_item("section");
-    sec->add_item("title")->append("Verifica ricampionamento");
+    sec->add_item("title")->append("Verifica ricampionamento e conversione quote");
     sec->add_item("para")->append("Si confrontano le quote dei dati MDT con le quote ground ortometriche interpolate e le quote dei dati MDS con le quote overground ortometriche interpolate.");
     sec->add_item("para")->append("Sono riportate la media degli scarti in z e la loro standard deviation.");
 

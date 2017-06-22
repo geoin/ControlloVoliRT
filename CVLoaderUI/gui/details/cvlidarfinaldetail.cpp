@@ -16,11 +16,11 @@ CVLidarFinalDetail::CVLidarFinalDetail(QWidget* p, Core::CVControl* c, TabPositi
 	int i = 0;
 	
 	CVFinalDataDetail* fold = new CVFinalDataDetail(this, c->at(i));
-	fold->title("Dati finali");
+    fold->title("Elaborati finali");
 	fold->description("Inserire cartelle dati finali lidar");
 
 	addTab(fold, "");
-    setTabToolTip(i, tr("Dati grezzi finali"));
+    setTabToolTip(i, tr("Elaborati finali"));
 	setTabIcon(i, QIcon(":/graphics/icons/lidar/final.png"));
 
 	i++;
@@ -33,7 +33,7 @@ CVLidarFinalDetail::CVLidarFinalDetail(QWidget* p, Core::CVControl* c, TabPositi
 	i++;
 	
 	addTab(new CVFolderDetail(this, c->at(i)), "");
-    setTabToolTip(i, tr("Dati grezzi"));
+    setTabToolTip(i, tr("Strisciate"));
 	setTabIcon(i, QIcon(":/graphics/icons/lidar/strip.png"));
 }
 

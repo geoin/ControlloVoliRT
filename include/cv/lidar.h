@@ -323,19 +323,19 @@ public:
 	typedef Poco::SharedPtr<DSM_Factory> DSMPtr;
 
 	CloudStrip(Strip::Ptr p) : _factory(NULL), _strip(p), _density(0.0) {
-        init(0.);
+        init(0., 2);
 	}
 
 	~CloudStrip() { 
 		release();
 	}
 
-    void init(double ang) {
+    void init(double ang, int echo) {
 		if (!_factory.get()) {
 			_factory.assign(new DSM_Factory);
 
 		}
-        _factory->SetEcho(MyLas::last_pulse); //single_pulse);
+        _factory->SetEcho(echo); //single_pulse);
         _factory->SetAngle(ang);
         //std::cout << "STRIP INIT " << ang << " " << std::endl;
 	}
@@ -376,10 +376,10 @@ private:
 
 class DSMHandler {
 public:
-    DSMHandler(CloudStrip::Ptr strip, double ang, bool tria = true) {
+    DSMHandler(CloudStrip::Ptr strip, double ang, int echo, bool tria = true) {
 		_strip = strip;
 
-        strip->init(ang);
+        strip->init(ang, echo);
 //        std::cout << "...opening " << std::endl;
 		_dsm = strip->open(tria);
 		_d = _dsm->GetDsm();

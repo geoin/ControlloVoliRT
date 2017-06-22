@@ -39,6 +39,11 @@ class vGrid;
 class lidar_final_exec {
 
 public:
+    enum DATA_TYPE {
+        TILE_GROUND = 0,
+        TILE_OVERGROUND = 1
+    };
+
 	struct Stats {
 		std::string target;
 		double mean;
@@ -67,11 +72,11 @@ public:
     void set_proj_dir(const std::string&);
 
 	void setTilesPointsPerc(int p) { _tilePP = p; }
-	void setClassFilesPerc(int p) { _classFP = p; }
-	void setClassPointsPerc(int p) { _classPP = p; }
+    void setTilesFilesPerc(int p) { _tileFP = p; }
+//	void setClassPointsPerc(int p) { _classPP = p; }
 	void setResampleFilesPerc(int p) { _resFP = p; }
 	void setResamplePointsPerc(int p) { _resPP = p; }
-	void setQuotaPointsPerc(int p) { _qPP = p; }
+    //void setQuotaPointsPerc(int p) { _qPP = p; }
 
 	static void Error(const std::string& operation, const std::exception& e); 
 	static void Error(const std::string& operation); 
@@ -129,12 +134,18 @@ private:
 
 	void _reportBlock();
 	void _reportEquality();
-    void _reportRawRandom(std::map< std::string, std::vector<double> >& rawRandomDiff);
+    void _reportRawRandom(std::map< std::string, std::vector<double> >& rawRandomDiff, DATA_TYPE tiletype);
 	void _reportResamples();
 	void _reportQuota();
 	void _reportEllipsoidic();
 
-	int _tilePP, _classFP, _classPP, _resFP, _resPP, _qPP;
+    int _tileFP;    // percentuale di file da usare per classificazione
+    int _tilePP;    // percentuale di punti da usare in ogni tile per classificazione
+    //int _classFP;
+    //int _classPP;
+    int _resFP; // percentuale di file da usare per ricampionamento e quote
+    int _resPP; // percentuale di punti da usare in ciascuna tile per ricampionamento e quote
+    //int _qPP;
 	double LID_ANG_SCAN, LID_TOL_A;
 };
 
