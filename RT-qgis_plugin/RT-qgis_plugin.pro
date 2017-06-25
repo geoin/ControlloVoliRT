@@ -18,7 +18,7 @@ win32 {
     $$OSGEO4W_DIR/include
 
     DEFINES += WIN32
-    DESTDIR = $$_PRO_FILE_PWD_/../../bin
+    DESTDIR = $$_PRO_FILE_PWD_/../bin
 }
 
 unix {

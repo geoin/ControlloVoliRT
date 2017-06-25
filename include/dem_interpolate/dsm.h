@@ -194,7 +194,10 @@ public:
 		return true;
 	}
     virtual void CreateIndex() {}
+    virtual void CreateIndex2() {}
     virtual double getPoint(const ND& nd) { return -1;}
+    virtual bool getPoints(const ND& nd, double radius, std::vector<int>& indexes) { return false; }
+    virtual bool getPoints2(const ND& nd, double radius, std::vector<int>& indexes) { return false; }
 	virtual size_t GetBorder(std::vector<DPOINT>& vec) {
 		vec.clear();
 		std::vector<SEGMENT> st;

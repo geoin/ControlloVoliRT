@@ -383,6 +383,7 @@ bool DSM_Grid::GetProperties(const std::string& nome)
 		return false;
     char mes[256];
 	int count = 0;
+	bool center = false;
     while ( txf.getline(mes, 255) ) {
 		Poco::StringTokenizer tok(mes, " \t", Poco::StringTokenizer::TOK_TRIM | Poco::StringTokenizer::TOK_IGNORE_EMPTY );
 		if ( tok.count() != 2 )
@@ -394,10 +395,18 @@ bool DSM_Grid::GetProperties(const std::string& nome)
 		} else if ( keyword == "nrows" ) {
 			_ny = atoi(tok[1].c_str());
 			count++;
-		} else if ( keyword == "xllcorner" || keyword == "xllcenter" ) {
+		} else if ( keyword == "xllcorner" ) {
 			_x0 = atof(tok[1].c_str());
 			count++;
-		} else if ( keyword == "yllcorner" || keyword == "yllcenter" ) {
+		} else if ( keyword == "xllcenter" ) {
+			center = true;
+			_x0 = atof(tok[1].c_str());
+			count++;
+		} else if ( keyword == "yllcorner" ) {
+			_y0 = atof(tok[1].c_str());
+			count++;
+		} else if ( keyword == "yllcenter" ) {
+			center = true;
 			_y0 = atof(tok[1].c_str());
 			count++;
 		} else if ( keyword == "nodata_value" ) {
@@ -409,6 +418,12 @@ bool DSM_Grid::GetProperties(const std::string& nome)
 		}
 		if ( count == 6 )
 			break;
+	}
+	if ( count != 6)
+		return false; // invalid format
+	if ( !center ) {
+		_x0 += _stx / 2;
+		_y0 += _sty / 2;
 	}
     _pos = txf.tellp();
     txf.close();

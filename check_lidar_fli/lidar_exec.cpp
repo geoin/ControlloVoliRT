@@ -39,6 +39,7 @@
 #include "dem_interpolate/dsm.h"
 #include "common/util.h"
 #include "common/logger.h"
+#include "common/statistics.h"
 
 #include <iostream>
 #include <iomanip>
@@ -666,22 +667,37 @@ void lidar_exec::_control_points_report() {
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
 
-	double med = 0;
+//	double med = 0;
 
+    statistics st(1);
+    std::vector<CV::Lidar::ControlPoint::Ptr> scartati;
 	for (; it != end; it++) {
 		CV::Lidar::ControlPoint::Ptr point = *it;
 		const std::string& name = point->name();
         const std::string& cloud = point->cloud();
 
-		row = tbody->add_item("row");
-        row->add_item("entry", attr)->append(name);
-        row->add_item("entry", attr)->append(cloud);
+//		row = tbody->add_item("row");
+//        row->add_item("entry", attr)->append(name);
+//        row->add_item("entry", attr)->append(cloud);
 		
 		if (point->isValid()) {
-			double diff = point->zDiff();
-			med += diff;
+            double diff = point->zDiff();
+            if ( diff > 3 * LID_TOL_A ) {
+                scartati.push_back(point);
+                Check_log << "Osservazione di " << name << " in " << cloud << " scartata" << std::endl;
+                continue;
+            }
+            row = tbody->add_item("row");
+            row->add_item("entry", attr)->append(name);
+            row->add_item("entry", attr)->append(cloud);
+
+
+            std::vector<double> vd;
+            vd.push_back(diff);
+            st.add_point(vd);
+            //med += diff;
 			print_item(row, attrr, diff, abs_less_ty, LID_TOL_A);
-		} else {
+        } /*else {
 			Doc_Item r = row->add_item("entry", attr);
 			r->add_instr("dbfo", "bgcolor=\"red\"");
 
@@ -691,24 +707,45 @@ void lidar_exec::_control_points_report() {
 			} else if (status == Lidar::ControlPoint::OUT_VAL) {
 				r->append("OUT_VAL");
 			}
-		}
+        }*/
+    }
+    if ( !scartati.empty() ) {
+        sec->add_item("para")->append("Le seguenti osservazioni sono state scartate:");
+
+        Doc_Item itl = sec->add_item("itemizedlist");
+        for (int i = 0; i < scartati.size(); i++) {
+            CV::Lidar::ControlPoint::Ptr p = scartati.at(i);
+            std::stringstream ss;
+            ss << std::fixed;
+
+            ss << "Punto " << p->name() << " Osservato in: " << p->cloud();
+            itl->add_item("listitem")->add_item("para")->append(ss.str());
+        }
     }
 
-	med /= _controlVal.size();
-	it = _controlVal.begin();
+//	med /= _controlVal.size();
+//	it = _controlVal.begin();
 
-	double sum = 0;
-	for (; it != end; it++) { 
-		sum += std::pow((*it)->zDiff() - med, 2);
-	}
+//	double sum = 0;
+//	for (; it != end; it++) {
+//		sum += std::pow((*it)->zDiff() - med, 2);
+//	}
 
-	double val = std::sqrt(sum/_controlVal.size());
+    double val = st.st_devS(); // std::sqrt(sum/_controlVal.size());
 
-	if (val <= LID_TOL_A ) {
-		sec->add_item("para")->append("I valori rientrano nella tolleranza");
+    Check_log << "Scarto quadratico medio " << val << " Valore di riferimento " << LID_TOL_A / 1.96 << std::endl;
+
+    std::stringstream ss1;
+    ss1 << std::fixed;
+    ss1 << "SQM: "<< val;
+    if (val <= LID_TOL_A / 1.96) {
+        ss1 << " < " << LID_TOL_A / 1.96 << " il valore rientra nella tolleranza";
+//		sec->add_item("para")->append("I valori rientrano nella tolleranza");
 	} else {
-		sec->add_item("para")->append("I valori non rientrano nella tolleranza");
+        ss1 << " > " << LID_TOL_A / 1.96 << " il valori non rientra nella tolleranza";
+//		sec->add_item("para")->append("I valori non rientrano nella tolleranza");
 	}
+    sec->add_item("para")->append(ss1.str());
 
     return;
 }

@@ -238,35 +238,27 @@ bool lidar_final_exec::run() {
 
     // usando i dati ground o overground determina l'ingombro dei fogli e lo sottrae da quello di carto
     Check_log << "Analisi copertura aree da rilevare.." << std::endl;
-    _checkBlock();
+    //_checkBlock(_groundEll, _groundEllList);
 	
     // confronta che il dato tile ground contenga gli stessi elementi degli altri oggetti
     Check_log << "Analisi completezza dati.." << std::endl;
-    _checkEquality();
+    //_checkEquality();
 	
 	// verifica che il dato groud abbia corrispondenti nelle strip
     Check_log << "Analisi classificazione ground" << std::endl;
-    _checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
+   // _checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
 
     // come sopra ma per il dato overground
     Check_log << "Analisi classificazione overground" << std::endl;
-    _checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
+    //_checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
 	
-//    Check_log << "Analisi classificazione.." << std::endl;
-//    _checkEllipsoidicData();
-	
-//    Check_log << "Analisi conversione ground grid" << std::endl;
-//	_checkQuota(_groundEll, _groundOrto, statsGround);
-	
-//    Check_log << "Analisi conversione overgground grid" << std::endl;
-//	_checkQuota(_overgroundEll, _overgroundOrto, statsOverGround);
 	
     // Verifica che ricampionamento e conversione quote produca risultati congrui
     Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
-    _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt);
+    _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt, TILE_GROUND);
 
     Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
-    _checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds);
+    _checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds, TILE_OVERGROUND);
 
     createReport();
 
@@ -510,14 +502,41 @@ void lidar_final_exec::_getStrips(std::vector<Lidar::Strip::Ptr>& str) {
 	}
 }
 
-void lidar_final_exec::_checkBlock() {
+OGRGeomPtr lidar_final_exec::_get_cartoU() {
+    // select data from carto areas
+    std::string table = std::string("carto");
+    std::stringstream sql1;
+    sql1 << "SELECT AsBinary(geom) geom from " << table;
+    CV::Util::Spatialite::Statement stm1(cnn);
+    stm1.prepare(sql1.str());
+    CV::Util::Spatialite::Recordset rs = stm1.recordset();
+
+    //std::cout << "Layer:" << table << std::endl;
+
+    // buid a unique feature
+    OGRGeomPtr carto;
+    bool first = true;
+    while ( !rs.eof() ) {
+        Blob blob = rs["geom"].toBlob();
+        OGRGeomPtr pol = blob;
+        if ( first ) {
+            carto = pol;
+            first = false;
+        } else
+            carto = carto->Union(pol);
+        rs.next();
+    }
+    return carto;
+}
+
+void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<std::string>& list) {
 	std::string table("FINAL_CARTO_DIFF");
 	std::string rawGrid("Z_RAW_F");
 	cnn.remove_layer(table);
 	cnn.remove_layer(rawGrid);
 
-    std::vector<std::string>::iterator it = _groundEllList.begin(); // _rawList.begin();
-    std::vector<std::string>::iterator end = _groundEllList.end(); //_rawList.end();
+    std::vector<std::string>::const_iterator it = list.begin();//_groundEllList.begin();
+    std::vector<std::string>::const_iterator end = list.end(); //_groundEllList.end();
 
 	OGRGeomPtr rg_ = OGRGeometryFactory::createGeometry(wkbPolygon);
 	OGRGeometry* pol = rg_;
@@ -540,7 +559,7 @@ void lidar_final_exec::_checkBlock() {
 
 	for (; it != end; it++) {
 		std::string name = *it;
-        Poco::Path pth(_groundEll, name);
+        Poco::Path pth(folder, name);
         pth.setExtension("xyzi");
 		DSM_Factory fac;
         File_Mask mask( 4, 1, 2, 3, -1, -1 );
@@ -548,7 +567,7 @@ void lidar_final_exec::_checkBlock() {
         if( !fac.Open( pth.toString(), false, false ) )
 			continue;
 		DSM* dsm = fac.GetDsm();
-        Check_log << "Letti " << dsm->Npt() << " punti da " << name << std::endl;
+        Check_log << name << " " << dsm->Npt() << " punti" << std::endl;
 
 		//int x = Poco::NumberParser::parse(name.substr(0, 4)) * 100;
 		//int y = Poco::NumberParser::parse(name.substr(4, 4)) * 1000;
@@ -561,6 +580,12 @@ void lidar_final_exec::_checkBlock() {
 		gp->addPoint( dsm->Xmax(), dsm->Ymax() );
 		gp->addPoint( dsm->Xmin(), dsm->Ymax() );
 		gp->closeRings();
+
+        Check_log <<  "  Bounding box\n";
+        Check_log <<  "    " << dsm->Xmin() << " " << dsm->Ymin() << "," << std::endl;
+        Check_log <<  "    " << dsm->Xmax() << " " << dsm->Ymin() << "," << std::endl;
+        Check_log <<  "    " << dsm->Xmax() << " " << dsm->Ymax() << "," << std::endl;
+        Check_log <<  "    " << dsm->Xmin() << " " << dsm->Ymax() << std::endl;
 
 		OGRGeomPtr rg_tmp = OGRGeometryFactory::createGeometry(wkbPolygon);
 		OGRGeometry* pol_tmp_ = rg_tmp;
@@ -583,46 +608,82 @@ void lidar_final_exec::_checkBlock() {
 
 	std::cout << "Layer:" << rawGrid << std::endl;
 
-	try {
-		CV::Util::Spatialite::Statement stm(cnn);
-		stm.prepare("select AsBinary(GEOM) as GEOM FROM CARTO");
+    try {
+        Check_log << "Verifica differenza tra area tile grezza e aerea carto" << std::endl;
+        OGRGeomPtr cartoU = _get_cartoU();
+        OGRGeomPtr dif = cartoU->Difference(pol);
+        if (!dif->IsEmpty()) {
 
-		CV::Util::Spatialite::Recordset set = stm.recordset();
+            std::stringstream sql;
+            sql << "CREATE TABLE " << table << "( ID TEXT )";
 
-		if (!set.eof()) {
-			Lidar::Block block(set["GEOM"].toBlob());
-			OGRGeomPtr dif = block.geom()->Difference(pol);
-			if (!dif->IsEmpty()) {
+            cnn.execute_immediate(sql.str());
 
-				std::stringstream sql;
-				sql << "CREATE TABLE " << table << "( ID TEXT )";
+            // add the geom column
+            std::stringstream sql1;
+            sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+                "'GEOM'," <<
+                SRID(cnn)<< "," <<
+                "'" << get_typestring(dif)  << "'," <<
+                "'XY')";
+            cnn.execute_immediate(sql1.str());
 
-				cnn.execute_immediate(sql.str());
-
-				// add the geom column
-				std::stringstream sql1;
-				sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
-					"'GEOM'," <<
-					SRID(cnn)<< "," <<
-					"'" << get_typestring(dif)  << "'," <<
-					"'XY')";
-				cnn.execute_immediate(sql1.str());
-
-				std::stringstream sqlc;
-				sqlc << "INSERT INTO " << table << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
-				CV::Util::Spatialite::Statement stm0(cnn);
-				stm0.prepare(sqlc.str());
-				stm0[1].fromBlob(dif);
-				stm0.execute();
-			} else {
-				_coversAll = true;
-			}
-		}
-	} catch (const std::exception& e) {
+            std::stringstream sqlc;
+            sqlc << "INSERT INTO " << table << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
+            CV::Util::Spatialite::Statement stm0(cnn);
+            stm0.prepare(sqlc.str());
+            stm0[1].fromBlob(dif);
+            stm0.execute();
+            std::cout << "Layer:" << table << std::endl;
+            Check_log << "l'area delle tile grezze differisce dall'aerea di carto" << std::endl;
+        } else {
+             Check_log << "l'area delle tile grezze coincide con l'aerea di carto" << std::endl;
+            _coversAll = true;
+        }
+    } catch (const std::exception& e) {
         Check_log << "Errore durante il reperimento del blocco" << e.what() << std::endl;
-	}
+    }
+
+//	try {
+//		CV::Util::Spatialite::Statement stm(cnn);
+//		stm.prepare("select AsBinary(GEOM) as GEOM FROM CARTO");
+
+//		CV::Util::Spatialite::Recordset set = stm.recordset();
+
+//		if (!set.eof()) {
+//			Lidar::Block block(set["GEOM"].toBlob());
+//			OGRGeomPtr dif = block.geom()->Difference(pol);
+//			if (!dif->IsEmpty()) {
+
+//				std::stringstream sql;
+//				sql << "CREATE TABLE " << table << "( ID TEXT )";
+
+//				cnn.execute_immediate(sql.str());
+
+//				// add the geom column
+//				std::stringstream sql1;
+//				sql1 << "SELECT AddGeometryColumn('" << table << "'," <<
+//					"'GEOM'," <<
+//					SRID(cnn)<< "," <<
+//					"'" << get_typestring(dif)  << "'," <<
+//					"'XY')";
+//				cnn.execute_immediate(sql1.str());
+
+//				std::stringstream sqlc;
+//				sqlc << "INSERT INTO " << table << " (geom) VALUES (ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
+//				CV::Util::Spatialite::Statement stm0(cnn);
+//				stm0.prepare(sqlc.str());
+//				stm0[1].fromBlob(dif);
+//				stm0.execute();
+//			} else {
+//				_coversAll = true;
+//			}
+//		}
+//	} catch (const std::exception& e) {
+//        Check_log << "Errore durante il reperimento del blocco" << e.what() << std::endl;
+//	}
 	
-	std::cout << "Layer:" << table << std::endl;
+//	std::cout << "Layer:" << table << std::endl;
 }
 
 void lidar_final_exec::_checkEquality() {
@@ -919,8 +980,37 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 //	}
 //}
 
+double GetCellQ(DSM* dsm, double x, double y, double p, bool gm){
+    statistics s(1);
+    double p1 = p * 1.42;
+    std::vector<int> indexes;
+    NODE nd(x, y, 0);
+    if ( !dsm->getPoints2(nd, p1,  indexes)) {
+        return Z_NOVAL;
+    }
+//    Check_log << "Radius search " << indexes.size() << " punti " << std::endl;
+    for ( size_t i = 0; i < indexes.size(); i++) {
+        const NODE& nd = dsm->Node(indexes[i]);
+        if ( nd.x > x - p && nd.x < x + p && nd.y > y - p && nd.y < y + p) {
+            std::vector<double> z;
+            z.push_back(nd.z);
+            s.add_point(z);
+        }
+    }
+//    Check_log << "Radius search " << indexes.size() << " punti interni " << s.count() << std::endl;
+    if ( s.count() ) {
+        std::vector<double> z;
+        if (gm)
+            z = s.Min();
+        else
+            z = s.Max();
+        return z[0];
+    }
+    return Z_NOVAL;
+}
+
 // verifica ricampionamento e conversione quote
-void lidar_final_exec::_checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& stats) { 
+void lidar_final_exec::_checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& stats, DATA_TYPE tiletype) {
 
 	size_t size = list1.size();
 	size_t cnt = _resFP / 100.f * size;
@@ -929,6 +1019,8 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 	}
 
     ortometric orto(_gridFile);
+
+    bool gm = tiletype == TILE_GROUND ? true : false;
 
 	Geoin::Util::Sampler sampler(size);
 	sampler.sample(cnt, size);
@@ -942,7 +1034,7 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 		DSM_Factory gr;
 		File_Mask mask(4, 1, 2, 3);
 		gr.SetMask(mask);
-		if (!gr.Open(groundPath, false, true)) {
+        if (!gr.Open(groundPath, false, false)) {
             Check_log << "Impossibile aprire " << groundPath << std::endl;
 			continue;
 		}
@@ -959,6 +1051,17 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
             Check_log << "Impossibile aprire " << mdtPath << std::endl;
 			continue;
 		}
+        DSM_Grid* grd = dynamic_cast<DSM_Grid*>(m.GetDsm());
+        if ( grd == nullptr ) {
+            Check_log << mdtPath << " non è un file grid" << std::endl;
+            continue;
+        }
+        double cellsize = grd->stx() / 2.;
+
+        DSM* gri = gr.GetDsm();
+        gri->CreateIndex2();
+
+
 		std::vector<double> diff;
 		unsigned int npt = m.GetDsm()->Npt();
 		size_t cntp = _resPP/100.0f * npt;
@@ -970,18 +1073,18 @@ void lidar_final_exec::_checkResamples(const std::string& folder1, const std::ve
 
         Check_log << " Verifica di " << cntp << " punti per tile" << std::endl;
 		
-//		vGrid grid;
-//        InitIGMIgrid( grid );
 		for (auto itp = sampler.begin(); itp != sampler.end(); itp++) {
+            // prende i punti dall'ascii grid
 			const NODE& n = m.GetDsm()->Node(*itp);
-			double z = gr.GetDsm()->GetQuota(n.x, n.y);
+            if ( n.z == Z_NOVAL || n.z == Z_OUT || n.z == Z_WEAK) {
+                continue;
+            }
+            double z =  GetCellQ(gri, n.x, n.y, cellsize, gm);
+            if (z == Z_NOVAL )
+                continue;
 
-			if (z != Z_NOVAL && z != Z_OUT && n.z != Z_NOVAL && n.z != Z_OUT && z != Z_WEAK && n.z != Z_WEAK ) {
-                z = orto.ortoQ(n.x, n.y, z);
-                if (z != Z_NOVAL )
-
-                    diff.push_back(z - n.z);
-			}
+            z = orto.ortoQ(n.x, n.y, z);
+            diff.push_back(z - n.z);
 		}
 
         Check_log << corner << " analizzati " << diff.size() << " punti" << std::endl;

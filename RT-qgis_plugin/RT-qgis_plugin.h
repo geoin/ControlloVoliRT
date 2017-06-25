@@ -175,18 +175,18 @@ public:
     Check_lidar_final(QgisInterface* mi);
 
 public slots:
-    void tileValueChanged(int i);
-    void classPValueChanged(int i);
     void classFValueChanged(int i);
-    void resPValueChanged(int i);
+    void classPValueChanged(int i);
+
     void resFValueChanged(int i);
-    void quotaValueChanged(int i);
+    void resPValueChanged(int i);
 
 private:
-    QSpinBox* _tileP;
-    QSpinBox* _classP, *_classF;
-    QSpinBox* _resP, *_resF;
-    QSpinBox* _qP;
+    QSpinBox* _classF;
+    QSpinBox* _classP;
+
+    QSpinBox* _resF;
+    QSpinBox* _resP;
 };
 
 class ExportLauncher : public QDialog {

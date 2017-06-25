@@ -210,6 +210,8 @@ ControlPoint::Status ControlPoint::zDiffFrom(DSM* dsm) {
 		_status = NO_VAL;
 	} else if (q == Z_OUT) {
 		_status = OUT_VAL;
+    }else if ( q == Z_WEAK ) {
+        _status = WEAK_VAL;
 	} else {
 		_status = VALID;
 		_diff = q  - _quota;

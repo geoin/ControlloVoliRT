@@ -277,7 +277,7 @@ private:
 
 class ControlPoint {
 public:
-	enum Status { UNKNOWN = 0, VALID = 1, NO_VAL, OUT_VAL };
+    enum Status { UNKNOWN = 0, VALID = 1, NO_VAL, OUT_VAL, WEAK_VAL };
 
 	typedef Poco::SharedPtr<ControlPoint> Ptr;
 

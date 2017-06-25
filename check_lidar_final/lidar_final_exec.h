@@ -32,9 +32,10 @@
 
 #include "cv/lidar.h"
 #include "proj_api.h"
-//#include "PJ_igmi.h"
+#include "CVUtil/ogrgeomptr.h"
 
 class vGrid;
+//class OGRGeomPtr;
 
 class lidar_final_exec {
 
@@ -94,12 +95,15 @@ private:
     bool _isStripUsed( std::map< std::string, std::vector<NODE> >& points,CV:: Lidar::Strip::Ptr sit );
 
 	size_t _getSamplesCount(size_t min, size_t max, size_t size, double perc = 0.1);
-	void _checkBlock();
+    void _checkBlock(const std::string& folder, const std::vector<std::string>& list);
 	void _checkEquality();
     void _checkRawRandom(const std::string& raw, int pulse, std::map< std::string, std::vector<double> >& rawRandomDiff );
-	void _checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2, const std::vector<std::string>& list2, std::vector<Stats>& diff);
+    void _checkResamples(const std::string& folder1, const std::vector<std::string>& list1, const std::string& folder2,
+                         const std::vector<std::string>& list2, std::vector<Stats>& diff, DATA_TYPE tiletype);
 	void _checkQuota(const std::string& folder1, const std::string& folder2, std::vector<Stats>&);
     bool InitIGMIgrid( vGrid& grid );
+
+    CV::Util::Geometry::OGRGeomPtr _get_cartoU();
 
 	void _checkEllipsoidicData();
 	void _checkFolderWithRaw(const std::string& folder, const std::vector<std::string>& data, const std::string&);

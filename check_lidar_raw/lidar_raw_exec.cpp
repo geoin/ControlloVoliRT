@@ -421,7 +421,8 @@ bool lidar_raw_exec::_checkIntersection() {
             for (size_t i = 0; i < intersectionGrid.size(); i++) {
                 double sVal = zSrc.at(i);
                 double tVal = zTrg.at(i);
-                if (sVal != Z_NOVAL && sVal != Z_OUT && tVal != Z_NOVAL && tVal != Z_OUT) {
+                if (sVal != Z_NOVAL && sVal != Z_OUT && sVal != Z_WEAK &&
+                        tVal != Z_NOVAL && tVal != Z_OUT && tVal != Z_WEAK ) {
                     double d = sVal - tVal;
                     if (std::abs(d) < 3 * LID_TOL_Z) {
                         diff.push_back(d);

@@ -70,12 +70,55 @@ struct PointCloud
     bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 
 };
+template <typename T>
+struct PointCloud2D
+{
+    struct Point
+    {
+        T  x,y;
+    };
+
+    std::vector<Point>  pts;
+
+    // Must return the number of data points
+    inline size_t kdtree_get_point_count() const { return pts.size(); }
+
+    // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
+    inline T kdtree_distance(const T *p1, const size_t idx_p2,size_t /*size*/) const
+    {
+        const T d0=p1[0]-pts[idx_p2].x;
+        const T d1=p1[1]-pts[idx_p2].y;
+        return d0*d0+d1*d1;
+    }
+
+    // Returns the dim'th component of the idx'th point in the class:
+    // Since this is inlined and the "dim" argument is typically an immediate value, the
+    //  "if/else's" are actually solved at compile time.
+    inline T kdtree_get_pt(const size_t idx, int dim) const
+    {
+        if (dim==0) return pts[idx].x;
+        else return pts[idx].y;
+    }
+
+    // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+    //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
+    //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+    template <class BBOX>
+    bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+
+};
 
 typedef nanoflann::KDTreeSingleIndexAdaptor<
     nanoflann::L2_Simple_Adaptor<float, PointCloud<float> >,
     PointCloud<float>,
     3 /* dim */
 > my_kd_tree_t;
+
+typedef nanoflann::KDTreeSingleIndexAdaptor<
+    nanoflann::L2_Simple_Adaptor<float, PointCloud2D<float> >,
+    PointCloud2D<float>,
+    2 /* dim */
+> my_kd_tree_t2;
 
 static void fn_lst(char* mes) {
 }
@@ -309,7 +352,7 @@ public:
 	unsigned int			Org_Nod;	// original num. of nodes
 	tPSLG(double eps = TR_EPS): _open(false),
 		_npt(0), _ntriangle(0), _nseg(0),
-        _nPrev(-5), _lastTri(-1), _nprev(-1), myIndex(nullptr),
+        _nPrev(-5), _lastTri(-1), _nprev(-1), myIndex(nullptr), myIndex2(nullptr),
 		_nSize(0), _p_off(), _p_scale(1., 1., 1.),
 		_echo(0), _trEps(TR_EPS) {}
 	virtual ~tPSLG() {
@@ -344,7 +387,7 @@ public:
 		double dx = _xmax - _xmin;
 		double dy = _ymax - _ymin;
 		dx = std::max(dx, dy);
-		_p_scale = DPOINT(dx, dx, 1);
+		_p_scale = DPOINT(dx, dx, dx);
 	}
 	void _normalize(const ND& nd, int k) {
 		node[k] = nd;
@@ -477,10 +520,14 @@ public:
 		triangle.clear();
 		seg.clear();
         cloud.pts.clear();
+        cloud2.pts.clear();
 		_open = false;
         if ( myIndex )
             delete myIndex;
-        myIndex = nullptr;
+        myIndex2 = nullptr;
+        if ( myIndex2 )
+            delete myIndex2;
+        myIndex2 = nullptr;
 	}
 	void Close(void) {
 		if ( _open ) {
@@ -541,7 +588,21 @@ public:
         myIndex = new  my_kd_tree_t( 3 /*dim*/, cloud, nanoflann::KDTreeSingleIndexAdaptorParams( 100 /* max leaf */ ) );
         myIndex->buildIndex();
     }
+    void CreateIndex2() {
+        for( unsigned int i = 0; i < Npt(); i++ ) {
+            const NODE& nd = node[i];
+            PointCloud2D<float>::Point p;
+            p.x = nd.x;
+            p.y = nd.y;
+
+            cloud2.pts.push_back( p );
+        }
+        myIndex2 = new  my_kd_tree_t2( 2 /*dim*/, cloud2, nanoflann::KDTreeSingleIndexAdaptorParams( 100 /* max leaf */ ) );
+        myIndex2->buildIndex();
+    }
     double getPoint(const NODE& nd) {
+        if ( myIndex == nullptr )
+            return -1;
         NODE n1 = _normalize(nd);
 
         float query_pt[3] = { n1.x, n1.y, n1.z };
@@ -556,6 +617,49 @@ public:
             return out_dist_sqr;
         return -1;
         //std::cout << "Index search " << ret_index << " in " << tm.FormatTime() <<  " Dist " << out_dist_sqr << std::endl;
+    }
+
+    bool getPoints(const NODE& nd, double radius, std::vector<int>& indexes) {
+        if ( myIndex == nullptr )
+            return -1;
+        NODE n1 = _normalize(nd);
+        float rd = pow(radius / _p_scale[0], 2);
+
+        float query_pt[3] = { n1.x, n1.y, n1.z };
+
+        nanoflann::SearchParams params;
+
+        std::vector<std::pair<size_t, float > > IndicesDists;
+        size_t kk = myIndex->radiusSearch( &query_pt[0], rd, IndicesDists, params );
+        //std::cout << "Radius search " << kk << " in " << tm.FormatTime() << std::endl;
+
+        indexes.clear();
+        for( size_t i = 0; i < IndicesDists.size(); i++ ) {
+            indexes.push_back(IndicesDists[i].first);
+            //std::cout << "Index " << IndicesDists[i].first << " Dist " << IndicesDists[i].second << std::endl;
+        }
+        return !IndicesDists.empty();
+    }
+    bool getPoints2(const NODE& nd, double radius, std::vector<int>& indexes) {
+        if ( myIndex2 == nullptr )
+            return -1;
+        NODE n1 = _normalize(nd);
+        float rd = pow(radius / _p_scale[0], 2);
+
+        float query_pt[3] = { n1.x, n1.y, n1.z };
+
+        nanoflann::SearchParams params;
+
+        std::vector<std::pair<size_t, float > > IndicesDists;
+        size_t kk = myIndex2->radiusSearch( &query_pt[0], rd, IndicesDists, params );
+        //std::cout << "Radius search " << kk << " in " << tm.FormatTime() << std::endl;
+
+        indexes.clear();
+        for( size_t i = 0; i < IndicesDists.size(); i++ ) {
+            indexes.push_back(IndicesDists[i].first);
+            //std::cout << "Index " << IndicesDists[i].first << " Dist " << IndicesDists[i].second << std::endl;
+        }
+        return !IndicesDists.empty();
     }
 
 	double GetQuota(double x, double y, double z = Z_NOVAL, double zo = Z_OUT) const {
@@ -1341,7 +1445,9 @@ private:
 
 	InertialEllipse _ie;
     my_kd_tree_t* myIndex;
+    my_kd_tree_t2* myIndex2;
     PointCloud<float> cloud;
+    PointCloud2D<float> cloud2;
 };
 
 typedef tPSLG<NODE, TRIANGLE> PSLG;
