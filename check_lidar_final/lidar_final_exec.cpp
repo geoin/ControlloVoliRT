@@ -237,8 +237,11 @@ bool lidar_final_exec::run() {
     readFolders();
 
     // usando i dati ground o overground determina l'ingombro dei fogli e lo sottrae da quello di carto
-    Check_log << "Analisi copertura aree da rilevare.." << std::endl;
-    //_checkBlock(_groundEll, _groundEllList);
+    Check_log << "Analisi copertura aree da rilevare GROUND" << std::endl;
+    //_checkBlock(_groundEll, _groundEllList, TILE_GROUND);
+
+    Check_log << "Analisi copertura aree da rilevare OVERGROUND" << std::endl;
+    _checkBlock(_overgroundEll, _overgroundEllList, TILE_OVERGROUND);
 	
     // confronta che il dato tile ground contenga gli stessi elementi degli altri oggetti
     Check_log << "Analisi completezza dati.." << std::endl;
@@ -255,10 +258,10 @@ bool lidar_final_exec::run() {
 	
     // Verifica che ricampionamento e conversione quote produca risultati congrui
     Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
-    _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt, TILE_GROUND);
+    //_checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt, TILE_GROUND);
 
     Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
-    _checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds, TILE_OVERGROUND);
+    //_checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds, TILE_OVERGROUND);
 
     createReport();
 
@@ -529,14 +532,16 @@ OGRGeomPtr lidar_final_exec::_get_cartoU() {
     return carto;
 }
 
-void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<std::string>& list) {
+void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<std::string>& list, DATA_TYPE tiletype) {
 	std::string table("FINAL_CARTO_DIFF");
 	std::string rawGrid("Z_RAW_F");
+    if ( tiletype == TILE_OVERGROUND )
+        rawGrid = "Z_RAW_OVER";
 	cnn.remove_layer(table);
 	cnn.remove_layer(rawGrid);
 
-    std::vector<std::string>::const_iterator it = list.begin();//_groundEllList.begin();
-    std::vector<std::string>::const_iterator end = list.end(); //_groundEllList.end();
+    std::vector<std::string>::const_iterator it = list.begin();
+    std::vector<std::string>::const_iterator end = list.end();
 
 	OGRGeomPtr rg_ = OGRGeometryFactory::createGeometry(wkbPolygon);
 	OGRGeometry* pol = rg_;

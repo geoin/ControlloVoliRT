@@ -876,6 +876,9 @@ public:
 		size_t szr = strlen(mes);
 		long nrec = (long) (sz / szr); // average record count
 
+        if ( _fm.ne < 0 || _fm.ni < 0)
+            _echo = MyLas::all_pulses;
+
 		node.clear();
 		node.reserve(nrec);
 		

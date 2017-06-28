@@ -104,7 +104,7 @@ bool lidar_raw_exec::run() {
         }
 
         Check_log << "Esecuzione controllo.." << std::endl;
-        //_checkIntersection();
+        _checkIntersection();
 
         _checkGCP();
 
@@ -341,7 +341,7 @@ bool lidar_raw_exec::_checkIntersection() {
 		Lidar::CloudStrip::Ptr cloud = *it;
         Check_log << "Analisi nuvola " << cloud->name() << std::endl;
         ++strip_count;
-//        if ( strip_count < 35)
+//        if ( strip_count < 20)
 //            continue;
 
         std::string ovl = _get_overlapped_cloud(cloud->name());
@@ -351,6 +351,7 @@ bool lidar_raw_exec::_checkIntersection() {
         }
 		
          Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN, MyLas::single_pulse);
+//         srcDsm->CreateIndex2();
 
 //		_checkControlPoints(cloud->name(), srcDsm);
 //        continue;
@@ -406,12 +407,13 @@ bool lidar_raw_exec::_checkIntersection() {
 
             std::vector<double> zSrc;
             _getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
-            //Check_log << "ZSRC " << zSrc.size() << std::endl;
+//            Check_log << "ZSRC " << zSrc.size() << std::endl;
 
             std::vector<double> zTrg;
             Lidar::DSMHandler targetDsm(cloudTarget, LID_ANG_SCAN, MyLas::single_pulse);
+//            targetDsm->CreateIndex2();
             _getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
-            //Check_log << "ZTRG " << zTrg.size() << std::endl;
+//            Check_log << "ZTRG " << zTrg.size() << std::endl;
             targetDsm.release();
 
             std::vector<double> diff;
@@ -424,7 +426,7 @@ bool lidar_raw_exec::_checkIntersection() {
                 if (sVal != Z_NOVAL && sVal != Z_OUT && sVal != Z_WEAK &&
                         tVal != Z_NOVAL && tVal != Z_OUT && tVal != Z_WEAK ) {
                     double d = sVal - tVal;
-                    if (std::abs(d) < 3 * LID_TOL_Z) {
+                    if (std::abs(d) < 2 * LID_TOL_Z) {
                         diff.push_back(d);
                     } else
                         ++discarted;
@@ -489,10 +491,30 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
 }
 
 void lidar_raw_exec::_getIntersectionDiff(CV::Lidar::DSMHandler& dsm, std::vector<DPOINT>& intersectionGrid, std::vector<double>& diff) {
+//    double r = 1;
+//    long disc = 0;
 	for (std::vector<DPOINT>::iterator it = intersectionGrid.begin(); it != intersectionGrid.end(); it++) {
+//        NODE nd(it->x, it->y);
+//        std::vector<int> indexes;
+//        dsm->getPoints2(nd, r, indexes);
+//        Check_log << "Punti entro 2 m " <<indexes.size()<<std::endl;
+//        statistics st(1);
+//        for ( size_t i = 0; i < indexes.size(); i++) {
+//            std::vector<double> vz;
+//            const NODE& nds = dsm->Node(indexes[i]);
+//            vz.push_back(nds.z);
+//            st.add_point(vz);
+//        }
+//        if ( st.aMax()[0] - st.aMin()[0] > 0.4 ) {
+//            disc++;
+//            diff.push_back(Z_NOVAL);
+//            continue;
+
+//        }
 		double z = dsm->GetQuota(it->x, it->y);
 		diff.push_back(z);
 	}
+//    Check_log << "Punti analizzati "<< intersectionGrid.size() << " scartati " <<disc <<std::endl;
 }
 
 void lidar_raw_exec::_getStats(const std::vector<double>& diff, Stats& s) {
