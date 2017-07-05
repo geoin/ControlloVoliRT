@@ -153,6 +153,10 @@ public:
 		//Ixy = Mxy - Mx * My;
 		Ixy = (double(_n) / double(_n - 1)) * (Mxy - Mx * My);
         Theta = atan2(2 * Ixy, Ixx - Iyy) / 2;
+
+        double c = sqrt(pow(Ixx - Iyy, 2.) + 4 * pow(Ixy, 2.));
+        ra = sqrt(2.) * sqrt(Ixx + Iyy + c);
+        rb = sqrt(2.) * sqrt(Ixx + Iyy - c);
 	}
 
 	inline void getAxisLen(double& l1, double& l2, double& theta) {
@@ -317,12 +321,20 @@ public:
         FirstPt = DPOINT( (A.x + D.x) / 2, (A.y + D.y) / 2 );
         LastPt = DPOINT( (B.x + C.x) / 2, (B.y + C.y) / 2 );
     }
+    void extreme_points(DPOINT& p1, DPOINT& p2)
+    {
+        double vi = cos(Theta);
+        double vj = sin(Theta);
 
+        p1 = DPOINT(Mx - ra * vi, My - ra * vj, 0);
+        p2 = DPOINT(Mx + ra * vi, My + ra * vj, 0);
+    }
 	double Mx, My;
 
 	double Ixx, Iyy, Ixy; // momenti d'inerzia	
 	double M2x, M2y, Mxy;
     double Theta;
+    double ra, rb;
 
     DPOINT A, B, C, D;      // corners of strip footprint
     DPOINT FirstPt, LastPt; // ending point of axes
@@ -1019,7 +1031,7 @@ public:
 			Release();
 		}
 
-        std::cout << " TRIANGULATE " << _ntriangle << std::endl;
+        std::cout << " N. meshes " << _ntriangle << std::endl;
 		return retval;
 	}
 
@@ -1132,66 +1144,78 @@ public:
 	//	GetNormal(n, &norm);
 	//	return angdir(norm.x, norm.y);
 	//}
-	//size_t GetBorder(std::vector<DPOINT>& vec) {
-	//	vec.clear();
-	//	std::vector<SEGMENT> st;
+    size_t GetBorder(std::vector<DPOINT>& vec) {
+        vec.clear();
+        std::vector<SEGMENT> st;
 
-	//	for (unsigned int i = 0; i < _ntriangle; i++) {
-	//		int nb = 0;
-	//		for (int j = 0; j < 3; j++) {
-	//			nb += ( triangle[i].n[j] == -1 );
-	//		}
-	//		if ( nb == 0 || nb == 3 ) // internal or isolated triangle
-	//			continue;
-	//		SEGMENT sm;
-	//		for (int j = 0; j < 3; j++) {
-	//			if ( nb == 1 && triangle[i].n[j] == -1 ) {
-	//				int ind = ( j - 1 >= 0 ) ? j - 1 : 2;
-	//				sm.p[0] = triangle[i].p[ind];
-	//				ind = ( j + 1 < 3 ) ? j + 1 : 0;
-	//				sm.p[1] = triangle[i].p[ind];
-	//				st.push_back(sm); // single border segment
-	//				break;
-	//			}
-	//			if ( (nb == 2 && triangle[i].n[j] != -1) ) {
-	//				sm.p[0] = triangle[i].p[j];
-	//				int ind = ( j - 1 >= 0 ) ? j - 1 : 2;
-	//				sm.p[1] = triangle[i].p[ind];
-	//				st.push_back(sm);
-	//				ind = ( j + 1 < 3 ) ? j + 1 : 0;
-	//				sm.p[1] = triangle[i].p[ind];
-	//				st.push_back(sm); // double border segment
-	//				break;
-	//			}
-	//		}
-	//	}
-	//	if ( st.size() == 0 )
-	//		return 0;
-	//	std::vector<unsigned int> vc;
-	//	vc.reserve(st.size());
-	//	vc.push_back(st[0].p[0]);
-	//	vc.push_back(st[0].p[1]);
-	//	st.erase(st.begin());
-	//	while ( st.size() ) { // build ordered list of vertexes
-	//		unsigned int k = vc[vc.size() - 1];
-	//		for (unsigned int i = 0; i < st.size(); i++) {
-	//			if ( st[i].p[0] == k ) {
-	//				vc.push_back(st[i].p[1]);
-	//				st.erase(st.begin() + i);
-	//				break;
-	//			} else if ( st[i].p[1] == k ) {
-	//				vc.push_back(st[i].p[0]);
-	//				st.erase(st.begin() + i);
-	//				break;
-	//			}
-	//		}
-	//	}
-	//	for (unsigned int i = 0; i < vc.size(); i++) {
-	//		DPOINT p1 = node[vc[i]];
-	//		vec.push_back(p1);
-	//	}
-	//	return vec.size();
-	//}
+        for (UINT i = 0; i < (UINT) triangle.size(); i++) {
+            int nb = 0;
+            for (int j = 0; j < 3; j++) {
+                nb += ( triangle[i].n[j] == -1 );
+            }
+            // scarta triangoli interni ed isolati
+            if ( nb == 0 || nb == 3 )
+                continue;
+            SEGMENT sm;
+            for (int j = 0; j < 3; j++) {
+                // un solo lato di bordo
+                if ( triangle[i].n[j] == -1 ) {
+                    int ind = ( j - 1 >= 0 ) ? j - 1 : 2;
+                    sm.p[0] = triangle[i].p[ind];
+                    ind = ( j + 1 < 3 ) ? j + 1 : 0;
+                    sm.p[1] = triangle[i].p[ind];
+                    st.push_back(sm);
+
+                }
+            }
+        }
+
+        if ( st.size() == 0 )
+            return 0;
+        std::vector<UINT> vc;
+        vc.reserve(st.size());
+        vc.push_back(st[0].p[0]);
+        vc.push_back(st[0].p[1]);
+        st.erase(st.begin());
+        while ( st.size() ) {
+            UINT k = vc[vc.size() - 1];
+            bool found = false;
+            for (UINT i = 0; i < st.size(); i++) {
+                if ( st[i].p[0] == k ) {
+                    vc.push_back(st[i].p[1]);
+                    st.erase(st.begin() + i);
+                    found = true;
+                    break;
+                } else if ( st[i].p[1] == k ) {
+                    vc.push_back(st[i].p[0]);
+                    st.erase(st.begin() + i);
+                    found = true;
+                    break;
+                }
+            }
+            if( !found ) {
+                if( k == vc[0] ) {
+                    for( UINT i = 0; i < vc.size(); i++ ) {
+                        DPOINT p1 = Node( vc[i] );
+                        vec.push_back( p1 );
+                    }
+                    vec.push_back( DPOINT() );
+                    vc.clear();
+                    if( !st.empty() ) {
+                        vc.push_back( st[0].p[0] );
+                        vc.push_back( st[0].p[1] );
+                        st.erase( st.begin() );
+                    }
+                }
+            }
+        }
+        for (UINT i = 0; i < vc.size(); i++) {
+            DPOINT p1 = Node(vc[i]);
+            vec.push_back(p1);
+        }
+        return vec.size();
+    }
+
 private:
 	void	Plane(double* equ, int n) const {
 		equ[0] = (GetTrY(n, 1) - GetTrY(n, 0)) * (GetTrZ(n, 2) - GetTrZ(n, 0)) - (GetTrZ(n, 1) - GetTrZ(n, 0)) * (GetTrY(n, 2) - GetTrY(n, 0));
@@ -1303,8 +1327,7 @@ private:
 		InitStruct(&outData, 0, 0, 0);
 		
 		bool ret = false;
-		//_hl_ = GetParent(_cnl.GetListHandle().GetHwnd());
-        std::cout << "call triangulate" << std::endl;
+
 		char mes[256];
         if ( Triangulate(&inData, &outData, mes) ) {
 

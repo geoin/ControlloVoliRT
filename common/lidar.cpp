@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <dem_interpolate/pslg.h>
+#include <vector>
 
 extern Logger Check_log;
 
@@ -156,7 +158,7 @@ bool Axis::fromCloud(const std::string& las, double ang, int echo) {
     DSM_Factory f;
     f.SetAngle(ang);
     f.SetEcho(echo);
-	if (!f.Open(las, false, false)) {
+    if (!f.Open(las, false, true)) {
 		return false;
 	}
     _npoints = f.GetDsm()->Npt();
@@ -165,26 +167,53 @@ bool Axis::fromCloud(const std::string& las, double ang, int echo) {
     _single_points = f.GetDsm()->PointCount(MyLas::single_pulse);
     _inter_points = f.GetDsm()->PointCount(MyLas::intermediate_pulse);
 
+     f.GetDsm()->GetBorder(_bb);
+    InertialEllipse ie;
+
+    for( size_t i = 0; i < _bb.size(); i++ ) {
+        ie.add( _bb[i].x, _bb[i].y );
+    }
+    ie.compute();
+    DPOINT p1, p2;
+    ie.extreme_points(p1, p2);
+    std::vector<DPOINT> pt;
+    int np = FeatureIntersectR( _bb, p1, p2, pt );
+
+    bool ret = false;
+    if( np == 2 ) {
+        _first = pt[0];
+        _last = pt[1];
+
+        _geom = OGRGeometryFactory::createGeometry(wkbLineString);
+
+        OGRGeometry* og = _geom;
+        reinterpret_cast<OGRLineString*>(og)->addPoint(_first.x, _first.y);
+        reinterpret_cast<OGRLineString*>(og)->addPoint(_last.x, _last.y);
+        _line = toLineString();
+        ret = true;
+    }
+
+
     //std::cout << "Punti filtrati: " << _npoints << std::endl;
     //std::cout << "min max: " << f.GetDsm()->Xmin() << " " <<  f.GetDsm()->Ymin() << " " << f.GetDsm()->Xmax() << " " <<  f.GetDsm()->Ymax() << std::endl;
 
     // first e last sono gli estremi dell'asse maggiore
 //	f.GetDsm()->getMajorAxis(_first, _last);
 //    _bb.resize(4);
-    f.GetDsm()->calculateStrip(_bb, _first, _last);
+//    f.GetDsm()->calculateStrip(_bb, _first, _last);
 //    f.GetDsm()->getBB(_bb[0], _bb[1], _bb[2], _bb[3]);
 
-	_geom = OGRGeometryFactory::createGeometry(wkbLineString);
+//	_geom = OGRGeometryFactory::createGeometry(wkbLineString);
 	
-	OGRGeometry* og = _geom;
-	reinterpret_cast<OGRLineString*>(og)->addPoint(_first.x, _first.y);
-	reinterpret_cast<OGRLineString*>(og)->addPoint(_last.x, _last.y);
-    //std::cout << "!!!estremi asse : "<< _first.x << " " <<  _first.y << " " << _last.x << " " <<  _last.y << std::endl;
+//	OGRGeometry* og = _geom;
+//	reinterpret_cast<OGRLineString*>(og)->addPoint(_first.x, _first.y);
+//	reinterpret_cast<OGRLineString*>(og)->addPoint(_last.x, _last.y);
+//    //std::cout << "!!!estremi asse : "<< _first.x << " " <<  _first.y << " " << _last.x << " " <<  _last.y << std::endl;
 	
-	_line = toLineString();
+//	_line = toLineString();
 	
 	f.Close();
-	return true;
+    return ret;
 }
 
 void Block::add(Strip::Ptr strip) {

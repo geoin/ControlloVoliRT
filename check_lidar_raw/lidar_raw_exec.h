@@ -56,6 +56,7 @@ public:
         long count;
 		double mean;
 		double stdDev;
+        double Wm, Wp;
 	};
 
 private:

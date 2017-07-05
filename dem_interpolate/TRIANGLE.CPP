@@ -16210,7 +16210,6 @@ int Triangulate(struct triangulateio *in, struct triangulateio *out, char* fTrEr
         int Verbose = 0;
         fGNprintf = nullptr;//fLprintf;
         tri_verbose = Verbose == 0 ? false : true;
-        std::cout << "Triangulate" << std::endl;
 
         char* triswitches = "Vpcznj"; //"Vpcznj";
 	if ( !setjmp(env) ) {

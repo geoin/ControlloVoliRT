@@ -8,6 +8,8 @@
 #include "exports.h"
 
 #include <memory.h>
+#include <vector>
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -896,4 +898,6 @@ private:
 	double Xs, Ys; // upper limit
 };
 
+//bool LineSegIntersez(const DPOINT& pA1, const DPOINT& pA2, RETTA& rtB, DPOINT& point);
+TOOLS_EXPORTS int FeatureIntersectR(const std::vector<DPOINT>& pol, const DPOINT& p1, const DPOINT& p2, std::vector<DPOINT>& pt);
 #endif

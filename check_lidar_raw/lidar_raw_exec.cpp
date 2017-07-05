@@ -341,8 +341,8 @@ bool lidar_raw_exec::_checkIntersection() {
 		Lidar::CloudStrip::Ptr cloud = *it;
         Check_log << "Analisi nuvola " << cloud->name() << std::endl;
         ++strip_count;
-//        if ( strip_count < 20)
-//            continue;
+        if ( strip_count < 132)
+            continue;
 
         std::string ovl = _get_overlapped_cloud(cloud->name());
         if ( ovl.empty() ) {
@@ -350,11 +350,7 @@ bool lidar_raw_exec::_checkIntersection() {
             continue;
         }
 		
-         Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN, MyLas::single_pulse);
-//         srcDsm->CreateIndex2();
-
-//		_checkControlPoints(cloud->name(), srcDsm);
-//        continue;
+        Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN, MyLas::single_pulse);
 
 		Lidar::Strip::Ptr source = cloud->strip();
 
@@ -403,36 +399,57 @@ bool lidar_raw_exec::_checkIntersection() {
                 }
             }
             Check_log << " Intersezione con " << cloudTarget->name() << std::endl;
-            Check_log << "  Analisi di "  << intersectionGrid.size() << " punti\n";
 
             std::vector<double> zSrc;
             _getIntersectionDiff(srcDsm, intersectionGrid, zSrc);
-//            Check_log << "ZSRC " << zSrc.size() << std::endl;
 
             std::vector<double> zTrg;
             Lidar::DSMHandler targetDsm(cloudTarget, LID_ANG_SCAN, MyLas::single_pulse);
-//            targetDsm->CreateIndex2();
             _getIntersectionDiff(targetDsm, intersectionGrid, zTrg);
-//            Check_log << "ZTRG " << zTrg.size() << std::endl;
+
             targetDsm.release();
 
             std::vector<double> diff;
 
             long discarted = 0;
+            long pvalid = 0;
 
+            Check_log << "Verifica differenze" << std::endl;
             for (size_t i = 0; i < intersectionGrid.size(); i++) {
                 double sVal = zSrc.at(i);
                 double tVal = zTrg.at(i);
                 if (sVal != Z_NOVAL && sVal != Z_OUT && sVal != Z_WEAK &&
                         tVal != Z_NOVAL && tVal != Z_OUT && tVal != Z_WEAK ) {
+
+                    pvalid++;
                     double d = sVal - tVal;
-                    if (std::abs(d) < 2 * LID_TOL_Z) {
+                    if (std::abs(d) < 1 * LID_TOL_Z) {
                         diff.push_back(d);
                     } else
                         ++discarted;
                 }
             }
-            //Check_log << "Scartati: " << discarted << std::endl;
+
+            size_t analized_points = intersectionGrid.size();
+            Check_log << "Punti selezionati " << analized_points << " punti validi " << pvalid <<
+                         " punti scartati " << discarted <<
+                          " Percentuale utilizzati " << 100 * diff.size() / pvalid << std::endl;
+            if ( pvalid == 0 ) {
+               Check_log << "Non ci sono punti a comune che soddisfano i requisiti"  << std::endl;
+               continue;
+            }
+
+            double ZZ = 1. - 0.95/2;
+            double ZZ2 = pow(ZZ, 2);
+            double PP = (double) diff.size() / (double) pvalid;
+            double A = 1./(1 + ZZ2 / pvalid);
+            double B = PP + ZZ2 / (2 * pvalid);
+            double C = ZZ * sqrt(PP * ( 1 -PP) / pvalid + ZZ2/(4 * pow((double) pvalid, 2)));
+
+            //Check_log << "ZZ " << ZZ << " ZZ2 " << ZZ2 << " PP " << PP << " A " << A << " B " << B << " C " << C << std::endl;
+
+            double Wm = A * (B - C);
+            double Wp = A * (B + C);
 
             intersectionGrid = std::vector<DPOINT>();
             zSrc = std::vector<double>();
@@ -441,8 +458,11 @@ bool lidar_raw_exec::_checkIntersection() {
             if ( diff.size() ) {
                 Stats s = { target->name(), 0.0, 0.0 };
                 _getStats(diff, s);
-                s.count = diff.size();
-                Check_log << "N.punti " << s.count << " scartati " <<  discarted << " Mean " << s.mean << " Dev standard " << s.stdDev << std::endl;
+                s.count = pvalid; //diff.size();
+                s.mean = 100 * PP;
+                s.Wm = Wm;
+                s.Wp = Wp;
+                Check_log << "Dev standard " << s.stdDev << " Interval " << s.Wm << " - " << s.Wp << std::endl;
                 _statList.insert(std::pair<std::string, Stats>(source->name(), s));
             } else {
                 Check_log << "Nessun punto  " << std::endl;
@@ -482,7 +502,7 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
             double dz = cp->quota() - z;
             pair->second.push_back(dz);
             Check_log /*<< std::fixed << std::setw( 11 ) << std::setprecision( 3 )*/ <<
-                         cp->name() << " cloud: " << strip << " diff: " << dz << std::endl;
+                         cp->name() << ";" << strip << ";" << dz << std::endl;
             count++;
 		}
 	}
@@ -493,6 +513,7 @@ void lidar_raw_exec::_checkControlPoints(const std::string& strip, CV::Lidar::DS
 void lidar_raw_exec::_getIntersectionDiff(CV::Lidar::DSMHandler& dsm, std::vector<DPOINT>& intersectionGrid, std::vector<double>& diff) {
 //    double r = 1;
 //    long disc = 0;
+    long countpt = 0;
 	for (std::vector<DPOINT>::iterator it = intersectionGrid.begin(); it != intersectionGrid.end(); it++) {
 //        NODE nd(it->x, it->y);
 //        std::vector<int> indexes;
@@ -511,9 +532,20 @@ void lidar_raw_exec::_getIntersectionDiff(CV::Lidar::DSMHandler& dsm, std::vecto
 //            continue;
 
 //        }
-		double z = dsm->GetQuota(it->x, it->y);
+
+        int itri = dsm->FindTriangle(it->x, it->y);
+        Triangolo t;
+        dsm->Get_triangle(t, itri);
+        double slope = t.GetSlope();
+        //Check_log << "slope " << slope << "  ";
+        double z = Z_NOVAL;
+        if ( slope < 15 ) {
+            z = dsm->GetQuota(it->x, it->y);
+            countpt++;
+        }
 		diff.push_back(z);
 	}
+    Check_log << "Punti in piano " << countpt << std::endl;
 //    Check_log << "Punti analizzati "<< intersectionGrid.size() << " scartati " <<disc <<std::endl;
 }
 
@@ -614,8 +646,8 @@ void lidar_raw_exec::_strip_overlaps_report() {
     attr.addAttribute("", "", "align", "", "center");
     row->add_item("entry", attr)->append("Strisciata 1");
     row->add_item("entry", attr)->append("Strisciata 2");
-    row->add_item("entry", attr)->append("N. punti");
-    row->add_item("entry", attr)->append("Media");
+    row->add_item("entry", attr)->append("N. punti analizzati");
+    row->add_item("entry", attr)->append("Perc. punti usati");
     row->add_item("entry", attr)->append("Dev. standard");
     Doc_Item tbody = tab->add_item("tbody");
 
@@ -635,7 +667,9 @@ void lidar_raw_exec::_strip_overlaps_report() {
 		row->add_item("entry", attr)->append(stat.target);
         row->add_item("entry", attr)->append(stat.count);
 
-        print_item(row, attr, stat.mean, abs_less_ty, LID_TOL_Z);
+//        print_item(row, attr, stat.mean, abs_less_ty, LID_TOL_Z);
+
+        print_item(row, attr, stat.mean, great_ty, 60);
         //row->add_item("entry", attr)->append(stat.mean);
 		row->add_item("entry", attr)->append(stat.stdDev);
 	}

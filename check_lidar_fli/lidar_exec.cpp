@@ -108,7 +108,7 @@ bool lidar_exec::run()
 
 		_read_ref_val();
 
-		// quota volo dagli assi
+        // legge il nome delle colonne necessarie
 		_findReferenceColumns();
 
 		// dagli assi di volo e dai parameti del lidar ricava l'impronta al suolo delle strip
@@ -129,15 +129,12 @@ bool lidar_exec::run()
 		} else {
 			// legge i dati del sensore di progetto
 			_read_lidar();
+            Check_log << "Lettura dem" << std::endl;
+            if (!_read_dem()) {
+                throw std::runtime_error("Modello numerico non trovato");
+            }
 		}
-		// read digital terrain model
-		//_dem_name = Path(_proj_dir, DEM).toString();
 
-        Check_log << "Lettura dem" << std::endl;
-		if (!_read_dem()) {
-			throw std::runtime_error("Modello numerico non trovato");
-		}
-		
         Check_log << "Elaborazione strisciate" << std::endl;
 		_process_strips();
 
@@ -146,7 +143,11 @@ bool lidar_exec::run()
 		
         if ( _type == FLY_TYPE && !_skip_areatest ) {
             Check_log << "Verifica punti di controllo su area di test" << std::endl;
-            _check_sample_cloud_folder();
+			try {
+				_check_sample_cloud_folder();
+			} catch( const std::exception& ex ) {
+				Check_log << " Impossibile processare le nuvole di test" << std::endl;
+			}
 		}
 
 		// se volo lidar confronta gli assi progettati con quelli effettivi
@@ -315,7 +316,6 @@ void lidar_exec::_buildAxis() {
 			_traverseFolder(p, stm);
         } else
           _addstrip(p, stm);
-		
 	}
 	cnn.commit_transaction();
 }
@@ -340,12 +340,6 @@ void lidar_exec::_addstrip(const Poco::Path& p, Statement& stm)
             ft.Inter_points = axis->interPoints();
 
             strpFt[ft.name] = ft;
-            const std::vector<DPOINT>& bb = ft.BB;
-            Check_log << "Bounding box\n";
-            Check_log <<  bb[0].x << " " << bb[0].y << "," << std::endl;
-            Check_log <<  bb[1].x << " " << bb[1].y << "," << std::endl;
-            Check_log <<  bb[2].x << " " << bb[2].y << "," << std::endl;
-            Check_log <<  bb[3].x << " " << bb[3].y << std::endl;
 
             Check_log << "Conteggio punti:\n";
             Check_log << "  primi:     " << ft.First_points << std::endl;
@@ -667,8 +661,6 @@ void lidar_exec::_control_points_report() {
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator it = _controlVal.begin();
 	std::vector<CV::Lidar::ControlPoint::Ptr>::iterator end = _controlVal.end();
 
-//	double med = 0;
-
     statistics st(1);
     std::vector<CV::Lidar::ControlPoint::Ptr> scartati;
 	for (; it != end; it++) {
@@ -676,10 +668,6 @@ void lidar_exec::_control_points_report() {
 		const std::string& name = point->name();
         const std::string& cloud = point->cloud();
 
-//		row = tbody->add_item("row");
-//        row->add_item("entry", attr)->append(name);
-//        row->add_item("entry", attr)->append(cloud);
-		
 		if (point->isValid()) {
             double diff = point->zDiff();
             if ( diff > 3 * LID_TOL_A ) {
@@ -1183,7 +1171,7 @@ void lidar_exec::_process_strips()
 	_createStripTable();
     std::string table = std::string(Z_STRIP) + (_type == PRJ_TYPE ? "P" : "V");
 
-    std::cout << "populating table " << table << std::endl;
+    Check_log << "populating table " << table << std::endl;
 	std::stringstream sql2;
 	sql2 << "INSERT INTO " << table << " (Z_STRIP_ID, Z_STRIP_CS, Z_MISSION, Z_STRIP_YAW, Z_STRIP_DENSITY, Z_STRIP_LENGTH, geom) \
 		VALUES (?1, ?2, ?3, ?4, ?5, ?6, ST_GeomFromWKB(:geom, " << SRID(cnn) << ") )";
@@ -1201,7 +1189,10 @@ void lidar_exec::_process_strips()
 
 	std::cout << "Layer:" << table << std::endl;
 
-	DSM* ds = _df->GetDsm();
+	DSM* ds =nullptr;
+
+	if ( _type == PRJ_TYPE )
+		ds = _df->GetDsm();
 
 	while ( !rs.eof() ) {
         Blob blob =  rs["geom"].toBlob();
@@ -1253,10 +1244,12 @@ void lidar_exec::_process_strips()
 			
             FootPrint& ft = st->second;
 
-            gp->addPoint(ft.BB[0].x, ft.BB[0].y);
-            gp->addPoint(ft.BB[1].x, ft.BB[1].y);
-            gp->addPoint(ft.BB[2].x, ft.BB[2].y);
-            gp->addPoint(ft.BB[3].x, ft.BB[3].y);
+            for ( size_t i = 0; i < ft.BB.size(); i++) {
+                gp->addPoint(ft.BB[i].x, ft.BB[i].y);
+            }
+//            gp->addPoint(ft.BB[1].x, ft.BB[1].y);
+//            gp->addPoint(ft.BB[2].x, ft.BB[2].y);
+//            gp->addPoint(ft.BB[3].x, ft.BB[3].y);
 			
 			gp->closeRings();
 			stripPtr->fromLineRing(axis, gp);
@@ -1640,7 +1633,7 @@ void lidar_exec::_get_overlaps(const std::map<std::string, Lidar::Strip::Ptr>& r
             std::string rname;
 			for (next++; next != end; next++) {
 				const Lidar::Strip::Ptr target = (*next).second;
-				if (source->isParallel(target) && source->intersect(target)) {
+				if (source->isParallel(target, 15) && source->intersect(target)) {
 					int dt = source->intersectionPercentage(target);
                     if ( dt > rmax) {
                         rmax = dt;
@@ -1765,8 +1758,9 @@ void lidar_exec::_findReferenceColumns() {
 	}
 
 	_quotaCol = rs[0].toString();
-	if (_quotaCol.size() == 0) {
-		throw std::runtime_error("Errore, selezionare la colonna dello shape contente i valori di quota");
+	if (_quotaCol.empty() ) {
+		_quotaCol = "A_VOL_QT";
+		//throw std::runtime_error("Errore, selezionare la colonna dello shape contente i valori di quota");
 	}
 
 	stm.reset();
@@ -1779,7 +1773,9 @@ void lidar_exec::_findReferenceColumns() {
 	}
 
 	_stripNameCol = rs[0].toString();
-	if (_stripNameCol.size() == 0) {
-		throw std::runtime_error("Errore, selezionare la colonna dello shape contente il nome delle strisciate");
+	// se non valorizzato assegna valori di default
+	if (_stripNameCol.empty() ) {
+		_stripNameCol = "A_VOL_CS";
+		//throw std::runtime_error("Errore, selezionare la colonna dello shape contente il nome delle strisciate");
 	}
 }

@@ -72,7 +72,69 @@ bool SEGMENTO::IsPtIn(DPOINT* pt) const
 //	rt1.c = -rt1.a * p1.x - rt1.b * p1.y;
 //	return rt1;
 //}
+bool LineSegIntersez(const DPOINT& pA1, const DPOINT& pA2, RETTA& rtB, DPOINT& point)
+{
+    RETTA	rtA;
+    rtA.X2Points(pA1, pA2);
+//    RETTA	rtB;
+//    rtB.X2Points(pB1, pB2);
 
+    if ( !rtA.Intersez(rtB, &point) )
+        return false;
+
+    if ( point.x >= (std::min)(pA1.x, pA2.x) &&
+        point.x <= (std::max)(pA1.x, pA2.x) &&
+        point.y >= (std::min)(pA1.y, pA2.y) &&
+        point.y <= (std::max)(pA1.y, pA2.y) )
+        return true;
+    if ( fabs(point.x - (std::min)(pA1.x, pA2.x)) < EPS_TH &&
+        point.y >= (std::min)(pA1.y, pA2.y) &&
+        point.y <= (std::max)(pA1.y, pA2.y))
+        return true;
+    if ( fabs(point.x - (std::max)(pA1.x, pA2.x)) < EPS_TH &&
+        point.y >= (std::min)(pA1.y, pA2.y) &&
+        point.y <= (std::max)(pA1.y, pA2.y))
+        return true;
+    if ( fabs(point.y - (std::min)(pA1.y, pA2.y)) < EPS_TH &&
+        point.x >= (std::min)(pA1.x, pA2.x) &&
+        point.x <= (std::max)(pA1.x, pA2.x))
+        return true;
+    if ( fabs(point.y - (std::max)(pA1.y, pA2.y)) < EPS_TH &&
+        point.x >= (std::min)(pA1.x, pA2.x) &&
+        point.x <= (std::max)(pA1.x, pA2.x))
+        return true;
+
+    return false;
+}
+TOOLS_EXPORTS int FeatureIntersectR(const std::vector<DPOINT>& pol, const DPOINT& p1, const DPOINT& p2, std::vector<DPOINT>& pt)
+{
+    std::vector<DPOINT> p0 = pol;
+
+    pt.clear();
+    int icount = 0;
+    RETTA rt(p1, p2);
+    for (size_t i = 0; i < pol.size() - 1; i++) {
+        DPOINT ppt;
+        if ( LineSegIntersez(p0[i], p0[i + 1], rt, ppt) ) {
+            pt.push_back(ppt);
+            icount++;
+        }
+    }
+
+    // sort the points on the line
+    bool sortx = ( fabs(p2.x - p1.x) > fabs(p2.y - p2.y) );
+    for (size_t i = 0; i < pt.size(); i++ ) {
+        for (size_t j = i + 1; j < pt.size(); j++ ) {
+            bool test = sortx ? ( pt[i].x > pt[j].x ) : ( pt[i].y > pt[j].y );
+            if ( test ) {
+                DPOINT dum = pt[i];
+                pt[i] = pt[j];
+                pt[j] = dum;
+            }
+        }
+    }
+    return icount;
+}
 TOOLS_EXPORTS int sign(double val)
 {
 	return ( val == 0. ) ? 0 : ( val < 0. ) ? -1 : 1;
