@@ -784,9 +784,13 @@ public:
     double GetSlope(void) const {
         DPOINT norm;
         GetNormal(&norm);
+        double dp = sqrt(1 - norm.z * norm.z);
         if ( norm.z == 0. )
-            return 3.14 / 2;
-        double ta = sqrt(1 - norm.z * norm.z) / norm.z;
+            return 1000.;
+        double ta = dp / norm.z;
+//        if ( dp == 0. )
+//            return 1.e100;
+//        double ta = norm.z / dp;
         return 100. * ta;
     }
 private:

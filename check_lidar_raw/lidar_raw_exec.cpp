@@ -332,6 +332,8 @@ Lidar::CloudStrip::Ptr lidar_raw_exec::_get_strip_by_name(const std::string& clo
  }
 
 bool lidar_raw_exec::_checkIntersection() {
+    if ( INTERSECTION_DENSITY == 0 )
+        return false;
 	std::vector<Lidar::CloudStrip::Ptr>::iterator it = _strips.begin();
 	std::vector<Lidar::CloudStrip::Ptr>::iterator end = _strips.end();
 	
@@ -341,8 +343,8 @@ bool lidar_raw_exec::_checkIntersection() {
 		Lidar::CloudStrip::Ptr cloud = *it;
         Check_log << "Analisi nuvola " << cloud->name() << std::endl;
         ++strip_count;
-        if ( strip_count < 132)
-            continue;
+//        if ( strip_count < 73)
+//            continue;
 
         std::string ovl = _get_overlapped_cloud(cloud->name());
         if ( ovl.empty() ) {
@@ -429,15 +431,15 @@ bool lidar_raw_exec::_checkIntersection() {
                         ++discarted;
                 }
             }
-
+			if( pvalid == 0 ) {
+				Check_log << "Non ci sono punti a comune che soddisfano i requisiti" << std::endl;
+				continue;
+			}
             size_t analized_points = intersectionGrid.size();
             Check_log << "Punti selezionati " << analized_points << " punti validi " << pvalid <<
                          " punti scartati " << discarted <<
                           " Percentuale utilizzati " << 100 * diff.size() / pvalid << std::endl;
-            if ( pvalid == 0 ) {
-               Check_log << "Non ci sono punti a comune che soddisfano i requisiti"  << std::endl;
-               continue;
-            }
+
 
             double ZZ = 1. - 0.95/2;
             double ZZ2 = pow(ZZ, 2);
