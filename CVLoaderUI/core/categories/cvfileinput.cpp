@@ -146,7 +146,7 @@ bool CVCloudSampleInput::load() {
 			CV::Util::Spatialite::Connection& cnn = SQL::Database::get();
 			Core::SQL::Query::Ptr q = Core::SQL::QueryBuilder::build(cnn);
 			CV::Util::Spatialite::Recordset set = q->select(
-				QStringList() << "ID" << "URI",
+                QStringList() << "ID" << "FOLDER",
 				QStringList() << _table, 
 				QStringList(),
 				QVariantList(),

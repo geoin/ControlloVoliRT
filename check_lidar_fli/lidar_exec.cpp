@@ -300,6 +300,9 @@ void lidar_exec::_buildAxis() {
 
 	std::vector<Poco::File>::iterator it = files.begin(), end = files.end();
 
+    size_t n_strip = files.size();
+    size_t c_strip = 0;
+
 	std::stringstream sql2;
 	sql2 << "INSERT INTO AVOLOV (" << _stripNameCol << ", GEOM) \
 		VALUES (?1, ST_GeomFromWKB(?2, " << SRID(cnn) << ") )";
@@ -314,15 +317,17 @@ void lidar_exec::_buildAxis() {
 		if (f.isDirectory()) {
             // solo se ci fossero sotto cartelle
 			_traverseFolder(p, stm);
-        } else
+        } else {
+            Check_log << "Strisciata " << p.getBaseName() << " " << ++c_strip << "/" << n_strip << std::endl;
           _addstrip(p, stm);
+        }
 	}
 	cnn.commit_transaction();
 }
 void lidar_exec::_addstrip(const Poco::Path& p, Statement& stm)
 {
     if (Poco::toLower(p.getExtension()) == "las") {
-        Check_log << "Strisciata " << p.getBaseName() << std::endl;
+        //Check_log << "Strisciata " << p.getBaseName() <<" " <<++c_strip << "/" << n_strip<< std::endl;
 
         Lidar::Axis::Ptr axis(new Lidar::Axis);
         axis->stripName(p.getBaseName());

@@ -170,9 +170,14 @@ bool Axis::fromCloud(const std::string& las, double ang, int echo) {
      f.GetDsm()->GetBorder(_bb);
     InertialEllipse ie;
 
-    for( size_t i = 0; i < _bb.size(); i++ ) {
-        ie.add( _bb[i].x, _bb[i].y );
+    for( UINT i = 0; i < f.GetDsm()->Npt(); i++ ) {
+        const DPOINT& pt = f.GetDsm()->Node( i );
+        ie.add( pt.x, pt.y );
     }
+
+//    for( size_t i = 0; i < _bb.size(); i++ ) {
+//        ie.add( _bb[i].x, _bb[i].y );
+//    }
     ie.compute();
     DPOINT p1, p2;
     ie.extreme_points(p1, p2);

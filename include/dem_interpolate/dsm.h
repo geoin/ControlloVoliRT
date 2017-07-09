@@ -114,6 +114,22 @@ public:
                 _count_first(0), _count_last(0), _count_single(0), _count_inter(0) {}
 	virtual ~_DSM() {}
 
+    _DSM& operator=(const _DSM& ds) {
+        _xmin = ds._xmin;
+        _ymin = ds._ymin;
+        _zmin = ds._zmin;
+        _xmax = ds._xmax;
+        _ymax = ds._ymax;
+        _zmax = ds._zmax;
+        _z_noVal = ds._z_noVal;
+        _count_first = 0;
+        _count_last = 0;
+        _count_single = 0;
+        _count_inter = 0;
+        return *this;
+    }
+    bool Triacalc() { return false;}
+
 	virtual double GetQuota(double x, double y, double z = Z_NOVAL, double zo = Z_OUT) const = 0;
 	virtual double GetQm(double x, double y, double dx, double dy, double z = Z_NOVAL, double zo = Z_OUT) const = 0;
 	virtual DSM_Type GetType(void) const = 0;
@@ -135,6 +151,8 @@ public:
         return _count_first + _count_last + _count_inter - 2 * _count_single;
     }
 
+    virtual _DSM* SubCloud(const DPOINT& p0, const DPOINT& p1) {return nullptr;}
+    virtual int AddNode(const ND& nd) {return 0;}
 	virtual const ND Node(unsigned int i) const = 0;
 	virtual void Node(const DPOINT& p, unsigned int i) = 0;
 	virtual const TRIANGLE& Triangle(unsigned int i) const = 0;

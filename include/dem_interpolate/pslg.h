@@ -1085,6 +1085,44 @@ public:
 			return false;
 		}
 	}
+    bool Triacalc() {
+        return _triCalc();
+    }
+
+    DSM* SubCloud(const DPOINT& p0, const DPOINT& p1) {
+        PSLG* dsm = new PSLG;
+        dsm->_xmin = dsm->_ymin = dsm->_zmin = INF;
+        dsm->_xmax = dsm->_ymax = dsm->_zmax = -INF;
+		dsm->_npt = 0;
+		dsm->_nSize = 0;
+        if ( dsm == nullptr )
+            return dsm;
+
+        for( size_t i = 0; i < node.size(); i++) {
+            const NODE& nd = Node(i);
+            if ( nd.x > p0.x && nd.x < p1.x && nd.y > p0.y && nd.y < p1.y ) {
+                dsm->node.push_back(nd);
+                dsm->setMin(nd.x, nd.y, nd.z);
+                dsm->setMax(nd.x, nd.y, nd.z);
+            }
+        }
+
+        if ( !dsm->node.empty() ) {
+            dsm->Org_Nod = dsm->node.size();
+			dsm->_npt = dsm->Org_Nod;
+            dsm->_set_off_scale();
+            for (unsigned int i = 0; i < dsm->Org_Nod; i++)
+                dsm->_normalize(i);
+            if ( !dsm->Triacalc()) {
+                delete dsm;
+                return nullptr;
+            }
+            return dsm;
+        }
+        delete dsm;
+        return nullptr;
+    }
+
 	int GetOppositeNode(unsigned int tri, unsigned int nd0, unsigned int nd1) {
 		int i0 = _getTriNodeIndex(tri, nd0);
 		int i1 = _getTriNodeIndex(tri, nd1);

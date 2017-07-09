@@ -124,7 +124,7 @@ public:
 		z += p.z;
 	}
 	DPOINT operator-(const DPOINT& p) const {
-		DPOINT p1(p.x - x, p.y - y, p.z - z);
+		DPOINT p1(x - p.x, y - p.y, z - p.z);
 		return p1;
 	}
 	void operator-=(const DPOINT& p) {
