@@ -579,7 +579,7 @@ void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<
 		//int x = Poco::NumberParser::parse(name.substr(0, 4)) * 100;
 		//int y = Poco::NumberParser::parse(name.substr(4, 4)) * 1000;
 
-		OGRGeometry* g = OGRGeometryFactory::createGeometry(wkbLinearRing);
+        OGRGeometry* g = OGRGeometryFactory::createGeometry(wkbLinearRing);
 		OGRLinearRing* gp = reinterpret_cast<OGRLinearRing*>(g);
 		gp->setCoordinateDimension(2);
 		gp->addPoint(dsm->Xmin(), dsm->Ymin());
