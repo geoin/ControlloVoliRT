@@ -30,6 +30,7 @@
 #include "Poco/StringTokenizer.h"
 #include "Poco/AutoPtr.h"
 #include "Poco/SharedPtr.h"
+#include "Poco/LocalDateTime.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -37,6 +38,7 @@
 #include "photo_util/sun.h"
 #include "Poco/DateTime.h"
 #include "Poco/DateTimeParser.h"
+#include "common/logger.h"
 
 #define SIGLA_PRJ "CSTP"
 #define CARTO "CARTO"
@@ -58,6 +60,8 @@ using Poco::Path;
 using namespace CV::Util::Spatialite;
 using namespace CV::Util::Geometry;
 
+Logger Check_log;
+
 photo_exec::~photo_exec()
 {
     if (_df != NULL) {
@@ -72,6 +76,13 @@ std::string photo_exec::_get_key(const std::string& val)
 
 bool photo_exec::run()
 {
+    std::string nomeLog =  ( _type == fli_type ) ? "Lidar_flightV.log" : "Lidar_flightP.log";
+    Poco::Path lp(_proj_dir, nomeLog);
+    Check_log.Init(lp.toString(), true);
+
+    Poco::LocalDateTime dt;
+    Check_log << dt.day() << "/" << dt.month() << "/" << dt.year() << "  " << dt.hour() << ":" << dt.minute() << std::endl;
+
 	CV::Version::print();
 
     if (_proj_dir.empty()) {
@@ -114,7 +125,7 @@ bool photo_exec::run()
 			std::string assi = std::string(ASSI_VOLO) + "V";
 			std::cout << "Layer:" << assi << std::endl;
             if ( !_calc_vdp(_vdps_plan) ) {
-				std::cout << "Tema degli assi di volo progettati non trovato" << std::endl;
+                Check_log << "Tema degli assi di volo progettati non trovato" << std::endl;
             }
 		} else {
             if ( !_calc_vdp(_vdps) ) {
@@ -147,12 +158,17 @@ bool photo_exec::run()
 		_process_strips();
 		_process_block();
 
-		std::cout << "Produzione del report finale: " << _dbook.name() << std::endl;
+        Check_log << "Produzione del report finale: " << _dbook.name() << std::endl;
 		_final_report();
 
 		// write the result on the docbook report
 		_dbook.write();
-		std::cout << "Procedura terminata:" << std::endl;
+
+        Poco::LocalDateTime dte;
+        Check_log << dte.day() << "/" << dte.month() << "/" << dte.year() << "  " << dte.hour() << ":" << dte.minute() << std::endl;
+
+        Check_log << "Procedura terminata" << std::endl;
+        Check_log.Close();
 	}
     catch(std::exception &e) {
         std::cout << std::string(e.what()) << std::endl;
@@ -645,6 +661,8 @@ void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
 	std::string table = std::string("_ZGSD") + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
 
+    Check_log << "Elaborazione GSD" << std::endl;
+
 	std::cout << "Layer:" << table << std::endl;
 
 	// create the photo table
@@ -692,7 +710,7 @@ void photo_exec::_process_gsd(std::vector<GSD>& vgsd)
 
 void photo_exec::_process_photos()
 {
-	std::cout << "Elaborazione dei fotogrammi" << std::endl;
+    Check_log << "Elaborazione dei fotogrammi" << std::endl;
 
 	std::string table = std::string(Z_FOTO) + (_type == Prj_type ? "P" : "V");
     cnn.remove_layer(table);
@@ -752,7 +770,7 @@ void photo_exec::_process_photos()
 			if ( !ds->RayIntersect(Pc, pd, pt) ) {
 				if ( !ds->IsValid(pt.z) ) {
 					if (!failed) {
-						std::cout << "Il fotogramma " << it->first << " cade al di fuori del dem" << std::endl;
+                        Check_log << "Il fotogramma " << it->first << " cade al di fuori del dem" << std::endl;
 						failed = true;
 					}
 					continue;
@@ -811,6 +829,8 @@ void photo_exec::_process_models()
 
 	std::string table = std::string(Z_MODEL) + (_type == Prj_type ? "P" : "V");
 	cnn.remove_layer(table);
+
+    Check_log << "Elaborazione dei modelli" << std::endl;
 	std::cout << "Layer:" << table << std::endl;
 
 	// create the model table
@@ -932,6 +952,8 @@ void photo_exec::_process_strips()
 	cnn.remove_layer(table);
 	std::cout << "Layer:" << table << std::endl;
 
+    Check_log << "Elaborazione delle strisciate" << std::endl;
+
 	// create the strip table
 	std::stringstream sql;
 	sql << "CREATE TABLE " << table << 
@@ -1039,7 +1061,7 @@ typedef struct mstrp {
 } mstrp;
 void photo_exec::_process_block()
 {
-	std::cout << "Elaborazione del blocco" << std::endl;
+    Check_log << "Elaborazione del blocco" << std::endl;
 
 	std::stringstream sql2;
 	std::string tablef(_type == Prj_type ? "Z_STRIPP" : "Z_STRIPV");

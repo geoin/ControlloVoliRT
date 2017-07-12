@@ -11,7 +11,7 @@
 #define VDP_H
 
 #include "exports.h"
-#include "dem_interpolate/geom.h"
+#include "common/geom.h"
 #include <string>
 #include <map>
 

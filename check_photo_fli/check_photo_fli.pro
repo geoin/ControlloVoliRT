@@ -12,6 +12,10 @@ QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
 QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
 QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
 
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
+QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
+
 win32 {
         QMAKE_CXXFLAGS -= -Zc:wchar_t-
         LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"

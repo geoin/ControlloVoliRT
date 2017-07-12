@@ -32,7 +32,7 @@
 #include "docbook/docbook.h"
 #include "CVUtil/cvspatialite.h"
 #include "CVUtil/ogrgeomptr.h"
-#include "dem_interpolate/geom.h"
+#include "common/geom.h"
 
 #include "cv/lidar.h"
 

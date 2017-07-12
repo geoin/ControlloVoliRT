@@ -29,7 +29,7 @@
 
 #include <string>
 #include <vector>
-#include "dem_interpolate/geom.h"
+#include "common/geom.h"
 #include "exports.h"
 
 class GPS_DATA {

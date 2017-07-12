@@ -40,15 +40,15 @@ INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include \
 DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS NOMINMAX
 
 SOURCES += \
-    geom.cpp \
     grid.cpp \
     triangle.cpp \
-    $$_PRO_FILE_PWD_/../common/parser.cpp
+    $$_PRO_FILE_PWD_/../common/parser.cpp \
+    $$_PRO_FILE_PWD_/../common/geom.cpp
 
 HEADERS +=\
     $$_PRO_FILE_PWD_/../include/dem_interpolate/pslg.h \
     $$_PRO_FILE_PWD_/../include/dem_interpolate/dsm.h \
-    $$_PRO_FILE_PWD_/../include/dem_interpolate/geom.h \
+    $$_PRO_FILE_PWD_/../include/common/geom.h \
     $$_PRO_FILE_PWD_/../include/dem_interpolate/triangle.h
 
 

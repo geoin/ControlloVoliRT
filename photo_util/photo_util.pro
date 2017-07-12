@@ -12,11 +12,13 @@ DEFINES += DLL_EXPORTS
 
 SOURCES += \
     vdp.cpp \
-    sun.cpp
+    sun.cpp \
+    $$_PRO_FILE_PWD_/../common/geom.cpp
 
 HEADERS +=\
     vdp.h \
-    sun.h
+    sun.h \
+    $$_PRO_FILE_PWD_/../common/geom.h
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 

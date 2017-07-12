@@ -5,7 +5,7 @@
 #include "Poco/DateTime.h"
 #include "Poco/DateTimeParser.h"
 
-#include "dem_interpolate/geom.h"
+#include "common/geom.h"
 #include "dem_interpolate/dsm.h"
 
 #include "CVUtil/ogrgeomptr.h"

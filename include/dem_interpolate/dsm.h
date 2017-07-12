@@ -15,7 +15,7 @@
 #include <vector>
 #include <iostream>
 
-#include "geom.h"
+#include "common/geom.h"
 #include "exports.h"
 
 #define Z_NOVAL -9999.
