@@ -173,7 +173,7 @@ bool CVFlyAttitude::persist() {
 			continue;
 		}
 
-		QStringList l = line.split(QRegExp("[\\t*\\s*]"), QString::SkipEmptyParts);
+		QStringList l = line.split( QRegExp( "[\\t*\\s*\\;]" ), QString::SkipEmptyParts );
 		if (l.size() != 7) {
 			continue;
 		}

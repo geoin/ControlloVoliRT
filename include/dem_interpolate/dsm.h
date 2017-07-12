@@ -174,6 +174,7 @@ public:
 		double y = pt.y;
 		if ( z == _z_noVal )
 			z = (_zmax + _zmin) / 2;
+		bool retrial = true;
 		double dz0 = 0;
 		int nit = 15;
 		double dz = 0., dx = 0, dy = 0;
@@ -184,8 +185,19 @@ public:
 			double zt = GetQuota(v.GetX(), v.GetY());
 			if ( zt == Z_OUT || zt == Z_NOVAL) {
 				pt.z = zt;
+				if ( retrial ) {
+                    if( (_zmax + _zmin) / 2 )
+						z = _zmin;
+					else if( z == _zmin )
+						z = _zmax;
+					else
+						return false;
+					continue;
+				}
+					
 				return false;
 			}
+			retrial = false;
 
 			dz = fabs(zt - z);
 			dx = fabs(v.GetX() - x);

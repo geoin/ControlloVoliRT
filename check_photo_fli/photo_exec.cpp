@@ -765,25 +765,26 @@ void photo_exec::_process_photos()
 			Collimation ci;
 			ci.xi = ( i == 0 || i == 3 ) ? 0.f : (i != 4) ? (float) vdp.dimx() : (float) (vdp.dimx() / 2.);
 			ci.yi = ( i == 0 || i == 1 ) ? 0.f : (i != 4) ? (float) vdp.dimy() : (float) (vdp.dimy() / 2.);
-			DPOINT pd, pt;
+            DPOINT pd, pt(0, 0, Z_NOVAL);
 			vdp.GetRay(ci, &pd);
-			if ( !ds->RayIntersect(Pc, pd, pt) ) {
-				if ( !ds->IsValid(pt.z) ) {
-					if (!failed) {
+            if ( !ds->RayIntersect(Pc, pd, pt) ) {
+                if ( !ds->IsValid(pt.z) ) {
+                    if (!failed) {
                         Check_log << "Il fotogramma " << it->first << " cade al di fuori del dem" << std::endl;
-						failed = true;
-					}
-					continue;
-				}
-			}
-			double dp = vdp.pix() * (vdp.Pc.z - pt.z) / vdp.foc();
-			vgsd.push_back(GSD(pt, it->first, dp));
+                        failed = true;
+                    }
+                    continue;
+                }
+            }
+            double dp = vdp.pix() * (vdp.Pc.z - pt.z) / vdp.foc();
+            vgsd.push_back(GSD(pt, it->first, dp));
 
-			dt += vdp.Pc.z - pt.z;
-			dpol.push_back(pt);
+            dt += vdp.Pc.z - pt.z;
+            dpol.push_back(pt);
 		}
 		if (failed) {
-			continue;
+           continue;
+
 		}
 
 		OGRGeometryFactory gf;

@@ -238,30 +238,30 @@ bool lidar_final_exec::run() {
 
     // usando i dati ground o overground determina l'ingombro dei fogli e lo sottrae da quello di carto
     Check_log << "Analisi copertura aree da rilevare GROUND" << std::endl;
-    //_checkBlock(_groundEll, _groundEllList, TILE_GROUND);
+    _checkBlock(_groundEll, _groundEllList, TILE_GROUND);
 
     Check_log << "Analisi copertura aree da rilevare OVERGROUND" << std::endl;
     _checkBlock(_overgroundEll, _overgroundEllList, TILE_OVERGROUND);
 	
     // confronta che il dato tile ground contenga gli stessi elementi degli altri oggetti
     Check_log << "Analisi completezza dati.." << std::endl;
-    //_checkEquality();
+    _checkEquality();
 	
 	// verifica che il dato groud abbia corrispondenti nelle strip
     Check_log << "Analisi classificazione ground" << std::endl;
-   // _checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
+    _checkRawRandom( _groundEll, MyLas::last_pulse, groundRandomDiffg );
 
     // come sopra ma per il dato overground
     Check_log << "Analisi classificazione overground" << std::endl;
-    //_checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
+    _checkRawRandom( _overgroundEll, MyLas::first_pulse, overRandomDiff );
 	
 	
     // Verifica che ricampionamento e conversione quote produca risultati congrui
     Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
-    //_checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt, TILE_GROUND);
+    _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt, TILE_GROUND);
 
     Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
-    //_checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds, TILE_OVERGROUND);
+    _checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds, TILE_OVERGROUND);
 
     createReport();
 
@@ -542,6 +542,7 @@ void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<
 
     std::vector<std::string>::const_iterator it = list.begin();
     std::vector<std::string>::const_iterator end = list.end();
+    size_t nt = list.size();
 
 	OGRGeomPtr rg_ = OGRGeometryFactory::createGeometry(wkbPolygon);
 	OGRGeometry* pol = rg_;
@@ -562,6 +563,7 @@ void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<
 
 	cnn.begin_transaction();
 
+    size_t ne = 0;
 	for (; it != end; it++) {
 		std::string name = *it;
         Poco::Path pth(folder, name);
@@ -572,7 +574,7 @@ void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<
         if( !fac.Open( pth.toString(), false, false ) )
 			continue;
 		DSM* dsm = fac.GetDsm();
-        Check_log << name << " " << dsm->Npt() << " punti" << std::endl;
+        Check_log << name << " " << dsm->Npt() << " punti " << ++ne << "/"<< nt << std::endl;
 
 		//int x = Poco::NumberParser::parse(name.substr(0, 4)) * 100;
 		//int y = Poco::NumberParser::parse(name.substr(4, 4)) * 1000;
