@@ -8,13 +8,12 @@ QT       -= core gui qt
 TARGET = dem_interpolate
 TEMPLATE = lib
 
-QMAKE_CFLAGS+= /ZI
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
-
 win32 {
-        LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
-        DEFINES += DLL_EXPORTS
+    QMAKE_CFLAGS+= /ZI
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
+    DEFINES += DLL_EXPORTS
 }
 unix{
     LIBS += -L"../../ControlloVoliRT/lib"

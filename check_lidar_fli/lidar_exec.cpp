@@ -35,7 +35,7 @@
 #include "Poco/LocalDateTime.h"
 #include <fstream>
 #include <sstream>
-#include "gdal/ogr_geometry.h"
+#include "ogr_geometry.h"
 #include "dem_interpolate/dsm.h"
 #include "common/util.h"
 #include "common/logger.h"

@@ -27,9 +27,9 @@
 #ifndef TIFF_UTIL_H
 #define TIFF_UTIL_H
 
-#include "dem_interpolate/geom.h"
-#include "geotiff/xtiffio.h"
-#include "geotiff/geotiffio.h"
+#include "common/geom.h"
+#include "xtiffio.h"
+#include "geotiffio.h"
 #include <string>
 #include <vector>
 

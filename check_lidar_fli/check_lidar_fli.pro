@@ -1,24 +1,23 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2013-10-10T17:26:24
-#
-#-------------------------------------------------
 CONFIG -= qt
 CONFIG += console
 QT       -= core gui
 TARGET = check_lidar
 
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
+OSGEO4_DIR = "D:/OSGeo4W64"
 
 win32 {
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
+
     LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
+    LIBS += -L"$$OSGEO4_DIR/lib"
     INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+    INCLUDEPATH += $$OSGEO4_DIR/include
     CONFIG(debug, debug|release) {
             LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lphoto_utild -lCVUtild -ldem_interpolated -lsqlite3_i -lgdal_i -lgeos_c -lproj_i -lspatialite_i
             TARGET = $$join(TARGET,,,d)

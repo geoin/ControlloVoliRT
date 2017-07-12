@@ -32,7 +32,7 @@
 #include "CVUtil/cvspatialite.h"
 #include "CVUtil/ogrgeomptr.h"
 #include "docbook/docbook.h"
-#include "dem_interpolate/geom.h"
+#include "common/geom.h"
 
 class ortho_exec {
 public:

@@ -10,10 +10,13 @@ TARGET = CVUtil
 TEMPLATE = lib
 CONFIG += staticlib
 
+OSGEO4_DIR = "D:/OSGeo4W64"
+
 INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 
 win32 {
-        INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+    INCLUDEPATH += $$OSGEO4_DIR/include
 }
 macx {
         INCLUDEPATH += ../../SwTools/include
@@ -39,5 +42,5 @@ incl.files += $$_PRO_FILE_PWD/_../CVUtil/cvspatialite.h
 incl.files += $$_PRO_FILE_PWD_/../CVUtil/ogrgeomptr.h
 INSTALLS += incl
 
-LIBS += -lPocoFoundation -lspatialite -lsqlite3
+LIBS += -lsqlite3
 

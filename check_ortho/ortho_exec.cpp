@@ -36,7 +36,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "gdal/ogr_geometry.h"
+#include "ogr_geometry.h"
 #include "common/util.h"
 
 //#define SRID 32632

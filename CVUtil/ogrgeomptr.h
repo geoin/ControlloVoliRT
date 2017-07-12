@@ -1,7 +1,7 @@
 #ifndef OGRGEOMPTR_H
 #define OGRGEOMPTR_H
 #include <Poco/SharedPtr.h>
-#include <gdal/ogr_geometry.h>
+#include "ogr_geometry.h"
 #include <vector>
 
 namespace CV {

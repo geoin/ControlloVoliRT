@@ -8,15 +8,17 @@ QT       -= core gui
 TARGET = ziplib
 TEMPLATE = lib
 
-QMAKE_CFLAGS+= /ZI
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZip.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZipd.lib
+OSGEO4_DIR = "D:/OSGeo4W64"
 
 win32 {
-        LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
-        DEFINES += DLL_EXPORTS
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZip.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZipd.lib
+    QMAKE_CFLAGS+= /ZI
+
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
+    DEFINES += DLL_EXPORTS
 }
 macx {
         LIBS += -L"/Users/andrea/SwTools/lib"
@@ -33,7 +35,7 @@ else {
 
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
-#CFLAG
+
 
 DEFINES +=ZIPLIB_LIBRARY
 

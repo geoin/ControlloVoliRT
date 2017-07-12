@@ -28,7 +28,7 @@
 #include "tiff_util.h"
 #include <fstream>
 #include "Poco/Path.h"
-#include "dem_interpolate/geom.h"
+#include "common/geom.h"
 
 using Poco::Path;
 #define	EPS 1.e-4

@@ -3,24 +3,27 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
+OSGEO4_DIR = "D:/OSGeo4W64"
 
 win32 {
-        QMAKE_CXXFLAGS -= -Zc:wchar_t-
-        LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
+    QMAKE_CXXFLAGS -= -Zc:wchar_t-
 
-        CONFIG(debug, debug|release) {
-                LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lZipLibd -lphoto_utild -lrtklibd -lCVUtild -lspatialite_i -lsqlite3_i  -lgdal_i -lproj_i -lgeos_c
-                TARGET = $$join(TARGET,,,d)
-        }
-        else {
-                LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lZipLib -lphoto_util -lrtklib lCVUtil -lspatialite_i -lsqlite3_i - -lgdal_i -lproj_i -lgeos_c
-        }
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
+    LIBS += -L"$$OSGEO4_DIR/lib"
+
+    CONFIG(debug, debug|release) {
+        LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lZipLibd -lphoto_utild -lrtklibd -lCVUtild -lspatialite_i -lsqlite3_i  -lgdal_i -lproj_i -lgeos_c
+        TARGET = $$join(TARGET,,,d)
+    }
+    else {
+         LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lZipLib -lphoto_util -lrtklib -lCVutil -lsqlite3_i -lspatialite_i -lgdal_i
+    }
 }
 
 unix: {
@@ -35,6 +38,7 @@ unix: {
 }
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include ../include
+INCLUDEPATH += $$OSGEO4_DIR/include
 
 
 DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX

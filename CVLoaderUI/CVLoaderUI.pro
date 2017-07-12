@@ -11,25 +11,29 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = CVloader
 TEMPLATE = app
 
-CV_INCL = ../include
-CV_TOOLS_INCL = $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
-OUT_DIR = $$_PRO_FILE_PWD_/../bin
+OSGEO4_DIR = "D:/OSGeo4W64"
 
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZip.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
-QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZipd.lib
+CV_INCL = $$_PRO_FILE_PWD_/../include
+CV_TOOLS_INCL = $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+OSGEO4_INCLUDEDIR = "D:/OSGeo4W64"
+OUT_DIR = $$_PRO_FILE_PWD_/../bin
 
 DEFINES += NOMINMAX
 
 INCLUDEPATH += $${CV_INCL}
 
 win32 {
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZip.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtild.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
+    QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZipd.lib
+
     INCLUDEPATH += $${CV_TOOLS_INCL}
+    INCLUDEPATH += $$OSGEO4_DIR/include
     LIBS += -L$$_PRO_FILE_PWD_"/../lib" -L$$_PRO_FILE_PWD_"/../../ControlloVoliRT_Tools/lib"
     LIBS += -LD:/OSGeo4W64/lib
     CONFIG(debug, debug|release) {
