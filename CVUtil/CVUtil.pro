@@ -38,7 +38,7 @@ HEADERS += \
 DESTDIR = $$_PRO_FILE_PWD_/../lib
 
 incl.path = $$_PRO_FILE_PWD_/../include/CVUtil
-incl.files += $$_PRO_FILE_PWD/_../CVUtil/cvspatialite.h
+incl.files += $$_PRO_FILE_PWD_/../CVUtil/cvspatialite.h
 incl.files += $$_PRO_FILE_PWD_/../CVUtil/ogrgeomptr.h
 INSTALLS += incl
 

@@ -384,7 +384,7 @@ int GNprintf(char* fmt, ...)
 #include <fpu_control.h>
 #endif /* LINUX */
 #ifdef TRILIBRARY
-#include "triangle.h"
+#include "dem_interpolate/triangle.h"
 #endif /* TRILIBRARY */
 
 /* A few forward declarations.                                               */
@@ -16214,21 +16214,6 @@ int Triangulate(struct triangulateio *in, struct triangulateio *out, char* fTrEr
         char* triswitches = "Vpcznj"; //"Vpcznj";
 	if ( !setjmp(env) ) {
 		triangulate(triswitches, in, out, NULL);
-		return 1;
-	} else {
-		strcpy(fTrErrMes, TrErrMes);
-		return 0;
-	}
-}
-_declspec (dllexport) int GNvoronoi(/*char * triswitches, */struct triangulateio *in, 
-										struct triangulateio *out, struct triangulateio *vor, 
-										void (*fLprintf)(char*), char* fTrErrMes)
-{
-	fGNprintf = fLprintf;
-
-	char* triswitches = "Vpcznv";
-	if ( !setjmp(env) ) {
-		triangulate(triswitches, in, out, vor);
 		return 1;
 	} else {
 		strcpy(fTrErrMes, TrErrMes);

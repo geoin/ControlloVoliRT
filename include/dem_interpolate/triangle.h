@@ -55,8 +55,8 @@ struct triangulateio {
 void ReleaseStruct(struct triangulateio *);
 int InitStruct(struct triangulateio * sto, unsigned int npt, int natt, unsigned int nseg);
 int Triangulate(struct triangulateio *in, struct triangulateio *out,char* fTrErrMes);
-//int Voronoi(char * triswitches, struct triangulateio *in, struct triangulateio *out,
-//										struct triangulateio *vor, void (*fLprintf)(char*), char* fTrErrMes);
+int Voronoi(char * triswitches, struct triangulateio *in, struct triangulateio *out,
+                                        struct triangulateio *vor, void (*fLprintf)(char*), char* fTrErrMes);
 //#if defined(__cplusplus)
 //}
 //#endif

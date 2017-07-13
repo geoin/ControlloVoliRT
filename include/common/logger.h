@@ -105,12 +105,13 @@ public:
 		return str;
 	}
 	static std::string now(void) {
-		SYSTEMTIME lt;
-		GetLocalTime(&lt);
-		std::ostringstream st;
-		st << set(lt.wDay, 2) << "/" << set(lt.wMonth, 2) << "/" << lt.wYear << "\t" 
-			<< set(lt.wHour, 2) << ":" << set(lt.wMinute, 2) << ":" << set(lt.wSecond, 2) << "\t";
-		return st.str();
+//		std::SYSTEMTIME lt;
+//		GetLocalTime(&lt);
+//		std::ostringstream st;
+//		st << set(lt.wDay, 2) << "/" << set(lt.wMonth, 2) << "/" << lt.wYear << "\t"
+//			<< set(lt.wHour, 2) << ":" << set(lt.wMinute, 2) << ":" << set(lt.wSecond, 2) << "\t";
+//		return st.str();
+                return std::string("xxx");
 	}
 	bool IsOpen(void) { return _isOpen; }
 private:

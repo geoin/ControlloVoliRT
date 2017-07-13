@@ -8,33 +8,42 @@ QT       -= core gui qt
 TARGET = dem_interpolate
 TEMPLATE = lib
 
+
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
+
 win32 {
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
     QMAKE_CFLAGS+= /ZI
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
     LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
+    LIBS += -llaslib
     DEFINES += DLL_EXPORTS
 }
+
 unix{
-    LIBS += -L"../../ControlloVoliRT/lib"
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT/lib"
     QMAKE_CXXFLAGS += -fPIC
 }
+
 macx {
-        LIBS += -L"/Users/andrea/SwTools/lib"
+        LIBS += -L"/opt/local/lib"
+        LIBS += -llas
+        INCLUDEPATH += "/opt/local/include"
 }
 
+
+
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundation64d -llaslibd
+        win32: LIBS += -lPocoFoundation64d
+        macx:  LIBS += -lPocoFoundationd
         TARGET = $$join(TARGET,,,d)
 }
 else {
-    LIBS += -lPocoFoundation64 -llaslib
+    win32: LIBS += -lPocoFoundation64
+    macx: LIBS += -lPocoFoundation
 }
-
-
-INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include \
-    $$_PRO_FILE_PWD_/../include/dem_interpolate\
-    $$_PRO_FILE_PWD_/../include
 
 DEFINES += DEMINTERPOLATE_LIBRARY ANSI_DECLARATORS NOMINMAX
 
@@ -51,10 +60,9 @@ HEADERS +=\
     $$_PRO_FILE_PWD_/../include/dem_interpolate/triangle.h
 
 
-#DESTDIR = ../lib
+DESTDIR = $$_PRO_FILE_PWD_/../lib
 
-#incl.path = ../include/dem_interpolate
-#incl.files = ../dem_interpolate/geom.h ../dem_interpolate/dsm.h
-#INSTALLS += incl
+incl.path = $$_PRO_FILE_PWD_/../include/dem_interpolate
+incl.files = $$_PRO_FILE_PWD_/../dem_interpolate/dsm.h
+INSTALLS += incl
 
-DESTDIR = $$_PRO_FILE_PWD_/../bin

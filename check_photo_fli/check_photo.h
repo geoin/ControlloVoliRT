@@ -37,8 +37,8 @@
 class DSM_Factory;
 class OGRPolygon;
 class OGRGeometry;
-class CV::Util::Spatialite::QueryField;
-class CV::Util::Spatialite::BindField;
+//class CV::Util::Spatialite::QueryField;
+//class CV::Util::Spatialite::BindField;
 
 class GSD {
 public:

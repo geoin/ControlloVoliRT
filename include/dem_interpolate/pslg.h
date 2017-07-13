@@ -29,7 +29,9 @@
 #endif
 
 #define TR_EPS 1.e-10
-
+#if !defined(UINT)
+    #define UINT unsigned int
+#endif
 
 template <typename T>
 struct PointCloud
@@ -617,7 +619,7 @@ public:
             return -1;
         NODE n1 = _normalize(nd);
 
-        float query_pt[3] = { n1.x, n1.y, n1.z };
+        float query_pt[3] = { float(n1.x), float(n1.y), float(n1.z) };
 
         const size_t num_results = 1;
         size_t ret_index;
@@ -637,7 +639,7 @@ public:
         NODE n1 = _normalize(nd);
         float rd = pow(radius / _p_scale[0], 2);
 
-        float query_pt[3] = { n1.x, n1.y, n1.z };
+        float query_pt[3] = { float(n1.x), float(n1.y), float(n1.z) };
 
         nanoflann::SearchParams params;
 
@@ -658,7 +660,7 @@ public:
         NODE n1 = _normalize(nd);
         float rd = pow(radius / _p_scale[0], 2);
 
-        float query_pt[3] = { n1.x, n1.y, n1.z };
+        float query_pt[3] = { float(n1.x), float(n1.y), float(n1.z) };
 
         nanoflann::SearchParams params;
 
@@ -1090,39 +1092,40 @@ public:
         return _triCalc();
     }
 
-    DSM* SubCloud(const DPOINT& p0, const DPOINT& p1) {
-        PSLG* dsm = new PSLG;
-        dsm->_xmin = dsm->_ymin = dsm->_zmin = INF;
-        dsm->_xmax = dsm->_ymax = dsm->_zmax = -INF;
-		dsm->_npt = 0;
-		dsm->_nSize = 0;
-        if ( dsm == nullptr )
-            return dsm;
+   DSM* SubCloud(const DPOINT& p0, const DPOINT& p1);
+//{
+//        PSLG* dsm = new PSLG;
+//        dsm->_xmin = dsm->_ymin = dsm->_zmin = INF;
+//        dsm->_xmax = dsm->_ymax = dsm->_zmax = -INF;
+//		dsm->_npt = 0;
+//		dsm->_nSize = 0;
+//        if ( dsm == nullptr )
+//            return dsm;
 
-        for( size_t i = 0; i < node.size(); i++) {
-            const NODE& nd = Node(i);
-            if ( nd.x > p0.x && nd.x < p1.x && nd.y > p0.y && nd.y < p1.y ) {
-                dsm->node.push_back(nd);
-                dsm->setMin(nd.x, nd.y, nd.z);
-                dsm->setMax(nd.x, nd.y, nd.z);
-            }
-        }
+//        for( size_t i = 0; i < node.size(); i++) {
+//            const NODE& nd = Node(i);
+//            if ( nd.x > p0.x && nd.x < p1.x && nd.y > p0.y && nd.y < p1.y ) {
+//                dsm->node.push_back(nd);
+//                dsm->setMin(nd.x, nd.y, nd.z);
+//                dsm->setMax(nd.x, nd.y, nd.z);
+//            }
+//        }
 
-        if ( !dsm->node.empty() ) {
-            dsm->Org_Nod = dsm->node.size();
-			dsm->_npt = dsm->Org_Nod;
-            dsm->_set_off_scale();
-            for (unsigned int i = 0; i < dsm->Org_Nod; i++)
-                dsm->_normalize(i);
-            if ( !dsm->Triacalc()) {
-                delete dsm;
-                return nullptr;
-            }
-            return dsm;
-        }
-        delete dsm;
-        return nullptr;
-    }
+//        if ( !dsm->node.empty() ) {
+//            dsm->Org_Nod = dsm->node.size();
+//			dsm->_npt = dsm->Org_Nod;
+//            dsm->_set_off_scale();
+//            for (unsigned int i = 0; i < dsm->Org_Nod; i++)
+//                dsm->_normalize(i);
+//            if ( !dsm->Triacalc()) {
+//                delete dsm;
+//                return nullptr;
+//            }
+//            return dsm;
+//        }
+//        delete dsm;
+//        return nullptr;
+//    }
 
 	int GetOppositeNode(unsigned int tri, unsigned int nd0, unsigned int nd1) {
 		int i0 = _getTriNodeIndex(tri, nd0);
@@ -1514,7 +1517,40 @@ private:
     PointCloud<float> cloud;
     PointCloud2D<float> cloud2;
 };
-
 typedef tPSLG<NODE, TRIANGLE> PSLG;
+
+template <typename ND, typename NT> inline DSM* tPSLG<ND, NT>::SubCloud(const DPOINT& p0, const DPOINT& p1) {
+    PSLG* dsm = new PSLG;
+    dsm->_xmin = dsm->_ymin = dsm->_zmin = INF;
+    dsm->_xmax = dsm->_ymax = dsm->_zmax = -INF;
+    dsm->_npt = 0;
+    dsm->_nSize = 0;
+    if ( dsm == nullptr )
+        return dsm;
+
+    for( size_t i = 0; i < node.size(); i++) {
+        const NODE& nd = Node(i);
+        if ( nd.x > p0.x && nd.x < p1.x && nd.y > p0.y && nd.y < p1.y ) {
+            dsm->node.push_back(nd);
+            dsm->setMin(nd.x, nd.y, nd.z);
+            dsm->setMax(nd.x, nd.y, nd.z);
+        }
+    }
+
+    if ( !dsm->node.empty() ) {
+        dsm->Org_Nod = dsm->node.size();
+        dsm->_npt = dsm->Org_Nod;
+        dsm->_set_off_scale();
+        for (unsigned int i = 0; i < dsm->Org_Nod; i++)
+            dsm->_normalize(i);
+        if ( !dsm->Triacalc()) {
+            delete dsm;
+            return nullptr;
+        }
+        return dsm;
+    }
+    delete dsm;
+    return nullptr;
+}
 
 #endif
