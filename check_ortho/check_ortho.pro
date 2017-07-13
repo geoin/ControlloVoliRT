@@ -3,9 +3,11 @@ QT       -= core gui
 CONFIG += console
 TARGET = check_ortho
 
-OSGEO4_DIR = "D:/OSGeo4W64"
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
+LIBS += -L"$$_PRO_FILE_PWD_/../lib"
 
 win32 {
+    OSGEO4_DIR = "D:/OSGeo4W64"
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
@@ -14,9 +16,9 @@ win32 {
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
 
-    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
     LIBS += -L"$$OSGEO4_DIR/lib"
-    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 
     INCLUDEPATH += $$OSGEO4_DIR/include
     CONFIG(debug, debug|release) {
@@ -29,8 +31,6 @@ win32 {
 }
 
 unix {
-        INCLUDEPATH +=  $$_PRO_FILE_PWD_/../include
-        LIBS += -L$$_PRO_FILE_PWD_/../lib
         CONFIG(debug, debug|release) {
                 LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lsqlite3 -lspatialite -lgdal -ltiff
                 TARGET = $$join(TARGET,,,d)
@@ -42,7 +42,7 @@ unix {
 
 
 
-DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
+#DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     check_ortho.cpp \

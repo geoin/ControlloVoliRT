@@ -3,9 +3,11 @@ CONFIG += console
 QT       -= core gui
 TARGET = check_lidar
 
-OSGEO4_DIR = "D:/OSGeo4W64"
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
+LIBS += -L"$$_PRO_FILE_PWD_/../lib"
 
 win32 {
+    OSGEO4_DIR = "D:/OSGeo4W64"
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
@@ -14,10 +16,11 @@ win32 {
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
 
-    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
     LIBS += -L"$$OSGEO4_DIR/lib"
-    INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+    INCLUDEPATH += ../../ControlloVoliRT_Tools/include
     INCLUDEPATH += $$OSGEO4_DIR/include
+    DEFINES += NOMINMAX
     CONFIG(debug, debug|release) {
             LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lphoto_utild -lCVUtild -ldem_interpolated -lsqlite3_i -lgdal_i -lgeos_c -lproj_i -lspatialite_i
             TARGET = $$join(TARGET,,,d)
@@ -41,7 +44,7 @@ macx {
 }
 
 unix {
-    INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
     CONFIG(debug, debug|release) {
         LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
         TARGET = $$join(TARGET,,,d)
@@ -50,8 +53,6 @@ unix {
         LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
     }
 }
-
-DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     $$_PRO_FILE_PWD_/check_lidar.cpp \

@@ -3,9 +3,11 @@ CONFIG += console
 QT       -= core gui
 TARGET = check_ta
 
-OSGEO4_DIR = "D:/OSGeo4W64"
+LIBS += -L"$$_PRO_FILE_PWD_/../lib"
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 
 win32 {
+    OSGEO4_DIR = "D:/OSGeo4W64"
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoUtil.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXML.lib
@@ -14,9 +16,9 @@ win32 {
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoXMLd.lib
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
 
-    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib" -L"$$_PRO_FILE_PWD_/../lib"
+    LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
     LIBS += -L"$$OSGEO4_DIR/lib"
-    INCLUDEPATH += $$OSGEO4_DIR/include
+    INCLUDEPATH += $$OSGEO4_DIR/include $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 
     CONFIG(debug, debug|release) {
             LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lCVUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite_i -lgdal_i
@@ -27,7 +29,7 @@ win32 {
 }
 
 unix {
-    LIBS += -L$$_PRO_FILE_PWD_/../lib
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
     CONFIG(debug, debug|release) {
             LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lCVUtil -lphoto_util -lsqlite3 -lspatialite -lgdal
             TARGET = $$join(TARGET,,,d)
@@ -36,9 +38,8 @@ unix {
     }
 }
 
-INCLUDEPATH += ../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
 
-DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
+#DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
 
 SOURCES += \
     check_ta.cpp \

@@ -12,8 +12,8 @@
 
 #include "exports.h"
 #include <set>
-#include "dem_interpolate/triangle.h"
-#include "dem_interpolate/dsm.h"
+#include "triangle.h"
+#include "dsm.h"
 #include <limits>
 #include <Poco/String.h>
 #include <Poco/Path.h>

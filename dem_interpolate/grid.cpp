@@ -7,8 +7,8 @@
 !			26/11/2011	created
 !			20/06/2013	updated
 !=================================================================================*/
-#include "dem_interpolate/dsm.h"
-#include "dem_interpolate/pslg.h"
+#include "dsm.h"
+#include "pslg.h"
 #include <fstream>
 #include <iostream>
 #include "Poco/StringTokenizer.h"
@@ -21,7 +21,7 @@
 #ifdef WIN32 //TODO (TEMP): needs to update win version
 #define LAS_NUMBER_OF_RETURNS number_of_returns_of_given_pulse
 #else
-#define LAS_NUMBER_OF_RETURNS number_of_returns_of_given_pulse
+#define LAS_NUMBER_OF_RETURNS number_of_returns
 #endif
 
 MyLas::~MyLas() 
@@ -46,8 +46,7 @@ bool MyLas::get_next_point(DPOINT& p)
 {
     _isvalid = true;
 	if ( _lasreader->read_point() ) {
-//        if( _lasreader->point.number_of_returns_of_given_pulse <= 0 ) {
-        if( _lasreader->point.number_of_returns <= 0 ) {
+        if( _lasreader->point.LAS_NUMBER_OF_RETURNS <= 0 ) {
             _isvalid = false;
             return true;
         }
@@ -57,11 +56,9 @@ bool MyLas::get_next_point(DPOINT& p)
 		_echo = 0;
 		if ( _lasreader->point.return_number == 1 )
             _echo |= first_pulse; // first echo
-        //        if ( _lasreader->point.return_number == _lasreader->point.number_of_returns_of_given_pulse )
-        if ( _lasreader->point.return_number == _lasreader->point.number_of_returns )
+        if ( _lasreader->point.return_number == _lasreader->point.LAS_NUMBER_OF_RETURNS )
             _echo |= last_pulse; // last echo
-        //        if ( _lasreader->point.return_number > 1 && _lasreader->point.return_number < _lasreader->point.number_of_returns_of_given_pulse )
-        if ( _lasreader->point.return_number > 1 && _lasreader->point.return_number < _lasreader->point.number_of_returns )
+        if ( _lasreader->point.return_number > 1 && _lasreader->point.return_number < _lasreader->point.LAS_NUMBER_OF_RETURNS )
             _echo = intermediate_pulse;
 
 		_angle = int( _lasreader->point.scan_angle_rank );

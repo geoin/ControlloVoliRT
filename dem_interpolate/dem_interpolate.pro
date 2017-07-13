@@ -1,12 +1,7 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2013-10-10T17:26:24
-#
-#-------------------------------------------------
-CONFIG += dll
 QT       -= core gui qt
 TARGET = dem_interpolate
 TEMPLATE = lib
+CONFIG += dll
 
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/../include
@@ -17,7 +12,6 @@ win32 {
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
     LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
-    LIBS += -llaslib
     DEFINES += DLL_EXPORTS
 }
 
@@ -36,12 +30,12 @@ macx {
 
 
 CONFIG(debug, debug|release) {
-        win32: LIBS += -lPocoFoundation64d
+        win32: LIBS += -lPocoFoundation64d -llaslibd
         macx:  LIBS += -lPocoFoundationd
         TARGET = $$join(TARGET,,,d)
 }
 else {
-    win32: LIBS += -lPocoFoundation64
+    win32: LIBS += -lPocoFoundation64 -llaslib
     macx: LIBS += -lPocoFoundation
 }
 
@@ -63,6 +57,7 @@ HEADERS +=\
 DESTDIR = $$_PRO_FILE_PWD_/../lib
 
 incl.path = $$_PRO_FILE_PWD_/../include/dem_interpolate
-incl.files = $$_PRO_FILE_PWD_/../dem_interpolate/dsm.h
+incl.files += $$_PRO_FILE_PWD_/../dem_interpolate/dsm.h
+incl.files += $$_PRO_FILE_PWD_/../dem_interpolate/pslg.h
 INSTALLS += incl
 

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <ctime>
 
 class Logger {
 public:
@@ -105,13 +106,8 @@ public:
 		return str;
 	}
 	static std::string now(void) {
-//		std::SYSTEMTIME lt;
-//		GetLocalTime(&lt);
-//		std::ostringstream st;
-//		st << set(lt.wDay, 2) << "/" << set(lt.wMonth, 2) << "/" << lt.wYear << "\t"
-//			<< set(lt.wHour, 2) << ":" << set(lt.wMinute, 2) << ":" << set(lt.wSecond, 2) << "\t";
-//		return st.str();
-                return std::string("xxx");
+                std::time_t result = std::time(nullptr);
+                return std::string(std::asctime(std::localtime(&result)));
 	}
 	bool IsOpen(void) { return _isOpen; }
 private:

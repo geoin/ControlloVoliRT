@@ -1,15 +1,7 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2013-10-10T17:26:24
-#
-#-------------------------------------------------
-CONFIG += sharedlib
 QT       -= core gui
-
 TARGET = rtklib
 TEMPLATE = lib
-
-#win32:LIBS += -lWs2_32 -lwinmm
+CONFIG += dll
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/../include
     CONFIG(debug, debug|release) {

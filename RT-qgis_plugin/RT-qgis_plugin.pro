@@ -1,6 +1,5 @@
 #base directory of the qgis installation
 
-
 TEMPLATE = lib
 QT += xml gui core
 
@@ -10,13 +9,12 @@ win32 {
     OSGEO4_DIR = "D:/OSGeo4W64"
     QGIS_DIR = $$OSGEO4_DIR"/apps/qgis-ltr-dev"
 
-    LIBS += $$QGIS_DIR/lib/qgis_core.lib -L$$OSGEO4W_DIR/lib
+    LIBS += -L$$OSGEO4W_DIR/lib $$QGIS_DIR/lib/qgis_core.lib
     INCLUDEPATH += \
     $$QGIS_DIR/include \
     $$OSGEO4_DIR/include
 
     DEFINES += WIN32
-    DESTDIR = $$_PRO_FILE_PWD_/../bin
 }
 
 unix {
@@ -24,8 +22,6 @@ unix {
     INCLUDEPATH +=          \
     /usr/include/gdal   \
     /usr/include/qgis
-
-    DESTDIR = ../bin
 }
 
 DEFINES += GUI_EXPORT=""
@@ -38,4 +34,5 @@ CONFIG(debug, debug|release) {
     TARGET = $$join(TARGET,,,d)
 }
 
+DESTDIR = $$_PRO_FILE_PWD_/../bin
 

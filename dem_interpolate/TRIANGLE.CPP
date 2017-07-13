@@ -384,7 +384,7 @@ int GNprintf(char* fmt, ...)
 #include <fpu_control.h>
 #endif /* LINUX */
 #ifdef TRILIBRARY
-#include "dem_interpolate/triangle.h"
+#include "triangle.h"
 #endif /* TRILIBRARY */
 
 /* A few forward declarations.                                               */

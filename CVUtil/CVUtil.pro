@@ -1,20 +1,12 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2013-11-03T16:04:43
-#
-#-------------------------------------------------
-
 QT       -= core gui
-
 TARGET = CVUtil
 TEMPLATE = lib
 CONFIG += staticlib
 
-OSGEO4_DIR = "D:/OSGeo4W64"
-
 INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 
 win32 {
+    OSGEO4_DIR = "D:/OSGeo4W64"
     INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
     INCLUDEPATH += $$OSGEO4_DIR/include
 }
@@ -42,5 +34,4 @@ incl.files += $$_PRO_FILE_PWD_/../CVUtil/cvspatialite.h
 incl.files += $$_PRO_FILE_PWD_/../CVUtil/ogrgeomptr.h
 INSTALLS += incl
 
-LIBS += -lsqlite3
 

@@ -594,7 +594,7 @@ void lidar_final_exec::_checkBlock(const std::string& folder, const std::vector<
         Check_log <<  "    " << dsm->Xmax() << " " << dsm->Ymax() << "," << std::endl;
         Check_log <<  "    " << dsm->Xmin() << " " << dsm->Ymax() << std::endl;
         Check_log <<  "  Elevation limits\n";
-        Check_log <<  "    " << dsm->zmin() << " " << dsm->Zmax()<< std::endl;
+        Check_log <<  "    " << dsm->Zmin() << " " << dsm->Zmax()<< std::endl;
 
 		OGRGeomPtr rg_tmp = OGRGeometryFactory::createGeometry(wkbPolygon);
 		OGRGeometry* pol_tmp_ = rg_tmp;
