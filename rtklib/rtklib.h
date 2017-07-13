@@ -1425,7 +1425,7 @@ extern int  rtksvrostat (rtksvr_t *svr, int type, gtime_t *time, int *sat,
 extern void rtksvrsstat (rtksvr_t *svr, int *sstat, char *msg);
 
 /* application defined functions ---------------------------------------------*/
-extern int (*showmsg)(char *format,...);
+extern int (*showmsg)(const char *format,...);
 extern void (*settspan)(gtime_t ts, gtime_t te);
 extern int (*settime)(gtime_t time);
 extern void (*resettime)(char* mes);

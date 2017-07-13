@@ -70,6 +70,10 @@ static const char rcsid[]="$Id:$";
 #define int64 __int64
 #define F_SEEK_I64 _fseeki64
 #define F_TELL_I64 _ftelli64
+#elif __APPLE__
+#define int64 int64_t
+#define F_SEEK_I64 fseeko
+#define F_TELL_I64 ftello
 #else
 #define int64 int64_t
 #define F_SEEK_I64 fseeko64

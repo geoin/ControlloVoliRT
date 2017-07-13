@@ -8,9 +8,9 @@ QT       -= core gui
 TARGET = ziplib
 TEMPLATE = lib
 
-OSGEO4_DIR = "D:/OSGeo4W64"
 
 win32 {
+    OSGEO4_DIR = "D:/OSGeo4W64"
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundation.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoZip.lib
     QMAKE_LFLAGS+=/NODEFAULTLIB:PocoFoundationd.lib
@@ -18,26 +18,29 @@ win32 {
     QMAKE_CFLAGS+= /ZI
 
     LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
+
     DEFINES += DLL_EXPORTS
-}
-macx {
-        LIBS += -L"/Users/andrea/SwTools/lib"
+    DEFINES +=ZIPLIB_LIBRARY
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 }
 
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
+
+macx {
+        INCLUDEPATH += /opt/local/include
+        LIBS += -L"/opt/local/lib"
+}
 
 CONFIG(debug, debug|release) {
-        LIBS += -lPocoFoundation64d -lPocoZip64d
+        win32: LIBS += -lPocoFoundation64d -lPocoZip64d
+        macx:  LIBS += -lPocoFoundationd -lPocoZipd
         TARGET = $$join(TARGET,,,d)
 }
 else {
-        LIBS += -lPocoFoundation64 -lPocoZip64
+        win32: LIBS += -lPocoFoundation64 -lPocoZip64
+        macx: LIBS += -lPocoFoundation -lPocoZip
 }
 
-
-INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
-
-
-DEFINES +=ZIPLIB_LIBRARY
 
 SOURCES += \
     gzip.c \

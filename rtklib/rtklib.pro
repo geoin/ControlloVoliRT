@@ -11,27 +11,28 @@ TEMPLATE = lib
 
 #win32:LIBS += -lWs2_32 -lwinmm
 
-
+INCLUDEPATH += $$_PRO_FILE_PWD_/../include
+    CONFIG(debug, debug|release) {
+        TARGET = $$join(TARGET,,,d)
+    }
 
 win32 {
+    DEFINES += DLL_EXPORTS RTKLIB_LIBRARY
+    DEFINES -= UNICODE
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
     QMAKE_CFLAGS -= -Zc:wchar_t-
     LIBS += -lWs2_32 -lwinmm
-    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include $$_PRO_FILE_PWD_/../include
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 
-    CONFIG(debug, debug|release) {
-        TARGET = $$join(TARGET,,,d)
-}
 }
 macx {
-    INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
-}
-unix {
-    INCLUDEPATH += ../../ControlloVoliRT_Tools/include ../include
+    INCLUDEPATH += /opt/local/include
 }
 
-DEFINES += DLL_EXPORTS RTKLIB_LIBRARY
-DEFINES -= UNICODE
+unix {
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+}
+
 
 SOURCES += \
     ublox.c \

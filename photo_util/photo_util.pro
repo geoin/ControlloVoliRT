@@ -8,7 +8,6 @@ QT       -= core gui
 TARGET = photo_util
 TEMPLATE = lib
 
-DEFINES += DLL_EXPORTS
 
 SOURCES += \
     vdp.cpp \
@@ -23,11 +22,12 @@ HEADERS +=\
 INCLUDEPATH += $$_PRO_FILE_PWD_/../include
 
 win32 {
+        DEFINES += DLL_EXPORTS
         INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
         CONFIG += wd4996
 }
 macx {
-        INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
+        INCLUDEPATH += /opt/local/include
 }
 
 CONFIG(debug, debug|release) {

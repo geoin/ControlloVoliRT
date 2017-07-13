@@ -698,7 +698,7 @@ public:
         double dq = _p[side].z - _p[v1].z;
         double dx = _p[side].x - _p[v1].x;
         double dy = _p[side].y - _p[v1].y;
-        double dist = _hypot(dx, dy);
+        double dist = hypot(dx, dy);
         double d1 = 0;
         if ( dq != 0 )
             d1 = dist * (ql - _p[v1].z) / dq;
@@ -709,7 +709,7 @@ public:
         double dq2 = _p[side].z - _p[v2].z;
         double dx2 = _p[side].x - _p[v2].x;
         double dy2 = _p[side].y - _p[v2].y;
-        double dist2 = _hypot(dx, dy);
+        double dist2 = hypot(dx, dy);
         double d2 = 0;
         if ( dq2 != 0 )
             d2 = dist2 * (ql - _p[v2].z) / dq2;
