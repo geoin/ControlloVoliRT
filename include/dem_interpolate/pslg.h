@@ -925,6 +925,7 @@ public:
 			setMax(n.x, n.y, n.z);
 			node.push_back(n);
 		}
+        fclose(fptr);
 		if (  node.empty() )
 			return false;
 		Org_Nod = (unsigned int) node.size();
