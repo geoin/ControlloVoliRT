@@ -183,13 +183,13 @@ bool photo_exec::_strip_report()
 	Doc_Item sec = _article->add_item("section");
 	sec->add_item("title")->append("Verifica parametri strisciate");
 
-	double v1 = _STRIP_OVERLAP * (1 - _STRIP_OVERLAP_RANGE / 100);
-	double v2 = _STRIP_OVERLAP * (1 + _STRIP_OVERLAP_RANGE / 100);
+    double minVal = _STRIP_OVERLAP * (1 - _STRIP_OVERLAP_RANGE / 100);
+    double maxVal = _STRIP_OVERLAP * (1 + _STRIP_OVERLAP_RANGE / 100);
 
 	sec->add_item("para")->append("Valori di riferimento:");
 	Doc_Item itl = sec->add_item("itemizedlist");
 	std::stringstream ss;
-	ss << "Ricoprimento Trasversale compreso tra " << v1 << "% e " << v2 << "%";
+    ss << "Ricoprimento Trasversale maggiore di " << minVal << "%";
 	itl->add_item("listitem")->add_item("para")->append(ss.str());
 	std::stringstream ss1;
 	ss1 << "Massima lunghezza strisciate minore di " << _MAX_STRIP_LENGTH << " km";
@@ -200,7 +200,7 @@ bool photo_exec::_strip_report()
 	std::string table2 = std::string(Z_STR_OVL) + (_type == Prj_type ? "P" : "V");
 	std::stringstream sql;
 	sql << "SELECT Z_STRIP_CS, Z_STRIP_LENGTH, Z_STRIP_T_OVERLAP, Z_STRIP2 FROM " << table << " a inner JOIN " << 
-		table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << _MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << v1 << " OR Z_STRIP_T_OVERLAP>" << v2;
+        table2 << " b on b.Z_STRIP1 = a.Z_STRIP_CS WHERE Z_STRIP_LENGTH>" << _MAX_STRIP_LENGTH << " OR Z_STRIP_T_OVERLAP<" << minVal;
 
 	Statement stm(cnn);
 	stm.prepare(sql.str());
@@ -238,7 +238,7 @@ bool photo_exec::_strip_report()
 		row->add_item("entry", attr)->append(rs[0].toString());
 		
 		print_item(row, attrr, rs[1], less_ty, _MAX_STRIP_LENGTH);
-		print_item(row, attrr, rs[2], between_ty, v1, v2);
+        print_item(row, attrr, rs[2], great_ty, minVal);
 
 		row->add_item("entry", attr)->append(rs[3].toString());
 		rs.next();

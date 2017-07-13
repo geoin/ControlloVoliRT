@@ -238,14 +238,14 @@ bool lidar_final_exec::run() {
 
     // usando i dati ground o overground determina l'ingombro dei fogli e lo sottrae da quello di carto
     Check_log << "Analisi copertura aree da rilevare GROUND" << std::endl;
-    _checkBlock(_groundEll, _groundEllList, TILE_GROUND);
+    //_checkBlock(_groundEll, _groundEllList, TILE_GROUND);
 
     Check_log << "Analisi copertura aree da rilevare OVERGROUND" << std::endl;
     _checkBlock(_overgroundEll, _overgroundEllList, TILE_OVERGROUND);
 	
     // confronta che il dato tile ground contenga gli stessi elementi degli altri oggetti
     Check_log << "Analisi completezza dati.." << std::endl;
-    _checkEquality();
+    //_checkEquality();
 	
 	// verifica che il dato groud abbia corrispondenti nelle strip
     Check_log << "Analisi classificazione ground" << std::endl;
@@ -258,10 +258,10 @@ bool lidar_final_exec::run() {
 	
     // Verifica che ricampionamento e conversione quote produca risultati congrui
     Check_log << "Analisi ricampionamento ground ortometrico.." << std::endl;
-    _checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt, TILE_GROUND);
+    //_checkResamples( _groundEll, _groundEllList, _mdt, _mdtList, diffMdt, TILE_GROUND);
 
     Check_log << "Analisi ricampionamento overground ortometrico.." << std::endl;
-    _checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds, TILE_OVERGROUND);
+   // _checkResamples(_overgroundEll, _overgroundEllList, _mds, _mdsList, diffMds, TILE_OVERGROUND);
 
     createReport();
 
