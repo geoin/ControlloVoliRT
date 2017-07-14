@@ -21,28 +21,28 @@ win32 {
     INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 
     INCLUDEPATH += $$OSGEO4_DIR/include
-    CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite_i -lCVutild -lgdal_i -llibtiff_i
-            TARGET = $$join(TARGET,,,d)
-    }
-    else {
-            LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite_i -lCVutil -lgdal_i -llibtiff_i
-    }
+}
+
+macx {
+    LIBS += -L"/opt/local/lib"
+    INCLUDEPATH += /opt/local/include
 }
 
 unix {
-        CONFIG(debug, debug|release) {
-                LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lsqlite3 -lspatialite -lgdal -ltiff
-                TARGET = $$join(TARGET,,,d)
-        }
-        else {
-                LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lsqlite3 -lspatialite  -lgdal -ltiff
-        }
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 }
 
-
-
-#DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
+CONFIG(debug, debug|release) {
+    win32:LIBS += -lPocoUtil64d -lPocoFoundation64d -lPocoXML64d -lphoto_utild -ldem_interpolated -lCVUtild -lspatialite_i -lsqlite3_i -lgdal_i -llibtiff_i
+#            unix: LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
+    macx: LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_utild -ldem_interpolated -lCVUtild -lspatialite -lsqlite3 -lgdal
+    TARGET = $$join(TARGET,,,d)
+}
+else {
+    win32: LIBS += -lPocoUtil64 -lPocoFoundation64 -lPocoXML64 -lphoto_util -ldem_interpolate -lCVUtil -lspatialite_i -lsqlite3_i -lgdal_i -llibtiff_i
+#            unix: LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
+    macx: LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
+}
 
 SOURCES += \
     check_ortho.cpp \

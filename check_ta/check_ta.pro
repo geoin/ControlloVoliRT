@@ -18,28 +18,28 @@ win32 {
 
     LIBS += -L"$$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/lib"
     LIBS += -L"$$OSGEO4_DIR/lib"
-    INCLUDEPATH += $$OSGEO4_DIR/include $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+    INCLUDEPATH += $$OSGEO4_DIR/include
+}
 
-    CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lCVUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite_i -lgdal_i
-            TARGET = $$join(TARGET,,,d)
-    } else {
-            LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lCVUtil -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite_i -lgdal_i
-    }
+macx {
+        LIBS += -L"/opt/local/lib"
+        INCLUDEPATH += /opt/local/include
 }
 
 unix {
-    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
-    CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lCVUtil -lphoto_util -lsqlite3 -lspatialite -lgdal
-            TARGET = $$join(TARGET,,,d)
-    } else {
-            LIBS += -lPocoFoundation -lPocoUtil -lPocoXML -lCVUtil -lphoto_util -lspatialite -lsqlite3 -lgdal
-    }
+        INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 }
+CONFIG(debug, debug|release) {
+        win32: LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lCVUtild -lphoto_utild -ldem_interpolated -lsqlite3_i -lspatialite_i -lgdal_i
+        macx: LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_utild -ldem_interpolated -lCVUtild -lspatialite -lsqlite3 -lgdal
 
+        TARGET = $$join(TARGET,,,d)
+} else {
+        win32: LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lCVUtil -lphoto_util -ldem_interpolate -lsqlite3_i -lspatialite_i -lgdal_i
+        macx: LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
 
-#DEFINES += DLL_EXPORTS DEMINTERPOLATE_LIBRARY NOMINMAX
+}
 
 SOURCES += \
     check_ta.cpp \

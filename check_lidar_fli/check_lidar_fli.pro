@@ -21,37 +21,27 @@ win32 {
     INCLUDEPATH += ../../ControlloVoliRT_Tools/include
     INCLUDEPATH += $$OSGEO4_DIR/include
     DEFINES += NOMINMAX
-    CONFIG(debug, debug|release) {
-            LIBS += -lPocoFoundation64d -lPocoUtil64d -lPocoXML64d -lphoto_utild -lCVUtild -ldem_interpolated -lsqlite3_i -lgdal_i -lgeos_c -lproj_i -lspatialite_i
-            TARGET = $$join(TARGET,,,d)
-    }
-    else {
-            LIBS += -lPocoFoundation64 -lPocoUtil64 -lPocoXML64 -lphoto_util -lCVUtil -lsqlite3_i -lgdal_i -ldem_interpolate -lgeos_c -lproj_i -lspatialite_i
-    }
 }
 
 macx {
-    LIBS += -L"/Users/andrea/SwTools/lib" -L"/Users/andrea/ControlloVoliRT/lib"
-    INCLUDEPATH += /Users/andrea/SwTools/include /Users/andrea/ControlloVoliRT/include
-    LIBS += -lspatialite_i
-    CONFIG(debug, debug|release) {
-            LIBS += -lPocoUtild -lphoto_utild -lsqlite3_i
-            TARGET = $$join(TARGET,,,d)
-    }
-    else {
-            LIBS += -lPocoUtil -lphoto_utild
-    }
+    LIBS += -L"/opt/local/lib"
+    INCLUDEPATH += /opt/local/include
 }
 
 unix {
     INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
-    CONFIG(debug, debug|release) {
-        LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
-        TARGET = $$join(TARGET,,,d)
-    }
-    else {
-        LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -lCVUtil -lsqlite3 -lspatialite -lgdal -ldem_interpolate
-    }
+}
+
+CONFIG(debug, debug|release) {
+    win32:LIBS += -lPocoUtil64d -lPocoFoundation64d -lPocoXML64d -lphoto_utild -ldem_interpolated -lCVUtild -lspatialite_i -lsqlite3_i -lgdal_i -llibtiff_i
+#            unix: LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
+    macx: LIBS += -lPocoUtild -lPocoFoundationd -lPocoXMLd -lphoto_utild -ldem_interpolated -lCVUtild -lspatialite -lsqlite3 -lgdal
+    TARGET = $$join(TARGET,,,d)
+}
+else {
+    win32: LIBS += -lPocoUtil64 -lPocoFoundation64 -lPocoXML64 -lphoto_util -ldem_interpolate -lCVUtil -lspatialite_i -lsqlite3_i -lgdal_i  -llibtiff_i
+#            unix: LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
+    macx: LIBS += -lPocoUtil -lPocoFoundation -lPocoXML -lphoto_util -ldem_interpolate -lCVUtil -lspatialite -lsqlite3 -lgdal
 }
 
 SOURCES += \
