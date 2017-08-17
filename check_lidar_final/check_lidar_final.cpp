@@ -46,7 +46,7 @@ void check_lidar_final::defineOptions(OptionSet& options) {
 
 	
     options.addOption(
-        Option("tile", "t", "Percentuale punti tile grezze")
+        Option("cp", "cp", "Percentuale punti tile grezze")
             .required(true)
             .repeatable(false)
             .argument("value")
@@ -132,6 +132,11 @@ int check_lidar_final::main(const std::vector<std::string>& args) {
         std::cout << ex.what() << std::endl;
         return Application::EXIT_SOFTWARE;
     }
+    catch (...) {
+        std::cout << "Termine anomalo" << std::endl;
+        return Application::EXIT_SOFTWARE;
+    }
+
     return Application::EXIT_OK;
 }
 

@@ -538,7 +538,7 @@ public:
 		_open = false;
         if ( myIndex )
             delete myIndex;
-        myIndex2 = nullptr;
+        myIndex = nullptr;
         if ( myIndex2 )
             delete myIndex2;
         myIndex2 = nullptr;

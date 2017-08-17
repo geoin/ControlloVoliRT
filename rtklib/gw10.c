@@ -1,13 +1,15 @@
 /*------------------------------------------------------------------------------
 * gw10.c : furuno GW-10 receiver functions
 *
-*          Copyright (C) 2011 by T.TAKASU, All rights reserved.
+*          Copyright (C) 2011-2012 by T.TAKASU, All rights reserved.
 *
 * reference :
 *     [1] Furuno, SBAS/GPS receiver type GW-10 III manual, July 2004
 *
 * version : $Revision:$ $Date:$
-* history : 2011/05/27 1.0 new
+* history : 2011/05/27  1.0  new
+*           2011/07/01  1.1  suppress warning
+*           2012/02/14  1.2  add decode of gps message (0x02)
 *-----------------------------------------------------------------------------*/
 #include "rtklib.h"
 
@@ -27,7 +29,7 @@
 #define ID_GW10REPH 0x27        /* gw10 msg id: raw ephemeris */
 
 #define LEN_GW10RAW 379         /* gw10 msg length: raw obs data */
-#define LEN_GW10GPS 48          /* gw10 msg length: gps data */
+#define LEN_GW10GPS 48          /* gw10 msg length: gps message */
 #define LEN_GW10SBS 40          /* gw10 msg length: sbas message */
 #define LEN_GW10DGPS 21         /* gw10 msg length: dgps message */
 #define LEN_GW10REF 22          /* gw10 msg length: dgps ref info */
@@ -49,15 +51,19 @@ static const char rcsid[]="$Id:$";
 
 static unsigned short U2(unsigned char *p)
 {
-    unsigned char b[2];
-    b[0]=p[1]; b[1]=p[0];
-    return *(unsigned short *)b;
+    unsigned short value;
+    unsigned char *q=(unsigned char *)&value+1;
+    int i;
+    for (i=0;i<2;i++) *q--=*p++;
+    return value;
 }
 static unsigned int U4(unsigned char *p)
 {
-    unsigned char b[4];
-    b[0]=p[3]; b[1]=p[2]; b[2]=p[1]; b[3]=p[0];
-    return *(unsigned int *)b;
+    unsigned int value;
+    unsigned char *q=(unsigned char *)&value+3;
+    int i;
+    for (i=0;i<4;i++) *q--=*p++;
+    return value;
 }
 static double R8(unsigned char *p)
 {
@@ -137,7 +143,7 @@ static int decode_gw10raw(raw_t *raw)
         }
         pr =R8(p+ 2)-toff;
         snr=U2(p+16);
-        cp =-(int)(U4(p+18))/256.0-toff/lam[0];
+        cp =-(int)(U4(p+18))/256.0-toff/lam_carr[0];
         flg=U1(p+22);
         if (flg&0x3) {
             trace(2,"gw10raw raw data invalid: prn=%d\n",prn);
@@ -162,6 +168,86 @@ static int decode_gw10raw(raw_t *raw)
     }
     raw->obs.n=n;
     return 1;
+}
+/* check partity -------------------------------------------------------------*/
+extern int check_parity(unsigned int word, unsigned char *data)
+{
+    const unsigned int hamming[]={
+        0xBB1F3480,0x5D8F9A40,0xAEC7CD00,0x5763E680,0x6BB1F340,0x8B7A89C0
+    };
+    unsigned int parity=0,w;
+    int i;
+    
+    for (i=0;i<6;i++) {
+        parity<<=1;
+        for (w=(word&hamming[i])>>6;w;w>>=1) parity^=w&1;
+    }
+    if (parity!=(word&0x3F)) return 0;
+    
+    for (i=0;i<3;i++) data[i]=(unsigned char)(word>>(22-i*8));
+    return 1;
+}
+/* decode gps message --------------------------------------------------------*/
+static int decode_gw10gps(raw_t *raw)
+{
+    eph_t eph={0};
+    double tow,ion[8]={0},utc[4]={0};
+    unsigned int buff=0;
+    int i,prn,sat,id,leaps;
+    unsigned char *p=raw->buff+2,subfrm[30];
+    
+    trace(4,"decode_gw10gps: len=%d\n",raw->len);
+    
+    tow=U4(p)/1000.0; p+=4;
+    prn=U1(p);        p+=1;
+    if (!(sat=satno(SYS_GPS,prn))) {
+        trace(2,"gw10 gps satellite number error: tow=%.1f prn=%d\n",tow,prn);
+        return -1;
+    }
+    for (i=0;i<10;i++) {
+        buff=(buff<<30)|U4(p); p+=4;
+        
+        /* check parity of word */
+        if (!check_parity(buff,subfrm+i*3)) {
+            trace(2,"gw10 gps frame parity error: tow=%.1f prn=%2d word=%2d\n",
+                 tow,prn,i+1);
+            return -1;
+        }
+    }
+    id=getbitu(subfrm,43,3); /* subframe id */
+    
+    if (id<1||5<id) {
+        trace(2,"gw10 gps frame id error: tow=%.1f prn=%2d id=%d\n",tow,prn,id);
+        return -1;
+    }
+    for (i=0;i<30;i++) raw->subfrm[sat-1][i+(id-1)*30]=subfrm[i];
+    
+    if (id==3) { /* decode ephemeris */
+        if (decode_frame(raw->subfrm[sat-1]   ,&eph,NULL,NULL,NULL,NULL)!=1||
+            decode_frame(raw->subfrm[sat-1]+30,&eph,NULL,NULL,NULL,NULL)!=2||
+            decode_frame(raw->subfrm[sat-1]+60,&eph,NULL,NULL,NULL,NULL)!=3) {
+            return 0;
+        }
+        if (!strstr(raw->opt,"-EPHALL")) {
+            if (eph.iode==raw->nav.eph[sat-1].iode) return 0; /* unchanged */
+        }
+        eph.sat=sat;
+        raw->nav.eph[sat-1]=eph;
+        raw->ephsat=sat;
+        return 2;
+    }
+    else if (id==4) { /* decode ion-utc parameters */
+        if (decode_frame(subfrm,NULL,NULL,ion,utc,&leaps)!=4) {
+            return 0;
+        }
+        if (norm(ion,8)>0.0&&norm(utc,4)>0.0&&leaps!=0) {
+            for (i=0;i<8;i++) raw->nav.ion_gps[i]=ion[i];
+            for (i=0;i<4;i++) raw->nav.utc_gps[i]=utc[i];
+            raw->nav.leaps=leaps;
+            return 9;
+        }
+    }
+    return 0;
 }
 /* decode waas messages ------------------------------------------------------*/
 static int decode_gw10sbs(raw_t *raw)
@@ -261,10 +347,12 @@ static int decode_gw10(raw_t *raw)
     
     trace(3,"decode_gw10: type=0x%02X len=%d\n",type,raw->len);
     
-    sprintf(raw->msgtype,"GW10 : type=%2d len=%3d",type,raw->len);
-    
+    if (raw->outtype) {
+        sprintf(raw->msgtype,"GW10 0x%02X (%4d):",type,raw->len);
+    }
     switch (type) {
         case ID_GW10RAW : return decode_gw10raw (raw);
+        case ID_GW10GPS : return decode_gw10gps (raw);
         case ID_GW10SBS : return decode_gw10sbs (raw);
         case ID_GW10REPH: return decode_gw10reph(raw);
         case ID_GW10SOL : return decode_gw10sol (raw);
@@ -274,12 +362,16 @@ static int decode_gw10(raw_t *raw)
 /* input gw10 raw message ------------------------------------------------------
 * input next gw10 raw message from stream
 * args   : raw_t *raw   IO     receiver raw data control struct
-*            raw->rcvopt : gw10 raw options
-*                "-EPHALL"  : output all ephemerides
 *          unsigned char data I stream data (1 byte)
 * return : status (-1: error message, 0: no message, 1: input observation data,
 *                  2: input ephemeris, 3: input sbas message,
 *                  9: input ion/utc parameter)
+*
+* notes  : to specify input options, set raw->opt to the following option
+*          strings separated by spaces.
+*
+*          -EPHALL    : input all ephemerides
+*
 *-----------------------------------------------------------------------------*/
 extern int input_gw10(raw_t *raw, unsigned char data)
 {

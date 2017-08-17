@@ -221,9 +221,9 @@ int rinex_post::read_options()
 	int PosMode = _prcopt.mode; 
     _prcopt.soltype  = 2; // 0 forward 1 backward 2 combined
     _prcopt.nf       = 2; // L1 + L2
-    _prcopt.navsys   = SYS_GPS; 
+    _prcopt.navsys   = SYS_GPS | SYS_GLO;
 	_prcopt.elmin    = 15.0 * D2R; 
-    _prcopt.snrmin   = 0.; 
+    //_prcopt.snrmin   = 0.;
     _prcopt.sateph   = 0; 
     _prcopt.modear   = 1; 
     _prcopt.glomodear= 1; 
@@ -254,7 +254,11 @@ int rinex_post::read_options()
     _prcopt.prn[3]   = 1E+1; 
     _prcopt.prn[4]   = 1E+1; 
     _prcopt.sclkstab = 5E-12;
-    _prcopt.thresar  = 3.; 
+    _prcopt.thresar[0]  = 3.0;
+    _prcopt.thresar[1]  = 3.0;
+    _prcopt.thresar[2]  = 3.0;
+    _prcopt.thresar[3]  = 3.0;
+
     _prcopt.elmaskar = 0. * D2R; 
     _prcopt.elmaskhold= 0. * D2R; 
     _prcopt.thresslip= 0.05; 

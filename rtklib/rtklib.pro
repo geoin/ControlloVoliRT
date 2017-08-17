@@ -14,7 +14,7 @@ win32 {
     QMAKE_CXXFLAGS -= -Zc:wchar_t-
     QMAKE_CFLAGS -= -Zc:wchar_t-
     LIBS += -lWs2_32 -lwinmm
-    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
+#    INCLUDEPATH += $$_PRO_FILE_PWD_/../../ControlloVoliRT_Tools/include
 
 }
 macx {
@@ -38,10 +38,18 @@ SOURCES += \
     rtkpos.c \
     rtkcmn.c \
     rtcm.c \
+    rtcm2.c \
+    rtcm3.c \
+    rtcm3e.c \
     rinex.c \
     rcvraw.c \
+    rt17.c \
     preceph.c \
     ppp.c \
+    binex.c \
+    ppp_ar.c \
+    nvs.c \
+    qzslex.c \
     postpos.c \
     pntpos.c \
     options.c \

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
 * rtksvr.c : rtk server functions
 *
-*          Copyright (C) 2007-2010 by T.TAKASU, All rights reserved.
+*          Copyright (C) 2007-2013 by T.TAKASU, All rights reserved.
 *
 * options : -DWIN32    use WIN32 API
 *
@@ -19,6 +19,12 @@
 *           2010/09/08  1.4  fix problem of ephemeris and ssr squence upset
 *                            (2.4.0_p8)
 *           2011/01/10  1.5  change api: rtksvrstart(),rtksvrostat()
+*           2011/06/21  1.6  fix ephemeris handover problem
+*           2012/05/14  1.7  fix bugs
+*           2013/03/28  1.8  fix problem on lack of glonass freq number in raw
+*                            fix problem on ephemeris with inverted toe
+*                            add api rtksvrfree()
+*           2014/06/28  1.9  fix probram on ephemeris update of beidou
 *-----------------------------------------------------------------------------*/
 #include "rtklib.h"
 
@@ -88,6 +94,27 @@ static void updatenav(nav_t *nav)
         nav->lam[i][j]=satwavelen(i+1,j,nav);
     }
 }
+/* update glonass frequency channel number in raw data struct ----------------*/
+static void updatefcn(rtksvr_t *svr)
+{
+    int i,j,sat,frq;
+    
+    for (i=0;i<MAXPRNGLO;i++) {
+        sat=satno(SYS_GLO,i+1);
+        
+        for (j=0,frq=-999;j<3;j++) {
+            if (svr->raw[j].nav.geph[i].sat!=sat) continue;
+            frq=svr->raw[j].nav.geph[i].frq;
+        }
+        if (frq<-7||frq>6) continue;
+        
+        for (j=0;j<3;j++) {
+            if (svr->raw[j].nav.geph[i].sat==sat) continue;
+            svr->raw[j].nav.geph[i].sat=sat;
+            svr->raw[j].nav.geph[i].frq=frq;
+        }
+    }
+}
 /* update rtk server struct --------------------------------------------------*/
 static void updatesvr(rtksvr_t *svr, int ret, obs_t *obs, nav_t *nav, int sat,
                       sbsmsg_t *sbsmsg, int index, int iobs)
@@ -96,10 +123,8 @@ static void updatesvr(rtksvr_t *svr, int ret, obs_t *obs, nav_t *nav, int sat,
     geph_t *geph1,*geph2,*geph3;
     gtime_t tof;
     double pos[3],del[3]={0},dr[3];
-    int i,n=0,prn,sbssat=svr->rtk.opt.sbassatsel;
-#if 0
-    int sys,iode;
-#endif
+    int i,n=0,prn,sbssat=svr->rtk.opt.sbassatsel,sys,iode;
+    
     tracet(4,"updatesvr: ret=%d sat=%2d index=%d\n",ret,sat,index);
     
     if (ret==1) { /* observation data */
@@ -122,7 +147,9 @@ static void updatesvr(rtksvr_t *svr, int ret, obs_t *obs, nav_t *nav, int sat,
                 eph2=svr->nav.eph+sat-1;
                 eph3=svr->nav.eph+sat-1+MAXSAT;
                 if (eph2->ttr.time==0||
-                    (timediff(eph1->toe,eph2->toe)>0.0&&eph1->iode!=eph2->iode)) {
+                    (eph1->iode!=eph3->iode&&eph1->iode!=eph2->iode)||
+                    (timediff(eph1->toe,eph3->toe)!=0.0&&
+                     timediff(eph1->toe,eph2->toe)!=0.0)) {
                     *eph3=*eph2;
                     *eph2=*eph1;
                     updatenav(&svr->nav);
@@ -136,10 +163,11 @@ static void updatesvr(rtksvr_t *svr, int ret, obs_t *obs, nav_t *nav, int sat,
                geph2=svr->nav.geph+prn-1;
                geph3=svr->nav.geph+prn-1+MAXPRNGLO;
                if (geph2->tof.time==0||
-                   (timediff(geph1->toe,geph2->toe)>0.0&&geph1->iode!=geph2->iode)) {
+                   (geph1->iode!=geph3->iode&&geph1->iode!=geph2->iode)) {
                    *geph3=*geph2;
                    *geph2=*geph1;
                    updatenav(&svr->nav);
+                   updatefcn(svr);
                }
            }
            svr->nmsg[index][6]++;
@@ -201,7 +229,6 @@ static void updatesvr(rtksvr_t *svr, int ret, obs_t *obs, nav_t *nav, int sat,
             if (!svr->rtcm[index].ssr[i].update) continue;
             svr->rtcm[index].ssr[i].update=0;
             
-#if 0 /* omitted in v.2.4.1 */
             iode=svr->rtcm[index].ssr[i].iode;
             sys=satsys(i+1,&prn);
             
@@ -218,7 +245,6 @@ static void updatesvr(rtksvr_t *svr, int ret, obs_t *obs, nav_t *nav, int sat,
                     continue;
                 }
             }
-#endif
             svr->nav.ssr[i]=svr->rtcm[index].ssr[i];
         }
         svr->nmsg[index][7]++;
@@ -237,26 +263,12 @@ static int decoderaw(rtksvr_t *svr, int index)
     obs_t *obs;
     nav_t *nav;
     sbsmsg_t *sbsmsg=NULL;
-#if 0
-    gtime_t time=svr->rtk.sol.time;
-#endif
     int i,ret,sat,fobs=0;
     
     tracet(4,"decoderaw: index=%d\n",index);
     
     rtksvrlock(svr);
     
-#if 0 /* omitted in v.2.4.1 */
-    /* adjust rtcm or raw time to solution time */
-    if (time.time) {
-        if (fabs(timediff(svr->rtcm[index].time,time))>3600.0) {
-            svr->rtcm[index].time=time;
-        }
-        if (fabs(timediff(svr->raw[index].time,time))>3600.0) {
-            svr->raw[index].time=time;
-        }
-    }
-#endif
     for (i=0;i<svr->nb[index];i++) {
         
         /* input rtcm/receiver raw data from stream */
@@ -279,6 +291,12 @@ static int decoderaw(rtksvr_t *svr, int index)
             sat=svr->raw[index].ephsat;
             sbsmsg=&svr->raw[index].sbsmsg;
         }
+#if 0 /* record for receiving tick */
+        if (ret==1) {
+            trace(0,"%d %10d T=%s NS=%2d\n",index,tickget(),
+                  time_str(obs->data[0].time,0),obs->n);
+        }
+#endif
         /* update rtk server */
         if (ret>0) updatesvr(svr,ret,obs,nav,sat,sbsmsg,index,fobs);
         
@@ -318,7 +336,7 @@ static void decodefile(rtksvr_t *svr, int index)
     if (svr->format[index]==STRFMT_SP3) { /* precise ephemeris */
         
         /* read sp3 precise ephemeris */
-        readsp3(file,&nav);
+        readsp3(file,&nav,0);
         if (nav.ne<=0) {
             tracet(1,"sp3 file read error: %s\n",file);
             return;
@@ -415,7 +433,7 @@ static void *rtksvrthread(void *arg)
             }
             /* rtk positioning */
             rtksvrlock(svr);
-            rtkpos(&svr->rtk, obs.data, obs.n, &svr->nav);
+            rtkpos(&svr->rtk,obs.data,obs.n,&svr->nav);
             rtksvrunlock(svr);
             
             if (svr->rtk.sol.stat!=SOLQ_NONE) {
@@ -458,10 +476,15 @@ static void *rtksvrthread(void *arg)
     }
     for (i=0;i<MAXSTRRTK;i++) strclose(svr->stream+i);
     for (i=0;i<3;i++) {
-        svr->nb[i]=svr->nsb[i]=svr->npb[i]=0;
+        svr->nb[i]=svr->npb[i]=0;
         free(svr->buff[i]); svr->buff[i]=NULL;
-        free(svr->sbuf[i]); svr->sbuf[i]=NULL;
         free(svr->pbuf[i]); svr->pbuf[i]=NULL;
+        free_raw (svr->raw +i);
+        free_rtcm(svr->rtcm+i);
+    }
+    for (i=0;i<2;i++) {
+        svr->nsb[i]=0;
+        free(svr->sbuf[i]); svr->sbuf[i]=NULL;
     }
     return 0;
 }
@@ -523,16 +546,30 @@ extern int rtksvrinit(rtksvr_t *svr)
         }
     }
     for (i=0;i<3;i++) {
-        if (!init_raw(svr->raw+i)||!init_rtcm(svr->rtcm+i)) {
-            tracet(1,"rtksvrinit: init_raw/init_rtcm error\n");
-            return 0;
-        }
+        memset(svr->raw +i,0,sizeof(raw_t ));
+        memset(svr->rtcm+i,0,sizeof(rtcm_t));
     }
     for (i=0;i<MAXSTRRTK;i++) strinit(svr->stream+i);
     
     initlock(&svr->lock);
     
     return 1;
+}
+/* free rtk server -------------------------------------------------------------
+* free rtk server
+* args   : rtksvr_t *svr    IO rtk server
+* return : none
+*-----------------------------------------------------------------------------*/
+extern void rtksvrfree(rtksvr_t *svr)
+{
+    int i,j;
+    
+    free(svr->nav.eph );
+    free(svr->nav.geph);
+    free(svr->nav.seph);
+    for (i=0;i<3;i++) for (j=0;j<MAXOBSBUF;j++) {
+        free(svr->obs[i][j].data);
+    }
 }
 /* lock/unlock rtk server ------------------------------------------------------
 * lock/unlock rtk server
@@ -623,8 +660,9 @@ extern int rtksvrstart(rtksvr_t *svr, int cycle, int buffsize, int *strs,
         init_raw (svr->raw +i);
         init_rtcm(svr->rtcm+i);
         
-        /* set receiver option */
-        strcpy(svr->raw[i].opt,rcvopts[i]);
+        /* set receiver and rtcm option */
+        strcpy(svr->raw [i].opt,rcvopts[i]);
+        strcpy(svr->rtcm[i].opt,rcvopts[i]);
         
         /* connect dgps corrections */
         svr->rtcm[i].dgps=svr->nav.dgps;

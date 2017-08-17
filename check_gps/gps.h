@@ -54,7 +54,7 @@ public:
 		gloass = 4,
 		gps_glonass = 5
 	};
-	GPS_OPT(): Position_mode(Kinematic), Solution_type(forward), Nav_sys(gps), frequence(2), max_base_dst(0.) {}
+	GPS_OPT(): Position_mode(Kinematic), Solution_type(forward), Nav_sys( gps_glonass ), frequence(2), max_base_dst(0.) {}
 	GPS_OPT(int pos, int sol, int nav, int fre): Position_mode(pos), Solution_type(sol), Nav_sys(nav), frequence(fre), max_base_dst(0.) {}
 	GPS_OPT(const GPS_OPT& gp): Position_mode(gp.Position_mode), Solution_type(gp.Solution_type), Nav_sys(gp.Nav_sys), frequence(gp.frequence), max_base_dst(0.) {}
 	GPS_OPT operator=(const GPS_OPT& gp) {

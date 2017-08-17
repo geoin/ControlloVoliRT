@@ -48,16 +48,16 @@ SOURCES += \
     $$_PRO_FILE_PWD_/../common/geom.cpp
 
 HEADERS +=\
-    $$_PRO_FILE_PWD_/../include/dem_interpolate/pslg.h \
-    $$_PRO_FILE_PWD_/../include/dem_interpolate/dsm.h \
-    $$_PRO_FILE_PWD_/../include/common/geom.h \
-    $$_PRO_FILE_PWD_/../include/dem_interpolate/triangle.h
-
+    pslg.h \
+    dsm.h \
+    triangle.h \
+    $$_PRO_FILE_PWD_/../include/common/geom.h
 
 DESTDIR = $$_PRO_FILE_PWD_/../lib
 
 incl.path = $$_PRO_FILE_PWD_/../include/dem_interpolate
 incl.files += $$_PRO_FILE_PWD_/../dem_interpolate/dsm.h
 incl.files += $$_PRO_FILE_PWD_/../dem_interpolate/pslg.h
+incl.files += $$_PRO_FILE_PWD_/../dem_interpolate/triangle.h
 INSTALLS += incl
 

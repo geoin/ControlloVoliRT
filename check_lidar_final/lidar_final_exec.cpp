@@ -236,6 +236,9 @@ bool lidar_final_exec::run() {
 
     readFolders();
 
+    Check_log << "File classificazione " << _tileFP << " Punti Classificazione " << _tilePP << std::endl;
+    Check_log << "File ricampionamento " << _resFP << " Punti ricampionamento " << _resPP << std::endl;
+
     // usando i dati ground o overground determina l'ingombro dei fogli e lo sottrae da quello di carto
     Check_log << "Analisi copertura aree da rilevare GROUND" << std::endl;
     _checkBlock(_groundEll, _groundEllList, TILE_GROUND);
@@ -755,6 +758,10 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 	std::vector<Lidar::Strip::Ptr> strips;
 	_getStrips(strips);
 
+    //std::vector<Lidar::Strip::Ptr>::const_iterator ssit = strips.begin();
+    //CV::Util::Geometry::OGRGeomPtr geo = (*ssit)->geom();
+    //char* bb = geo->exportToJson();
+
 	Poco::Path fPath(raw);
 	
 	std::vector<std::string> folderContent;
@@ -764,11 +771,11 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
     Geoin::Util::Sampler samplerf(sizef);
 
     int campione = _tileFP / 100.f * sizef;
-    if (campione == 0) {
-        campione = 1;
+    if (campione == 0 || _tilePP == 0) {
+       return;
     }
     samplerf.sample(campione, sizef);
-    Check_log << "Verifica di un campione di " << campione << " su " << sizef << " files" << std::endl;
+    Check_log << "Verifica di un campione di " << campione << " SU " << sizef << " files" << std::endl;
 
 	std::vector<std::string>::iterator it = folderContent.begin();
 	std::vector<std::string>::iterator end = folderContent.end();
@@ -778,6 +785,9 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 //	for (; it != end; it++) {
 
     size_t cnt = 1500;  // punti da verificare per ogni tile
+
+    long ni = 0;
+    size_t totpoints = 0;
 
     // seleziona alcune tile
     for (auto it = samplerf.begin(); it != samplerf.end(); it++) {
@@ -792,7 +802,7 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 			continue;
         }
 
-        Check_log << "Apertura di " << p.getBaseName() << std::endl;
+        Check_log << "Apertura di " << p.getBaseName() << " " << ++ni << "/" << campione << std::endl;
 		if ( !f.Open(p.toString(), false, false)) {
             Check_log << "Errore nell'apertura di " << p.getBaseName() << std::endl;
 			continue;
@@ -803,10 +813,10 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 
 		//size_t c = _getSamplesCount(1000, size/2, size);
 
-        cnt = _tilePP/100.0f*size;
-        if (cnt == 0) {
-            cnt = 1;
-        }
+//        cnt = _tilePP/100.0f*size;
+//        if (cnt > 1000000) {
+//            cnt = 1000000;
+//        }
 
 		Geoin::Util::Sampler sampler(size);
 		sampler.sample(cnt, size);
@@ -815,14 +825,20 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 			NODE n = dsm->Node(index);
 			points[p.getBaseName()].push_back(n);
 		}
+        totpoints += cnt;
+        Check_log << "   Selezionati " << cnt << " punti" << std::endl;
 	}
 
-    Check_log << " Verifica di " << cnt << " punti per tile" << std::endl;
+    //Check_log << " Verifica di " << cnt << " punti per tile" << std::endl;
+    Check_log << " Punti complessivi " << totpoints << std::endl;
 
 	std::vector<Lidar::Strip::Ptr>::const_iterator sit = strips.begin();
 	std::vector<Lidar::Strip::Ptr>::const_iterator send = strips.end();
+    ni = 0;
 	bool con = false;
 	for (; sit != send; sit++) {
+        Check_log << " !!" << std::endl;
+        ++ni;
         if ( !_isStripUsed( points, *sit) ) {
             Check_log << "No points in " << (*sit)->name() << std::endl;
             continue;
@@ -832,7 +848,7 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 		std::string actual = (*sit)->name() + ".las";
 		path.append(actual);
 
-        Check_log << " * " << actual << std::endl;
+        Check_log << " * " << actual << "  " << ni <<"/" << strips.size() << std::endl;
 		
 		DSM_Factory f;
         f.SetEcho(pulse);
@@ -853,6 +869,8 @@ void lidar_final_exec::_checkRawRandom( const std::string& raw, int pulse, std::
 			//std::vector<NODE>::iterator pIt = gIt->second.begin();
 			//std::vector<NODE>::iterator pEnd = gIt->second.end();
 			std::vector<NODE>& vn = gIt->second;
+
+            Check_log << "Tile " << gIt->first << std::endl;
 
             std::set<size_t> ilist;
             statistics st(1);

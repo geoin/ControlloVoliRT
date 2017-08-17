@@ -104,7 +104,7 @@ bool lidar_raw_exec::run() {
         }
 
         Check_log << "Esecuzione controllo.." << std::endl;
-        _checkIntersection();
+        //_checkIntersection();
 
         _checkGCP();
 
@@ -316,11 +316,12 @@ Lidar::CloudStrip::Ptr lidar_raw_exec::_get_strip_by_name(const std::string& clo
      Check_log << "Strips da analizzare "<< _strips.size() << std::endl;
      long strip_count = 0;
      for (; it != end; it++) {
-         Lidar::CloudStrip::Ptr cloud = *it;
-         Check_log << "Analisi nuvola " << cloud->name() << std::endl;
          ++strip_count;
-    //        if ( strip_count < 35)
-    //            continue;
+         Lidar::CloudStrip::Ptr cloud = *it;
+         Check_log << "Analisi nuvola " << cloud->name() << " " << strip_count << "/" << _strips.size() << std::endl;
+
+//            if ( strip_count > 65)
+//                continue;
 
 
           Lidar::DSMHandler srcDsm(cloud, LID_ANG_SCAN, MyLas::last_pulse, false);

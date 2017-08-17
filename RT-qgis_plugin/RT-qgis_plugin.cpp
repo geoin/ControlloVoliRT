@@ -650,8 +650,8 @@ Check_lidar_final::Check_lidar_final(QgisInterface* mi): dbox(mi)
 
     // prepare the parameters
     _args << PARAM_PREFIX_L("dir"); // project dir
-    _args << PARAM_PREFIX_L("tile") + "10";
     _args << PARAM_PREFIX_L("cf") + "10";
+    _args << PARAM_PREFIX_L("cp") + "10";
     _args << PARAM_PREFIX_L("rf") + "10";
     _args << PARAM_PREFIX_L("rp") + "10";
 
@@ -694,7 +694,7 @@ void Check_lidar_final::classFValueChanged(int i) {
     _args[1] = PARAM_PREFIX_L("cf") + QString::number(i);
 }
 void Check_lidar_final::classPValueChanged(int i) {
-    _args[2] = PARAM_PREFIX_L("tile") + QString::number(i);
+    _args[2] = PARAM_PREFIX_L("cp") + QString::number(i);
 }
 void Check_lidar_final::resFValueChanged(int i) {
     _args[3] = PARAM_PREFIX_L("rf") + QString::number(i);
